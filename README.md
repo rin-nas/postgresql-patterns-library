@@ -22,7 +22,7 @@
 
 #### Получить список названий предков и наследников для каждого узла дерева (на примере регионов)
 
-```
+```sql
 SELECT
     id,
     nlevel(ltree_path) AS level,
@@ -39,7 +39,7 @@ LIMIT 1000;
 
 #### Получить циклические связи в графе
 
-```
+```sql
 WITH paths_with_cycle(depth, path) AS (
  WITH RECURSIVE search_graph(parent_id, child_id, depth, path, cycle) AS (
    SELECT g.parent_id, g.child_id, 1,
@@ -66,7 +66,7 @@ SQL-запросы `WITH RECURSIVE...` должны иметь [защиту 
 
 #### Получить названия всех уровней сферы деятельности 4-го уровня
 
-```
+```sql
 SELECT ot1.name AS name_1, ot2.name as name_2, ot3.name as name_3, ot4.id as id
     FROM v3_offer_trade ot4
     INNER JOIN v3_offer_trade ot3 ON ot4.order_tree <@ ot3.order_tree AND nlevel(ot3.order_tree) = 3
@@ -78,7 +78,7 @@ SELECT ot1.name AS name_1, ot2.name as name_2, ot3.name as name_3, ot4.id as id
 
 #### Получить записи, которые удовлетворяют условиям из JSON массива
 
-```
+```sql
 SELECT * FROM (
     VALUES ('[{"id" : 1, "created_at" : "2003-07-01", "name": "Sony"}, {"id" : 2, "created_at" : "2008-10-27", "name": "Samsung"}]'::jsonb),
            ('[{"id" : 3, "created_at" : "2010-03-30", "name": "LG"},   {"id" : 4, "created_at" : "2018-12-09", "name": "Apple"}]'::jsonb)
@@ -92,7 +92,7 @@ WHERE EXISTS(
 
 #### Сравнить 2 JSON и получить отличия
 
-```
+```sql
 CREATE OR REPLACE FUNCTION jsonb_diff(l JSONB, r JSONB) RETURNS JSONB AS $json_diff$
     SELECT jsonb_object_agg(a.key, a.value)
     FROM (SELECT key, value FROM jsonb_each(l)) AS a(key,value)
@@ -108,7 +108,7 @@ SELECT jsonb_diff('{"a":1,"b":2}'::JSONB, '{"a":1,"b":null}'::JSONB);
 
 #### Агрегатная функция конкатенации массивов>
 
-```
+```sql
 CREATE AGGREGATE array_cat_agg(anyarray) (
     SFUNC     = array_cat
    ,STYPE     = anyarray
@@ -127,7 +127,7 @@ GROUP BY id;
 
 #### Получить одинаковые элементы массивов (пересечение массивов)
 
-```
+```sql
 -- для 2-х массивов
 select array_agg(a) from unnest(array[1, 2, 3, 4, 5]) a where a = any(array[4, 5, 6, 7, 8]); -- {4,5}
 
@@ -140,7 +140,7 @@ inner join unnest(array[4, 5, 6, 7, 8]) a3 on a1 = a3; -- {4,5}
 
 #### Получить уникальные элементы массива или отсортировать их
 
-```
+```sql
 -- способ 1
 SELECT ARRAY_AGG(DISTINCT a ORDER BY a) FROM UNNEST(ARRAY[1,2,3,2,1]) t(a); -- {1,2,3}
 
@@ -159,7 +159,7 @@ $$ LANGUAGE SQL IMMUTABLE;
 
 Если кол-во записей в таблице очень большое, то этот запрос может быть медленным и тогда нужен [полнотекстовый поиск](https://postgrespro.ru/docs/postgresql/11/textsearch).
 
-```
+```sql
 CREATE INDEX /*CONCURRENTLY*/ IF NOT EXISTS t_name_trigram_index ON t USING GIN (lower(name) gin_trgm_ops);
 
 WITH
@@ -195,7 +195,7 @@ LIMIT 100
 
 ### Получить записи-дубликаты по значению полей
 
-```
+```sql
 SELECT
     ROW_NUMBER() OVER(PARTITION BY d.name ORDER BY d.id ASC) AS duplicate_num, -- номер дубля
     d.*
@@ -212,7 +212,7 @@ ORDER BY name, duplicate_num
 
 ### Агрегатная функция конкатенации строк (аналог [group_concat()](https://dev.mysql.com/doc/refman/5.7/en/group-by-functions.html#function_group-concat) в MySQL)
 
-```
+```sql
 SELECT STRING_AGG(DISTINCT s, ', ' ORDER BY s) AS field_alias FROM (VALUES ('b'), ('a'), ('b')) AS t(s); -- a, b
 
 SELECT ARRAY_TO_STRING(ARRAY_AGG(DISTINCT s ORDER BY s), ', ') AS field_alias FROM (VALUES ('b'), ('a'), ('b')) AS t(s); -- a, b
@@ -220,7 +220,7 @@ SELECT ARRAY_TO_STRING(ARRAY_AGG(DISTINCT s ORDER BY s), ', ') AS field_alias FR
 
 ### Получить время выполнения запроса в его результате
 
-```
+```sql
 SELECT extract(seconds FROM clock_timestamp() - now()) AS execution_time FROM pg_sleep(1.5);
 ```
 
@@ -233,7 +233,7 @@ SELECT extract(seconds FROM clock_timestamp() - now()) AS execution_time FRO
 1. индексирование данных в поисковых движках типа Sphinx, Solr, Elastic Search
 2. ускорение выполнения запросов в PostgreSQL через их [распараллеливание](https://m.habr.com/company/lanit/blog/351160/)
 
-```
+```sql
 WITH
 result1 AS (
     SELECT id
@@ -269,7 +269,7 @@ min_id | max_id | total
 
 Далее можно последовательно выполнять SQL запросы (SELECT, UPDATE) для каждого диапазона, например:
 
-```
+```sql
 SELECT *
 FROM v3_resume
 WHERE id BETWEEN 162655 AND 6594323
@@ -281,7 +281,7 @@ WHERE id BETWEEN 162655 AND 6594323
 
 [Источник](http://highload.guide/blog/query_performance_postgreSQL.html)
 
-```
+```sql
 -- вместо запроса
 SELECT * FROM t WHERE id < 1000 AND val IN(1, ..., 10000);
 
@@ -293,7 +293,7 @@ SELECT * FROM t JOIN (VALUES (1), ...(10000)) AS v(val) UGING(val) WHERE id < 10
 
 [Источник](https://blog.jooq.org/2017/05/31/how-to-execute-a-sql-query-only-if-another-sql-query-has-no-results/)
 
-```
+```sql
 WITH r AS (
   SELECT * FROM film WHERE length = 120
 )
@@ -306,7 +306,7 @@ AND NOT EXISTS (SELECT * FROM r)
 
 ### Как развернуть запись в набор колонок?
 
-```
+```sql
 SELECT (a).*, (b).* -- unnesting the records again
 FROM (
     SELECT
@@ -319,7 +319,7 @@ FROM (
 
 ### Как получить итоговую сумму для каждой записи в одном запросе?
 
-```
+```sql
 SELECT
    array_agg(x) over () as frame,
    x,
@@ -330,7 +330,7 @@ FROM generate_series(1, 4) as t (x);
 
 ### Как получить возраст по дате рождения?
 
-```
+```sql
 SELECT EXTRACT(YEAR FROM age('1977-09-10'::date))
 ```
 
@@ -340,7 +340,7 @@ SELECT EXTRACT(YEAR FROM age('1977-09-10'::date))
 
 По материалам [Stackoverflow: Reference value of serial column in another column during same INSERT](https://stackoverflow.com/questions/12433075/reference-value-of-serial-column-in-another-column-during-same-insert/12433285)
 
-```
+```sql
 WITH t AS (
    SELECT nextval(pg_get_serial_sequence('v3_region', 'id')) AS id
 )
@@ -356,7 +356,7 @@ RETURNING ltree_path
 
 Работоспособность проверена на миграции из ретро работы. Ключевой момент - использование выражения RETURNING id **INTO**.
 
-```
+```sql
 DO $$
 DECLARE packageId integer;
 DECLARE featureId integer;
@@ -401,7 +401,7 @@ END $$;
 
 ### Модифицировать данные в нескольких таблицах и вернуть id затронутых записей в одном запросе
 
-```
+```sql
 WITH
 updated AS (
     UPDATE table1
@@ -435,7 +435,7 @@ TODO — попробовать написать запрос обновлен�
 
 ### Сделать составной уникальный индекс, одно из полей может быть null
 
-```
+```sql
 create table test (
     a varchar NOT NULL,
     b varchar default null
@@ -454,7 +454,7 @@ create unique index on test(a, coalesce(b, ''))
 ### Получить список процессов (SQL запросов), выполняющихся сейчас
 В PHPStorm есть возможность настроить для результата запроса значения в колонке `application_name`и вписать туда ПО и свою фамилию для своих SQL запросов.Для этого нужно открыть окно "Data Sources and Drivers", выбрать нужное соединение с БД из секции "Project Data Sources", перейти на вкладку "Advanced", отсортировать таблицу по колонке "Name", для "Name" равному "Application Name", изменить значение в колонке "Value" на что-то типа"PhpStorm Petrov Ivan" (строго на английском языке). |>
 
-```
+```sql
 SELECT pid, application_name, query, NOW() - query_start AS elapsed
 FROM pg_stat_activity
 ORDER BY elapsed DESC;
@@ -463,7 +463,7 @@ ORDER BY elapsed DESC;
 ### Остановить или завершить работу процессов
 
 
-```
+```sql
 -- Остановить все процессы, работающие более 1 часа, сигналом SIGINT
 SELECT pg_cancel_backend(pid), application_name, query, NOW() - query_start AS elapsed
 FROM pg_stat_activity
@@ -479,7 +479,7 @@ ORDER BY elapsed DESC
 
 ### Получить список всех функций БД, включая триггерные процедуры
 
-```
+```sql
 SELECT n.nspname AS "Schema",
        p.proname AS "Name",
        CASE WHEN p.proretset THEN 'setof ' ELSE '' END
@@ -538,7 +538,7 @@ WHERE p.prorettype <> 'pg_catalog.cstring'::pg_catalog.regtype
 
 Результат выполнения SQL запроса см. на странице "[Список всех зависимостей (внешних ключей) между таблицами БД](http://wiki.rabota.space/pages/viewpage.action?pageId=25788841)">
 
-```
+```sql
 -- https://stackoverflow.com/questions/1152260/postgres-sql-to-list-table-foreign-keys/36800049#36800049
 
 SELECT
@@ -599,7 +599,7 @@ WHERE c.contype = 'f' ORDER BY 1;
 
 В начале отображаются наиболее часто используемые индексы (отсортированы по колонке index_scans_count)
 
-```
+```sql
 SELECT
     idstat.relname                            AS table_name,                  -- имя таблицы
     indexrelname                            AS index_name,                  -- индекс
@@ -631,13 +631,13 @@ ORDER BY
 
 ### Получить список установленных расширений (extensions)
 
-```
+```sql
 select * from pg_available_extensions where installed_version is not null;
 ```
 
 ### Получить список таблиц с размером занимаемого места
 
-```
+```sql
 SELECT nspname || '.' || relname AS "relation",
        pg_size_pretty(pg_total_relation_size(C.oid)) AS "total_size"
 FROM pg_class C
@@ -651,7 +651,7 @@ LIMIT 100
 
 ### Получить и изменить значения параметров конфигурации выполнения
 
-```
+```sql
 -- получение значений параметров
 SHOW pg_trgm.word_similarity_threshold;
 SHOW pg_trgm.similarity_threshold;
@@ -674,7 +674,7 @@ SELECT set_config('pg_trgm.word_similarity_threshold', 0.2::text, FALSE),
 
 [Источник и статья по теме](https://www.compose.com/articles/simple-index-checking-for-postgres/)
 
-```
+```sql
 with table_stats as (
 select psut.relname,
   psut.n_live_tup,
