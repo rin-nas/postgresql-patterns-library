@@ -106,7 +106,7 @@ SELECT jsonb_diff('{"a":1,"b":2}'::JSONB, '{"a":1,"b":null}'::JSONB);
 
 ### Массивы
 
-#### Агрегатная функция конкатенации массивов>
+#### Агрегатная функция конкатенации массивов
 
 ```sql
 CREATE AGGREGATE array_cat_agg(anyarray) (
