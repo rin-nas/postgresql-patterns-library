@@ -189,9 +189,121 @@ LIMIT 100
 
 #### Получить для слова с ошибкой (опечаткой) наиболее подходящие варианты слов для замены (исправления)
 
+```sql
+CREATE EXTENSION IF NOT EXISTS fuzzymatch;
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+ 
+CREATE INDEX /*CONCURRENTLY*/ IF NOT EXISTS v3_sphinx_wordforms_word_trigram_index ON public.v3_sphinx_wordforms USING GIN (lower(word) gin_trgm_ops);
+ 
+SELECT COUNT(*) FROM v3_sphinx_wordforms; -- 1,241,939 записей
+ 
+-- EXPLAIN
+WITH
+vars AS (
+    SELECT set_config('pg_trgm.word_similarity_threshold', 0.4::text, TRUE)::real AS word_similarity_threshold,
+           set_config('pg_trgm.similarity_threshold', 0.4::text, TRUE)::real AS similarity_threshold,
+           ARRAY['бхугалтер', 'лктор', 'дикто', 'вра', 'прогромист', 'затейник', 'смотритель']::text[] AS words_from,
+           2 AS ins_cost,
+           2 AS del_cost,
+           1 AS sub_cost
+    ),
+words_from AS (
+    SELECT lower(word_from) AS word_from, word_num
+    FROM unnest((SELECT words_from FROM vars)) WITH ORDINALITY AS q(word_from, word_num)
+),
+result AS (
+    SELECT *,
+           to_jsonb(ARRAY((
+                  WITH t AS (
+                      SELECT *,
+                             extract(seconds FROM clock_timestamp() - now()) AS execution_time,
+                             ROW_NUMBER() OVER w AS position,
+                             levenshtein_rank3 - LEAD(levenshtein_rank3) OVER w AS next_levenshtein_rank3_delta
+                      FROM (
+                           -- нельзя выносить подзапрос в WITH name AS (SELECT ...), т.к. план запроса меняется, итоговый запрос выполняется в 2 раза медленнее!
+                           SELECT q.word_from,
+                                  q.word_num,
+                                  t.word AS word_to,
+                                  word_similarity(q.word_from, t.word) AS word_similarity_rank,
+                                  similarity(q.word_from, t.word)      AS similarity_rank,
+                                  levenshtein(q.word_from, t.word)                                             AS levenshtein_distance1,
+                                  levenshtein(q.word_from, t.word, vars.ins_cost, vars.del_cost,vars.sub_cost) AS levenshtein_distance2,
+                                  sqrt(levenshtein(q.word_from, t.word) *
+                                       levenshtein(q.word_from, t.word, vars.ins_cost, vars.del_cost, vars.sub_cost)) AS levenshtein_distance3, -- среднее геометрическое
+                                  1 - sqrt(levenshtein(q.word_from, t.word) *
+                                           levenshtein(q.word_from, t.word, vars.ins_cost, vars.del_cost, vars.sub_cost)) / length(t.word) AS levenshtein_rank3
+                           FROM v3_sphinx_wordforms AS t, vars
+                           WHERE lower(t.word) % q.word_from -- заставляем PostgreSQL использовать GIN индекс!
+                      ) AS t
+                      WHERE TRUE
+                        AND levenshtein_distance1 < 5 AND levenshtein_rank3 > 0.55
+                        --AND (word_similarity_rank >= 0.25 OR similarity_rank >= 0.25)
+                      WINDOW w AS (ORDER BY levenshtein_distance1 ASC,
+                                            levenshtein_rank3 DESC,
+                                            word_similarity_rank DESC,
+                                            similarity_rank DESC)
+                      ORDER BY levenshtein_distance1 ASC,
+                               levenshtein_rank3 DESC,
+                               word_similarity_rank DESC,
+                               similarity_rank DESC
+                      LIMIT 2
+                  )
+                  SELECT to_jsonb(t.*)
+                  FROM t
+                  -- если у нескольких кандидатов подряд рейтинг оличается незначительно, то исключаем всю выборку
+                  WHERE position = 1 AND (next_levenshtein_rank3_delta IS NULL OR next_levenshtein_rank3_delta > 0.05)
+                  LIMIT 1
+           ))) AS json
+    FROM words_from AS q
+    ORDER BY word_num ASC
+    --LIMIT 1
+)
+--SELECT word_from, word_num, jsonb_array_length(json), jsonb_pretty(json), extract(seconds FROM clock_timestamp() - now()) AS execution_time FROM result; -- для отладки
+SELECT *
+FROM jsonb_to_recordset((
+     SELECT jsonb_agg(json->0) AS json
+     FROM result
+     WHERE jsonb_array_length(json) != 0
+)) AS x(word_num int,
+        word_from text,
+        word_to text,
+        word_similarity_rank real,
+        similarity_rank real,
+        levenshtein_distance1 int,
+        levenshtein_distance2 int,
+        levenshtein_distance3 real,
+        levenshtein_rank3 real,
+        execution_time real)
+ORDER BY word_num ASC
+-- LIMIT 1
+```
 
+**Описание запроса**
+1. Запрос так же подходит для получения поисковых подсказок (с учётом начала слов), если его немного модернизировать. Практики пока нет, а в теории нужно убрать ограничение по дистанции Левенштейна.
+1. Запрос использует GIN индекс, поэтому работает быстро.
+1. Среди пользователей, которые делают опечатки, есть те, которые делают грамматические ошибки. Поэтому, при расчёте расстояния Левенштейна, цена вставки и удаления буквы должна быть выше, чем замены. Цены операций являеются целочисленными числами, которые нам не очень подходят, поэтому приходится делать дополнительный расчёт.
+1. Пороговые значения для `word_similarity_rank`, `similarity_rank` и `next_levenshtein_rank3_delta` подобраны опытным путём.
+1. Если у нескольких слов-кандидатов подряд рейтинг оличается незначительно, то исключаем всю выборку, т.к. непонятно на что исправлять из-за неоднозначности
 
-Подробнее об этом запросе см. на странице "[Сервис исправления опечаток в поисковых запросах](http://wiki.rabota.space/pages/viewpage.action?pageId=28869654)"
+Алгоритм исправления ошибок и опечаток основан на вычислении расстояния [[Дамерау—]Левенштейна](https://ru.wikipedia.org/wiki/Расстояние_Дамерау_—_Левенштейна).
+Точность исправления слова зависит в т.ч. от количества букв в слове.
+Получать слова-кандидаты для исправления ошибок необходимо для R > 0.55 и D < 6
+
+Длина слова, букв (L) | Максимальная дистанция Левенштейна (D) | Доля R = (1 − (D ÷ L))
+---:|--:|--:
+2	|0	|1
+3	|1	|0.6666
+4	|1	|0.75
+5	|2	|0.6
+6	|2	|0.6666
+7	|3	|0.5714
+8	|3	|0.625
+9	|3	|0.6666
+10	|4	|0.6
+11	|4	|0.6363
+12	|4	|0.6666
+13	|4	|0.6923
+14 и более	|4	|0.7142
 
 ### Получить записи-дубликаты по значению полей
 
