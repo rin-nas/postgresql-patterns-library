@@ -157,7 +157,7 @@ $$ LANGUAGE SQL IMMUTABLE;
 
 #### Получить названия сущностей по поисковой фразе с учётом начала слов (поисковые подсказки)
 
-Если кол-во записей в таблице очень большое, то этот запрос может быть медленным и тогда нужен [полнотекстовый поиск](https://postgrespro.ru/docs/postgresql/11/textsearch).
+См. так же [полнотекстовый поиск](https://postgrespro.ru/docs/postgresql/11/textsearch).
 
 ```sql
 CREATE INDEX /*CONCURRENTLY*/ IF NOT EXISTS t_name_trigram_index ON t USING GIN (lower(name) gin_trgm_ops);
