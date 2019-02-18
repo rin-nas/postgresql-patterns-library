@@ -165,21 +165,21 @@ CREATE INDEX /*CONCURRENTLY*/ IF NOT EXISTS t_name_trigram_index ON t USING GIN 
 WITH
 vars AS (
 SELECT CONCAT('%',
-              REPLACE(quote_like(trim(REGEXP_REPLACE('бар ', '[^а-яёa-z0-9]+', ' ', 'gi'))),
+              LOWER(REPLACE(quote_like(trim(REGEXP_REPLACE('бар ', '[^а-яёa-z0-9]+', ' ', 'gi'))),
                       ' ', '_%'),
               '%'
-             ) AS query_like,
+             )) AS query_like,
        CONCAT('(?<![а-яёa-z0-9])',
-              REPLACE(quote_regexp(ltrim(REGEXP_REPLACE('бар ', '[^а-яёa-z0-9]+', ' ', 'gi'))),
+              LOWER(REPLACE(quote_regexp(ltrim(REGEXP_REPLACE('бар ', '[^а-яёa-z0-9]+', ' ', 'gi'))),
                       ' ', '(?:[^а-яёa-z0-9]+|$)')
-             ) AS query_regexp
+             )) AS query_regexp
 )
 SELECT
   t.name,
-  lower(t.name) ILIKE TRIM(LEADING '%_' FROM vars.query_like) AS is_leading
-FROM t
-WHERE lower(t.name) ILIKE (SELECT query_like FROM vars) -- для скорости
-  AND lower(t.name) ~* (SELECT query_regexp FROM vars) -- для точности
+  lower(t.name) LIKE TRIM(LEADING '%_' FROM vars.query_like) AS is_leading
+FROM t, vars
+WHERE lower(t.name) LIKE vars.query_like -- для скорости
+  AND lower(t.name) ~* vars.query_regexp -- для точности
 ORDER BY
   is_leading DESC,
   LENGTH(name),
