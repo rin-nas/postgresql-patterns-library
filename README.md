@@ -165,14 +165,14 @@ CREATE INDEX /*CONCURRENTLY*/ IF NOT EXISTS t_name_trigram_index ON t USING GIN 
 WITH
 vars AS (
 SELECT CONCAT('%',
-              LOWER(REPLACE(quote_like(trim(REGEXP_REPLACE('бар ', '[^а-яёa-z0-9]+', ' ', 'gi'))),
+              REPLACE(quote_like(trim(REGEXP_REPLACE(LOWER('бар '), '[^а-яёa-z0-9]+', ' ', 'gi'))),
                       ' ', '_%'),
               '%'
-             )) AS query_like,
+             ) AS query_like,
        CONCAT('(?<![а-яёa-z0-9])',
-              LOWER(REPLACE(quote_regexp(ltrim(REGEXP_REPLACE('бар ', '[^а-яёa-z0-9]+', ' ', 'gi'))),
+              REPLACE(quote_regexp(ltrim(REGEXP_REPLACE(LOWER('бар '), '[^а-яёa-z0-9]+', ' ', 'gi'))),
                       ' ', '(?:[^а-яёa-z0-9]+|$)')
-             )) AS query_regexp
+             ) AS query_regexp
 )
 SELECT
   t.name,
