@@ -163,26 +163,25 @@ $$ LANGUAGE SQL IMMUTABLE;
 CREATE INDEX /*CONCURRENTLY*/ IF NOT EXISTS t_name_trigram_index ON t USING GIN (lower(name) gin_trgm_ops);
 
 WITH
+normalize AS (
+    SELECT ltrim(REGEXP_REPLACE(LOWER('бар '), '[^а-яёa-z0-9]+', ' ', 'gi')) AS query
+),
 vars AS (
-SELECT CONCAT('%',
-              REPLACE(quote_like(trim(REGEXP_REPLACE(LOWER('бар '), '[^а-яёa-z0-9]+', ' ', 'gi'))),
-                      ' ', '_%'),
-              '%'
-             ) AS query_like,
-       CONCAT('(?<![а-яёa-z0-9])',
-              REPLACE(quote_regexp(ltrim(REGEXP_REPLACE(LOWER('бар '), '[^а-яёa-z0-9]+', ' ', 'gi'))),
-                      ' ', '(?:[^а-яёa-z0-9]+|$)')
-             ) AS query_regexp
+    SELECT CONCAT('%', REPLACE(quote_like(trim(normalize.query)), ' ', '_%'), '%') AS query_like,
+           CONCAT('(?<![а-яёa-z0-9])', REPLACE(quote_regexp(normalize.query), ' ', '(?:[^а-яёa-z0-9]+|$)')) AS query_regexp
+    FROM normalize
 )
-SELECT
+SELECT 
   t.name,
-  lower(t.name) LIKE TRIM(LEADING '%_' FROM vars.query_like) AS is_leading
-FROM t, vars
-WHERE lower(t.name) LIKE vars.query_like -- для скорости
+  lower(t.name) LIKE RTRIM(normalize.query) AS is_leading
+FROM t, vars, normalize
+WHERE
+  length(rtrim(normalize.query)) > 0 -- для скорости
+  AND lower(t.name) LIKE vars.query_like -- для скорости
   AND lower(t.name) ~* vars.query_regexp -- для точности
-ORDER BY
+ORDER BY 
   is_leading DESC,
-  LENGTH(name),
+  LENGTH(name), 
   name
 LIMIT 100
 ```
