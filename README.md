@@ -307,6 +307,7 @@ ORDER BY word_num ASC
 ### Получить записи-дубликаты по значению полей
 
 ```sql
+-- через подзапрос с EXISTS этой же таблицы
 SELECT
     ROW_NUMBER() OVER(PARTITION BY d.name ORDER BY d.id ASC) AS duplicate_num, -- номер дубля
     d.*
@@ -319,6 +320,20 @@ WHERE EXISTS(SELECT 1
                    -- AND d.id > t.id -- только дубликаты
             )
 ORDER BY name, duplicate_num
+```
+
+```sql
+-- получить ID записей, имеющих дубликаты по полю slugify(name)
+SELECT unnest(array_agg(id)) AS id
+FROM v3_region
+GROUP BY slugify(name)
+HAVING count(*) > 1;
+ 
+-- получить ID записей, НЕ имеющих дубликаты по полю slugify(name)
+SELECT max(id) AS id
+FROM v3_region
+GROUP BY slugify(name)
+HAVING count(*) = 1;
 ```
 
 ### Агрегатная функция конкатенации строк (аналог [group_concat()](https://dev.mysql.com/doc/refman/5.7/en/group-by-functions.html#function_group-concat) в MySQL)
