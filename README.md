@@ -335,6 +335,18 @@ SELECT max(id) AS id
 FROM v3_region
 GROUP BY slugify(name)
 HAVING count(*) = 1;
+
+-- получить разные названия населённых пунктов с одинаковыми kladr_id
+SELECT ROW_NUMBER() OVER(PARTITION BY kladr_id ORDER BY kladr_id ASC) AS duplicate_num, -- номер дубля
+       *
+FROM (
+    SELECT kladr_id,
+           unnest(array_agg(address)) AS address
+    FROM d
+    GROUP BY kladr_id
+    HAVING count(*) > 1
+    ORDER BY kladr_id
+) AS t
 ```
 
 ### Агрегатная функция конкатенации строк (аналог [group_concat()](https://dev.mysql.com/doc/refman/5.7/en/group-by-functions.html#function_group-concat) в MySQL)
