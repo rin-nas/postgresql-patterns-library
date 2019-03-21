@@ -339,7 +339,7 @@ GROUP BY slugify(name)
 HAVING count(*) = 1;
 
 -- получить разные названия населённых пунктов с одинаковыми kladr_id
-SELECT ROW_NUMBER() OVER(PARTITION BY kladr_id ORDER BY kladr_id ASC) AS duplicate_num, -- номер дубля
+SELECT ROW_NUMBER() OVER(PARTITION BY kladr_id ORDER BY address ASC) AS duplicate_num, -- номер дубля
        *
 FROM (
     SELECT kladr_id,
