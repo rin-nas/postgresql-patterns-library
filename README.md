@@ -347,8 +347,8 @@ FROM (
     FROM d
     GROUP BY kladr_id
     HAVING count(*) > 1
-    ORDER BY kladr_id
 ) AS t
+ORDER BY kladr_id, duplicate_num
 ```
 
 ### Агрегатная функция конкатенации строк (аналог [group_concat()](https://dev.mysql.com/doc/refman/5.7/en/group-by-functions.html#function_group-concat) в MySQL)
