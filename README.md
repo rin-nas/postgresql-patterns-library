@@ -195,80 +195,124 @@ LIMIT 100
 CREATE EXTENSION IF NOT EXISTS fuzzymatch;
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
  
+CREATE INDEX /*CONCURRENTLY*/ IF NOT EXISTS custom_query_group_name_name_trigram_index ON public.custom_query_group_name USING GIN (lower(name) gin_trgm_ops);
 CREATE INDEX /*CONCURRENTLY*/ IF NOT EXISTS v3_sphinx_wordforms_word_trigram_index ON public.v3_sphinx_wordforms USING GIN (lower(word) gin_trgm_ops);
  
 SELECT COUNT(*) FROM v3_sphinx_wordforms; -- 1,241,939 записей
  
+-- вот основной SQL запрос, который исправляет опечатки
 -- EXPLAIN
 WITH
 vars AS (
-    SELECT set_config('pg_trgm.word_similarity_threshold', 0.4::text, TRUE)::real AS word_similarity_threshold,
-           set_config('pg_trgm.similarity_threshold', 0.4::text, TRUE)::real AS similarity_threshold,
-           ARRAY['бхугалтер', 'лктор', 'дикто', 'вра', 'прогромист', 'затейник', 'смотритель']::text[] AS words_from,
-           2 AS ins_cost,
-           2 AS del_cost,
-           1 AS sub_cost
-    ),
-words_from AS (
-    SELECT lower(word_from) AS word_from, word_num
-    FROM unnest((SELECT words_from FROM vars)) WITH ORDINALITY AS q(word_from, word_num)
+      -- 0.21 -- это минимум, чтобы исправить "вадитль" на "водитель"
+      SELECT set_config('pg_trgm.word_similarity_threshold', 0.21::text, TRUE)::real AS word_similarity_threshold,
+             set_config('pg_trgm.similarity_threshold', 0.21::text, TRUE)::real AS similarity_threshold,
+             -- string_to_array(lower('вадитль|дифектолог'), '|')::text[] AS words_from,
+             ARRAY['вадитль', 'дифектолог', 'формовшица', 'фрмовщица', 'бхугалтер', 'лктор', 'дикто', 'вра', 'прагромист',
+                   'затейник', 'смотритель', 'unknown']::text[] AS words_from,
+             2 AS ins_cost,
+             2 AS del_cost,
+             1 AS sub_cost
 ),
-result AS (
-    SELECT *,
-           to_jsonb(ARRAY((
-                  WITH t AS (
-                      SELECT *,
-                             extract(seconds FROM clock_timestamp() - now()) AS execution_time,
-                             ROW_NUMBER() OVER w AS position,
-                             levenshtein_rank3 - LEAD(levenshtein_rank3) OVER w AS next_levenshtein_rank3_delta
-                      FROM (
-                           -- нельзя выносить подзапрос в WITH name AS (SELECT ...), т.к. план запроса меняется, итоговый запрос выполняется в 2 раза медленнее!
-                           SELECT q.word_from,
-                                  q.word_num,
-                                  t.word AS word_to,
-                                  word_similarity(q.word_from, t.word) AS word_similarity_rank,
-                                  similarity(q.word_from, t.word)      AS similarity_rank,
-                                  levenshtein(q.word_from, t.word)                                             AS levenshtein_distance1,
-                                  levenshtein(q.word_from, t.word, vars.ins_cost, vars.del_cost,vars.sub_cost) AS levenshtein_distance2,
-                                  sqrt(levenshtein(q.word_from, t.word) *
-                                       levenshtein(q.word_from, t.word, vars.ins_cost, vars.del_cost, vars.sub_cost)) AS levenshtein_distance3, -- среднее геометрическое
-                                  1 - sqrt(levenshtein(q.word_from, t.word) *
-                                           levenshtein(q.word_from, t.word, vars.ins_cost, vars.del_cost, vars.sub_cost)) / length(t.word) AS levenshtein_rank3
-                           FROM v3_sphinx_wordforms AS t, vars
-                           WHERE lower(t.word) % q.word_from -- заставляем PostgreSQL использовать GIN индекс!
-                      ) AS t
-                      WHERE TRUE
-                        AND levenshtein_distance1 < 5 AND levenshtein_rank3 > 0.55
-                        --AND (word_similarity_rank >= 0.25 OR similarity_rank >= 0.25)
-                      WINDOW w AS (ORDER BY levenshtein_distance1 ASC,
-                                            levenshtein_rank3 DESC,
-                                            word_similarity_rank DESC,
-                                            similarity_rank DESC)
-                      ORDER BY levenshtein_distance1 ASC,
-                               levenshtein_rank3 DESC,
-                               word_similarity_rank DESC,
-                               similarity_rank DESC
-                      LIMIT 2
-                  )
-                  SELECT to_jsonb(t.*)
-                  FROM t
-                  -- если у нескольких кандидатов подряд рейтинг оличается незначительно, то исключаем всю выборку
-                  WHERE position = 1 AND (next_levenshtein_rank3_delta IS NULL OR next_levenshtein_rank3_delta > 0.05)
-                  LIMIT 1
-           ))) AS json
-    FROM words_from AS q
-    ORDER BY word_num ASC
-    --LIMIT 1
+words AS (
+    SELECT
+        lower(q.word_from) AS word_from,
+        q.word_num - 1 AS word_num,
+        -- есть слово в словаре русского языка?
+        NOT EXISTS(
+              SELECT 1
+              FROM v3_sphinx_wordforms AS dict
+              WHERE lower(dict.word) = lower(q.word_from)
+                AND mistake = FALSE
+                AND checked = TRUE
+              LIMIT 1
+        )
+        -- есть слово в названиях профессий?
+        AND NOT EXISTS(
+              SELECT 1
+              FROM custom_query_group_name AS dict
+              WHERE lower(dict.name) = lower(q.word_from)
+              LIMIT 1
+        ) AS is_mistake
+    FROM unnest((SELECT words_from FROM vars)) WITH ORDINALITY AS q(word_from, word_num)
 )
---SELECT word_from, word_num, jsonb_array_length(json), jsonb_pretty(json), extract(seconds FROM clock_timestamp() - now()) AS execution_time FROM result; -- для отладки
+-- SELECT * FROM words_from; -- для отладки
+, result AS (
+      SELECT *,
+             to_jsonb(ARRAY((
+                    WITH t AS (
+                           SELECT *,
+                                  round(extract(seconds FROM clock_timestamp() - now())::numeric, 4) AS execution_time,
+                                  ROW_NUMBER() OVER w AS position,
+                                  levenshtein_rank3 - LEAD(levenshtein_rank3) OVER w AS next_levenshtein_rank3_delta
+                           FROM (
+                                -- нельзя выносить подзапрос в WITH name AS (SELECT ...), т.к. план запроса меняется, итоговый запрос выполняется в 2 раза медленнее!
+                                SELECT q.word_num,
+                                       q.word_from,
+                                       t.name AS word_to,
+                                       round(word_similarity(q.word_from, t.name)::numeric, 4) AS word_similarity_rank,
+                                       round(similarity(q.word_from, t.name)::numeric, 4)      AS similarity_rank,
+                                       levenshtein(q.word_from, t.name)                                             AS levenshtein_distance1,
+                                       levenshtein(q.word_from, t.name, vars.ins_cost, vars.del_cost,vars.sub_cost) AS levenshtein_distance2,
+                                       round(sqrt(levenshtein(q.word_from, t.name) *
+                                                  levenshtein(q.word_from, t.name, vars.ins_cost, vars.del_cost, vars.sub_cost))::numeric, 4) AS levenshtein_distance3, -- среднее геометрическое
+                                       round((1 - sqrt(levenshtein(q.word_from, t.name) *
+                                                       levenshtein(q.word_from, t.name, vars.ins_cost, vars.del_cost, vars.sub_cost)) / length(t.name))::numeric, 4) AS levenshtein_rank3
+                                FROM custom_query_group_name AS t, vars
+                                WHERE lower(t.name) % q.word_from -- используем GIN индекс!
+                           ) AS t
+                           WHERE TRUE
+                             AND levenshtein_distance1 < 5 AND levenshtein_rank3 > 0.55
+                                  WINDOW w AS (ORDER BY levenshtein_distance1 ASC,
+                                                        levenshtein_rank3 DESC,
+                                                        word_similarity_rank DESC,
+                                                        similarity_rank DESC)
+                           ORDER BY levenshtein_distance1 ASC,
+                                    levenshtein_rank3 DESC,
+                                    word_similarity_rank DESC,
+                                    similarity_rank DESC
+                           LIMIT 3
+                           --LIMIT 10 -- для отладки
+                    )
+                    SELECT to_jsonb(tt.*) FROM (
+                         SELECT *,
+                                -- если у нескольких кандидатов подряд рейтинг отличается незначительно,
+                                -- то это не точное исправление (автоисправлять нельзя, только предлагать)
+                                position = 1
+                                AND (next_levenshtein_rank3_delta IS NULL OR
+                                     next_levenshtein_rank3_delta > 0.05) AS can_correct
+                         FROM t
+                         LIMIT 3
+                         --LIMIT 10 -- для отладки
+                    ) AS tt
+             ))) AS json
+      FROM words AS q
+      WHERE is_mistake = TRUE
+      ORDER BY word_num ASC
+)
+SELECT w.word_num,
+       w.word_from,
+       w.is_mistake,
+       COALESCE(r.json->0->>'can_correct' = 'true', FALSE) AS can_correct,
+       CASE
+           WHEN r.json->0->>'can_correct' = 'true' THEN to_jsonb(ARRAY[r.json->0->>'word_to'])
+           ELSE (SELECT jsonb_agg(o->'word_to') FROM jsonb_array_elements(json) AS t(o))
+       END AS "words_to::json"
+       --, jsonb_array_length(json) AS words_to_count, jsonb_pretty(json) AS "words_details::json", extract(seconds FROM clock_timestamp() - now()) AS execution_time -- для отладки
+FROM words AS w
+LEFT JOIN result AS r ON r.word_num = w.word_num
+ORDER BY w.word_num
+;
+-- для отладки
 SELECT *
 FROM jsonb_to_recordset((
-     SELECT jsonb_agg(json->0) AS json
-     FROM result
-     WHERE jsonb_array_length(json) != 0
+    SELECT jsonb_agg(json->0) AS json
+    FROM result
+    WHERE jsonb_array_length(json) != 0
 )) AS x(word_num int,
         word_from text,
         word_to text,
+        can_correct boolean,
         word_similarity_rank real,
         similarity_rank real,
         levenshtein_distance1 int,
@@ -277,15 +321,30 @@ FROM jsonb_to_recordset((
         levenshtein_rank3 real,
         execution_time real)
 ORDER BY word_num ASC
--- LIMIT 1
 ```
+**Пример результата запроса**
+
+word_num|word_from|is_mistake|can_correct|words_to::json
+-------:|:--------|:---------|:----------|:-------------
+1 |вадитль|true|true|\["водитель"]
+2 |дифектолог|true|false|\["дефектолог", "директолог", "диетолог"]
+3 |формовшица|true|true|\["формовщица"]
+4 |фрмовщица|true|true|\["формовщица"]
+5 |бхугалтер|true|true|\["бухгалтер"]
+6 |лктор|true|true|\["лектор"]
+7 |дикто|true|true|\["диктор"]
+8 |вра|true|true|\["врач"]
+9 |прагромист|true|true|\["программист"]
+10|затейник|false|false|NULL
+11|смотритель|false|false|NULL
+12|unknown|true|false|NULL
 
 **Описание запроса**
 1. Запрос так же подходит для получения поисковых подсказок (с учётом начала слов), если его немного модернизировать. Практики пока нет, а в теории нужно убрать ограничение по дистанции Левенштейна.
 1. Запрос использует GIN индекс, поэтому работает быстро.
 1. Среди пользователей, которые делают опечатки, есть те, которые делают грамматические ошибки. Поэтому, при расчёте расстояния Левенштейна, цена вставки и удаления буквы должна быть выше, чем замены. Цены операций являеются целочисленными числами, которые нам не очень подходят, поэтому приходится делать дополнительный расчёт.
-1. Пороговые значения для `word_similarity_rank`, `similarity_rank` и `next_levenshtein_rank3_delta` подобраны опытным путём.
-1. Если у нескольких слов-кандидатов подряд рейтинг оличается незначительно, то исключаем всю выборку, т.к. непонятно на что исправлять из-за неоднозначности
+1. Пороговые значения подобраны опытным путём.
+1. Если у нескольких кандидатов подряд рейтинг отличается незначительно, то это не точное исправление (автоисправлять нельзя, только предлагать варианты)
 
 Алгоритм исправления ошибок и опечаток основан на вычислении расстояния [[Дамерау—]Левенштейна](https://ru.wikipedia.org/wiki/Расстояние_Дамерау_—_Левенштейна).
 Точность исправления слова зависит в т.ч. от количества букв в слове.
