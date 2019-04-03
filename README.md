@@ -280,7 +280,8 @@ words AS (
                                 -- то это не точное исправление (автоисправлять нельзя, только предлагать)
                                 position = 1
                                 AND (next_levenshtein_rank3_delta IS NULL OR
-                                     next_levenshtein_rank3_delta > 0.05) AS can_correct
+                                     -- 0.04 -- это минимум, чтобы исправить "разработчик гр" на "разработчик игр"
+                                     next_levenshtein_rank3_delta > 0.04) AS can_correct
                          FROM t
                          LIMIT 3
                          --LIMIT 10 -- для отладки
