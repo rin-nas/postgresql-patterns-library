@@ -602,6 +602,39 @@ $$;
 SELECT is_email('test.@domain.com');
 ```
 
+### Как распарсить CSV строку в таблицу?
+
+[Выполнить SQL](https://dbfiddle.uk/?rdbms=postgres_9.6&fiddle=7da25a3d9ce73681aff84d38afee44c6)
+```sql
+EXPLAIN
+WITH
+parsed AS (
+    SELECT string_to_array(t.row, ';') AS row
+    FROM unnest(string_to_array(
+     -- id;kladr_id;ancestors
+     '501;8300000000000;Автономный округ Ненецкий
+      751;8600800000000;Автономный округ Ханты-Мансийский, Район Советский
+     1755;8700300000000;Автономный округ Чукотский, Район Билибинский
+     1725;7501900000000;Край Забайкальский, Район Петровск-Забайкальский
+ ; ;
+      711;2302100000000;Край Краснодарский, Район Лабинский
+      729;2401600000000;Край Красноярский, Район Иланский
+      765;2700700000000;Край Хабаровский, Район Вяземский
+     ', E'\n')) AS t(row)
+    WHERE TRIM(t.row) != '' -- ignore empty rows
+),
+normalized AS (
+    SELECT
+        CASE WHEN TRIM(row[1]) ~ '^\d+$' THEN TRIM(row[1])::integer ELSE NULL END AS id,
+        NULLIF(TRIM(row[2]), '') AS kladr_id,
+        NULLIF(TRIM(row[3]), '') AS ancestors
+    FROM parsed
+)
+SELECT *
+FROM normalized
+WHERE jsonb_strip_nulls(to_jsonb(normalized)) != '{}' -- ignore rows where all column value is null
+```
+
 ## Модификация данных (DML)
 
 ### Добавить запись с id, значение которого нужно сохранить ещё в другом поле в том же INSERT запросе
