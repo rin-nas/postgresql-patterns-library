@@ -537,7 +537,7 @@ SELECT EXTRACT(YEAR FROM age('1977-09-10'::date))
 
 ### Как проверить email на валидность?
 
-Регулярное выражение взято и адаптировано отсюда: https://github.com/rin-nas/regexp-patterns-library/
+Регулярное выражение взято и адаптировано [отсюда](https://github.com/rin-nas/regexp-patterns-library/)
 
 ```sql
 create function is_email(email text)
