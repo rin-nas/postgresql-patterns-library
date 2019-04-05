@@ -15,3 +15,6 @@
 1. https://blog.jooq.org/2014/04/29/nosql-no-sql-how-to-calculate-running-totals/ — How to Calculate Running Totals
 1. https://hashrocket.com/blog/posts/faster-json-generation-with-postgresql — генерация JSON 
 1. https://hashrocket.com/blog/posts/exploring-postgres-gin-index — Exploring the Postgres Gin index
+1. Parse CSV strings with PostgreSQL
+   1. http://qaru.site/questions/2680232/pass-a-csv-parameter-in-postgres
+   1. https://gist.github.com/carymrobbins/b8e7340ce63a22e8d33c
