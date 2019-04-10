@@ -602,37 +602,57 @@ $$;
 SELECT is_email('test.@domain.com');
 ```
 
-### Как распарсить CSV строку в таблицу?
+### Как распарсить CSV строку в таблицу, где каждая строка будет массивом?
 
-[Выполнить SQL](https://www.db-fiddle.com/f/2HxHBjPptQWgBbs6csPguz/0) или [Выполнить SQL](http://sqlfiddle.postgrespro.ru/#!17//6403)
+[Выполнить SQL](https://www.db-fiddle.com/f/eqsGTTqAmH1QoQ8LL63jM/0) или [Выполнить SQL](http://sqlfiddle.postgrespro.ru/#!22/0/6439)
 ```sql
-EXPLAIN
+-- EXPLAIN --ANALYSE
 WITH
-parsed AS (
-    SELECT string_to_array(t.row, ';') AS row
-    FROM unnest(string_to_array(
-     -- id;kladr_id;ancestors
-     '501;8300000000000;Автономный округ Ненецкий
-      751;8600800000000;Автономный округ Ханты-Мансийский, Район Советский
-     1755;8700300000000;Автономный округ Чукотский, Район Билибинский
-     1725;7501900000000;Край Забайкальский, Район Петровск-Забайкальский
- ; ;
-      711;2302100000000;Край Краснодарский, Район Лабинский
-      729;2401600000000;Край Красноярский, Район Иланский
-      765;2700700000000;Край Хабаровский, Район Вяземский
-     ', E'\n')) AS t(row)
-    WHERE TRIM(t.row) != '' -- ignore empty rows
-),
-normalized AS (
-    SELECT
-        CASE WHEN TRIM(row[1]) ~ '^\d+$' THEN TRIM(row[1])::integer ELSE NULL END AS id,
-        NULLIF(TRIM(row[2]), '') AS kladr_id,
-        NULLIF(TRIM(row[3]), '') AS ancestors
-    FROM parsed
-)
-SELECT *
-FROM normalized
-WHERE jsonb_strip_nulls(to_jsonb(normalized)) != '{}' -- ignore rows where all column value is null
+    -- https://en.wikipedia.org/wiki/Comma-separated_values
+    -- https://postgrespro.ru/docs/postgresql/10/sql-copy
+    data AS (SELECT -- скопируйте сюда данные в формате CSV
+                    ' 501 ; 8300000000000 ; ";Автономный ;"";округ""
+  ""Ненецкий"";";test1
+                      751;8600800000000; "  Автономный округ ""Ханты-Мансийский"", Район Советский" ;
+                     1755;8700300000000;Автономный округ Чукотский, Район Билибинский
+                     1725;7501900000000;Край Забайкальский, Район Петровск-Забайкальский
+
+                  ;;
+                       711;2302100000000;Край Краснодарский, Район Лабинский
+                       729;2401600000000;Край Красноярский, Район Иланский
+                       765;2700700000000;Край Хабаровский, Район Вяземский' AS csv),
+    options AS (SELECT -- задайте символ, разделяющий столбцы в строках файла,
+                       -- возможные вариаты: ';', ',', '\t' (табуляция)
+                       ';' AS delimiter),
+    prepared AS (SELECT REPLACE('(?: ([^"<delimiter>\r\n]*)         #1
+                                   | \x20* ("(?:[^"]+|"")*") \x20*  #2
+                                 ) (<delimiter>|[\r\n]+)', '<delimiter>', options.delimiter) AS parse_pattern
+                 FROM options),
+    parsed AS (
+        SELECT * FROM (
+            SELECT
+                (SELECT ARRAY_AGG(
+                    CASE WHEN LENGTH(field) > 1 AND
+                              LEFT(field, 1) = '"' AND
+                              RIGHT(field, 1) = '"' THEN REPLACE(SUBSTRING(field, 2, LENGTH(field) - 2), '""', '"')
+                         ELSE NULLIF(TRIM(field), '')
+                    END
+                    ORDER BY num)
+                 FROM unnest(string_to_array(t.row, E'\x01;\x02')) WITH ORDINALITY AS q(field, num)
+                ) AS row
+            FROM data, prepared,
+                 regexp_split_to_table(
+                     regexp_replace(data.csv || E'\n', prepared.parse_pattern, E'\\1\\2\x01\\3\x02', 'gx'),
+                     '\x01[\r\n]+\x02'
+                 ) AS t(row)
+            ) AS t
+        WHERE row IS NOT NULL AND array_to_string(row, '') != ''
+    )
+SELECT
+    CASE WHEN row[1] ~ '^\d+$' THEN row[1]::integer ELSE NULL END AS id,
+    row[2] AS kladr_id,
+    row[3] AS ancestors
+FROM parsed
 ```
 
 ## Модификация данных (DML)
