@@ -602,6 +602,37 @@ $$;
 SELECT is_email('test.@domain.com');
 ```
 
+### Как [транслитерировать](https://ru.wikipedia.org/wiki/%D0%A2%D1%80%D0%B0%D0%BD%D1%81%D0%BB%D0%B8%D1%82%D0%B5%D1%80%D0%B0%D1%86%D0%B8%D1%8F) русские буквы на английские?
+
+```sql
+create or replace function public.slugify(str text)
+returns text
+language plpgsql
+as $$
+declare
+_out text;
+begin
+_out := translate(
+trim(both ' ' from lower(str)),
+'абвгдеёзийклмнопрстуфыэ',
+'abvgdeeziyklmnoprstufye'
+);
+_out := replace(_out, 'ж', 'zh');
+_out := replace(_out, 'х', 'kh');
+_out := replace(_out, 'ц', 'ts');
+_out := replace(_out, 'ч', 'ch');
+_out := replace(_out, 'ш', 'sh');
+_out := replace(_out, 'щ', 'sch');
+_out := replace(_out, 'ь', '');
+_out := replace(_out, 'ъ', '');
+_out := replace(_out, 'ю', 'yu');
+_out := replace(_out, 'я', 'ya');
+_out := regexp_replace(_out, '[^a-z0-9]+', '-', 'g');
+return _out;
+end
+$$;
+```
+
 ### Как распарсить CSV строку в таблицу?
 
 [Выполнить SQL](https://www.db-fiddle.com/f/eqsGTTqAmH1QoQ8LL63jM/0) или [Выполнить SQL](http://sqlfiddle.postgrespro.ru/#!22/0/6439)
@@ -1029,38 +1060,4 @@ left outer join table_io ti
 left outer join index_io ii
   on ii.relname = ts.relname
 order by ti.table_page_read desc, ii.idx_page_read desc
-```
-
-## Функции
-
-### [Транслитерация](https://ru.wikipedia.org/wiki/%D0%A2%D1%80%D0%B0%D0%BD%D1%81%D0%BB%D0%B8%D1%82%D0%B5%D1%80%D0%B0%D1%86%D0%B8%D1%8F) русских букв на английские
-
-```sql
-slugify()  Collapse source
-create or replace function public.slugify(str text)
-returns text
-language plpgsql
-as $$
-declare
-_out text;
-begin
-_out := translate(
-trim(both ' ' from lower(str)),
-'абвгдеёзийклмнопрстуфыэ',
-'abvgdeeziyklmnoprstufye'
-);
-_out := replace(_out, 'ж', 'zh');
-_out := replace(_out, 'х', 'kh');
-_out := replace(_out, 'ц', 'ts');
-_out := replace(_out, 'ч', 'ch');
-_out := replace(_out, 'ш', 'sh');
-_out := replace(_out, 'щ', 'sch');
-_out := replace(_out, 'ь', '');
-_out := replace(_out, 'ъ', '');
-_out := replace(_out, 'ю', 'yu');
-_out := replace(_out, 'я', 'ya');
-_out := regexp_replace(_out, '[^a-z0-9]+', '-', 'g');
-return _out;
-end
-$$;
 ```
