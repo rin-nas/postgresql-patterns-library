@@ -602,7 +602,7 @@ $$;
 SELECT is_email('test.@domain.com');
 ```
 
-### Как распарсить CSV строку в таблицу, где каждая строка будет массивом?
+### Как распарсить CSV строку в таблицу?
 
 [Выполнить SQL](https://www.db-fiddle.com/f/eqsGTTqAmH1QoQ8LL63jM/0) или [Выполнить SQL](http://sqlfiddle.postgrespro.ru/#!22/0/6439)
 ```sql
