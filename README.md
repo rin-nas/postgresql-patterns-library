@@ -68,62 +68,163 @@
 
 ### Строки
 
-### Деревья и графы
-
-#### Как получить список названий предков и наследников для каждого узла дерева (на примере регионов)?
-
-![XPath-axes](XPath-axes.png)
+#### Агрегатная функция конкатенации строк (аналог [group_concat()](https://dev.mysql.com/doc/refman/5.7/en/group-by-functions.html#function_group-concat) в MySQL)
 
 ```sql
-SELECT
-    id,
-    nlevel(ltree_path) AS level,
-    ltree_path AS id_path,
-    (SELECT array_agg(st.name ORDER BY nlevel(st.ltree_path)) FROM v3_region AS st WHERE st.ltree_path @> t.ltree_path AND st.ltree_path != t.ltree_path) AS ancestors,
-    name AS self,
-    (SELECT array_agg(st.name ORDER BY nlevel(st.ltree_path)) FROM v3_region AS st WHERE st.ltree_path <@ t.ltree_path AND st.ltree_path != t.ltree_path) AS descendants
-    --, t.*
-FROM v3_region AS t
-WHERE nlevel(ltree_path) >= 2
-ORDER BY nlevel(ltree_path) ASC, ancestors
-LIMIT 1000;
+SELECT STRING_AGG(DISTINCT s, ', ' ORDER BY s) AS field_alias FROM (VALUES ('b'), ('a'), ('b')) AS t(s); -- a, b
+
+SELECT ARRAY_TO_STRING(ARRAY_AGG(DISTINCT s ORDER BY s), ', ') AS field_alias FROM (VALUES ('b'), ('a'), ('b')) AS t(s); -- a, b
 ```
 
-#### Как получить циклические связи в графе?
+#### Как проверить email на валидность?
+
+Регулярное выражение взято и адаптировано [отсюда](https://github.com/rin-nas/regexp-patterns-library/)
 
 ```sql
-WITH paths_with_cycle(depth, path) AS (
- WITH RECURSIVE search_graph(parent_id, child_id, depth, path, cycle) AS (
-   SELECT g.parent_id, g.child_id, 1,
-     ARRAY[g.parent_id],
-     false
-   FROM custom_query_group_relationship AS g
-   UNION ALL
-   SELECT g.parent_id, g.child_id, sg.depth + 1,
-     path || g.parent_id,
-     g.parent_id = ANY(path)
-   FROM custom_query_group_relationship AS g, search_graph sg
-   WHERE g.parent_id = sg.child_id AND cycle IS FALSE
- )
- SELECT depth, path FROM search_graph WHERE cycle IS TRUE
- ORDER BY depth
+create function is_email(email text)
+    returns boolean
+    language plpgsql
+as $$
+BEGIN
+    return regexp_match($1, $REGEXP$
+^
+(?<![-!#$%&'*+/=?^_`{|}~@."\]\\a-zA-Zа-яА-ЯёЁ\d])
+(?:
+    [-!#$%&'*+/=?^_`{|}~a-zA-Z\d]+
+  | [-!#$%&'*+/=?^_`{|}~а-яА-ЯёЁ\d]+
+  | "(?:(?:[^"\\]|\\.)+)"
 )
-SELECT DISTINCT path FROM paths_with_cycle
-WHERE depth = (SELECT MIN(depth) FROM paths_with_cycle)
+(?:
+  \.
+  (?:
+      [-!#$%&'*+/=?^_`{|}~a-zA-Z\d]+
+    | [-!#$%&'*+/=?^_`{|}~а-яА-ЯёЁ\d]+
+    | "(?:[^"\\]|\\.)+"
+  )
+)*
+@
+(?:
+    (?:
+       (?: #домены 2-го и последующих уровней
+         (?!-)
+         (?:
+             (?:[a-zA-Z\d]|-(?!-)){1,63}
+           | (?:[а-яА-ЯёЁ\d]|-(?!-)){1,63}
+         )
+         (?<!-)
+         \.
+       )+
+       (?:  #домен 1-го уровня
+           [a-zA-Z]{2,63}
+         | [а-яА-ЯёЁ]{2,63}
+       )
+    )\M
+  | (?: #IPv4
+      (?<!\d)
+      (?!0+\.)
+      (?:1?\d\d?|2(?:[0-4]\d|5[0-5]))(?:\.(?:1?\d\d?|2(?:[0-4]\d|5[0-5]))){3}
+      (?!\d)
+    )
+  | \[ #IPv4 в квадратных скобках
+    (?:
+      (?<!\d)
+      (?!0+\.)
+      (?:1?\d\d?|2(?:[0-4]\d|5[0-5]))(?:\.(?:1?\d\d?|2(?:[0-4]\d|5[0-5]))){3}
+      (?!\d)
+    )
+    \]
+)
+$
+$REGEXP$, 'sx') is not null;
+
+END;
+$$;
+
+SELECT is_email('test.@domain.com');
 ```
 
-#### Как защититься от циклических связей в графе?
-
-SQL-запросы `WITH RECURSIVE...` должны иметь [защиту от зацикливания](https://stackoverflow.com/questions/51025607/prevent-infinite-loop-in-recursive-query-in-postgresql)! Когда запрос зациклится, он будет выполняться очень долго, съедая ресурсы БД. А ещё таких запросов будет много. Повезёт, если сработает защита самого PostgreSQL.
-
-#### Как получить названия всех уровней сферы деятельности 4-го уровня?
+#### Как [транслитерировать](https://ru.wikipedia.org/wiki/%D0%A2%D1%80%D0%B0%D0%BD%D1%81%D0%BB%D0%B8%D1%82%D0%B5%D1%80%D0%B0%D1%86%D0%B8%D1%8F) русские буквы на английские?
 
 ```sql
-SELECT ot1.name AS name_1, ot2.name as name_2, ot3.name as name_3, ot4.id as id
-    FROM v3_offer_trade ot4
-    INNER JOIN v3_offer_trade ot3 ON ot4.order_tree <@ ot3.order_tree AND nlevel(ot3.order_tree) = 3
-    INNER JOIN v3_offer_trade ot2 ON ot4.order_tree <@ ot2.order_tree AND nlevel(ot2.order_tree) = 2
-    INNER JOIN v3_offer_trade ot1 ON ot4.order_tree <@ ot1.order_tree AND nlevel(ot1.order_tree) = 1
+create or replace function public.slugify(str text)
+returns text
+language plpgsql
+as $$
+declare
+_out text;
+begin
+_out := translate(
+trim(both ' ' from lower(str)),
+'абвгдеёзийклмнопрстуфыэ',
+'abvgdeeziyklmnoprstufye'
+);
+_out := replace(_out, 'ж', 'zh');
+_out := replace(_out, 'х', 'kh');
+_out := replace(_out, 'ц', 'ts');
+_out := replace(_out, 'ч', 'ch');
+_out := replace(_out, 'ш', 'sh');
+_out := replace(_out, 'щ', 'sch');
+_out := replace(_out, 'ь', '');
+_out := replace(_out, 'ъ', '');
+_out := replace(_out, 'ю', 'yu');
+_out := replace(_out, 'я', 'ya');
+_out := regexp_replace(_out, '[^a-z0-9]+', '-', 'g');
+return _out;
+end
+$$;
+```
+
+#### Как распарсить CSV строку в таблицу?
+
+[Выполнить SQL](https://www.db-fiddle.com/f/eqsGTTqAmH1QoQ8LL63jM/0) или [Выполнить SQL](http://sqlfiddle.postgrespro.ru/#!22/0/6439)
+```sql
+-- EXPLAIN --ANALYSE
+WITH
+    -- https://en.wikipedia.org/wiki/Comma-separated_values
+    -- https://postgrespro.ru/docs/postgresql/10/sql-copy
+    data AS (SELECT -- скопируйте сюда данные в формате CSV
+                    ' 501 ; 8300000000000 ; ";Автономный ;"";округ""
+  ""Ненецкий"";";test1
+                      751;8600800000000; "  Автономный округ ""Ханты-Мансийский"", Район Советский" ;
+                     1755;8700300000000;Автономный округ Чукотский, Район Билибинский
+                     1725;7501900000000;Край Забайкальский, Район Петровск-Забайкальский
+
+                  ;;
+                       711;2302100000000;Край Краснодарский, Район Лабинский
+                       729;2401600000000;Край Красноярский, Район Иланский
+                       765;2700700000000;Край Хабаровский, Район Вяземский' AS csv),
+    options AS (SELECT -- задайте символ, разделяющий столбцы в строках файла,
+                       -- возможные вариаты: ';', ',', '\t' (табуляция)
+                       ';' AS delimiter),
+    prepared AS (SELECT REPLACE('(?: ([^"<delimiter>\r\n]*)         #1
+                                   | \x20* ("(?:[^"]+|"")*") \x20*  #2
+                                 ) (<delimiter>|[\r\n]+)', '<delimiter>', options.delimiter) AS parse_pattern
+                 FROM options),
+    parsed AS (
+        SELECT * FROM (
+            SELECT
+                (SELECT ARRAY_AGG(
+                    CASE WHEN LENGTH(field) > 1 AND
+                              LEFT(field, 1) = '"' AND
+                              RIGHT(field, 1) = '"' THEN REPLACE(SUBSTRING(field, 2, LENGTH(field) - 2), '""', '"')
+                         ELSE NULLIF(TRIM(field), '')
+                    END
+                    ORDER BY num)
+                 FROM unnest(string_to_array(t.row, E'\x01;\x02')) WITH ORDINALITY AS q(field, num)
+                ) AS row
+            FROM data, prepared,
+                 regexp_split_to_table(
+                     regexp_replace(data.csv || E'\n', prepared.parse_pattern, E'\\1\\2\x01\\3\x02', 'gx'),
+                     '\x01[\r\n]+\x02'
+                 ) AS t(row)
+            ) AS t
+        WHERE row IS NOT NULL AND array_to_string(row, '') != ''
+    )
+SELECT
+    CASE WHEN row[1] ~ '^\d+$' THEN row[1]::integer ELSE NULL END AS id,
+    row[2] AS kladr_id,
+    row[3] AS ancestors
+FROM parsed
 ```
 
 ### JSON
@@ -416,6 +517,64 @@ word_num|word_from|is_mistake|can_correct|words_to::json
 13	|4	|0.6923
 14 и более	|4	|0.7142
 
+### Деревья и графы
+
+#### Как получить список названий предков и наследников для каждого узла дерева (на примере регионов)?
+
+![XPath-axes](XPath-axes.png)
+
+```sql
+SELECT
+    id,
+    nlevel(ltree_path) AS level,
+    ltree_path AS id_path,
+    (SELECT array_agg(st.name ORDER BY nlevel(st.ltree_path)) FROM v3_region AS st WHERE st.ltree_path @> t.ltree_path AND st.ltree_path != t.ltree_path) AS ancestors,
+    name AS self,
+    (SELECT array_agg(st.name ORDER BY nlevel(st.ltree_path)) FROM v3_region AS st WHERE st.ltree_path <@ t.ltree_path AND st.ltree_path != t.ltree_path) AS descendants
+    --, t.*
+FROM v3_region AS t
+WHERE nlevel(ltree_path) >= 2
+ORDER BY nlevel(ltree_path) ASC, ancestors
+LIMIT 1000;
+```
+
+#### Как получить циклические связи в графе?
+
+```sql
+WITH paths_with_cycle(depth, path) AS (
+ WITH RECURSIVE search_graph(parent_id, child_id, depth, path, cycle) AS (
+   SELECT g.parent_id, g.child_id, 1,
+     ARRAY[g.parent_id],
+     false
+   FROM custom_query_group_relationship AS g
+   UNION ALL
+   SELECT g.parent_id, g.child_id, sg.depth + 1,
+     path || g.parent_id,
+     g.parent_id = ANY(path)
+   FROM custom_query_group_relationship AS g, search_graph sg
+   WHERE g.parent_id = sg.child_id AND cycle IS FALSE
+ )
+ SELECT depth, path FROM search_graph WHERE cycle IS TRUE
+ ORDER BY depth
+)
+SELECT DISTINCT path FROM paths_with_cycle
+WHERE depth = (SELECT MIN(depth) FROM paths_with_cycle)
+```
+
+#### Как защититься от циклических связей в графе?
+
+SQL-запросы `WITH RECURSIVE...` должны иметь [защиту от зацикливания](https://stackoverflow.com/questions/51025607/prevent-infinite-loop-in-recursive-query-in-postgresql)! Когда запрос зациклится, он будет выполняться очень долго, съедая ресурсы БД. А ещё таких запросов будет много. Повезёт, если сработает защита самого PostgreSQL.
+
+#### Как получить названия всех уровней сферы деятельности 4-го уровня?
+
+```sql
+SELECT ot1.name AS name_1, ot2.name as name_2, ot3.name as name_3, ot4.id as id
+    FROM v3_offer_trade ot4
+    INNER JOIN v3_offer_trade ot3 ON ot4.order_tree <@ ot3.order_tree AND nlevel(ot3.order_tree) = 3
+    INNER JOIN v3_offer_trade ot2 ON ot4.order_tree <@ ot2.order_tree AND nlevel(ot2.order_tree) = 2
+    INNER JOIN v3_offer_trade ot1 ON ot4.order_tree <@ ot1.order_tree AND nlevel(ot1.order_tree) = 1
+```
+
 ### Как получить записи-дубликаты по значению полей?
 
 ```sql
@@ -458,14 +617,6 @@ FROM (
     HAVING count(*) > 1
 ) AS t
 ORDER BY kladr_id, duplicate_num
-```
-
-### Агрегатная функция конкатенации строк (аналог [group_concat()](https://dev.mysql.com/doc/refman/5.7/en/group-by-functions.html#function_group-concat) в MySQL)
-
-```sql
-SELECT STRING_AGG(DISTINCT s, ', ' ORDER BY s) AS field_alias FROM (VALUES ('b'), ('a'), ('b')) AS t(s); -- a, b
-
-SELECT ARRAY_TO_STRING(ARRAY_AGG(DISTINCT s ORDER BY s), ', ') AS field_alias FROM (VALUES ('b'), ('a'), ('b')) AS t(s); -- a, b
 ```
 
 ### Как получить время выполнения запроса в его результате?
@@ -582,157 +733,6 @@ FROM generate_series(1, 4) as t (x);
 
 ```sql
 SELECT EXTRACT(YEAR FROM age('1977-09-10'::date))
-```
-
-### Как проверить email на валидность?
-
-Регулярное выражение взято и адаптировано [отсюда](https://github.com/rin-nas/regexp-patterns-library/)
-
-```sql
-create function is_email(email text)
-    returns boolean
-    language plpgsql
-as $$
-BEGIN
-    return regexp_match($1, $REGEXP$
-^
-(?<![-!#$%&'*+/=?^_`{|}~@."\]\\a-zA-Zа-яА-ЯёЁ\d])
-(?:
-    [-!#$%&'*+/=?^_`{|}~a-zA-Z\d]+
-  | [-!#$%&'*+/=?^_`{|}~а-яА-ЯёЁ\d]+
-  | "(?:(?:[^"\\]|\\.)+)"
-)
-(?:
-  \.
-  (?:
-      [-!#$%&'*+/=?^_`{|}~a-zA-Z\d]+
-    | [-!#$%&'*+/=?^_`{|}~а-яА-ЯёЁ\d]+
-    | "(?:[^"\\]|\\.)+"
-  )
-)*
-@
-(?:
-    (?:
-       (?: #домены 2-го и последующих уровней
-         (?!-)
-         (?:
-             (?:[a-zA-Z\d]|-(?!-)){1,63}
-           | (?:[а-яА-ЯёЁ\d]|-(?!-)){1,63}
-         )
-         (?<!-)
-         \.
-       )+
-       (?:  #домен 1-го уровня
-           [a-zA-Z]{2,63}
-         | [а-яА-ЯёЁ]{2,63}
-       )
-    )\M
-  | (?: #IPv4
-      (?<!\d)
-      (?!0+\.)
-      (?:1?\d\d?|2(?:[0-4]\d|5[0-5]))(?:\.(?:1?\d\d?|2(?:[0-4]\d|5[0-5]))){3}
-      (?!\d)
-    )
-  | \[ #IPv4 в квадратных скобках
-    (?:
-      (?<!\d)
-      (?!0+\.)
-      (?:1?\d\d?|2(?:[0-4]\d|5[0-5]))(?:\.(?:1?\d\d?|2(?:[0-4]\d|5[0-5]))){3}
-      (?!\d)
-    )
-    \]
-)
-$
-$REGEXP$, 'sx') is not null;
-
-END;
-$$;
-
-SELECT is_email('test.@domain.com');
-```
-
-### Как [транслитерировать](https://ru.wikipedia.org/wiki/%D0%A2%D1%80%D0%B0%D0%BD%D1%81%D0%BB%D0%B8%D1%82%D0%B5%D1%80%D0%B0%D1%86%D0%B8%D1%8F) русские буквы на английские?
-
-```sql
-create or replace function public.slugify(str text)
-returns text
-language plpgsql
-as $$
-declare
-_out text;
-begin
-_out := translate(
-trim(both ' ' from lower(str)),
-'абвгдеёзийклмнопрстуфыэ',
-'abvgdeeziyklmnoprstufye'
-);
-_out := replace(_out, 'ж', 'zh');
-_out := replace(_out, 'х', 'kh');
-_out := replace(_out, 'ц', 'ts');
-_out := replace(_out, 'ч', 'ch');
-_out := replace(_out, 'ш', 'sh');
-_out := replace(_out, 'щ', 'sch');
-_out := replace(_out, 'ь', '');
-_out := replace(_out, 'ъ', '');
-_out := replace(_out, 'ю', 'yu');
-_out := replace(_out, 'я', 'ya');
-_out := regexp_replace(_out, '[^a-z0-9]+', '-', 'g');
-return _out;
-end
-$$;
-```
-
-### Как распарсить CSV строку в таблицу?
-
-[Выполнить SQL](https://www.db-fiddle.com/f/eqsGTTqAmH1QoQ8LL63jM/0) или [Выполнить SQL](http://sqlfiddle.postgrespro.ru/#!22/0/6439)
-```sql
--- EXPLAIN --ANALYSE
-WITH
-    -- https://en.wikipedia.org/wiki/Comma-separated_values
-    -- https://postgrespro.ru/docs/postgresql/10/sql-copy
-    data AS (SELECT -- скопируйте сюда данные в формате CSV
-                    ' 501 ; 8300000000000 ; ";Автономный ;"";округ""
-  ""Ненецкий"";";test1
-                      751;8600800000000; "  Автономный округ ""Ханты-Мансийский"", Район Советский" ;
-                     1755;8700300000000;Автономный округ Чукотский, Район Билибинский
-                     1725;7501900000000;Край Забайкальский, Район Петровск-Забайкальский
-
-                  ;;
-                       711;2302100000000;Край Краснодарский, Район Лабинский
-                       729;2401600000000;Край Красноярский, Район Иланский
-                       765;2700700000000;Край Хабаровский, Район Вяземский' AS csv),
-    options AS (SELECT -- задайте символ, разделяющий столбцы в строках файла,
-                       -- возможные вариаты: ';', ',', '\t' (табуляция)
-                       ';' AS delimiter),
-    prepared AS (SELECT REPLACE('(?: ([^"<delimiter>\r\n]*)         #1
-                                   | \x20* ("(?:[^"]+|"")*") \x20*  #2
-                                 ) (<delimiter>|[\r\n]+)', '<delimiter>', options.delimiter) AS parse_pattern
-                 FROM options),
-    parsed AS (
-        SELECT * FROM (
-            SELECT
-                (SELECT ARRAY_AGG(
-                    CASE WHEN LENGTH(field) > 1 AND
-                              LEFT(field, 1) = '"' AND
-                              RIGHT(field, 1) = '"' THEN REPLACE(SUBSTRING(field, 2, LENGTH(field) - 2), '""', '"')
-                         ELSE NULLIF(TRIM(field), '')
-                    END
-                    ORDER BY num)
-                 FROM unnest(string_to_array(t.row, E'\x01;\x02')) WITH ORDINALITY AS q(field, num)
-                ) AS row
-            FROM data, prepared,
-                 regexp_split_to_table(
-                     regexp_replace(data.csv || E'\n', prepared.parse_pattern, E'\\1\\2\x01\\3\x02', 'gx'),
-                     '\x01[\r\n]+\x02'
-                 ) AS t(row)
-            ) AS t
-        WHERE row IS NOT NULL AND array_to_string(row, '') != ''
-    )
-SELECT
-    CASE WHEN row[1] ~ '^\d+$' THEN row[1]::integer ELSE NULL END AS id,
-    row[2] AS kladr_id,
-    row[3] AS ancestors
-FROM parsed
 ```
 
 ## Модификация данных (DML)
