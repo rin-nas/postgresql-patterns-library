@@ -500,7 +500,7 @@ WHERE id BETWEEN 162655 AND 6594323
   AND is_spam = FALSE;
 ```
 
-### Как ускорить SELECT запросов c сотнями и тысячами IN(...)
+### Как ускорить SELECT запросов c сотнями и тысячами значениями в IN(...)
 
 [Источник](http://highload.guide/blog/query_performance_postgreSQL.html)
 
