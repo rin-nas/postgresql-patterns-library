@@ -738,7 +738,7 @@ FROM generate_series(1, 4) as t (x);
 SELECT EXTRACT(YEAR FROM age('1977-09-10'::date))
 ```
 
-## Как вычислить дистанцию между 2-мя точками на Земле по её поверхности?
+### Как вычислить дистанцию между 2-мя точками на Земле по её поверхности?
 
 Если есть модуль [earthdistance](https://postgrespro.ru/docs/postgresql/10/earthdistance), то `(point(lon1, lat1) <@> point(lon2, lat2)) * 1.609344 AS distance`.
 Иначе `gc_dist(lat1, lon1, lat2, lon2) AS distance`.
