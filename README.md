@@ -636,22 +636,25 @@ SELECT extract(seconds FROM clock_timestamp() - now()) AS execution_time FRO
 
 ```sql
 WITH
+-- отфильтровываем лишние записи и оставляем только колонку id
 result1 AS (
     SELECT id
     FROM v3_resume
     WHERE is_publish_status = TRUE
       AND is_spam = FALSE
 ),
+-- для каждого id получаем номер пачки
 result2 AS (
     SELECT
        id,
        ((row_number() OVER (ORDER BY id) - 1) / 100000)::integer AS part
     FROM result1
 )
+-- группируем по номеру пачки и получаем минимальное и максимальное значение id
 SELECT
     MIN(id) AS min_id,
     MAX(id) AS max_id,
-    COUNT(id) AS total -- кол-во записей в пачке
+    COUNT(id) AS total -- кол-во записей в пачке (для отладки, можно закомментировать эту строку)
 FROM result2
 GROUP BY part
 ORDER BY 1;
@@ -659,8 +662,8 @@ ORDER BY 1;
 
 Пример результата выполнения
 
-min_id | max_id | total
---:|--:|--:
+№ | min_id | max_id | total
+--:|--:|--:|--:
 1 | 162655 | 6594323 | 100000 
 2 | 6594329 | 6974938 | 100000 
 3 | 6974949 | 7332884 | 100000 
