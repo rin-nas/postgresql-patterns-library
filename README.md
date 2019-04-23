@@ -29,7 +29,7 @@
    1. [Как получить записи-дубликаты по значению полей?](#Как-получить-записи-дубликаты-по-значению-полей)
    1. [Как получить время выполнения запроса в его результате?](#Как-получить-время-выполнения-запроса-в-его-результате)
    1. [Как разбить большую таблицу по N тысяч записей, получив диапазоны id?](#Как-разбить-большую-таблицу-по-N-тысяч-записей-получив-диапазоны-id)
-   1. [Как ускорить SELECT запросов c сотнями и тысячами значениями в IN(...)?](#Как-ускорить-SELECT-запросов-c-сотнями-и-тысячами-значениями-в-IN)
+   1. [Как ускорить SELECT запросы c сотнями и тысячами значениями в IN(...)?](#Как-ускорить-SELECT-запросы-c-сотнями-и-тысячами-значениями-в-IN)
    1. [Как выполнить другой SQL запрос, если исходный не вернул результат?](#Как-выполнить-другой-SQL-запрос-если-исходный-не-вернул-результат)
    1. [Как развернуть запись в набор колонок?](#Как-развернуть-запись-в-набор-колонок)
    1. [Как получить итоговую сумму для каждой записи в одном запросе?](#Как-получить-итоговую-сумму-для-каждой-записи-в-одном-запросе)
@@ -681,7 +681,7 @@ WHERE id BETWEEN 162655 AND 6594323
   AND is_spam = FALSE;
 ```
 
-### Как ускорить SELECT запросов c сотнями и тысячами значениями в IN(...)?
+### Как ускорить SELECT запросы c сотнями и тысячами значениями в IN(...)?
 
 [Источник](http://highload.guide/blog/query_performance_postgreSQL.html)
 
@@ -737,6 +737,53 @@ FROM generate_series(1, 4) as t (x);
 ```sql
 SELECT EXTRACT(YEAR FROM age('1977-09-10'::date))
 ```
+
+## Как вычислить дистанцию между 2-мя точками на Земле по её поверхности?
+
+Если есть модуль [earthdistance](https://postgrespro.ru/docs/postgresql/10/earthdistance), то `(point(lon1, lat1) <@> point(lon2, lat2)) * 1.609344 AS distance`.
+Иначе `gc_dist(lat1, lon1, lat2, lon2) AS distance`.
+
+```sql
+create or replace function gc_dist(
+    lat1 double precision, lon1 double precision,
+    lat2 double precision, lon2 double precision
+) returns double precision
+    language plpgsql
+AS $$
+    -- https://en.wikipedia.org/wiki/Haversine_formula
+    -- http://www.movable-type.co.uk/scripts/latlong.html
+    DECLARE R INT = 6371; -- km, https://en.wikipedia.org/wiki/Earth_radius
+    DECLARE dLat double precision = (lat2-lat1)*PI()/180;
+    DECLARE dLon double precision = (lon2-lon1)*PI()/180;
+    DECLARE a double precision = sin(dLat/2) * sin(dLat/2) +
+                                 cos(lat1*PI()/180) * cos(lat2*PI()/180) *
+                                 sin(dLon/2) * sin(dLon/2);
+    DECLARE c double precision = 2 * asin(sqrt(a));
+BEGIN
+    RETURN R * c;
+EXCEPTION
+-- если координаты совпадают, то получим исключение, а падать нельзя
+WHEN numeric_value_out_of_range
+    THEN RETURN 0;
+END;
+$$;
+
+-- select * from pg_available_extensions where installed_version is not null;
+
+with t as (
+    SELECT 37.61556 AS msk_x, 55.75222 AS msk_y, -- координаты центра Москвы
+           30.26417 AS spb_x, 59.89444 AS spb_y, -- координаты центра Санкт-Петербурга
+           1.609344 AS miles_to_kilometre_ratio
+)
+select (point(msk_x, msk_y) <@> point(spb_x, spb_y)) * miles_to_kilometre_ratio AS dist1_km,
+       gc_dist(msk_y, msk_x, spb_y, spb_x) AS dist2_km
+from t;
+```
+Пример результата выполнения
+
+dist1_km1 | dist2_km
+--:       | --:
+633.045646835722 | 633.0469500660282
 
 ## Модификация данных (DML)
 
