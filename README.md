@@ -35,6 +35,7 @@
    1. [Как получить итоговую сумму для каждой записи в одном запросе?](#Как-получить-итоговую-сумму-для-каждой-записи-в-одном-запросе)
    1. [Как получить возраст по дате рождения?](#Как-получить-возраст-по-дате-рождения)
    1. [Как вычислить дистанцию между 2-мя точками на Земле по её поверхности в километрах?](#Как-вычислить-дистанцию-между-2-мя-точками-на-Земле-по-её-поверхности-в-километрах)
+   1. [Как найти ближайшие населённые пункты относительно текущих координат?](#Как-найти-ближайшие-населённые-пункты-относительно-текущих-координат)
   
 **[Модификация данных (DML)](#Модификация-данных-DML)**
    1. [Как добавить запись с id, значение которого нужно сохранить ещё в другом поле в том же INSERT запросе?](#Как-добавить-запись-с-id-значение-которого-нужно-сохранить-ещё-в-другом-поле-в-том-же-INSERT-запросе)
@@ -775,9 +776,9 @@ $$;
 with t as (
     SELECT 37.61556 AS msk_x, 55.75222 AS msk_y, -- координаты центра Москвы
            30.26417 AS spb_x, 59.89444 AS spb_y, -- координаты центра Санкт-Петербурга
-           1.609344 AS miles_to_kilometre_ratio
+           1.609344 AS mile_to_kilometre_ratio
 )
-select (point(msk_x, msk_y) <@> point(spb_x, spb_y)) * miles_to_kilometre_ratio AS dist1_km,
+select (point(msk_x, msk_y) <@> point(spb_x, spb_y)) * mile_to_kilometre_ratio AS dist1_km,
        gc_dist(msk_y, msk_x, spb_y, spb_x) AS dist2_km
 from t;
 ```
@@ -786,6 +787,24 @@ from t;
 dist1_km1 | dist2_km
 --:       | --:
 633.045646835722 | 633.0469500660282
+
+## Как найти ближайшие населённые пункты относительно текущих координат?
+
+```sql
+
+create index if not exists v3_region_point_idx on v3_region using gist(point(map_center_x, map_center_y));
+
+--explain
+with t as (
+    SELECT 37.61556 AS msk_x, 55.75222 AS msk_y, -- координаты центра Москвы
+           1.609344 AS miles_to_kilometre_ratio
+)
+select (point(msk_x, msk_y) <@> point(map_center_x, map_center_y)) * miles_to_kilometre_ratio AS dist_km,
+       name
+from v3_region, t
+order by (select point(msk_x, msk_y) from t) <-> point(map_center_x, map_center_y)
+limit 10;
+```
 
 См. так же https://tapoueh.org/blog/2018/05/postgresql-data-types-point/
 
