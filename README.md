@@ -791,7 +791,7 @@ dist1_km1 | dist2_km
 ## Как найти ближайшие населённые пункты относительно заданных координат?
 
 ```sql
-
+-- координаты (долготу, широту) лучше сразу хранить не в 2-х отдельных полях, а в одном поле с типом point
 create index if not exists v3_region_point_idx on v3_region using gist(point(map_center_x, map_center_y));
 
 --explain
