@@ -913,11 +913,11 @@ create table test (
     b varchar default null
 );
 
--- решение 1
-create unique index on test (a, b) where b is not null;
+-- решение 1 (Более предпочтительное решение. Если есть внешние ключи на колонки a и b, то дополнительных индексов делать уже не нужно)
+create unique index on test (b, a) where b is not null;
 create unique index on test (a) where b is null;
 
--- решение 2
+-- решение 2 (Менее предпочтительное решение, т.к. есть зависимость от типа данных, но один индекс компактнее двух)
 create unique index on test(a, coalesce(b, '')) -- для чисел вместо '' напишите 0
 ```
 
