@@ -918,7 +918,7 @@ create unique index on test (a, b) where b is not null;
 create unique index on test (a) where b is null;
 
 -- решение 2
-create unique index on test(a, coalesce(b, ''))
+create unique index on test(a, coalesce(b, '')) -- для чисел вместо '' напишите 0
 ```
 
 ## Администрирование
