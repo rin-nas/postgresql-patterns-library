@@ -797,9 +797,9 @@ create index if not exists v3_region_point_idx on v3_region using gist(point(map
 --explain
 with t as (
     SELECT 37.61556 AS msk_x, 55.75222 AS msk_y, -- координаты центра Москвы
-           1.609344 AS miles_to_kilometre_ratio
+           1.609344 AS mile_to_kilometre_ratio
 )
-select (point(msk_x, msk_y) <@> point(map_center_x, map_center_y)) * miles_to_kilometre_ratio AS dist_km,
+select (point(msk_x, msk_y) <@> point(map_center_x, map_center_y)) * mile_to_kilometre_ratio AS dist_km,
        name
 from v3_region, t
 order by (select point(msk_x, msk_y) from t) <-> point(map_center_x, map_center_y)
