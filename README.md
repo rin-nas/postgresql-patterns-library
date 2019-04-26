@@ -232,7 +232,7 @@ FROM parsed
 
 #### Как определить пол по ФИО (фамилии, имени, отчеству) на русском языке?
 
-* [gender_by_ending.sql](gender_by_name/gender_by_ending.sql)
+* [gender_by_name.sql](gender_by_name/gender_by_name.sql)
 * [tables.sql](gender_by_name/tables.sql)
 * [gender_by_ending.csv](gender_by_name/gender_by_ending.csv)
 * [person_name_dictionary.csv](gender_by_name/person_name_dictionary.csv)
