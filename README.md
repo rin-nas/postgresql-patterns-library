@@ -11,6 +11,7 @@
       1. [Как проверить email на валидность?](#Как-проверить-email-на-валидность)
       1. [Как транслитерировать русские буквы на английские?](#Как-транслитерировать-русские-буквы-на-английские)
       1. [Как распарсить CSV строку в таблицу?](#Как-распарсить-CSV-строку-в-таблицу)
+      1. [Как определить пол по ФИО (фамилии, имени, отчеству) на русском языке?](#Как-определить-пол-по-ФИО-фамилии-имени-отчеству-на-русском-языке)
    1. [JSON](#JSON)
       1. [Как получить записи, которые удовлетворяют условиям из JSON массива?](#Как-получить-записи,-которые-удовлетворяют-условиям-из-JSON-массива)
       1. [Как сравнить 2 JSON и получить отличия?](#Как-сравнить-2-JSON-и-получить-отличия)
@@ -229,21 +230,12 @@ SELECT
 FROM parsed
 ```
 
-### JSON
+#### Как определить пол по ФИО (фамилии, имени, отчеству) на русском языке?
 
-#### Как получить записи, которые удовлетворяют условиям из JSON массива?
-
-```sql
-SELECT * FROM (
-    VALUES ('[{"id" : 1, "created_at" : "2003-07-01", "name": "Sony"}, {"id" : 2, "created_at" : "2008-10-27", "name": "Samsung"}]'::jsonb),
-           ('[{"id" : 3, "created_at" : "2010-03-30", "name": "LG"},   {"id" : 4, "created_at" : "2018-12-09", "name": "Apple"}]'::jsonb)
-) AS t
-WHERE EXISTS(
-          SELECT *
-          FROM jsonb_to_recordset(t.column1) AS x(id int, created_at timestamp, name text)
-          WHERE x.id IN (1, 3) AND x.created_at > '2000-01-01' AND name NOT LIKE 'P%'
-      )
-```
+* [gender_by_ending.sql](gender_by_ending/gender_by_ending.sql)
+* [tables.sql](gender_by_ending/tables.sql)
+* [gender_by_ending.csv](gender_by_ending/gender_by_ending.csv)
+* [person_name_dictionary.csv](gender_by_ending/person_name_dictionary.csv)
 
 #### Как сравнить 2 JSON и получить отличия?
 
