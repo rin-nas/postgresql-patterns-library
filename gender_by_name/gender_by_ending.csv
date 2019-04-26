@@ -1,0 +1,182 @@
+id,ending,gender,name_type,example
+1,аева,female,last_name,Николаева Исаева Ермолаева
+2,бева,female,last_name,Голубева
+3,дева,female,last_name,Лебедева Медведева Груздева
+4,еева,female,last_name,Алексеева Андреева Сергеева
+5,жева,female,last_name,Сторожева Ражева Оруджева
+6,зева,female,last_name,Князева Кобзева Переверзева
+7,иева,female,last_name,Дмитриева Алиева Валиева
+8,лева,female,last_name,Яковлева Киселева Ковалева
+9,нева,female,last_name,Селезнева Корнева Каменева
+10,оева,female,last_name,Сысоева Мирзоева Бобоева
+11,рева,female,last_name,Пономарева Лазарева Бондарева
+12,сева,female,last_name,Гусева Лосева Карасева
+13,тева,female,last_name,Лаптева Гостева Локтева
+14,уева,female,last_name,Зуева Бушуева Батуева
+15,цева,female,last_name,Зайцева Кудрявцева Мальцева
+16,чева,female,last_name,Горбачева Фомичева Грачева
+17,шева,female,last_name,Малышева Чернышева Якушева
+18,щева,female,last_name,Канищева Степанищева Борщева
+19,ыева,female,last_name,Бапбыева Дурдыева
+20,ьева,female,last_name,Васильева Григорьева Афанасьева
+21,юева,female,last_name,Клюева
+22,яева,female,last_name,Беляева Гуляева Черняева
+23,аёва,female,last_name,Бугаёва
+24,лёва,female,last_name,Журавлёва Киселёва Ковалёва
+25,нёва,female,last_name,Селезнёва Лунёва Синёва
+26,рёва,female,last_name,Пономарёва Дегтярёва Пушкарёва
+27,сёва,female,last_name,Карасёва Авдасёва
+28,чёва,female,last_name,Грачёва Ткачёва Фомичёва
+29,шёва,female,last_name,Чернышёва
+30,щёва,female,last_name,Лещёва Борщёва Холщёва
+31,ьёва,female,last_name,Соловьёва Воробьёва Муравьёва
+32,кива,female,last_name,Тимкива
+33,бова,female,last_name,Рябова Зубова Коробова
+34,вова,female,last_name,Львова Кривова Сивова
+35,гова,female,last_name,Рогова Долгова Пирогова
+36,дова,female,last_name,Давыдова Виноградова Демидова
+37,жова,female,last_name,Рыжова Ежова Чижова
+38,зова,female,last_name,Морозова Сизова Газизова
+39,кова,female,last_name,Новикова Волкова Полякова
+40,лова,female,last_name,Павлова Козлова Соколова
+41,мова,female,last_name,Максимова Абрамова Трофимова
+42,нова,female,last_name,Иванова Смирнова Степанова
+43,пова,female,last_name,Попова Филиппова Карпова
+44,рова,female,last_name,Петрова Макарова Захарова
+45,сова,female,last_name,Борисова Тарасова Власова
+46,това,female,last_name,Федотова Титова Котова
+47,фова,female,last_name,Евграфова Графова Шарифова
+48,хова,female,last_name,Петухова Сухова Глухова
+49,цова,female,last_name,Кузнецова Скворцова Воронцова
+50,шова,female,last_name,Кудряшова Ершова Чернышова
+51,бина,female,last_name,Шубина Рыбина Губина
+52,вина,female,last_name,Левина Савина Головина
+53,гина,female,last_name,Брагина Кулагина Корчагина
+54,дина,female,last_name,Юдина Бородина Володина
+55,еина,female,last_name,Шеина Пелагеина Кривошеина
+56,жина,female,last_name,Рогожина Сажина Дрожжина
+57,зина,female,last_name,Кузина Березина Козина
+58,кина,female,last_name,Сорокина Галкина Шишкина
+59,лина,female,last_name,Никулина Силина Амелина
+60,мина,female,last_name,Кузьмина Фомина Зимина
+61,нина,female,last_name,Калинина Воронина Пронина
+62,оина,female,last_name,Соина
+63,пина,female,last_name,Репина Лапина Антипина
+64,рина,female,last_name,Ларина Тюрина Зорина
+65,сина,female,last_name,Васина Мосина Лисина
+66,тина,female,last_name,Никитина Костина Субботина
+67,фина,female,last_name,Мустафина Марфина Вафина
+68,хина,female,last_name,Мухина Ерохина Золотухина
+69,цина,female,last_name,Шипицина Синицина Курицина
+70,чина,female,last_name,Кучина Колчина Бучина
+71,шина,female,last_name,Гришина Мишина Яшина
+72,щина,female,last_name,Гущина Рощина Клещина
+73,ьина,female,last_name,Ильина Марьина Кутьина
+74,цына,female,last_name,Синицына Лисицына Курицына
+75,вая,female,last_name,Яровая Полевая Луговая
+76,кая,female,last_name,Полянская Подольская Савицкая
+77,лая,female,last_name,Белая Безуглая Погорелая
+78,ная,female,last_name,Бережная Черная Калюжная
+79,рая,female,last_name,Серая
+80,тая,female,last_name,Усатая Лютая Толстая
+81,чая,female,last_name,Осадчая Летучая
+82,няя,female,last_name,Завгородняя Зимняя
+83,аев,male,last_name,Николаев Исаев Ермолаев
+84,бев,male,last_name,Голубев
+85,дев,male,last_name,Лебедев Медведев Груздев
+86,еев,male,last_name,Алексеев Андреев Сергеев
+87,жев,male,last_name,Сторожев Ражев Оруджев
+88,зев,male,last_name,Князев Кобзев Переверзев
+89,иев,male,last_name,Дмитриев Алиев Валиев
+90,лев,male,last_name,Яковлев Киселев Ковалев
+91,нев,male,last_name,Селезнев Корнев Каменев
+92,оев,male,last_name,Сысоев Мирзоев Бобоев
+93,рев,male,last_name,Пономарев Лазарев Бондарев
+94,сев,male,last_name,Гусев Лосев Карасев
+95,тев,male,last_name,Лаптев Гостев Локтев
+96,уев,male,last_name,Зуев Бушуев Батуев
+97,цев,male,last_name,Зайцев Кудрявцев Мальцев
+98,чев,male,last_name,Горбачев Фомичев Грачев
+99,шев,male,last_name,Малышев Чернышев Якушев
+100,щев,male,last_name,Канищев Степанищев Борщев
+101,ыев,male,last_name,Бапбыев Дурдыев
+102,ьев,male,last_name,Васильев Григорьев Афанасьев
+103,юев,male,last_name,Клюев
+104,яев,male,last_name,Беляев Гуляев Черняев
+105,аёв,male,last_name,Бугаёв
+106,лёв,male,last_name,Журавлёв Киселёв Ковалёв
+107,нёв,male,last_name,Селезнёв Лунёв Синёв
+108,рёв,male,last_name,Пономарёв Дегтярёв Пушкарёв
+109,сёв,male,last_name,Карасёв Авдасёв
+110,чёв,male,last_name,Грачёв Ткачёв Фомичёв
+111,шёв,male,last_name,Чернышёв
+112,щёв,male,last_name,Лещёв Борщёв Холщёв
+113,ьёв,male,last_name,Соловьёв Воробьёв Муравьёв
+114,кив,male,last_name,Тимкив
+115,бов,male,last_name,Рябов Зубов Коробов
+116,вов,male,last_name,Львов Кривов Сивов
+117,гов,male,last_name,Рогов Долгов Пирогов
+118,дов,male,last_name,Давыдов Виноградов Демидов
+119,жов,male,last_name,Рыжов Ежов Чижов
+120,зов,male,last_name,Морозов Сизов Газизов
+121,ков,male,last_name,Новиков Волков Поляков
+122,лов,male,last_name,Павлов Козлов Соколов
+123,мов,male,last_name,Максимов Абрамов Трофимов
+124,нов,male,last_name,Иванов Смирнов Степанов
+125,пов,male,last_name,Попов Филиппов Карпов
+126,ров,male,last_name,Петров Макаров Захаров
+127,сов,male,last_name,Борисов Тарасов Власов
+128,тов,male,last_name,Федотов Титов Котов
+129,фов,male,last_name,Евграфов Графов Шарифов
+130,хов,male,last_name,Петухов Сухов Глухов
+131,цов,male,last_name,Кузнецов Скворцов Воронцов
+132,шов,male,last_name,Кудряшов Ершов Чернышов
+133,бин,male,last_name,Шубин Рыбин Губин
+134,вин,male,last_name,Левин Савин Головин
+135,гин,male,last_name,Брагин Кулагин Корчагин
+136,дин,male,last_name,Юдин Бородин Володин
+137,еин,male,last_name,Шеин Пелагеин Кривошеин
+138,жин,male,last_name,Рогожин Сажин Дрожжин
+139,зин,male,last_name,Кузин Березин Козин
+140,кин,male,last_name,Сорокин Галкин Шишкин
+141,лин,male,last_name,Никулин Силин Амелин
+142,мин,male,last_name,Кузьмин Фомин Зимин
+143,нин,male,last_name,Калинин Воронин Пронин
+144,оин,male,last_name,Соин
+145,пин,male,last_name,Репин Лапин Антипин
+146,рин,male,last_name,Ларин Тюрин Зорин
+147,син,male,last_name,Васин Мосин Лисин
+148,тин,male,last_name,Никитин Костин Субботин
+149,фин,male,last_name,Мустафин Марфин Вафин
+150,хин,male,last_name,Мухин Ерохин Золотухин
+151,цин,male,last_name,Шипицин Синицин Курицин
+152,чин,male,last_name,Кучин Колчин Бучин
+153,шин,male,last_name,Гришин Мишин Яшин
+154,щин,male,last_name,Гущин Рощин Клещин
+155,ьин,male,last_name,Ильин Марьин Кутьин
+156,цын,male,last_name,Синицын Лисицын Курицын
+157,вой,male,last_name,Яровой Полевой Луговой
+158,ной,male,last_name,Бережной Черной Калюжной
+159,той,male,last_name,Толстой
+160,кой,male,last_name,Кумской
+161,кий,male,last_name,Полянский Подольский Савицкий Чернявский Высоцкий Вербицкий
+162,чий,male,last_name,Осадчий Летучий
+163,ний,male,last_name,Завгородний
+164,лый,male,last_name,Белый Безуглый Погорелый
+165,ный,male,last_name,Калюжный
+166,рый,male,last_name,Серый
+167,тый,male,last_name,Усатый Лютый
+168,овичь,male,middle_name,Максимовичь (с грамматической ошибкой)
+169,евичь,male,middle_name,Витальевичь (с грамматической ошибкой)
+170,льич,male,middle_name,Ильич
+171,ьмич,male,middle_name,Кузьмич
+172,итич,male,middle_name,Никитич
+173,оглы,male,middle_name,Сабитоглы
+174,овна,female,middle_name,Борисовна
+175,евна,female,middle_name,Андреевна
+176,ична,female,middle_name,Лукинична
+177,авна,female,middle_name,Ярославна
+178,кызы,female,middle_name,Сабиткызы
+179,евич,male,middle_name,"Витальевич, Алексеевич"
+180,кызы,female,last_name,Султан кызы
+183,ович,male,middle_name,
