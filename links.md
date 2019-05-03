@@ -16,3 +16,4 @@
 1. https://hashrocket.com/blog/posts/faster-json-generation-with-postgresql — генерация JSON 
 1. https://hashrocket.com/blog/posts/exploring-postgres-gin-index — Exploring the Postgres Gin index
 1. https://tapoueh.org/blog/2018/05/postgresql-data-types-point/
+1. [задача параллельной многопроцессной обработки очереди](http://dklab.ru/chicken/nablas/53.html), обсуждение на [форуме](https://www.sql.ru/forum/681777/obsuzhdaem-blokirovki-pg-try-advisory-lock)
