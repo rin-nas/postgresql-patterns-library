@@ -1142,6 +1142,7 @@ SELECT (clock_timestamp() - xact_start) AS ts_age,
 state, pid, query FROM pg_stat_activity
 WHERE query ilike '%autovacuum%' AND NOT pid=pg_backend_pid()
 ```
+Если вы регулярно видите процессы автовакуума — в одной и той же таблице (часто), или же работающие слишком долго — вам необходимо принимать меры и конфигурировать базу.
 
 ### Simple index checking
 
