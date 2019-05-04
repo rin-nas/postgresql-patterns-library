@@ -57,6 +57,7 @@
    1. [Как получить список установленных расширений (extensions)?](#Как-получить-список-установленных-расширений-extensions)
    1. [Как получить список таблиц с размером занимаемого места?](#Как-получить-список-таблиц-с-размером-занимаемого-места)
    1. [Как получить и изменить значения параметров конфигурации выполнения?](#Как-получить-и-изменить-значения-параметров-конфигурации-выполнения)
+   1. [Как узнать все активные в данный момент процессы автовакуумa и время их работы?](#Как-узнать-все-активные-в-данный-момент-процессы-автовакуумa-и-время-их-работы)
    1. [Simple index checking](#Simple-index-checking)
 
 ## Проектирование данных
@@ -1132,6 +1133,14 @@ SET pg_trgm.word_similarity_threshold = 0.3;
 
 SELECT set_config('pg_trgm.word_similarity_threshold', 0.2::text, FALSE),
        set_config('pg_trgm.similarity_threshold', 0.2::text, FALSE);
+```
+
+### Как получить все активные в данный момент процессы автовакуумa и время их работы?
+
+```
+SELECT (clock_timestamp() - xact_start) AS ts_age,
+state, pid, query FROM pg_stat_activity
+WHERE query ilike '%autovacuum%' AND NOT pid=pg_backend_pid()
 ```
 
 ### Simple index checking
