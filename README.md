@@ -1001,11 +1001,9 @@ WHERE p.prorettype <> 'pg_catalog.cstring'::pg_catalog.regtype
 * список исходящих связей (таблицы, которые зависят от текущей таблицы)
 * список входящих связей (таблицы, от которых зависит текущая таблица)
 
-Результат выполнения SQL запроса см. на странице "[Список всех зависимостей (внешних ключей) между таблицами БД](http://wiki.rabota.space/pages/viewpage.action?pageId=25788841)">
+[Источник](https://stackoverflow.com/questions/1152260/postgres-sql-to-list-table-foreign-keys/36800049#36800049)
 
 ```sql
--- https://stackoverflow.com/questions/1152260/postgres-sql-to-list-table-foreign-keys/36800049#36800049
-
 SELECT
     c.conname AS constraint_name,
     (SELECT n.nspname FROM pg_namespace AS n WHERE n.oid=c.connamespace) AS constraint_schema,
