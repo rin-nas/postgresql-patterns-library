@@ -18,3 +18,4 @@
 1. https://tapoueh.org/blog/2018/05/postgresql-data-types-point/
 1. [задача параллельной многопроцессной обработки очереди](http://dklab.ru/chicken/nablas/53.html), обсуждение на [форуме](https://www.sql.ru/forum/681777/obsuzhdaem-blokirovki-pg-try-advisory-lock)
 1. https://pgday.ru/files/pgmaster14/max.boguk.query.optimization.pdf
+1. https://pgday.ru/presentation/232/5964945ea4142.pdf
