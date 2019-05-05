@@ -58,6 +58,7 @@
    1. [Как получить список таблиц с размером занимаемого места?](#Как-получить-список-таблиц-с-размером-занимаемого-места)
    1. [Как получить и изменить значения параметров конфигурации выполнения?](#Как-получить-и-изменить-значения-параметров-конфигурации-выполнения)
    1. [Как получить все активные в данный момент процессы автовакуумa и время их работы?](#Как-получить-все-активные-в-данный-момент-процессы-автовакуумa-и-время-их-работы)
+   1. [Как узнать, почему время ответа от базы периодически падает?](Как-узнать-почему-время-ответа-от-базы-периодически-падает)
    1. [Simple index checking](#Simple-index-checking)
 
 ## Проектирование данных
@@ -1016,8 +1017,7 @@ SELECT
                 SELECT
                     ROW_NUMBER() OVER (ROWS UNBOUNDED PRECEDING) AS seq,
                     attnum
-                FROM
-                            UNNEST(c.conkey) AS t(attnum)
+                FROM UNNEST(c.conkey) AS t(attnum)
             ) AS t
             INNER JOIN pg_attribute AS a ON a.attrelid=c.conrelid AND a.attnum=t.attnum
     ) AS from_cols,
@@ -1030,8 +1030,7 @@ SELECT
                 SELECT
                     ROW_NUMBER() OVER (ROWS UNBOUNDED PRECEDING) AS seq,
                     attnum
-                FROM
-                            UNNEST(c.confkey) AS t(attnum)
+                FROM UNNEST(c.confkey) AS t(attnum)
             ) AS t
             INNER JOIN pg_attribute AS a ON a.attrelid=c.confrelid AND a.attnum=t.attnum
     ) AS to_cols,
@@ -1114,21 +1113,29 @@ LIMIT 100
 
 ### Как получить и изменить значения параметров конфигурации выполнения?
 
+#### получение значений параметров
+
 ```sql
--- получение значений параметров
+-- способ 1
 SHOW pg_trgm.word_similarity_threshold;
 SHOW pg_trgm.similarity_threshold;
 
+-- способ 2
 SELECT name, setting AS value
 FROM pg_settings
 WHERE name IN ('pg_trgm.word_similarity_threshold', 'pg_trgm.similarity_threshold');
 
+-- способ 3
 SELECT current_setting('pg_trgm.word_similarity_threshold'), current_setting('pg_trgm.similarity_threshold');
+```
 
--- изменение значений параметров
+#### изменение значений параметров
+```sql
+-- способ 1
 SET pg_trgm.similarity_threshold = 0.3;
 SET pg_trgm.word_similarity_threshold = 0.3;
 
+-- способ 2
 SELECT set_config('pg_trgm.word_similarity_threshold', 0.2::text, FALSE),
        set_config('pg_trgm.similarity_threshold', 0.2::text, FALSE);
 ```
@@ -1141,6 +1148,44 @@ state, pid, query FROM pg_stat_activity
 WHERE query ilike '%autovacuum%' AND NOT pid=pg_backend_pid()
 ```
 Если вы регулярно видите процессы автовакуума — в одной и той же таблице (часто), или же работающие слишком долго — вам необходимо принимать меры и конфигурировать базу.
+
+### Как узнать, почему время ответа от базы периодически падает?
+
+Запрос покажет статистику по контрольным точкам с момента, когда она в последний раз обнулялась. Важными показателями будут минуты между контрольными точками и объем записываемой информации.
+Большое кол-во данных за короткое время — это серьезная нагрузка на систему ввода-вывода. Если это ваш случай, то ситуацию нужно однозначно менять!
+
+[Источник](https://dataegret.ru/)
+
+```sql
+SELECT now()-pg_postmaster_start_time() "Uptime",
+now()-stats_reset "Minutes since stats reset",
+round(100.0*checkpoints_req/checkpoints,1) "Forced
+checkpoint ratio (%)",
+round(min_since_reset/checkpoints,2) "Minutes between
+checkpoints",
+round(checkpoint_write_time::numeric/(checkpoints*1000),2) "Average
+write time per checkpoint (s)",
+round(checkpoint_sync_time::numeric/(checkpoints*1000),2) "Average
+sync time per checkpoint (s)",
+round(total_buffers/pages_per_mb,1) "Total MB written",
+round(buffers_checkpoint/(pages_per_mb*checkpoints),2) "MB per
+checkpoint",
+round(buffers_checkpoint/(pages_per_mb*min_since_reset*60),2)
+"Checkpoint MBps"
+FROM (
+SELECT checkpoints_req,
+checkpoints_timed + checkpoints_req checkpoints,
+checkpoint_write_time,
+checkpoint_sync_time,
+buffers_checkpoint,
+buffers_checkpoint + buffers_clean + buffers_backend total_buffers,
+stats_reset,
+round(extract('epoch' from now() - stats_reset)/60)::numeric
+min_since_reset,
+(1024.0 * 1024 / (current_setting('block_size')::numeric))pages_per_mb
+FROM pg_stat_bgwriter
+) bg
+```
 
 ### Simple index checking
 
