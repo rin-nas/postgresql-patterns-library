@@ -7,7 +7,7 @@
 1. https://postgres.cz/wiki/PostgreSQL_SQL_Tricks
 1. http://cwestblog.com/2018/10/27/postgresql-query-hierarchical-data-without-recursion/
 1. http://cwestblog.com/2018/10/29/postgresql-recursively-query-hierarchical-data/
-1. http://www.pateldenish.com
+1. http://www.pateldenish.com/2018/11/postgres-11-partitioning.html
 1. https://use-the-index-luke.com/no-offset — Как правильно делать постраничную навигацию без OFFSET
 1. https://www.jooq.org/sakila — БД, для которой есть примеры SQL запросов в документации MySQL
 1. https://pgloader.io/ —  Continuous Migration from your current database to PostgreSQL
@@ -20,3 +20,4 @@
 1. https://pgday.ru/files/pgmaster14/max.boguk.query.optimization.pdf
 1. https://pgday.ru/presentation/232/5964945ea4142.pdf
 1. http://tatiyants.com/how-to-navigate-json-trees-in-postgres-using-recursive-ctes/
+1. https://wiki.postgresql.org/wiki/Category:Performance_Snippets
