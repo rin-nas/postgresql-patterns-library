@@ -4,7 +4,6 @@
    1. https://m.habr.com/en/company/yandex/blog/435880/ — Изменение схемы таблиц PostgreSQL без долгих блокировок. Лекция Яндекса
    1. https://habr.com/post/228023/ — Работа с геолокациями в режиме highload (Задача поиска ближайшего соседа)
    1. https://habr.com/post/280912/ — Полезные трюки PostgreSQL
-1. https://postgres.cz/wiki/PostgreSQL_SQL_Tricks
 1. http://cwestblog.com/2018/10/27/postgresql-query-hierarchical-data-without-recursion/
 1. http://cwestblog.com/2018/10/29/postgresql-recursively-query-hierarchical-data/
 1. http://www.pateldenish.com/2018/11/postgres-11-partitioning.html
@@ -21,3 +20,4 @@
 1. https://pgday.ru/presentation/232/5964945ea4142.pdf
 1. http://tatiyants.com/how-to-navigate-json-trees-in-postgres-using-recursive-ctes/
 1. https://wiki.postgresql.org/wiki/Category:Performance_Snippets
+1. https://postgres.cz/wiki/PostgreSQL_SQL_Tricks
