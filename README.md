@@ -578,7 +578,7 @@ SELECT ot1.name AS name_1, ot2.name as name_2, ot3.name as name_3, ot4.id as id
 
 #### Как посмотреть на план выполнения запроса (EXPLAIN) в наглядном графическом виде?
 
-[Вот инструмент](http://tatiyants.com/pev/)
+[Postgres Explain Visualizer (Pev)](http://tatiyants.com/pev/) is a tool I wrote to make EXPLAIN output easier to grok. It creates a graphical representation of the query plan
 
 #### Как ускорить SELECT запросы c сотнями и тысячами значениями в IN(...)?
 
