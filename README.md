@@ -1235,7 +1235,7 @@ select psiui.relname,
   sum(psiui.idx_blks_hit) as idx_page_hit,
   1.0 * sum(psiui.idx_blks_hit) / greatest(1.0, sum(psiui.idx_blks_hit) + sum(psiui.idx_blks_read)) as idx_hit_ratio
 from pg_statio_user_indexes psiui
-group by psiui.relname, psiui.indexrelnameКак получить циклические связи в графе?
+group by psiui.relname, psiui.indexrelname
 order by sum(psiui.idx_blks_read) desc
 )
 select ts.relname, ts.n_live_tup, ts.index_use_ratio,
