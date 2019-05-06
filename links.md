@@ -22,3 +22,28 @@
 1. https://wiki.postgresql.org/wiki/Category:Performance_Snippets
 1. https://postgres.cz/wiki/PostgreSQL_SQL_Tricks
 1. https://pgday.ru/ru/2016/papers/62 Where is the space, Postgres?
+
+quote_like
+```sql
+create function quote_like(text) returns text
+    immutable
+    strict
+    language sql
+as
+$$
+SELECT replace(replace(replace($1, '\', '\\'), '_', '\_'), '%', '\%');
+$$;
+```
+
+quote_regexp
+```sql
+create function quote_regexp(text) returns text
+    stable
+    language plpgsql
+as
+$$
+BEGIN
+    RETURN REGEXP_REPLACE($1, '([[\](){}.+*^$|\\?-])', '\\\1', 'g');
+END;
+$$;
+```
