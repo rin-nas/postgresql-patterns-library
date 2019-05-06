@@ -23,6 +23,8 @@
 1. https://postgres.cz/wiki/PostgreSQL_SQL_Tricks
 1. https://pgday.ru/ru/2016/papers/62 Where is the space, Postgres?
 
+SQL_CALC_FOUND_ROWS
+
 quote_like
 ```sql
 create function quote_like(text) returns text
