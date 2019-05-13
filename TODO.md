@@ -16,36 +16,13 @@
 1. https://hashrocket.com/blog/posts/exploring-postgres-gin-index — Exploring the Postgres Gin index
 1. https://tapoueh.org/blog/2018/05/postgresql-data-types-point/ (см. запрос с итоговыми суммами и диаграммами внизу)
 1. [задача параллельной многопроцессной обработки очереди](http://dklab.ru/chicken/nablas/53.html), обсуждение на [форуме](https://www.sql.ru/forum/681777/obsuzhdaem-blokirovki-pg-try-advisory-lock)
-1. https://pgday.ru/files/pgmaster14/max.boguk.query.optimization.pdf
-1. https://pgday.ru/presentation/232/5964945ea4142.pdf
+1. https://pgday.ru/files/pgmaster14/max.boguk.query.optimization.pdf (оптимизация запросов)
+1. https://pgday.ru/presentation/232/5964945ea4142.pdf Учим слона танцевать
+рок-н-ролл (оптимизация запросов)
 1. http://tatiyants.com/how-to-navigate-json-trees-in-postgres-using-recursive-ctes/
 1. https://wiki.postgresql.org/wiki/Category:Performance_Snippets
 1. https://postgres.cz/wiki/PostgreSQL_SQL_Tricks
 1. https://pgday.ru/ru/2016/papers/62 Where is the space, Postgres?
+1. https://github.com/dataegret/pg-utils Useful DBA tools by Data Egret
 
 SQL_CALC_FOUND_ROWS
-
-quote_like
-```sql
-create function quote_like(text) returns text
-    immutable
-    strict
-    language sql
-as
-$$
-SELECT replace(replace(replace($1, '\', '\\'), '_', '\_'), '%', '\%');
-$$;
-```
-
-quote_regexp
-```sql
-create function quote_regexp(text) returns text
-    stable
-    language plpgsql
-as
-$$
-BEGIN
-    RETURN REGEXP_REPLACE($1, '([[\](){}.+*^$|\\?-])', '\\\1', 'g');
-END;
-$$;
-```
