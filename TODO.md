@@ -24,5 +24,6 @@
 1. https://postgres.cz/wiki/PostgreSQL_SQL_Tricks
 1. https://pgday.ru/ru/2016/papers/62 Where is the space, Postgres?
 1. https://github.com/dataegret/pg-utils Useful DBA tools by Data Egret
+1. https://stackoverflow.com/questions/28550679/what-is-the-difference-between-lateral-and-a-subquery-in-postgresql
 
 SQL_CALC_FOUND_ROWS
