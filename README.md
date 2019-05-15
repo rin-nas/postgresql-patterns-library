@@ -481,6 +481,7 @@ words AS (
              ))) AS json
       FROM words AS q
       WHERE is_mistake = TRUE
+      AND clock_timestamp() - now() < '100ms'::interval -- ограничиваем время выполнения запроса!
       ORDER BY word_num ASC
 )
 SELECT w.word_num,
