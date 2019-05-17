@@ -1,7 +1,7 @@
 Ссылки с примерами SQL запросов
 
 1. Хабр
-   1. **https://m.habr.com/en/company/yandex/blog/435880/** — Изменение схемы таблиц PostgreSQL без долгих блокировок. Лекция Яндекса
+   1. **https://m.habr.com/en/company/yandex/blog/435880/** — Изменение схемы таблиц PostgreSQL без долгих блокировок. Лекция Яндекса (дать пример оптимизации миграции Version20190516085945.php)
    1. https://habr.com/post/228023/ — Работа с геолокациями в режиме highload (Задача поиска ближайшего соседа)
    1. https://habr.com/post/280912/ — Полезные трюки PostgreSQL
 1. https://www.citusdata.com/blog/2018/02/22/seven-tips-for-dealing-with-postgres-locks/
