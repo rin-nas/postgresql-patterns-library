@@ -440,7 +440,8 @@ words AS (
                                   ROW_NUMBER() OVER w AS position,
                                   levenshtein_rank3 - LEAD(levenshtein_rank3) OVER w AS next_levenshtein_rank3_delta
                            FROM (
-                                -- нельзя выносить подзапрос в WITH name AS (SELECT ...), т.к. план запроса меняется, итоговый запрос выполняется в 2 раза медленнее!
+                                -- нельзя выносить подзапрос в WITH name AS (SELECT ...), 
+                                -- т.к. план запроса меняется, итоговый запрос выполняется в 2 раза медленнее!
                                 SELECT q.word_num,
                                        q.word_from,
                                        t.name AS word_to,
@@ -482,8 +483,11 @@ words AS (
                     ) AS tt
              ))) AS json
       FROM words AS q
-      WHERE is_mistake = TRUE
-      AND clock_timestamp() - now() < '100ms'::interval -- ограничиваем время выполнения запроса!
+      WHERE clock_timestamp() - now() < '50ms'::interval -- ограничиваем время выполнения запроса!
+            AND is_mistake = TRUE
+            -- первые 2 элемента -- это всегда исходный текст и текст в другой раскладке клавиатуры
+            -- если один из этих элементов не является опечаткой, то отдельные слова уже не обрабатываем 
+            AND NOT EXISTS(SELECT * FROM words WHERE word_num < 2 AND is_mistake = FALSE)
       ORDER BY word_num ASC
 )
 SELECT w.word_num,
