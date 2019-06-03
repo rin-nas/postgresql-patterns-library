@@ -487,8 +487,10 @@ words AS (
       WHERE clock_timestamp() - now() < '50ms'::interval -- ограничиваем время выполнения запроса!
             AND is_mistake = TRUE
             -- первые 2 элемента -- это всегда исходный текст и текст в другой раскладке клавиатуры
-            -- если один из этих элементов не является опечаткой, то отдельные слова уже не обрабатываем 
-            AND NOT EXISTS(SELECT * FROM words WHERE word_num < 2 AND is_mistake = FALSE)
+            -- если один из этих элементов не является опечаткой, то прерываем цикл 
+            AND NOT EXISTS(SELECT * FROM words AS s WHERE s.word_num < 2 AND s.is_mistake = FALSE)
+            -- если все отдельные слова не имеют опечаток, то прерываем цикл
+            AND (SELECT COUNT(*) = 2 OR (COUNT(*) - 2) / 2 != COUNT(*) FILTER (WHERE s.word_num >= 2 AND s.is_mistake = FALSE) FROM words AS s)
       ORDER BY word_num ASC
 )
 SELECT w.word_num,
