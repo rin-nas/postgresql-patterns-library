@@ -28,5 +28,6 @@
 1. https://stackoverflow.com/questions/28550679/what-is-the-difference-between-lateral-and-a-subquery-in-postgresql
 1. https://stackoverflow.com/questions/8443716/postgres-unique-constraint-for-array
 1. https://stackoverflow.com/questions/20215724/need-foreign-key-as-array
+1. https://habr.com/ru/company/postgrespro/blog/448368/ — SQL: задача о рабочем времени
 
 SQL_CALC_FOUND_ROWS
