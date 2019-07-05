@@ -693,18 +693,27 @@ ORDER BY name, duplicate_num
 ```
 
 ```sql
--- получить ID записей, имеющих дубликаты по полю slugify(name)
-SELECT unnest(array_agg(id)) AS id
-FROM v3_region
-GROUP BY slugify(name)
-HAVING count(*) > 1;
- 
+-- получить ID записей, имеющих дубликаты по полю lower(name)
+SELECT id_original, unnest(id_doubles) AS id_double
+FROM (
+    SELECT min(id) AS id_original,
+           (array_agg(id order by id))[2:] AS id_doubles
+    FROM skill
+    GROUP BY lower(name)
+    HAVING count(*) > 1
+    ORDER BY count(*) DESC
+) AS t;
+```
+
+```sql
 -- получить ID записей, НЕ имеющих дубликаты по полю slugify(name)
 SELECT max(id) AS id
-FROM v3_region
+FROM region
 GROUP BY slugify(name)
 HAVING count(*) = 1;
+```
 
+```sql
 -- получить разные названия населённых пунктов с одинаковыми kladr_id
 SELECT ROW_NUMBER() OVER(PARTITION BY kladr_id ORDER BY address ASC) AS duplicate_num, -- номер дубля
        *
@@ -738,7 +747,7 @@ WITH
 -- отфильтровываем лишние записи и оставляем только колонку id
 result1 AS (
     SELECT id
-    FROM v3_resume
+    FROM resume
     WHERE is_publish_status = TRUE
       AND is_spam = FALSE
 ),
@@ -774,7 +783,7 @@ ORDER BY 1;
 
 ```sql
 SELECT *
-FROM v3_resume
+FROM resume
 WHERE id BETWEEN 162655 AND 6594323
   AND is_publish_status = TRUE
   AND is_spam = FALSE;
@@ -876,7 +885,7 @@ dist1_km1 | dist2_km
 
 ```sql
 -- координаты (долготу, широту) лучше сразу хранить не в 2-х отдельных полях, а в одном поле с типом point
-create index if not exists v3_region_point_idx on v3_region using gist(point(map_center_x, map_center_y));
+create index if not exists region_point_idx on region using gist(point(map_center_x, map_center_y));
 
 --explain
 with t as (
@@ -885,7 +894,7 @@ with t as (
 )
 select (point(msk_x, msk_y) <@> point(map_center_x, map_center_y)) * mile_to_kilometre_ratio AS dist_km,
        name
-from v3_region, t
+from region, t
 order by (select point(msk_x, msk_y) from t) <-> point(map_center_x, map_center_y)
 limit 10;
 ```
@@ -898,7 +907,7 @@ limit 10;
 SELECT pg_size_pretty(SUM(OCTET_LENGTH(t::text) + 1))
 FROM (
     -- сюда нужно поместить ваш запрос, например:
-    SELECT * FROM v3_region LIMIT 50000
+    SELECT * FROM region LIMIT 50000
 ) AS t
 ```
 
@@ -910,9 +919,9 @@ FROM (
 
 ```sql
 WITH t AS (
-   SELECT nextval(pg_get_serial_sequence('v3_region', 'id')) AS id
+   SELECT nextval(pg_get_serial_sequence('region', 'id')) AS id
 )
-INSERT INTO v3_region (id, ltree_path, ?r)
+INSERT INTO region (id, ltree_path, ?r)
 SELECT id,
        CAST(?s || '.' || id AS ltree) AS ltree_path,
        ?l
