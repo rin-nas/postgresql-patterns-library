@@ -762,6 +762,7 @@ result2 AS (
 SELECT
     MIN(id) AS min_id,
     MAX(id) AS max_id,
+    -- ARRAY_AGG(id) AS ids, -- список id в пачке, при необходимости
     COUNT(id) AS total -- кол-во записей в пачке (для отладки, можно закомментировать эту строку)
 FROM result2
 GROUP BY part
@@ -787,6 +788,13 @@ FROM resume
 WHERE id BETWEEN 162655 AND 6594323
   AND is_publish_status = TRUE
   AND is_spam = FALSE;
+```
+Если условие в фильтрации данных тяжёлое, то лучше выбирать по спискам id для каждого диапазона, например:
+
+```sql
+SELECT *
+FROM resume
+WHERE id IN (/*список id через запятую*/);
 ```
 
 ### Как выполнить другой SQL запрос, если исходный не вернул результат?
