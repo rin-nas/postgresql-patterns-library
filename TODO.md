@@ -22,6 +22,7 @@
 рок-н-ролл (оптимизация запросов)
 1. http://tatiyants.com/how-to-navigate-json-trees-in-postgres-using-recursive-ctes/
 1. https://wiki.postgresql.org/wiki/Category:Performance_Snippets
+1. https://wiki.postgresql.org/wiki/Index_Maintenance
 1. https://postgres.cz/wiki/PostgreSQL_SQL_Tricks
 1. https://pgday.ru/ru/2016/papers/62 Where is the space, Postgres?
 1. https://github.com/dataegret/pg-utils Useful DBA tools by Data Egret
