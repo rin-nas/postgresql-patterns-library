@@ -4,6 +4,8 @@
    1. **https://m.habr.com/en/company/yandex/blog/435880/** — Изменение схемы таблиц PostgreSQL без долгих блокировок. Лекция Яндекса (дать пример оптимизации миграции Version20190516085945.php)
    1. https://habr.com/post/228023/ — Работа с геолокациями в режиме highload (Задача поиска ближайшего соседа)
    1. https://habr.com/post/280912/ — Полезные трюки PostgreSQL
+   1. https://habr.com/ru/company/postgrespro/blog/448368/ — SQL: задача о рабочем времени
+   1. https://habr.com/ru/company/0/blog/316304/ Как заставить PostgreSQL считать быстрее
 1. https://www.citusdata.com/blog/2018/02/22/seven-tips-for-dealing-with-postgres-locks/
 1. http://cwestblog.com/2018/10/27/postgresql-query-hierarchical-data-without-recursion/
 1. http://cwestblog.com/2018/10/29/postgresql-recursively-query-hierarchical-data/
@@ -29,7 +31,6 @@
 1. https://stackoverflow.com/questions/28550679/what-is-the-difference-between-lateral-and-a-subquery-in-postgresql
 1. https://stackoverflow.com/questions/8443716/postgres-unique-constraint-for-array
 1. https://stackoverflow.com/questions/20215724/need-foreign-key-as-array
-1. https://habr.com/ru/company/postgrespro/blog/448368/ — SQL: задача о рабочем времени
 1. https://pgcookbook.ru/index.html
 
 SQL_CALC_FOUND_ROWS
