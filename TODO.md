@@ -16,7 +16,6 @@
 1. https://tapoueh.org/blog/2013/08/understanding-window-functions/ — Understanding Window Functions
 1. https://blog.jooq.org/2014/04/29/nosql-no-sql-how-to-calculate-running-totals/ — How to Calculate Running Totals
 1. https://hashrocket.com/blog/posts/faster-json-generation-with-postgresql — генерация JSON 
-1. https://hashrocket.com/blog/posts/exploring-postgres-gin-index — Exploring the Postgres Gin index
 1. https://tapoueh.org/blog/2018/05/postgresql-data-types-point/ (см. запрос с итоговыми суммами и диаграммами внизу)
 1. [задача параллельной многопроцессной обработки очереди](http://dklab.ru/chicken/nablas/53.html), обсуждение на [форуме](https://www.sql.ru/forum/681777/obsuzhdaem-blokirovki-pg-try-advisory-lock)
 1. https://pgday.ru/files/pgmaster14/max.boguk.query.optimization.pdf (оптимизация запросов)
