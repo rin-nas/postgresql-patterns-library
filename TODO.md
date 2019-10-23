@@ -32,5 +32,8 @@
 1. https://stackoverflow.com/questions/8443716/postgres-unique-constraint-for-array
 1. https://stackoverflow.com/questions/20215724/need-foreign-key-as-array
 1. https://pgcookbook.ru/index.html
+1. https://wiki.postgresql.org/wiki/ArrXor
+1. http://akorotkov.github.io/blog/2016/06/17/faceted-search/
+1. http://sqlfiddle.postgrespro.ru/#!22/0/8530
 
 SQL_CALC_FOUND_ROWS
