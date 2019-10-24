@@ -6,6 +6,7 @@
    1. https://habr.com/post/280912/ — Полезные трюки PostgreSQL
    1. https://habr.com/ru/company/postgrespro/blog/448368/ — SQL: задача о рабочем времени
    1. https://habr.com/ru/company/0/blog/316304/ Как заставить PostgreSQL считать быстрее
+   1. https://m.habr.com/ru/post/468463/ - Улучшение производительности Zabbix + PostgreSQL при помощи партиционирования и индексирования
 1. https://www.citusdata.com/blog/2018/02/22/seven-tips-for-dealing-with-postgres-locks/
 1. http://cwestblog.com/2018/10/27/postgresql-query-hierarchical-data-without-recursion/
 1. http://cwestblog.com/2018/10/29/postgresql-recursively-query-hierarchical-data/
