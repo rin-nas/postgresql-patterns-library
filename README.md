@@ -56,6 +56,7 @@
    1. [Как добавить колонку в существующую таблицу без её блокирования?](#Как-добавить-колонку-в-существующую-таблицу-без-её-блокирования)
    1. [Как сделать ограничение уникальности на колонку в существующей таблице без её блокирования?](#Как-сделать-ограничение-уникальности-на-колонку-в-существующей-таблице-без-её-блокирования)
    1. [Как сделать составной уникальный индекс, где одно из полей может быть null?](#Как-сделать-составной-уникальный-индекс-где-одно-из-полей-может-быть-null)
+   1. [Как починить сломаный уникальный индекс, имеющий дубликаты?](Как-починить-сломаный-уникальный-индекс-имеющий-дубликаты)
 
 **[Администрирование](#Администрирование)**
    1. [Как получить список процессов (SQL запросов), выполняющихся сейчас?](#Как-получить-список-процессов-SQL-запросов-выполняющихся-сейчас)
@@ -1104,6 +1105,62 @@ create unique index on test (a) where b is null;
 
 -- решение 2 (Менее предпочтительное решение, т.к. есть зависимость от типа данных, но один индекс компактнее двух)
 create unique index on test(a, coalesce(b, '')) -- для чисел вместо '' напишите 0
+```
+
+### Как починить сломаный уникальный индекс, имеющий дубликаты?
+
+Чиним битый уникальный индекс на поле `v3_skill.name`
+
+```sql
+-- EXPLAIN
+WITH
+skill AS (
+   SELECT min(id) AS id_original,
+          (array_agg(id order by id))[2:] AS id_doubles
+   FROM v3_skill
+   GROUP BY lower(name)
+   HAVING count(*) > 1
+),
+
+repair_v3_resume_work_skill AS (
+    -- собираем связи с дублями в таблицу
+    SELECT t.resume_id, t.work_skill_id AS id_double, skill.id_original
+    FROM skill
+    INNER JOIN v3_resume_work_skill AS t ON t.work_skill_id = ANY (skill.id_doubles)
+),
+deleted_v3_resume_work_skill AS (
+   -- удаляем связи с дублями из таблицы
+   DELETE FROM v3_resume_work_skill
+   USING repair_v3_resume_work_skill AS t
+   WHERE v3_resume_work_skill.resume_id = t.resume_id
+     AND v3_resume_work_skill.work_skill_id = t.id_double
+   RETURNING id
+),
+inserted_v3_resume_work_skill AS (
+   -- добавляем новые правильные связи, при этом такая связь уже может существовать
+   INSERT INTO v3_resume_work_skill (resume_id, work_skill_id)
+   SELECT t.resume_id, t.id_original FROM repair_v3_resume_work_skill AS t
+   ON CONFLICT DO NOTHING
+   RETURNING id
+),
+
+-- удаляем дубликаты
+deleted_v3_skill AS (
+   DELETE FROM v3_skill
+   USING skill AS t
+   WHERE v3_skill.id = ANY (t.id_doubles)
+   RETURNING id
+)
+
+         SELECT 'v3_resume_work_skill' AS table_name, 'deleted'  AS action, COUNT(*) FROM deleted_v3_resume_work_skill
+UNION ALL SELECT 'v3_resume_work_skill' AS table_name, 'inserted' AS action, COUNT(*) FROM inserted_v3_resume_work_skill
+
+UNION ALL SELECT 'v3_skill' AS table_name, 'deleted' AS action, COUNT(*) FROM deleted_v3_skill
+;
+
+-- удаляем битый индекс и создаём новый уникальный индекс
+DROP INDEX IF EXISTS v3_skill.uniq_skill_name;
+CREATE UNIQUE INDEX IF NOT EXISTS uniq_skill_name ON v3_skill (lower(name));
 ```
 
 ## Администрирование
