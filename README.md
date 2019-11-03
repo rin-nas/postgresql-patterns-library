@@ -1010,40 +1010,10 @@ RETURNING ltree_path
 
 ```sql
 DO $$
-DECLARE packageId integer;
-DECLARE featureId integer;
+DECLARE t1Id integer;
 BEGIN
-  -- собственно, пакет
-  INSERT INTO v3_paid_model_package (name, period, order_num, description, short_description) VALUES ('asdf', 7, 11111, 'sda', 'sda') RETURNING id INTO packageId;
-  -- нужно для package_member
-  INSERT INTO v3_paid_model_feature (name, period, description, paid_count, order_num) VALUES ('asdf', 7, 'sda', 100, 999) RETURNING id INTO featureId;
-  -- легаси старой админки это требует
-  UPDATE v3_paid_model_limit SET features_ids = ARRAY[featureId] WHERE id = 31;
-  -- содержимое, попробуем без размещения. CityIds должны быть несущественны
-  INSERT INTO v3_paid_model_package_member (package_id, feature_id, service_id, city_ids) VALUES (packageId, featureId, $serviceId, '{1}');
-  -- package_power, в теории, не нужен
-  -- прайс (пока без ссылки на АСУ, т.к. там еще нет тарифа. Поправить, когда заведут)
-  INSERT INTO v3_paid_model_packages_by_city_by_owner (price, city_id, package_id, owner_type, quantity_step, quantity_min)
-  SELECT 200, city_id, packageId, 2, 200, 200 FROM (
-   SELECT DISTINCT city_id FROM v3_region
-  ) AS active_cities;
-  -- аналогично для кадровых агентств
-  INSERT INTO v3_paid_model_packages_by_city_by_owner (price, city_id, package_id, owner_type, quantity_step, quantity_min)
-  SELECT 200, city_id, packageId, 3, 200, 200 FROM (
-   SELECT DISTINCT city_id FROM v3_region
-  ) AS active_cities;
-  -- прячем старые платные отклики
-  UPDATE v3_paid_model_packages_by_city_by_owner
-  SET is_hidden = true
-   WHERE id IN (
-     SELECT package_id
-     FROM shop_tariff_group_tariff
-     WHERE group_id IN (SELECT id FROM shop_tariff_group WHERE section_id = 5)
-   );
-  -- вставим новые без is_hidden
-  INSERT INTO shop_tariff_group_tariff (package_id, group_id)
-  SELECT id, (SELECT id FROM shop_tariff_group WHERE section_id = 5 LIMIT 1) -- там одна группа, но перестрахуемся
-   FROM v3_paid_model_packages_by_city_by_owner WHERE package_id = packageId;
+  INSERT INTO t1 (a, b) VALUES ('a', 'b') RETURNING id INTO t1Id;
+  INSERT INTO t2 (c, d, t1_id) VALUES ('c', 'd', t1Id);
 END $$;
 ```
 
