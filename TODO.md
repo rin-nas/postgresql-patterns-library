@@ -36,5 +36,6 @@
 1. https://wiki.postgresql.org/wiki/ArrXor
 1. http://akorotkov.github.io/blog/2016/06/17/faceted-search/
 1. http://sqlfiddle.postgrespro.ru/#!22/0/8530
+1. https://www.percona.com/blog/2019/07/22/automatic-index-recommendations-in-postgresql-using-pg_qualstats-and-hypopg/
 
 SQL_CALC_FOUND_ROWS
