@@ -35,7 +35,8 @@
 1. https://pgcookbook.ru/index.html
 1. https://wiki.postgresql.org/wiki/ArrXor
 1. http://akorotkov.github.io/blog/2016/06/17/faceted-search/
-1. http://sqlfiddle.postgrespro.ru/#!22/0/8530
+1. http://sqlfiddle.postgrespro.ru/ - песочница
 1. https://www.percona.com/blog/2019/07/22/automatic-index-recommendations-in-postgresql-using-pg_qualstats-and-hypopg/
+1. https://github.com/k1aus/parallelsql - A sql extenstion that parallizes sql queries using dblink
 
 SQL_CALC_FOUND_ROWS
