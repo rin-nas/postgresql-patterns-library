@@ -38,5 +38,6 @@
 1. http://sqlfiddle.postgrespro.ru/ - песочница
 1. https://www.percona.com/blog/2019/07/22/automatic-index-recommendations-in-postgresql-using-pg_qualstats-and-hypopg/
 1. https://github.com/k1aus/parallelsql - A sql extenstion that parallizes sql queries using dblink
+1. https://tech.binary.com/parallel-query-without-parallel-query/
 
 SQL_CALC_FOUND_ROWS
