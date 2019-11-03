@@ -986,7 +986,7 @@ inserted AS (
 )
 SELECT 'table1_updated' AS action, id
 FROM updated
-UNION
+UNION ALL
 SELECT 'table2_inserted' AS action, id
 FROM inserted;
 ```
@@ -1016,6 +1016,37 @@ BEGIN
   INSERT INTO t1 (a, b) VALUES ('a', 'b') RETURNING id INTO t1Id;
   INSERT INTO t2 (c, d, t1_id) VALUES ('c', 'd', t1Id);
 END $$;
+```
+
+### Как модифицировать данные в связанных таблицах одним запросом?
+
+При сохранении сущностей возникает задача сохранить данные не только в основную таблицу БД, но ещё в связанные. В запросе ниже "старые" связи будут удалены, "новые" — добавлены, а существующие останутся без изменений. Счётчики полей id serial зря не увеличатся. Приведён пример сохранения регионов вакансии.
+
+```sql
+WITH
+    -- у таблицы v3_vacancy_region должен быть уникальный ключ vacancy_id+region_id
+    -- сначала удаляем все не переданные (несуществующие) регионы размещения для вакансии
+    -- для ?l в конец массива идентификаторов регионов нужно добавить 0, чтобы запросы не сломались
+    deleted AS (
+        DELETE FROM v3_vacancy_region
+        WHERE vacancy_id = ?0
+        AND region_id NOT IN (?l1)
+        -- AND ROW(region_id, some_field) NOT IN (ROW(3, 'a'), ROW(8, 'b'), ...) -- пример для случая, если уникальный ключ состоит из нескольких полей
+        RETURNING id
+    ),
+    -- потом добавляем все регионы размещения для вакансии
+    -- несуществующие id регионов и дубликаты будут проигнорированы, ошибки не будет
+    -- select нужен, чтобы запрос не сломался по ограничениям внешний ключей, если в списке region_id есть "леваки", они просто проигнорируются
+    inserted AS (
+        INSERT INTO v3_vacancy_region (vacancy_id, region_id)
+        SELECT ?0 AS vacancy_id, id AS region_id FROM v3_region WHERE id IN (?l1)
+        ON CONFLICT DO NOTHING
+        RETURNING id
+    )
+SELECT
+    -- последовательность пречисления полей важна: сначала удаление, потом добавление, иначе будет ошибка
+    (SELECT COUNT(*) FROM deleted) AS deleted, -- количество удалённых записей
+    (SELECT COUNT(*) FROM inserted) AS updated -- количество добавленных записей
 ```
 
 ## Модификация схемы данных (DDL)
