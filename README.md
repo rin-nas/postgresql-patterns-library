@@ -1180,7 +1180,7 @@ create unique index on table_name (cast(md5(lower(column_name)) as uuid));
 -- но не будет учитываться регистр слов и любые другие символы
 create unique index on table_name (cast(md5(cast(to_tsvector('simple', column_name) as text)) as uuid));
 
--- для поля с типом JSON
+-- для поля с типом JSONB
 create unique index on partner__partners (cast(md5(lower(cast(column_name as text))) as uuid));
 ```
 
