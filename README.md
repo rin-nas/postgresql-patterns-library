@@ -1171,12 +1171,17 @@ rollback;
 
 #### Как сделать компактный уникальный индекс на текстовое поле?
 ```sql
+-- для поля с типом TEXT
 -- md5, приведённый к типу uuid занимает 16 байт вместо 32 байт
 create unique index on table_name (cast(md5(lower(column_name)) as uuid));
 
+-- для поля с типом TEXT
 -- в этом индексе будут учитываться слова (буквы, цифры, точка, дефис) и их позиции в тексте, 
 -- но не будет учитываться регистр слов и любые другие символы
 create unique index on table_name (cast(md5(cast(to_tsvector('simple', column_name) as text)) as uuid));
+
+-- для поля с типом JSON
+create unique index on partner__partners (cast(md5(lower(cast(column_name as text))) as uuid));
 ```
 
 ## Администрирование
