@@ -695,13 +695,16 @@ SELECT ot1.name AS name_1, ot2.name as name_2, ot3.name as name_3, ot4.id as id
 [Источник](http://highload.guide/blog/query_performance_postgreSQL.html)
 
 ```sql
--- вместо запроса
+-- было
 SELECT * FROM t WHERE id < 1000 AND val IN(1, ..., 10000);
 
--- лучше использовать
-SELECT * FROM t JOIN (VALUES (1), ...(10000)) AS v(val) UGING(val) WHERE id < 1000;
-```
+-- стало (способ 1)
+SELECT * FROM t WHERE id IN (VALUES (1), ...(10000)) WHERE id < 1000;
 
+-- стало (способ 2)
+SELECT * FROM t JOIN (VALUES (1), ...(10000)) AS v(val) UGING(val) WHERE id < 1000;
+
+```
 
 
 ### Как получить записи-дубликаты по значению полей?
