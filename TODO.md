@@ -8,39 +8,42 @@
    1. https://habr.com/ru/company/0/blog/316304/ Как заставить PostgreSQL считать быстрее
    1. https://m.habr.com/ru/post/468463/ - Улучшение производительности Zabbix + PostgreSQL при помощи партиционирования и индексирования
    1. https://m.habr.com/ru/company/otus/blog/472364/ - PostgreSQL и настройки согласованности записи для каждого конкретного соединения
-1. https://www.citusdata.com/blog/2018/02/22/seven-tips-for-dealing-with-postgres-locks/
-1. http://cwestblog.com/2018/10/27/postgresql-query-hierarchical-data-without-recursion/
-1. http://cwestblog.com/2018/10/29/postgresql-recursively-query-hierarchical-data/
-1. http://www.pateldenish.com/2018/11/postgres-11-partitioning.html
-1. https://use-the-index-luke.com/no-offset — Как правильно делать постраничную навигацию без OFFSET
-1. https://www.jooq.org/sakila — БД, для которой есть примеры SQL запросов в документации MySQL
-1. https://pgloader.io/ —  Continuous Migration from your current database to PostgreSQL
-1. https://tapoueh.org/blog/2013/08/understanding-window-functions/ — Understanding Window Functions
-1. https://blog.jooq.org/2014/04/29/nosql-no-sql-how-to-calculate-running-totals/ — How to Calculate Running Totals
-1. https://hashrocket.com/blog/posts/faster-json-generation-with-postgresql — генерация JSON 
-1. https://tapoueh.org/blog/2018/05/postgresql-data-types-point/ (см. запрос с итоговыми суммами и диаграммами внизу)
-1. [задача параллельной многопроцессной обработки очереди](http://dklab.ru/chicken/nablas/53.html), обсуждение на [форуме](https://www.sql.ru/forum/681777/obsuzhdaem-blokirovki-pg-try-advisory-lock)
-1. https://pgday.ru/files/pgmaster14/max.boguk.query.optimization.pdf (оптимизация запросов)
-1. https://pgday.ru/presentation/232/5964945ea4142.pdf Учим слона танцевать
+1. GitHub
+   1. https://github.com/dataegret/pg-utils Useful DBA tools by Data Egret
+   1. https://github.com/pgexperts/pgx_scripts/ A collection of useful little scripts for database analysis and administration, created by our team at PostgreSQL Experts
+   1. https://github.com/k1aus/parallelsql - A sql extenstion that parallizes sql queries using dblink
+   1  https://github.com/ioguix/pgsql-bloat-estimation
+1. StackOverflow
+   1. https://stackoverflow.com/questions/28550679/what-is-the-difference-between-lateral-and-a-subquery-in-postgresql
+   1. https://stackoverflow.com/questions/8443716/postgres-unique-constraint-for-array
+   1. https://stackoverflow.com/questions/20215724/need-foreign-key-as-array
+1. Other
+   1. https://www.citusdata.com/blog/2018/02/22/seven-tips-for-dealing-with-postgres-locks/
+   1. http://cwestblog.com/2018/10/27/postgresql-query-hierarchical-data-without-recursion/
+   1. http://cwestblog.com/2018/10/29/postgresql-recursively-query-hierarchical-data/
+   1. http://www.pateldenish.com/2018/11/postgres-11-partitioning.html
+   1. https://use-the-index-luke.com/no-offset — Как правильно делать постраничную навигацию без OFFSET
+   1. https://www.jooq.org/sakila — БД, для которой есть примеры SQL запросов в документации MySQL
+   1. https://pgloader.io/ —  Continuous Migration from your current database to PostgreSQL
+   1. https://tapoueh.org/blog/2013/08/understanding-window-functions/ — Understanding Window Functions
+   1. https://blog.jooq.org/2014/04/29/nosql-no-sql-how-to-calculate-running-totals/ — How to Calculate Running Totals
+   1. https://hashrocket.com/blog/posts/faster-json-generation-with-postgresql — генерация JSON 
+   1. https://tapoueh.org/blog/2018/05/postgresql-data-types-point/ (см. запрос с итоговыми суммами и диаграммами внизу)
+   1. [задача параллельной многопроцессной обработки очереди](http://dklab.ru/chicken/nablas/53.html), обсуждение на [форуме](https://www.sql.ru/forum/681777/obsuzhdaem-blokirovki-pg-try-advisory-lock)
+   1. https://pgday.ru/files/pgmaster14/max.boguk.query.optimization.pdf (оптимизация запросов)
+   1. https://pgday.ru/presentation/232/5964945ea4142.pdf Учим слона танцевать
 рок-н-ролл (оптимизация запросов)
-1. http://tatiyants.com/how-to-navigate-json-trees-in-postgres-using-recursive-ctes/
-1. https://wiki.postgresql.org/wiki/Category:Performance_Snippets
-1. https://wiki.postgresql.org/wiki/Index_Maintenance
-1. https://postgres.cz/wiki/PostgreSQL_SQL_Tricks
-1. https://pgday.ru/ru/2016/papers/62 Where is the space, Postgres?
-1. https://github.com/dataegret/pg-utils Useful DBA tools by Data Egret
-1. https://github.com/pgexperts/pgx_scripts/ A collection of useful little scripts for database analysis and administration, created by our team at PostgreSQL Experts
-1  https://github.com/ioguix/pgsql-bloat-estimation
-1. https://stackoverflow.com/questions/28550679/what-is-the-difference-between-lateral-and-a-subquery-in-postgresql
-1. https://stackoverflow.com/questions/8443716/postgres-unique-constraint-for-array
-1. https://stackoverflow.com/questions/20215724/need-foreign-key-as-array
-1. https://pgcookbook.ru/index.html
-1. https://wiki.postgresql.org/wiki/ArrXor
-1. http://akorotkov.github.io/blog/2016/06/17/faceted-search/
-1. http://sqlfiddle.postgrespro.ru/ - песочница
-1. https://www.percona.com/blog/2019/07/22/automatic-index-recommendations-in-postgresql-using-pg_qualstats-and-hypopg/
-1. https://github.com/k1aus/parallelsql - A sql extenstion that parallizes sql queries using dblink
-1. https://tech.binary.com/parallel-query-without-parallel-query/
+   1. http://tatiyants.com/how-to-navigate-json-trees-in-postgres-using-recursive-ctes/
+   1. https://wiki.postgresql.org/wiki/Category:Performance_Snippets
+   1. https://wiki.postgresql.org/wiki/Index_Maintenance
+   1. https://postgres.cz/wiki/PostgreSQL_SQL_Tricks
+   1. https://pgday.ru/ru/2016/papers/62 Where is the space, Postgres?
+   1. https://pgcookbook.ru/index.html
+   1. https://wiki.postgresql.org/wiki/ArrXor
+   1. http://akorotkov.github.io/blog/2016/06/17/faceted-search/
+   1. http://sqlfiddle.postgrespro.ru/ - песочница
+   1. https://www.percona.com/blog/2019/07/22/automatic-index-recommendations-in-postgresql-using-pg_qualstats-and-hypopg/
+   1. https://tech.binary.com/parallel-query-without-parallel-query/
 
 
 SQL_CALC_FOUND_ROWS
