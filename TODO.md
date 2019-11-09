@@ -44,6 +44,7 @@
    1. http://sqlfiddle.postgrespro.ru/ - песочница
    1. https://www.percona.com/blog/2019/07/22/automatic-index-recommendations-in-postgresql-using-pg_qualstats-and-hypopg/
    1. https://tech.binary.com/parallel-query-without-parallel-query/
+   1. https://github.com/NikolayS/postgres_dba - The missing set of useful tools for Postgres DBA
 
 
 SQL_CALC_FOUND_ROWS
