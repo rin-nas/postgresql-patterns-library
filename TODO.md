@@ -30,6 +30,7 @@
 1. https://pgday.ru/ru/2016/papers/62 Where is the space, Postgres?
 1. https://github.com/dataegret/pg-utils Useful DBA tools by Data Egret
 1. https://github.com/pgexperts/pgx_scripts/ A collection of useful little scripts for database analysis and administration, created by our team at PostgreSQL Experts
+1  https://github.com/ioguix/pgsql-bloat-estimation
 1. https://stackoverflow.com/questions/28550679/what-is-the-difference-between-lateral-and-a-subquery-in-postgresql
 1. https://stackoverflow.com/questions/8443716/postgres-unique-constraint-for-array
 1. https://stackoverflow.com/questions/20215724/need-foreign-key-as-array
