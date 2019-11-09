@@ -29,6 +29,7 @@
 1. https://postgres.cz/wiki/PostgreSQL_SQL_Tricks
 1. https://pgday.ru/ru/2016/papers/62 Where is the space, Postgres?
 1. https://github.com/dataegret/pg-utils Useful DBA tools by Data Egret
+1. https://github.com/pgexperts/pgx_scripts/ A collection of useful little scripts for database analysis and administration, created by our team at PostgreSQL Experts
 1. https://stackoverflow.com/questions/28550679/what-is-the-difference-between-lateral-and-a-subquery-in-postgresql
 1. https://stackoverflow.com/questions/8443716/postgres-unique-constraint-for-array
 1. https://stackoverflow.com/questions/20215724/need-foreign-key-as-array
@@ -39,5 +40,6 @@
 1. https://www.percona.com/blog/2019/07/22/automatic-index-recommendations-in-postgresql-using-pg_qualstats-and-hypopg/
 1. https://github.com/k1aus/parallelsql - A sql extenstion that parallizes sql queries using dblink
 1. https://tech.binary.com/parallel-query-without-parallel-query/
+
 
 SQL_CALC_FOUND_ROWS
