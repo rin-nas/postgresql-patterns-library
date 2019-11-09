@@ -12,7 +12,9 @@
    1. https://github.com/dataegret/pg-utils Useful DBA tools by Data Egret
    1. https://github.com/pgexperts/pgx_scripts/ A collection of useful little scripts for database analysis and administration, created by our team at PostgreSQL Experts
    1. https://github.com/k1aus/parallelsql - A sql extenstion that parallizes sql queries using dblink
-   1  https://github.com/ioguix/pgsql-bloat-estimation
+   1. https://github.com/ioguix/pgsql-bloat-estimation
+   1. https://github.com/lesovsky/uber-scripts - Scripts for Linux system administrators
+   1. https://github.com/NikolayS/postgres_dba - The missing set of useful tools for Postgres DBA
 1. StackOverflow
    1. https://stackoverflow.com/questions/28550679/what-is-the-difference-between-lateral-and-a-subquery-in-postgresql
    1. https://stackoverflow.com/questions/8443716/postgres-unique-constraint-for-array
@@ -44,7 +46,6 @@
    1. http://sqlfiddle.postgrespro.ru/ - песочница
    1. https://www.percona.com/blog/2019/07/22/automatic-index-recommendations-in-postgresql-using-pg_qualstats-and-hypopg/
    1. https://tech.binary.com/parallel-query-without-parallel-query/
-   1. https://github.com/NikolayS/postgres_dba - The missing set of useful tools for Postgres DBA
 
 
 SQL_CALC_FOUND_ROWS
