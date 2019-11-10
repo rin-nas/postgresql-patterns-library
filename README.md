@@ -691,7 +691,7 @@ SELECT ot1.name AS name_1, ot2.name as name_2, ot3.name as name_3, ot4.id as id
 1. [Postgres Explain Visualizer (Pev)](http://tatiyants.com/pev/) is a tool I wrote to make EXPLAIN output easier to grok. It creates a graphical representation of the query plan
 1. [PostgreSQL's explain analyze made readable](https://explain.depesz.com/)
 
-### Как использовать вывод EXPLAIN запроса в другом запросе?
+#### Как использовать вывод EXPLAIN запроса в другом запросе?
 
 ```sql
 CREATE OR REPLACE FUNCTION json_explain(
