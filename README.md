@@ -33,6 +33,7 @@
    1. [Оптимизация выполнения запросов](#Оптимизация-выполнения-запросов)
       1. [Как посмотреть на план выполнения запроса (EXPLAIN) в наглядном графическом виде?](#Как-посмотреть-на-план-выполнения-запроса-EXPLAIN-в-наглядном-графическом-виде)
       1. [Как ускорить SELECT запросы c сотнями и тысячами значениями в IN(...)?](#Как-ускорить-SELECT-запросы-c-сотнями-и-тысячами-значениями-в-IN)
+      1. [Как использовать вывод EXPLAIN запроса в другом запросе?](#Как-использовать-вывод-EXPLAIN-запроса-в-другом-запросе)
    1. [Как получить записи-дубликаты по значению полей?](#Как-получить-записи-дубликаты-по-значению-полей)
    1. [Как получить время выполнения запроса в его результате?](#Как-получить-время-выполнения-запроса-в-его-результате)
    1. [Как разбить большую таблицу по N тысяч записей, получив диапазоны id?](#Как-разбить-большую-таблицу-по-N-тысяч-записей-получив-диапазоны-id)
@@ -44,7 +45,6 @@
    1. [Как вычислить дистанцию между 2-мя точками на Земле по её поверхности в километрах?](#Как-вычислить-дистанцию-между-2-мя-точками-на-Земле-по-её-поверхности-в-километрах)
    1. [Как найти ближайшие населённые пункты относительно заданных координат?](#Как-найти-ближайшие-населённые-пункты-относительно-заданных-координат)
    1. [Как вычислить приблизительный объём данных для результата SELECT запроса?](#Как-вычислить-приблизительный-объём-данных-для-результата-SELECT-запроса)
-   1. [Как использовать вывод EXPLAIN запроса в другом запросе?](#Как-использовать-вывод-EXPLAIN-запроса-в-другом-запросе)
   
 **[Модификация данных (DML)](#Модификация-данных-DML)**
    1. [Как добавить или обновить записи одним запросом (UPSERT)?](#Как-добавить-или-обновить-записи-одним-запросом-UPSERT)
@@ -691,6 +691,25 @@ SELECT ot1.name AS name_1, ot2.name as name_2, ot3.name as name_3, ot4.id as id
 1. [Postgres Explain Visualizer (Pev)](http://tatiyants.com/pev/) is a tool I wrote to make EXPLAIN output easier to grok. It creates a graphical representation of the query plan
 1. [PostgreSQL's explain analyze made readable](https://explain.depesz.com/)
 
+### Как использовать вывод EXPLAIN запроса в другом запросе?
+
+```sql
+CREATE OR REPLACE FUNCTION json_explain(
+    query TEXT,
+    params TEXT[] DEFAULT ARRAY[]::text[]
+) RETURNS SETOF JSON AS $$
+BEGIN
+    RETURN QUERY
+    EXECUTE 'EXPLAIN ('
+         || ARRAY_TO_STRING(ARRAY_APPEND(params, 'FORMAT JSON'), ',')
+         || ')'
+         || query;
+END
+$$ LANGUAGE plpgsql;
+
+SELECT json_explain('SELECT * FROM pg_class', ARRAY['ANALYSE'])->0;
+```
+
 #### Как ускорить SELECT запросы c сотнями и тысячами значениями в IN(...)?
 
 [Источник](http://highload.guide/blog/query_performance_postgreSQL.html)
@@ -968,25 +987,6 @@ FROM (
     -- сюда нужно поместить ваш запрос, например:
     SELECT * FROM region LIMIT 50000
 ) AS t
-```
-
-### Как использовать вывод EXPLAIN запроса в другом запросе?
-
-```sql
-CREATE OR REPLACE FUNCTION json_explain(
-    query TEXT,
-    params TEXT[] DEFAULT ARRAY[]::text[]
-) RETURNS SETOF JSON AS $$
-BEGIN
-    RETURN QUERY
-    EXECUTE 'EXPLAIN ('
-         || ARRAY_TO_STRING(ARRAY_APPEND(params, 'FORMAT JSON'), ',')
-         || ')'
-         || query;
-END
-$$ LANGUAGE plpgsql;
-
-SELECT json_explain('SELECT * FROM pg_class', ARRAY['ANALYSE'])->0;
 ```
 
 ## Модификация данных (DML)
