@@ -9,7 +9,6 @@
    1. https://habr.com/ru/company/0/blog/316304/ Как заставить PostgreSQL считать быстрее
    1. https://m.habr.com/ru/post/468463/ - Улучшение производительности Zabbix + PostgreSQL при помощи партиционирования и индексирования
    1. https://m.habr.com/ru/company/otus/blog/472364/ - PostgreSQL и настройки согласованности записи для каждого конкретного соединения
-   1. https://github.com/NikolayS/awesome-postgres - links
 
 # GitHub
    1. https://github.com/dataegret/pg-utils Useful DBA tools by Data Egret
@@ -18,6 +17,7 @@
    1. https://github.com/ioguix/pgsql-bloat-estimation
    1. https://github.com/lesovsky/uber-scripts - Scripts for Linux system administrators
    1. https://github.com/NikolayS/postgres_dba - The missing set of useful tools for Postgres DBA
+   1. https://github.com/NikolayS/awesome-postgres - links
 
 # StackOverflow
    1. https://stackoverflow.com/questions/28550679/what-is-the-difference-between-lateral-and-a-subquery-in-postgresql
