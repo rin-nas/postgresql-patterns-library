@@ -1,6 +1,7 @@
 Ссылки с примерами SQL запросов
 
-1. Хабр
+# Хабр
+
    1. **https://m.habr.com/en/company/yandex/blog/435880/** — Изменение схемы таблиц PostgreSQL без долгих блокировок. Лекция Яндекса (дать пример оптимизации миграции Version20190516085945.php)
    1. https://habr.com/post/228023/ — Работа с геолокациями в режиме highload (Задача поиска ближайшего соседа)
    1. https://habr.com/post/280912/ — Полезные трюки PostgreSQL
@@ -9,18 +10,21 @@
    1. https://m.habr.com/ru/post/468463/ - Улучшение производительности Zabbix + PostgreSQL при помощи партиционирования и индексирования
    1. https://m.habr.com/ru/company/otus/blog/472364/ - PostgreSQL и настройки согласованности записи для каждого конкретного соединения
    1. https://github.com/NikolayS/awesome-postgres - links
-1. GitHub
+
+# GitHub
    1. https://github.com/dataegret/pg-utils Useful DBA tools by Data Egret
    1. https://github.com/pgexperts/pgx_scripts/ A collection of useful little scripts for database analysis and administration, created by our team at PostgreSQL Experts
    1. https://github.com/k1aus/parallelsql - A sql extenstion that parallizes sql queries using dblink
    1. https://github.com/ioguix/pgsql-bloat-estimation
    1. https://github.com/lesovsky/uber-scripts - Scripts for Linux system administrators
    1. https://github.com/NikolayS/postgres_dba - The missing set of useful tools for Postgres DBA
-1. StackOverflow
+
+# StackOverflow
    1. https://stackoverflow.com/questions/28550679/what-is-the-difference-between-lateral-and-a-subquery-in-postgresql
    1. https://stackoverflow.com/questions/8443716/postgres-unique-constraint-for-array
    1. https://stackoverflow.com/questions/20215724/need-foreign-key-as-array
-1. Other
+
+# Other
    1. https://www.citusdata.com/blog/2018/02/22/seven-tips-for-dealing-with-postgres-locks/
    1. http://cwestblog.com/2018/10/27/postgresql-query-hierarchical-data-without-recursion/
    1. http://cwestblog.com/2018/10/29/postgresql-recursively-query-hierarchical-data/
@@ -48,5 +52,5 @@
    1. https://www.percona.com/blog/2019/07/22/automatic-index-recommendations-in-postgresql-using-pg_qualstats-and-hypopg/
    1. https://tech.binary.com/parallel-query-without-parallel-query/
 
-
-SQL_CALC_FOUND_ROWS
+# TODO
+Рассказать, как Postgresql можно обойтись без SQL_CALC_FOUND_ROWS и почему это лучше
