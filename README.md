@@ -75,6 +75,7 @@
    1. [Как узнать, почему время ответа от базы периодически падает?](#Как-узнать-почему-время-ответа-от-базы-периодически-падает)
    1. [Как обезопасить приложение от тяжёлых миграций, приводящих к блокированию запросов?](#Как-обезопасить-приложение-от-тяжёлых-миграций-приводящих-к-блокированию-запросов)
    1. [Simple index checking](#Simple-index-checking)
+   1. [Как скопировать таблицы из одной базы данных в другую?](#Как-скопировать-таблицы-из-одной-базы-данных-в-другую)
 
 ## Проектирование данных
 
@@ -1550,4 +1551,10 @@ left outer join table_io ti
 left outer join index_io ii
   on ii.relname = ts.relname
 order by ti.table_page_read desc, ii.idx_page_read desc
+```
+
+### Как скопировать таблицы из одной базы данных в другую?
+   
+```bash
+pg_dump -U postgres -h 127.0.0.1 --exclude-table=_* --dbname={database_src} --schema=public --verbose | psql -U postgres -h 127.0.0.1 --dbname={database_dst} --single-transaction --set ON_ERROR_ROLLBACK=on 2> errors.txt
 ```
