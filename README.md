@@ -1082,7 +1082,7 @@ WITH u AS (
     SET description = 'new text' 
     WHERE id=123 
     AND updated_at = '2019-11-08 00:58:33'
-    --AND md5(t::text) = '1BC29B36F623BA82AAF6724FD3B16718' -- если нет колонки updated_at, вычисляем хеш от всей строки
+    --AND md5(t::text) = '1BC29B36F623BA82AAF6724FD3B16718' -- если нет колонки updated_at, вычисляем хеш от данных всей записи
     RETURNING *
 )
 SELECT true AS is_updated, updated_at
