@@ -422,9 +422,9 @@ CREATE EXTENSION IF NOT EXISTS fuzzymatch;
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
  
 CREATE INDEX /*CONCURRENTLY*/ IF NOT EXISTS custom_query_group_name_name_trigram_index ON public.custom_query_group_name USING GIN (lower(name) gin_trgm_ops);
-CREATE INDEX /*CONCURRENTLY*/ IF NOT EXISTS v3_sphinx_wordforms_word_trigram_index ON public.v3_sphinx_wordforms USING GIN (lower(word) gin_trgm_ops);
+CREATE INDEX /*CONCURRENTLY*/ IF NOT EXISTS sphinx_wordforms_word_trigram_index ON public.sphinx_wordforms USING GIN (lower(word) gin_trgm_ops);
  
-SELECT COUNT(*) FROM v3_sphinx_wordforms; -- 1,241,939 записей
+SELECT COUNT(*) FROM sphinx_wordforms; -- 1,241,939 записей
  
 -- drop function typos_correct(text, interval, boolean);
 
@@ -484,7 +484,7 @@ WITH
             -- есть слово в словаре русского языка?
             NOT EXISTS(
                 SELECT 1
-                FROM v3_sphinx_wordforms AS dict
+                FROM sphinx_wordforms AS dict
                 WHERE lower(dict.word) = lower(q.word_from)
                   AND mistake = FALSE
                   AND checked = TRUE
@@ -638,11 +638,11 @@ SELECT
     id,
     nlevel(ltree_path) AS level,
     ltree_path AS id_path,
-    (SELECT array_agg(st.name ORDER BY nlevel(st.ltree_path)) FROM v3_region AS st WHERE st.ltree_path @> t.ltree_path AND st.ltree_path != t.ltree_path) AS ancestors,
+    (SELECT array_agg(st.name ORDER BY nlevel(st.ltree_path)) FROM region AS st WHERE st.ltree_path @> t.ltree_path AND st.ltree_path != t.ltree_path) AS ancestors,
     name AS self,
-    (SELECT array_agg(st.name ORDER BY nlevel(st.ltree_path)) FROM v3_region AS st WHERE st.ltree_path <@ t.ltree_path AND st.ltree_path != t.ltree_path) AS descendants
+    (SELECT array_agg(st.name ORDER BY nlevel(st.ltree_path)) FROM region AS st WHERE st.ltree_path <@ t.ltree_path AND st.ltree_path != t.ltree_path) AS descendants
     --, t.*
-FROM v3_region AS t
+FROM region AS t
 WHERE nlevel(ltree_path) >= 2
 ORDER BY nlevel(ltree_path) ASC, ancestors
 LIMIT 1000;
@@ -679,10 +679,10 @@ SQL-запросы `WITH RECURSIVE...` должны иметь [защиту 
 
 ```sql
 SELECT ot1.name AS name_1, ot2.name as name_2, ot3.name as name_3, ot4.id as id
-    FROM v3_offer_trade ot4
-    INNER JOIN v3_offer_trade ot3 ON ot4.order_tree <@ ot3.order_tree AND nlevel(ot3.order_tree) = 3
-    INNER JOIN v3_offer_trade ot2 ON ot4.order_tree <@ ot2.order_tree AND nlevel(ot2.order_tree) = 2
-    INNER JOIN v3_offer_trade ot1 ON ot4.order_tree <@ ot1.order_tree AND nlevel(ot1.order_tree) = 1
+    FROM offer_trade ot4
+    INNER JOIN offer_trade ot3 ON ot4.order_tree <@ ot3.order_tree AND nlevel(ot3.order_tree) = 3
+    INNER JOIN offer_trade ot2 ON ot4.order_tree <@ ot2.order_tree AND nlevel(ot2.order_tree) = 2
+    INNER JOIN offer_trade ot1 ON ot4.order_tree <@ ot1.order_tree AND nlevel(ot1.order_tree) = 1
 ```
 
 ### Оптимизация выполнения запросов
@@ -1049,11 +1049,11 @@ END $$;
 
 ```sql
 WITH
-    -- у таблицы v3_vacancy_region должен быть уникальный ключ vacancy_id+region_id
+    -- у таблицы vacancy_region должен быть уникальный ключ vacancy_id+region_id
     -- сначала удаляем все не переданные (несуществующие) регионы размещения для вакансии
     -- для ?l в конец массива идентификаторов регионов нужно добавить 0, чтобы запросы не сломались
     deleted AS (
-        DELETE FROM v3_vacancy_region
+        DELETE FROM vacancy_region
         WHERE vacancy_id = ?0
         AND region_id NOT IN (?l1)
         -- AND ROW(region_id, some_field) NOT IN (ROW(3, 'a'), ROW(8, 'b'), ...) -- пример для случая, если уникальный ключ состоит из нескольких полей
@@ -1063,8 +1063,8 @@ WITH
     -- несуществующие id регионов и дубликаты будут проигнорированы, ошибки не будет
     -- select нужен, чтобы запрос не сломался по ограничениям внешний ключей, если в списке region_id есть "леваки", они просто проигнорируются
     inserted AS (
-        INSERT INTO v3_vacancy_region (vacancy_id, region_id)
-        SELECT ?0 AS vacancy_id, id AS region_id FROM v3_region WHERE id IN (?l1)
+        INSERT INTO vacancy_region (vacancy_id, region_id)
+        SELECT ?0 AS vacancy_id, id AS region_id FROM region WHERE id IN (?l1)
         ON CONFLICT DO NOTHING
         RETURNING id
     )
@@ -1123,7 +1123,7 @@ create unique index on test(a, coalesce(b, '')) -- для чисел вмест�
 
 #### Как починить сломаный уникальный индекс, имеющий дубликаты?
 
-Чиним битый уникальный индекс на поле `v3_skill.name`
+Чиним битый уникальный индекс на поле `skill.name`
 
 ```sql
 -- EXPLAIN
@@ -1131,50 +1131,50 @@ WITH
 skill AS (
    SELECT min(id) AS id_original,
           (array_agg(id order by id))[2:] AS id_doubles
-   FROM v3_skill
+   FROM skill
    GROUP BY lower(name)
    HAVING count(*) > 1
 ),
 
-repair_v3_resume_work_skill AS (
+repair_resume_work_skill AS (
     -- собираем связи с дублями в таблицу
     SELECT t.resume_id, t.work_skill_id AS id_double, skill.id_original
     FROM skill
-    INNER JOIN v3_resume_work_skill AS t ON t.work_skill_id = ANY (skill.id_doubles)
+    INNER JOIN resume_work_skill AS t ON t.work_skill_id = ANY (skill.id_doubles)
 ),
-deleted_v3_resume_work_skill AS (
+deleted_resume_work_skill AS (
    -- удаляем связи с дублями из таблицы
-   DELETE FROM v3_resume_work_skill
-   USING repair_v3_resume_work_skill AS t
-   WHERE v3_resume_work_skill.resume_id = t.resume_id
-     AND v3_resume_work_skill.work_skill_id = t.id_double
+   DELETE FROM resume_work_skill
+   USING repair_resume_work_skill AS t
+   WHERE resume_work_skill.resume_id = t.resume_id
+     AND resume_work_skill.work_skill_id = t.id_double
    RETURNING id
 ),
-inserted_v3_resume_work_skill AS (
+inserted_resume_work_skill AS (
    -- добавляем новые правильные связи, при этом такая связь уже может существовать
-   INSERT INTO v3_resume_work_skill (resume_id, work_skill_id)
-   SELECT t.resume_id, t.id_original FROM repair_v3_resume_work_skill AS t
+   INSERT INTO resume_work_skill (resume_id, work_skill_id)
+   SELECT t.resume_id, t.id_original FROM repair_resume_work_skill AS t
    ON CONFLICT DO NOTHING
    RETURNING id
 ),
 
 -- удаляем дубликаты
-deleted_v3_skill AS (
-   DELETE FROM v3_skill
+deleted_skill AS (
+   DELETE FROM skill
    USING skill AS t
-   WHERE v3_skill.id = ANY (t.id_doubles)
+   WHERE skill.id = ANY (t.id_doubles)
    RETURNING id
 )
 
-         SELECT 'v3_resume_work_skill' AS table_name, 'deleted'  AS action, COUNT(*) FROM deleted_v3_resume_work_skill
-UNION ALL SELECT 'v3_resume_work_skill' AS table_name, 'inserted' AS action, COUNT(*) FROM inserted_v3_resume_work_skill
+         SELECT 'resume_work_skill' AS table_name, 'deleted'  AS action, COUNT(*) FROM deleted_resume_work_skill
+UNION ALL SELECT 'resume_work_skill' AS table_name, 'inserted' AS action, COUNT(*) FROM inserted_resume_work_skill
 
-UNION ALL SELECT 'v3_skill' AS table_name, 'deleted' AS action, COUNT(*) FROM deleted_v3_skill
+UNION ALL SELECT 'skill' AS table_name, 'deleted' AS action, COUNT(*) FROM deleted_skill
 ;
 
 -- удаляем битый индекс и создаём новый уникальный индекс
-DROP INDEX IF EXISTS v3_skill.uniq_skill_name;
-CREATE UNIQUE INDEX IF NOT EXISTS uniq_skill_name ON v3_skill (lower(name));
+DROP INDEX IF EXISTS skill.uniq_skill_name;
+CREATE UNIQUE INDEX IF NOT EXISTS uniq_skill_name ON skill (lower(name));
 ```
 
 #### Как временно отключить индекс?
