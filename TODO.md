@@ -54,3 +54,16 @@
 
 # TODO
 Рассказать, как Postgresql можно обойтись без SQL_CALC_FOUND_ROWS и почему это лучше
+
+#UPDATE/DELETE million rows ideas
+
+```
+non0 = select count(*) from table where flag!=0;
+batchsize = 1000000;
+for ( i=0; i<non0; i+=batchsize) {
+  update table set flag=0 where flag <> 0 and id in (select id from table where flag <> 0 limit batchsize);
+  commit;
+  vacuum table;
+  analyze table;
+}
+```
