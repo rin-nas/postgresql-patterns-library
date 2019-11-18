@@ -85,6 +85,6 @@ LOOP
 END LOOP;
 
 ```
-https://postgrespro.ru/docs/postgresql/11/logical-replication
-https://blog.codacy.com/how-to-update-large-tables-in-postgresql/
-https://dba.stackexchange.com/questions/41059/optimizing-bulk-update-performance-in-postgresql
+1. https://postgrespro.ru/docs/postgresql/11/logical-replication
+1. https://blog.codacy.com/how-to-update-large-tables-in-postgresql/
+1. https://dba.stackexchange.com/questions/41059/optimizing-bulk-update-performance-in-postgresql
