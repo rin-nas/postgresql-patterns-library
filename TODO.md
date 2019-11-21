@@ -14,7 +14,7 @@
    1. https://github.com/dataegret/pg-utils Useful DBA tools by Data Egret
    1. https://github.com/pgexperts/pgx_scripts/ A collection of useful little scripts for database analysis and administration, created by our team at PostgreSQL Experts
    1. https://github.com/k1aus/parallelsql - A sql extenstion that parallizes sql queries using dblink
-   1. https://github.com/ioguix/pgsql-bloat-estimation
+   1. https://github.com/ioguix/pgsql-bloat-estimation - Queries to mesure statistical bloat in btree indexes and tables for PostgreSQL
    1. https://github.com/lesovsky/uber-scripts - Scripts for Linux system administrators
    1. https://github.com/NikolayS/postgres_dba - The missing set of useful tools for Postgres DBA
    1. https://github.com/NikolayS/awesome-postgres - links
