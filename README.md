@@ -1113,7 +1113,7 @@ WHERE u2.id = u.id;
 
 ### Как обновить несколько миллионов записей в таблице не блокируя все записи и не нагружая БД?
 
-```
+```sql
 DROP TABLE IF EXISTS person_tmp;
 
 CREATE TABLE person_tmp AS
