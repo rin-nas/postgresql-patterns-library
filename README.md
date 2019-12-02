@@ -54,6 +54,7 @@
    1. [Как модифицировать данные в связанных таблицах одним запросом?](#Как-модифицировать-данные-в-связанных-таблицах-одним-запросом)
    1. [Как обновить запись так, чтобы не затереть чужие изменения, уже сделанные кем-то?](#Как-обновить-запись-так-чтобы-не-затереть-чужие-изменения-уже-сделанные-кем-то)
    1. [Как обновить несколько строк по разным условиям в одном запросе?](#Как-обновить-несколько-строк-по-разным-условиям-в-одном-запросе)
+   1. [Как обновить несколько миллионов записей в таблице не блокируя все записи и не нагружая БД?](#Как-обновить-несколько-миллионов-записей-в-таблице-не-блокируя-все-записи-и-не-нагружая-БД?)
 
 **[Модификация схемы данных (DDL)](#Модификация-схемы-данных-DDL)**
    1. [Как добавить колонку в существующую таблицу без её блокирования?](#Как-добавить-колонку-в-существующую-таблицу-без-её-блокирования)
@@ -1108,6 +1109,58 @@ FROM (VALUES
   (2, 'robert@duncan.info', 'Robert', 'Duncan')
 ) as u2(id, email, first_name, last_name)
 WHERE u2.id = u.id;
+```
+
+### Как обновить несколько миллионов записей в таблице не блокируя все записи и не нагружая БД?
+
+```
+DROP TABLE IF EXISTS person_tmp;
+
+CREATE TABLE person_tmp AS
+WITH result AS (
+    SELECT id,
+           ((row_number() OVER (ORDER BY id) - 1) / 10000)::integer AS part
+    FROM person
+)
+SELECT
+    MIN(id) AS min_id,
+    MAX(id) AS max_id
+FROM result
+GROUP BY part
+ORDER BY 1;
+
+--TABLE person_tmp LIMIT 100;
+
+DO $$
+    DECLARE
+        total int default (SELECT COUNT(*) FROM person_tmp);
+        counter int default 0;
+        rec record;
+        cur CURSOR FOR TABLE person_tmp;
+        affected_rows int;
+    BEGIN
+        FOR rec IN cur LOOP
+                counter := counter + 1;
+
+                UPDATE person
+                SET ...
+                WHERE id BETWEEN rec.min_id AND rec.max_id;
+
+                GET DIAGNOSTICS affected_rows := ROW_COUNT;
+
+                COMMIT; -- https://www.postgresql.org/docs/11/plpgsql-transactions.html
+
+                RAISE NOTICE 'Cycle % of % done (% rows affected)', counter, total, affected_rows;
+
+            END LOOP;
+
+    END
+$$;
+
+DROP TABLE IF EXISTS person_tmp;
+
+VACUUM VERBOSE ANALYSE person;
+
 ```
 
 ## Модификация схемы данных (DDL)
