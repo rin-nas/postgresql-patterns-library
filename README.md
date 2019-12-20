@@ -793,8 +793,6 @@ SELECT extract(seconds FROM clock_timestamp() - now()) AS execution_time FRO
 
 ### Как разбить большую таблицу по N тысяч записей, получив диапазоны id?
 
-Цель разбиения — уменьшить кол-во блокируемых записей при конкурентном доступе.
-
 Применение:
 
 1. индексирование данных в поисковых движках типа Sphinx, Solr, Elastic Search
@@ -838,7 +836,7 @@ ORDER BY 1;
 83 | 24276878 | 24427703 | 100000 
 84 | 24427705 | 24542589 | 77587 
 
-Далее можно последовательно или параллельно выполнять SQL запросы (SELECT, UPDATE) для каждого диапазона, например:
+Далее можно последовательно или параллельно выполнять SQL запросы для каждого диапазона, например:
 
 ```sql
 SELECT *
@@ -1114,53 +1112,307 @@ WHERE u2.id = u.id;
 ### Как обновить несколько миллионов записей в таблице не блокируя все записи и не нагружая БД?
 
 ```sql
-DROP TABLE IF EXISTS person_tmp;
-
-CREATE TABLE person_tmp AS
-WITH result AS (
-    SELECT id,
-           ((row_number() OVER (ORDER BY id) - 1) / 10000)::integer AS part
-    FROM person
-)
-SELECT
-    MIN(id) AS min_id,
-    MAX(id) AS max_id
-FROM result
-GROUP BY part
-ORDER BY 1;
-
---TABLE person_tmp LIMIT 100;
-
+-- Запросы выполнять НЕ в транзакции!
+ 
+VACUUM VERBOSE ANALYZE {table};
+ 
+-- сначала выполняем все тяжёлые вычисления
+-- подготавливаем в таблице данные для последующего обновления: id, поля со старыми и/или новыми данными (при необходимости)
+-- или подготавливаем в таблице данные для последующего удаления: id и все остальные поля
+-- таблица является резервной копией для возможности отката
+CREATE TABLE IF NOT EXISTS {table}_{JiraTaskId} AS
+SELECT id/*значения в колонке id должны быть уникальными!*/, ...
+FROM {table}, ...
+WHERE ...;
+ 
+CREATE UNIQUE INDEX IF NOT EXISTS {table}_{JiraTaskId}_uniq_id ON {table}_{JiraTaskId} (id);
+ 
+--SELECT * FROM {table}_{JiraTaskId} ORDER BY id LIMIT 100; -- для отладки
+ 
 DO $$
-    DECLARE
-        total int default (SELECT COUNT(*) FROM person_tmp);
-        counter int default 0;
-        rec record;
-        cur CURSOR FOR TABLE person_tmp;
-        affected_rows int;
-    BEGIN
-        FOR rec IN cur LOOP
-                counter := counter + 1;
-
-                UPDATE person
-                SET ...
-                WHERE id BETWEEN rec.min_id AND rec.max_id;
-
-                GET DIAGNOSTICS affected_rows := ROW_COUNT;
-
-                COMMIT; -- https://www.postgresql.org/docs/11/plpgsql-transactions.html
-
-                RAISE NOTICE 'Cycle % of % done (% rows affected)', counter, total, affected_rows;
-
-            END LOOP;
-
-    END
+DECLARE
+    total_time_start timestamp default clock_timestamp();
+    total_time_elapsed numeric default 0; -- время выполнения всех запросов, в секундах
+    query_time_start timestamp;
+    query_time_elapsed numeric default 0; -- фактическое время выполнения 1-го запроса, в секундах
+    estimated_time interval default null; -- оценочное время, сколько осталось работать
+    time_max numeric default 1; -- пороговое максимальное время выполнения 1-го запроса, в секундах
+    rec_start record;
+    rec_stop record;
+    cycles int default 0; -- счётчик для цикла
+    batch_rows int default 1; -- по сколько записей будем обновлять за 1 цикл
+    processed_rows int default 0; -- счётчик, сколько записей обновили, увеличивается на каждой итерации цикла
+    total_rows int default 0; -- количество записей всего
+    cur CURSOR FOR SELECT * FROM {table}_{JiraTaskId} ORDER BY id; -- сортировка по id обязательна!
+BEGIN
+    RAISE NOTICE 'Calculate total rows%', ' ';
+ 
+    SELECT COUNT(*) INTO total_rows FROM {table}_{JiraTaskId};
+ 
+    FOR rec_start IN cur LOOP
+        cycles := cycles + 1;
+ 
+        --EXIT WHEN cycles > 15; -- для отладки
+ 
+        FETCH RELATIVE (batch_rows - 1) FROM cur INTO rec_stop;
+ 
+        IF rec_stop IS NULL THEN
+            batch_rows := total_rows - processed_rows;
+            FETCH LAST FROM cur INTO rec_stop;
+        END IF;
+ 
+        query_time_start := clock_timestamp();
+ 
+            -- напишите здесь запрос для добавления записей:
+            INSERT INTO ...
+            SELECT ...
+            FROM ... AS t
+            WHERE t.id BETWEEN rec_start.id AND rec_stop.id;
+ 
+            -- или напишите здесь запрос для обновления записей:
+            UPDATE {table} AS n
+            SET ...
+            FROM {table}_{JiraTaskId} AS t
+            WHERE t.id = n.id AND t.id BETWEEN rec_start.id AND rec_stop.id;
+             
+            -- или напишите здесь запрос для удаления записей:
+            DELETE FROM {table} WHERE id BETWEEN rec_start.id AND rec_stop.id;
+ 
+            COMMIT; -- https://www.postgresql.org/docs/11/plpgsql-transactions.html
+ 
+        query_time_elapsed := round(extract('epoch' from clock_timestamp() - query_time_start)::numeric, 2);
+        total_time_elapsed := round(extract('epoch' from clock_timestamp() - total_time_start)::numeric, 2);
+        processed_rows := processed_rows + batch_rows;
+ 
+        IF cycles > 16 THEN
+            estimated_time := ((total_rows * total_time_elapsed / processed_rows - total_time_elapsed)::int::text || 's')::interval;
+        END IF;
+ 
+        RAISE NOTICE 'Query % processed % rows (id BETWEEN % AND %) for % sec', cycles, batch_rows, rec_start.id, rec_stop.id, query_time_elapsed;
+        RAISE NOTICE 'Total processed % of % rows (% %%), estimated time left: %', processed_rows, total_rows, round(processed_rows * 100.0 / total_rows, 2), COALESCE(estimated_time::text, '?');
+        RAISE NOTICE '%', ' '; -- just new line
+ 
+        IF query_time_elapsed < time_max THEN
+            batch_rows := batch_rows * 2;
+        ELSE
+            batch_rows := GREATEST(1, batch_rows / 2);
+        END IF;
+ 
+    END LOOP;
+ 
+    RAISE NOTICE 'Done. % rows per second, % queries per second', (processed_rows / total_time_elapsed)::int, round(cycles / total_time_elapsed, 2);
+ 
+END
 $$;
+ 
+VACUUM VERBOSE ANALYZE {table};
+```
 
-DROP TABLE IF EXISTS person_tmp;
-
-VACUUM VERBOSE ANALYSE person;
-
+Пример отчёта выполненного блока DO
+```
+[2019-12-06 14:48:01] [00000] Query 1 processed 1 rows (id BETWEEN 45 AND 45) for 1.31 sec
+[2019-12-06 14:48:01] [00000] Total processed 1 of 1027511 rows (0 %), estimated time left: ?
+[2019-12-06 14:48:01] [00000]
+[2019-12-06 14:48:01] [00000] Query 2 processed 1 rows (id BETWEEN 109 AND 109) for 0.00 sec
+[2019-12-06 14:48:01] [00000] Total processed 2 of 1027511 rows (0 %), estimated time left: ?
+[2019-12-06 14:48:01] [00000]
+[2019-12-06 14:48:01] [00000] Query 3 processed 2 rows (id BETWEEN 116 AND 253) for 0.00 sec
+[2019-12-06 14:48:01] [00000] Total processed 4 of 1027511 rows (0 %), estimated time left: ?
+[2019-12-06 14:48:01] [00000]
+[2019-12-06 14:48:01] [00000] Query 4 processed 4 rows (id BETWEEN 363 AND 624) for 0.00 sec
+[2019-12-06 14:48:01] [00000] Total processed 8 of 1027511 rows (0 %), estimated time left: ?
+[2019-12-06 14:48:01] [00000]
+[2019-12-06 14:48:01] [00000] Query 5 processed 8 rows (id BETWEEN 638 AND 1061) for 0.00 sec
+[2019-12-06 14:48:01] [00000] Total processed 16 of 1027511 rows (0 %), estimated time left: ?
+[2019-12-06 14:48:01] [00000]
+[2019-12-06 14:48:01] [00000] Query 6 processed 16 rows (id BETWEEN 1129 AND 2020) for 0.01 sec
+[2019-12-06 14:48:01] [00000] Total processed 32 of 1027511 rows (0 %), estimated time left: ?
+[2019-12-06 14:48:01] [00000]
+[2019-12-06 14:48:01] [00000] Query 7 processed 32 rows (id BETWEEN 2119 AND 3017) for 0.01 sec
+[2019-12-06 14:48:01] [00000] Total processed 64 of 1027511 rows (0 %), estimated time left: ?
+[2019-12-06 14:48:01] [00000]
+[2019-12-06 14:48:01] [00000] Query 8 processed 64 rows (id BETWEEN 3106 AND 5157) for 0.02 sec
+[2019-12-06 14:48:01] [00000] Total processed 128 of 1027511 rows (0 %), estimated time left: ?
+[2019-12-06 14:48:01] [00000]
+[2019-12-06 14:48:01] [00000] Query 9 processed 128 rows (id BETWEEN 5185 AND 10781) for 0.01 sec
+[2019-12-06 14:48:01] [00000] Total processed 256 of 1027511 rows (0 %), estimated time left: ?
+[2019-12-06 14:48:01] [00000]
+[2019-12-06 14:48:01] [00000] Query 10 processed 256 rows (id BETWEEN 10835 AND 300608) for 0.04 sec
+[2019-12-06 14:48:01] [00000] Total processed 512 of 1027511 rows (0 %), estimated time left: ?
+[2019-12-06 14:48:01] [00000]
+[2019-12-06 14:48:01] [00000] Query 11 processed 512 rows (id BETWEEN 300660 AND 392756) for 0.05 sec
+[2019-12-06 14:48:01] [00000] Total processed 1024 of 1027511 rows (0 %), estimated time left: ?
+[2019-12-06 14:48:01] [00000]
+[2019-12-06 14:48:01] [00000] Query 12 processed 1024 rows (id BETWEEN 393018 AND 494144) for 0.11 sec
+[2019-12-06 14:48:01] [00000] Total processed 2048 of 1027511 rows (0 %), estimated time left: ?
+[2019-12-06 14:48:01] [00000]
+[2019-12-06 14:48:02] [00000] Query 13 processed 2048 rows (id BETWEEN 494261 AND 621517) for 0.25 sec
+[2019-12-06 14:48:02] [00000] Total processed 4096 of 1027511 rows (0 %), estimated time left: ?
+[2019-12-06 14:48:02] [00000]
+[2019-12-06 14:48:02] [00000] Query 14 processed 4096 rows (id BETWEEN 621518 AND 778925) for 0.37 sec
+[2019-12-06 14:48:02] [00000] Total processed 8192 of 1027511 rows (0 %), estimated time left: ?
+[2019-12-06 14:48:02] [00000]
+[2019-12-06 14:48:02] [00000] Query 15 processed 8192 rows (id BETWEEN 778928 AND 1891253) for 0.54 sec
+[2019-12-06 14:48:02] [00000] Total processed 16384 of 1027511 rows (1 %), estimated time left: ?
+[2019-12-06 14:48:02] [00000]
+[2019-12-06 14:48:04] [00000] Query 16 processed 16384 rows (id BETWEEN 1892788 AND 10448979) for 1.23 sec
+[2019-12-06 14:48:04] [00000] Total processed 32768 of 1027511 rows (3 %), estimated time left: ?
+[2019-12-06 14:48:04] [00000]
+[2019-12-06 14:48:05] [00000] Query 17 processed 8192 rows (id BETWEEN 10449057 AND 11223737) for 0.93 sec
+[2019-12-06 14:48:05] [00000] Total processed 40960 of 1027511 rows (3 %), estimated time left: 00:02:04
+[2019-12-06 14:48:05] [00000]
+[2019-12-06 14:48:05] [00000] Query 18 processed 16384 rows (id BETWEEN 11223739 AND 12501518) for 0.93 sec
+[2019-12-06 14:48:05] [00000] Total processed 57344 of 1027511 rows (5 %), estimated time left: 00:01:43
+[2019-12-06 14:48:05] [00000]
+[2019-12-06 14:48:08] [00000] Query 19 processed 32768 rows (id BETWEEN 12501524 AND 16119693) for 2.94 sec
+[2019-12-06 14:48:08] [00000] Total processed 90112 of 1027511 rows (8 %), estimated time left: 00:01:34
+[2019-12-06 14:48:08] [00000]
+[2019-12-06 14:48:11] [00000] Query 20 processed 16384 rows (id BETWEEN 16119696 AND 17270678) for 2.13 sec
+[2019-12-06 14:48:11] [00000] Total processed 106496 of 1027511 rows (10 %), estimated time left: 00:01:37
+[2019-12-06 14:48:11] [00000]
+[2019-12-06 14:48:11] [00000] Query 21 processed 8192 rows (id BETWEEN 17270726 AND 18581013) for 0.69 sec
+[2019-12-06 14:48:11] [00000] Total processed 114688 of 1027511 rows (11 %), estimated time left: 00:01:34
+[2019-12-06 14:48:11] [00000]
+[2019-12-06 14:48:12] [00000] Query 22 processed 16384 rows (id BETWEEN 18582136 AND 20698177) for 1.02 sec
+[2019-12-06 14:48:12] [00000] Total processed 131072 of 1027511 rows (12 %), estimated time left: 00:01:28
+[2019-12-06 14:48:12] [00000]
+[2019-12-06 14:48:13] [00000] Query 23 processed 8192 rows (id BETWEEN 20698203 AND 22043643) for 0.51 sec
+[2019-12-06 14:48:13] [00000] Total processed 139264 of 1027511 rows (13 %), estimated time left: 00:01:26
+[2019-12-06 14:48:13] [00000]
+[2019-12-06 14:48:14] [00000] Query 24 processed 16384 rows (id BETWEEN 22043671 AND 24016029) for 0.96 sec
+[2019-12-06 14:48:14] [00000] Total processed 155648 of 1027511 rows (15 %), estimated time left: 00:01:20
+[2019-12-06 14:48:14] [00000]
+[2019-12-06 14:48:18] [00000] Query 25 processed 32768 rows (id BETWEEN 24016030 AND 27764872) for 3.95 sec
+[2019-12-06 14:48:18] [00000] Total processed 188416 of 1027511 rows (18 %), estimated time left: 00:01:22
+[2019-12-06 14:48:18] [00000]
+[2019-12-06 14:48:19] [00000] Query 26 processed 16384 rows (id BETWEEN 27764874 AND 29649545) for 0.89 sec
+[2019-12-06 14:48:19] [00000] Total processed 204800 of 1027511 rows (19 %), estimated time left: 00:01:17
+[2019-12-06 14:48:19] [00000]
+[2019-12-06 14:48:20] [00000] Query 27 processed 32768 rows (id BETWEEN 29651296 AND 33078590) for 1.78 sec
+[2019-12-06 14:48:20] [00000] Total processed 237568 of 1027511 rows (23 %), estimated time left: 00:01:10
+[2019-12-06 14:48:20] [00000]
+[2019-12-06 14:48:22] [00000] Query 28 processed 16384 rows (id BETWEEN 33078591 AND 33958148) for 1.26 sec
+[2019-12-06 14:48:22] [00000] Total processed 253952 of 1027511 rows (24 %), estimated time left: 00:01:08
+[2019-12-06 14:48:22] [00000]
+[2019-12-06 14:48:22] [00000] Query 29 processed 8192 rows (id BETWEEN 33958156 AND 34206330) for 0.63 sec
+[2019-12-06 14:48:22] [00000] Total processed 262144 of 1027511 rows (25 %), estimated time left: 00:01:07
+[2019-12-06 14:48:22] [00000]
+[2019-12-06 14:48:24] [00000] Query 30 processed 16384 rows (id BETWEEN 34206331 AND 35020146) for 1.24 sec
+[2019-12-06 14:48:24] [00000] Total processed 278528 of 1027511 rows (27 %), estimated time left: 00:01:05
+[2019-12-06 14:48:24] [00000]
+[2019-12-06 14:48:24] [00000] Query 31 processed 8192 rows (id BETWEEN 35020147 AND 35439539) for 0.40 sec
+[2019-12-06 14:48:24] [00000] Total processed 286720 of 1027511 rows (27 %), estimated time left: 00:01:03
+[2019-12-06 14:48:24] [00000]
+[2019-12-06 14:48:25] [00000] Query 32 processed 16384 rows (id BETWEEN 35439542 AND 36289494) for 1.32 sec
+[2019-12-06 14:48:25] [00000] Total processed 303104 of 1027511 rows (29 %), estimated time left: 00:01:02
+[2019-12-06 14:48:25] [00000]
+[2019-12-06 14:48:26] [00000] Query 33 processed 8192 rows (id BETWEEN 36289495 AND 36657783) for 0.66 sec
+[2019-12-06 14:48:26] [00000] Total processed 311296 of 1027511 rows (30 %), estimated time left: 00:01:01
+[2019-12-06 14:48:26] [00000]
+[2019-12-06 14:48:27] [00000] Query 34 processed 16384 rows (id BETWEEN 36657784 AND 37691799) for 1.24 sec
+[2019-12-06 14:48:27] [00000] Total processed 327680 of 1027511 rows (31 %), estimated time left: 00:00:59
+[2019-12-06 14:48:27] [00000]
+[2019-12-06 14:48:28] [00000] Query 35 processed 8192 rows (id BETWEEN 37691800 AND 37933416) for 0.49 sec
+[2019-12-06 14:48:28] [00000] Total processed 335872 of 1027511 rows (32 %), estimated time left: 00:00:58
+[2019-12-06 14:48:28] [00000]
+[2019-12-06 14:48:29] [00000] Query 36 processed 16384 rows (id BETWEEN 37933417 AND 38849414) for 1.10 sec
+[2019-12-06 14:48:29] [00000] Total processed 352256 of 1027511 rows (34 %), estimated time left: 00:00:56
+[2019-12-06 14:48:29] [00000]
+[2019-12-06 14:48:29] [00000] Query 37 processed 8192 rows (id BETWEEN 38849415 AND 39234300) for 0.68 sec
+[2019-12-06 14:48:29] [00000] Total processed 360448 of 1027511 rows (35 %), estimated time left: 00:00:56
+[2019-12-06 14:48:29] [00000]
+[2019-12-06 14:48:31] [00000] Query 38 processed 16384 rows (id BETWEEN 39234301 AND 40125074) for 1.12 sec
+[2019-12-06 14:48:31] [00000] Total processed 376832 of 1027511 rows (36 %), estimated time left: 00:00:54
+[2019-12-06 14:48:31] [00000]
+[2019-12-06 14:48:31] [00000] Query 39 processed 8192 rows (id BETWEEN 40125075 AND 40788965) for 0.61 sec
+[2019-12-06 14:48:31] [00000] Total processed 385024 of 1027511 rows (37 %), estimated time left: 00:00:53
+[2019-12-06 14:48:31] [00000]
+[2019-12-06 14:48:32] [00000] Query 40 processed 16384 rows (id BETWEEN 40788967 AND 41472732) for 0.89 sec
+[2019-12-06 14:48:32] [00000] Total processed 401408 of 1027511 rows (39 %), estimated time left: 00:00:51
+[2019-12-06 14:48:32] [00000]
+[2019-12-06 14:48:34] [00000] Query 41 processed 32768 rows (id BETWEEN 41472733 AND 43215629) for 1.86 sec
+[2019-12-06 14:48:34] [00000] Total processed 434176 of 1027511 rows (42 %), estimated time left: 00:00:47
+[2019-12-06 14:48:34] [00000]
+[2019-12-06 14:48:35] [00000] Query 42 processed 16384 rows (id BETWEEN 43215630 AND 44039196) for 1.02 sec
+[2019-12-06 14:48:35] [00000] Total processed 450560 of 1027511 rows (43 %), estimated time left: 00:00:46
+[2019-12-06 14:48:35] [00000]
+[2019-12-06 14:48:35] [00000] Query 43 processed 8192 rows (id BETWEEN 44039199 AND 44386982) for 0.35 sec
+[2019-12-06 14:48:35] [00000] Total processed 458752 of 1027511 rows (44 %), estimated time left: 00:00:45
+[2019-12-06 14:48:35] [00000]
+[2019-12-06 14:48:36] [00000] Query 44 processed 16384 rows (id BETWEEN 44386985 AND 45086919) for 0.80 sec
+[2019-12-06 14:48:36] [00000] Total processed 475136 of 1027511 rows (46 %), estimated time left: 00:00:43
+[2019-12-06 14:48:36] [00000]
+[2019-12-06 14:48:37] [00000] Query 45 processed 32768 rows (id BETWEEN 45086920 AND 45655026) for 1.39 sec
+[2019-12-06 14:48:37] [00000] Total processed 507904 of 1027511 rows (49 %), estimated time left: 00:00:39
+[2019-12-06 14:48:37] [00000]
+[2019-12-06 14:48:38] [00000] Query 46 processed 16384 rows (id BETWEEN 45655028 AND 45954067) for 0.62 sec
+[2019-12-06 14:48:38] [00000] Total processed 524288 of 1027511 rows (51 %), estimated time left: 00:00:37
+[2019-12-06 14:48:38] [00000]
+[2019-12-06 14:48:39] [00000] Query 47 processed 32768 rows (id BETWEEN 45954068 AND 46287604) for 1.28 sec
+[2019-12-06 14:48:39] [00000] Total processed 557056 of 1027511 rows (54 %), estimated time left: 00:00:34
+[2019-12-06 14:48:39] [00000]
+[2019-12-06 14:48:40] [00000] Query 48 processed 16384 rows (id BETWEEN 46287605 AND 46499354) for 0.68 sec
+[2019-12-06 14:48:40] [00000] Total processed 573440 of 1027511 rows (55 %), estimated time left: 00:00:32
+[2019-12-06 14:48:40] [00000]
+[2019-12-06 14:48:42] [00000] Query 49 processed 32768 rows (id BETWEEN 46499357 AND 46840850) for 1.36 sec
+[2019-12-06 14:48:42] [00000] Total processed 606208 of 1027511 rows (58 %), estimated time left: 00:00:29
+[2019-12-06 14:48:42] [00000]
+[2019-12-06 14:48:42] [00000] Query 50 processed 16384 rows (id BETWEEN 46840851 AND 46972769) for 0.63 sec
+[2019-12-06 14:48:42] [00000] Total processed 622592 of 1027511 rows (60 %), estimated time left: 00:00:28
+[2019-12-06 14:48:42] [00000]
+[2019-12-06 14:48:43] [00000] Query 51 processed 32768 rows (id BETWEEN 46972772 AND 47215810) for 1.28 sec
+[2019-12-06 14:48:43] [00000] Total processed 655360 of 1027511 rows (63 %), estimated time left: 00:00:25
+[2019-12-06 14:48:43] [00000]
+[2019-12-06 14:48:44] [00000] Query 52 processed 16384 rows (id BETWEEN 47215826 AND 47345636) for 0.64 sec
+[2019-12-06 14:48:44] [00000] Total processed 671744 of 1027511 rows (65 %), estimated time left: 00:00:24
+[2019-12-06 14:48:44] [00000]
+[2019-12-06 14:48:45] [00000] Query 53 processed 32768 rows (id BETWEEN 47345665 AND 47712596) for 1.27 sec
+[2019-12-06 14:48:45] [00000] Total processed 704512 of 1027511 rows (68 %), estimated time left: 00:00:21
+[2019-12-06 14:48:45] [00000]
+[2019-12-06 14:48:46] [00000] Query 54 processed 16384 rows (id BETWEEN 47712613 AND 47898628) for 0.58 sec
+[2019-12-06 14:48:46] [00000] Total processed 720896 of 1027511 rows (70 %), estimated time left: 00:00:20
+[2019-12-06 14:48:46] [00000]
+[2019-12-06 14:48:47] [00000] Query 55 processed 32768 rows (id BETWEEN 47898820 AND 48246522) for 1.19 sec
+[2019-12-06 14:48:47] [00000] Total processed 753664 of 1027511 rows (73 %), estimated time left: 00:00:17
+[2019-12-06 14:48:47] [00000]
+[2019-12-06 14:48:48] [00000] Query 56 processed 16384 rows (id BETWEEN 48246523 AND 48434299) for 0.61 sec
+[2019-12-06 14:48:48] [00000] Total processed 770048 of 1027511 rows (74 %), estimated time left: 00:00:16
+[2019-12-06 14:48:48] [00000]
+[2019-12-06 14:48:49] [00000] Query 57 processed 32768 rows (id BETWEEN 48434300 AND 48679802) for 1.12 sec
+[2019-12-06 14:48:49] [00000] Total processed 802816 of 1027511 rows (78 %), estimated time left: 00:00:14
+[2019-12-06 14:48:49] [00000]
+[2019-12-06 14:48:50] [00000] Query 58 processed 16384 rows (id BETWEEN 48679804 AND 48804791) for 0.59 sec
+[2019-12-06 14:48:50] [00000] Total processed 819200 of 1027511 rows (79 %), estimated time left: 00:00:13
+[2019-12-06 14:48:50] [00000]
+[2019-12-06 14:48:51] [00000] Query 59 processed 32768 rows (id BETWEEN 48804792 AND 49250685) for 1.23 sec
+[2019-12-06 14:48:51] [00000] Total processed 851968 of 1027511 rows (82 %), estimated time left: 00:00:11
+[2019-12-06 14:48:51] [00000]
+[2019-12-06 14:48:51] [00000] Query 60 processed 16384 rows (id BETWEEN 49250686 AND 49587398) for 0.61 sec
+[2019-12-06 14:48:51] [00000] Total processed 868352 of 1027511 rows (84 %), estimated time left: 00:00:10
+[2019-12-06 14:48:51] [00000]
+[2019-12-06 14:48:53] [00000] Query 61 processed 32768 rows (id BETWEEN 49587400 AND 50579907) for 1.56 sec
+[2019-12-06 14:48:53] [00000] Total processed 901120 of 1027511 rows (87 %), estimated time left: 00:00:07
+[2019-12-06 14:48:53] [00000]
+[2019-12-06 14:48:53] [00000] Query 62 processed 16384 rows (id BETWEEN 50579908 AND 51034839) for 0.68 sec
+[2019-12-06 14:48:53] [00000] Total processed 917504 of 1027511 rows (89 %), estimated time left: 00:00:06
+[2019-12-06 14:48:53] [00000]
+[2019-12-06 14:48:55] [00000] Query 63 processed 32768 rows (id BETWEEN 51034840 AND 52010180) for 1.57 sec
+[2019-12-06 14:48:55] [00000] Total processed 950272 of 1027511 rows (92 %), estimated time left: 00:00:05
+[2019-12-06 14:48:55] [00000]
+[2019-12-06 14:48:56] [00000] Query 64 processed 16384 rows (id BETWEEN 52010181 AND 52434593) for 0.83 sec
+[2019-12-06 14:48:56] [00000] Total processed 966656 of 1027511 rows (94 %), estimated time left: 00:00:04
+[2019-12-06 14:48:56] [00000]
+[2019-12-06 14:48:59] [00000] Query 65 processed 32768 rows (id BETWEEN 52434594 AND 53008406) for 3.24 sec
+[2019-12-06 14:48:59] [00000] Total processed 999424 of 1027511 rows (97 %), estimated time left: 00:00:02
+[2019-12-06 14:48:59] [00000]
+[2019-12-06 14:49:00] [00000] Query 66 processed 16384 rows (id BETWEEN 53008506 AND 53452287) for 0.84 sec
+[2019-12-06 14:49:00] [00000] Total processed 1015808 of 1027511 rows (98 %), estimated time left: 00:00:01
+[2019-12-06 14:49:00] [00000]
+[2019-12-06 14:49:01] [00000] Query 67 processed 11703 rows (id BETWEEN 53452288 AND 53860922) for 0.76 sec
+[2019-12-06 14:49:01] [00000] Total processed 1027511 of 1027511 rows (100 %), estimated time left: 00:00:00
+[2019-12-06 14:49:01] [00000]
+[2019-12-06 14:49:01] [00000] Done. 16737 rows per second, 1.09 queries per second
+[2019-12-06 14:49:01] completed in 1 m 1 s 415 ms
 ```
 
 ## Модификация схемы данных (DDL)
