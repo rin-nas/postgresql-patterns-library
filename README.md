@@ -1118,7 +1118,8 @@ WHERE u2.id = u.id;
 1. Минимальные кратковременные блокировки на запись (чтобы не повлиять на стабильность работы БД)
 1. Отображение прогресса выполнения в процентах и оставшегося времени завершения
 1. На реплику данные передаются постепенно небольшими порциями, а не одним огромным куском.
-1. Скрипт ниже обрабатывает большую таблицу пачками по несколько (десятки/сотни/тысячи) записей.  В процесе работы размер пачки автоматические подстраивается под максимальное время работы для 1-й пачки (несколько секунд). 
+
+Скрипт ниже обрабатывает большую таблицу пачками по несколько (десятки/сотни/тысячи) записей.  В процесе работы размер пачки автоматические подстраивается под максимальное время работы для 1-й пачки (несколько секунд). 
 
 ```sql
 -- Запросы выполнять НЕ в транзакции!
@@ -1140,19 +1141,23 @@ CREATE UNIQUE INDEX IF NOT EXISTS {table}_{JiraTaskId}_uniq_id ON {table}_{JiraT
  
 DO $$
 DECLARE
+    -- private variables (do not edit):
     total_time_start timestamp default clock_timestamp();
     total_time_elapsed numeric default 0; -- время выполнения всех запросов, в секундах
     query_time_start timestamp;
     query_time_elapsed numeric default 0; -- фактическое время выполнения 1-го запроса, в секундах
     estimated_time interval default null; -- оценочное время, сколько осталось работать
-    time_max numeric default 1; -- пороговое максимальное время выполнения 1-го запроса, в секундах
     rec_start record;
     rec_stop record;
     cycles int default 0; -- счётчик для цикла
     batch_rows int default 1; -- по сколько записей будем обновлять за 1 цикл
     processed_rows int default 0; -- счётчик, сколько записей обновили, увеличивается на каждой итерации цикла
     total_rows int default 0; -- количество записей всего
+    -- public variables (need to edit):
+    time_max numeric default 1; -- пороговое максимальное время выполнения 1-го запроса, в секундах
     cur CURSOR FOR SELECT * FROM {table}_{JiraTaskId} ORDER BY id; -- сортировка по id обязательна!
+    cpu_num smallint default 1; -- для распараллеливания скрипта для выполнения через bash и psql: номер текущего ядра процессора
+    cpu_max smallint default 1; -- для распараллеливания скрипта для выполнения через bash и psql: максимальное количество ядер процессора
 BEGIN
     RAISE NOTICE 'Calculate total rows%', ' ';
  
@@ -1176,16 +1181,20 @@ BEGIN
             INSERT INTO ...
             SELECT ...
             FROM ... AS t
-            WHERE t.id BETWEEN rec_start.id AND rec_stop.id;
+            WHERE t.id % cpu_max = (cpu_num - 1)
+              AND t.id BETWEEN rec_start.id AND rec_stop.id;
  
             -- или напишите здесь запрос для обновления записей:
             UPDATE {table} AS n
             SET ...
             FROM {table}_{JiraTaskId} AS t
-            WHERE t.id = n.id AND t.id BETWEEN rec_start.id AND rec_stop.id;
+            WHERE t.id % cpu_max = (cpu_num - 1)
+              AND t.id = n.id AND t.id BETWEEN rec_start.id AND rec_stop.id;
              
             -- или напишите здесь запрос для удаления записей:
-            DELETE FROM {table} WHERE id BETWEEN rec_start.id AND rec_stop.id;
+            DELETE FROM {table}
+            WHERE id % cpu_max = (cpu_num - 1)
+              AND id BETWEEN rec_start.id AND rec_stop.id;
  
             COMMIT; -- https://www.postgresql.org/docs/11/plpgsql-transactions.html
  
@@ -1423,6 +1432,29 @@ VACUUM VERBOSE ANALYZE {table};
 [2019-12-06 14:49:01] [00000]
 [2019-12-06 14:49:01] [00000] Done. 16737 rows per second, 1.09 queries per second
 [2019-12-06 14:49:01] completed in 1 m 1 s 415 ms
+```
+
+Для ускорения выполнения SQL шаблон можно распараллелить по нескольким ядрам процессора:
+
+`{JiraTaskId}.sh`:
+```bash
+#cpu_max=`nproc`
+cpu_max=$((`nproc` / 2))
+#echo "$cpu_max"
+#exit 0
+ 
+for ((cpu_num = 1; cpu_num <= cpu_max; cpu_num++))
+do
+    cat {JiraTaskId}.sql \
+        | sed "s/cpu_num smallint default 1/cpu_num smallint default $cpu_num/g" \
+        | sed "s/cpu_max smallint default 1/cpu_max smallint default $cpu_max/g" \
+        | psql --user={username} --dbname={dbname} --echo-all > {JiraTaskId}_job_$cpu_num.log 2>&1 &
+done
+ 
+jobs -l
+ 
+#wait
+#echo "All done"
 ```
 
 ## Модификация схемы данных (DDL)
