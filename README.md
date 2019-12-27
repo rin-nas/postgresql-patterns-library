@@ -1196,6 +1196,7 @@ BEGIN
             WHERE id % cpu_max = (cpu_num - 1)
               AND id BETWEEN rec_start.id AND rec_stop.id;
  
+            -- comment next command if you use PosgreSQL < 11, but you will have one big long transaction
             COMMIT; -- https://www.postgresql.org/docs/11/plpgsql-transactions.html
  
         query_time_elapsed := round(extract('epoch' from clock_timestamp() - query_time_start)::numeric, 2);
