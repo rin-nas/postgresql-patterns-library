@@ -1206,7 +1206,7 @@ BEGIN
             estimated_time := ((total_rows * total_time_elapsed / processed_rows - total_time_elapsed)::int::text || 's')::interval;
         END IF;
  
-        RAISE NOTICE 'Query % processed % rows (id %% % = (% - 1) AND id BETWEEN % AND %) for % sec', cycles, batch_rows, cpu_num, cpu_max, rec_start.id, rec_stop.id, query_time_elapsed;
+        RAISE NOTICE 'Query % processed % rows (id %% % = (% - 1) AND id BETWEEN % AND %) for % sec', cycles, batch_rows, cpu_max, cpu_num, rec_start.id, rec_stop.id, query_time_elapsed;
         RAISE NOTICE 'Total processed % of % rows (% %%), estimated time left: %', processed_rows, total_rows, round(processed_rows * 100.0 / total_rows, 2), COALESCE(estimated_time::text, '?');
         RAISE NOTICE '%', ' '; -- just new line
  
