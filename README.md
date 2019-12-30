@@ -1208,7 +1208,8 @@ BEGIN
         END IF;
  
         RAISE NOTICE 'Query % processed % rows (id %% % = (% - 1) AND id BETWEEN % AND %) for % sec', cycles, batch_rows, cpu_max, cpu_num, rec_start.id, rec_stop.id, query_time_elapsed;
-        RAISE NOTICE 'Total processed % of % rows (% %%), estimated time left: %', processed_rows, total_rows, round(processed_rows * 100.0 / total_rows, 2), COALESCE(estimated_time::text, '?');
+        RAISE NOTICE 'Total processed % of % rows (% %%)', processed_rows, total_rows, round(processed_rows * 100.0 / total_rows, 2);
+        RAISE NOTICE 'Now: %, estimated time left: %', clock_timestamp()::timestamp(0), COALESCE(estimated_time::text, '?');
         RAISE NOTICE '%', ' '; -- just new line
  
         IF query_time_elapsed < time_max THEN
