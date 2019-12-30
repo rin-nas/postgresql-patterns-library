@@ -1209,7 +1209,7 @@ BEGIN
  
         RAISE NOTICE 'Query % processed % rows (id %% % = (% - 1) AND id BETWEEN % AND %) for % sec', cycles, batch_rows, cpu_max, cpu_num, rec_start.id, rec_stop.id, query_time_elapsed;
         RAISE NOTICE 'Total processed % of % rows (% %%)', processed_rows, total_rows, round(processed_rows * 100.0 / total_rows, 2);
-        RAISE NOTICE 'Now: %, estimated time left: %', clock_timestamp()::timestamp(0), COALESCE(estimated_time::text, '?');
+        RAISE NOTICE 'Current date time: %, elapsed time: %, estimated time: %', clock_timestamp()::timestamp(0), (clock_timestamp() - total_time_start)::interval(0), COALESCE(estimated_time::text, '?');
         RAISE NOTICE '%', ' '; -- just new line
  
         IF query_time_elapsed < time_max THEN
@@ -1230,210 +1230,268 @@ VACUUM VERBOSE ANALYZE {table};
 
 Пример отчёта выполненного блока DO
 ```
-[2019-12-06 14:48:00] [00000] Calculate total rows
-[2019-12-06 14:48:01] [00000] Query 1 processed 1 rows (id BETWEEN 45 AND 45) for 1.31 sec
-[2019-12-06 14:48:01] [00000] Total processed 1 of 1027511 rows (0 %), estimated time left: ?
-[2019-12-06 14:48:01] [00000]
-[2019-12-06 14:48:01] [00000] Query 2 processed 1 rows (id BETWEEN 109 AND 109) for 0.00 sec
-[2019-12-06 14:48:01] [00000] Total processed 2 of 1027511 rows (0 %), estimated time left: ?
-[2019-12-06 14:48:01] [00000]
-[2019-12-06 14:48:01] [00000] Query 3 processed 2 rows (id BETWEEN 116 AND 253) for 0.00 sec
-[2019-12-06 14:48:01] [00000] Total processed 4 of 1027511 rows (0 %), estimated time left: ?
-[2019-12-06 14:48:01] [00000]
-[2019-12-06 14:48:01] [00000] Query 4 processed 4 rows (id BETWEEN 363 AND 624) for 0.00 sec
-[2019-12-06 14:48:01] [00000] Total processed 8 of 1027511 rows (0 %), estimated time left: ?
-[2019-12-06 14:48:01] [00000]
-[2019-12-06 14:48:01] [00000] Query 5 processed 8 rows (id BETWEEN 638 AND 1061) for 0.00 sec
-[2019-12-06 14:48:01] [00000] Total processed 16 of 1027511 rows (0 %), estimated time left: ?
-[2019-12-06 14:48:01] [00000]
-[2019-12-06 14:48:01] [00000] Query 6 processed 16 rows (id BETWEEN 1129 AND 2020) for 0.01 sec
-[2019-12-06 14:48:01] [00000] Total processed 32 of 1027511 rows (0 %), estimated time left: ?
-[2019-12-06 14:48:01] [00000]
-[2019-12-06 14:48:01] [00000] Query 7 processed 32 rows (id BETWEEN 2119 AND 3017) for 0.01 sec
-[2019-12-06 14:48:01] [00000] Total processed 64 of 1027511 rows (0 %), estimated time left: ?
-[2019-12-06 14:48:01] [00000]
-[2019-12-06 14:48:01] [00000] Query 8 processed 64 rows (id BETWEEN 3106 AND 5157) for 0.02 sec
-[2019-12-06 14:48:01] [00000] Total processed 128 of 1027511 rows (0 %), estimated time left: ?
-[2019-12-06 14:48:01] [00000]
-[2019-12-06 14:48:01] [00000] Query 9 processed 128 rows (id BETWEEN 5185 AND 10781) for 0.01 sec
-[2019-12-06 14:48:01] [00000] Total processed 256 of 1027511 rows (0 %), estimated time left: ?
-[2019-12-06 14:48:01] [00000]
-[2019-12-06 14:48:01] [00000] Query 10 processed 256 rows (id BETWEEN 10835 AND 300608) for 0.04 sec
-[2019-12-06 14:48:01] [00000] Total processed 512 of 1027511 rows (0 %), estimated time left: ?
-[2019-12-06 14:48:01] [00000]
-[2019-12-06 14:48:01] [00000] Query 11 processed 512 rows (id BETWEEN 300660 AND 392756) for 0.05 sec
-[2019-12-06 14:48:01] [00000] Total processed 1024 of 1027511 rows (0 %), estimated time left: ?
-[2019-12-06 14:48:01] [00000]
-[2019-12-06 14:48:01] [00000] Query 12 processed 1024 rows (id BETWEEN 393018 AND 494144) for 0.11 sec
-[2019-12-06 14:48:01] [00000] Total processed 2048 of 1027511 rows (0 %), estimated time left: ?
-[2019-12-06 14:48:01] [00000]
-[2019-12-06 14:48:02] [00000] Query 13 processed 2048 rows (id BETWEEN 494261 AND 621517) for 0.25 sec
-[2019-12-06 14:48:02] [00000] Total processed 4096 of 1027511 rows (0 %), estimated time left: ?
-[2019-12-06 14:48:02] [00000]
-[2019-12-06 14:48:02] [00000] Query 14 processed 4096 rows (id BETWEEN 621518 AND 778925) for 0.37 sec
-[2019-12-06 14:48:02] [00000] Total processed 8192 of 1027511 rows (0 %), estimated time left: ?
-[2019-12-06 14:48:02] [00000]
-[2019-12-06 14:48:02] [00000] Query 15 processed 8192 rows (id BETWEEN 778928 AND 1891253) for 0.54 sec
-[2019-12-06 14:48:02] [00000] Total processed 16384 of 1027511 rows (1 %), estimated time left: ?
-[2019-12-06 14:48:02] [00000]
-[2019-12-06 14:48:04] [00000] Query 16 processed 16384 rows (id BETWEEN 1892788 AND 10448979) for 1.23 sec
-[2019-12-06 14:48:04] [00000] Total processed 32768 of 1027511 rows (3 %), estimated time left: ?
-[2019-12-06 14:48:04] [00000]
-[2019-12-06 14:48:05] [00000] Query 17 processed 8192 rows (id BETWEEN 10449057 AND 11223737) for 0.93 sec
-[2019-12-06 14:48:05] [00000] Total processed 40960 of 1027511 rows (3 %), estimated time left: 00:02:04
-[2019-12-06 14:48:05] [00000]
-[2019-12-06 14:48:05] [00000] Query 18 processed 16384 rows (id BETWEEN 11223739 AND 12501518) for 0.93 sec
-[2019-12-06 14:48:05] [00000] Total processed 57344 of 1027511 rows (5 %), estimated time left: 00:01:43
-[2019-12-06 14:48:05] [00000]
-[2019-12-06 14:48:08] [00000] Query 19 processed 32768 rows (id BETWEEN 12501524 AND 16119693) for 2.94 sec
-[2019-12-06 14:48:08] [00000] Total processed 90112 of 1027511 rows (8 %), estimated time left: 00:01:34
-[2019-12-06 14:48:08] [00000]
-[2019-12-06 14:48:11] [00000] Query 20 processed 16384 rows (id BETWEEN 16119696 AND 17270678) for 2.13 sec
-[2019-12-06 14:48:11] [00000] Total processed 106496 of 1027511 rows (10 %), estimated time left: 00:01:37
-[2019-12-06 14:48:11] [00000]
-[2019-12-06 14:48:11] [00000] Query 21 processed 8192 rows (id BETWEEN 17270726 AND 18581013) for 0.69 sec
-[2019-12-06 14:48:11] [00000] Total processed 114688 of 1027511 rows (11 %), estimated time left: 00:01:34
-[2019-12-06 14:48:11] [00000]
-[2019-12-06 14:48:12] [00000] Query 22 processed 16384 rows (id BETWEEN 18582136 AND 20698177) for 1.02 sec
-[2019-12-06 14:48:12] [00000] Total processed 131072 of 1027511 rows (12 %), estimated time left: 00:01:28
-[2019-12-06 14:48:12] [00000]
-[2019-12-06 14:48:13] [00000] Query 23 processed 8192 rows (id BETWEEN 20698203 AND 22043643) for 0.51 sec
-[2019-12-06 14:48:13] [00000] Total processed 139264 of 1027511 rows (13 %), estimated time left: 00:01:26
-[2019-12-06 14:48:13] [00000]
-[2019-12-06 14:48:14] [00000] Query 24 processed 16384 rows (id BETWEEN 22043671 AND 24016029) for 0.96 sec
-[2019-12-06 14:48:14] [00000] Total processed 155648 of 1027511 rows (15 %), estimated time left: 00:01:20
-[2019-12-06 14:48:14] [00000]
-[2019-12-06 14:48:18] [00000] Query 25 processed 32768 rows (id BETWEEN 24016030 AND 27764872) for 3.95 sec
-[2019-12-06 14:48:18] [00000] Total processed 188416 of 1027511 rows (18 %), estimated time left: 00:01:22
-[2019-12-06 14:48:18] [00000]
-[2019-12-06 14:48:19] [00000] Query 26 processed 16384 rows (id BETWEEN 27764874 AND 29649545) for 0.89 sec
-[2019-12-06 14:48:19] [00000] Total processed 204800 of 1027511 rows (19 %), estimated time left: 00:01:17
-[2019-12-06 14:48:19] [00000]
-[2019-12-06 14:48:20] [00000] Query 27 processed 32768 rows (id BETWEEN 29651296 AND 33078590) for 1.78 sec
-[2019-12-06 14:48:20] [00000] Total processed 237568 of 1027511 rows (23 %), estimated time left: 00:01:10
-[2019-12-06 14:48:20] [00000]
-[2019-12-06 14:48:22] [00000] Query 28 processed 16384 rows (id BETWEEN 33078591 AND 33958148) for 1.26 sec
-[2019-12-06 14:48:22] [00000] Total processed 253952 of 1027511 rows (24 %), estimated time left: 00:01:08
-[2019-12-06 14:48:22] [00000]
-[2019-12-06 14:48:22] [00000] Query 29 processed 8192 rows (id BETWEEN 33958156 AND 34206330) for 0.63 sec
-[2019-12-06 14:48:22] [00000] Total processed 262144 of 1027511 rows (25 %), estimated time left: 00:01:07
-[2019-12-06 14:48:22] [00000]
-[2019-12-06 14:48:24] [00000] Query 30 processed 16384 rows (id BETWEEN 34206331 AND 35020146) for 1.24 sec
-[2019-12-06 14:48:24] [00000] Total processed 278528 of 1027511 rows (27 %), estimated time left: 00:01:05
-[2019-12-06 14:48:24] [00000]
-[2019-12-06 14:48:24] [00000] Query 31 processed 8192 rows (id BETWEEN 35020147 AND 35439539) for 0.40 sec
-[2019-12-06 14:48:24] [00000] Total processed 286720 of 1027511 rows (27 %), estimated time left: 00:01:03
-[2019-12-06 14:48:24] [00000]
-[2019-12-06 14:48:25] [00000] Query 32 processed 16384 rows (id BETWEEN 35439542 AND 36289494) for 1.32 sec
-[2019-12-06 14:48:25] [00000] Total processed 303104 of 1027511 rows (29 %), estimated time left: 00:01:02
-[2019-12-06 14:48:25] [00000]
-[2019-12-06 14:48:26] [00000] Query 33 processed 8192 rows (id BETWEEN 36289495 AND 36657783) for 0.66 sec
-[2019-12-06 14:48:26] [00000] Total processed 311296 of 1027511 rows (30 %), estimated time left: 00:01:01
-[2019-12-06 14:48:26] [00000]
-[2019-12-06 14:48:27] [00000] Query 34 processed 16384 rows (id BETWEEN 36657784 AND 37691799) for 1.24 sec
-[2019-12-06 14:48:27] [00000] Total processed 327680 of 1027511 rows (31 %), estimated time left: 00:00:59
-[2019-12-06 14:48:27] [00000]
-[2019-12-06 14:48:28] [00000] Query 35 processed 8192 rows (id BETWEEN 37691800 AND 37933416) for 0.49 sec
-[2019-12-06 14:48:28] [00000] Total processed 335872 of 1027511 rows (32 %), estimated time left: 00:00:58
-[2019-12-06 14:48:28] [00000]
-[2019-12-06 14:48:29] [00000] Query 36 processed 16384 rows (id BETWEEN 37933417 AND 38849414) for 1.10 sec
-[2019-12-06 14:48:29] [00000] Total processed 352256 of 1027511 rows (34 %), estimated time left: 00:00:56
-[2019-12-06 14:48:29] [00000]
-[2019-12-06 14:48:29] [00000] Query 37 processed 8192 rows (id BETWEEN 38849415 AND 39234300) for 0.68 sec
-[2019-12-06 14:48:29] [00000] Total processed 360448 of 1027511 rows (35 %), estimated time left: 00:00:56
-[2019-12-06 14:48:29] [00000]
-[2019-12-06 14:48:31] [00000] Query 38 processed 16384 rows (id BETWEEN 39234301 AND 40125074) for 1.12 sec
-[2019-12-06 14:48:31] [00000] Total processed 376832 of 1027511 rows (36 %), estimated time left: 00:00:54
-[2019-12-06 14:48:31] [00000]
-[2019-12-06 14:48:31] [00000] Query 39 processed 8192 rows (id BETWEEN 40125075 AND 40788965) for 0.61 sec
-[2019-12-06 14:48:31] [00000] Total processed 385024 of 1027511 rows (37 %), estimated time left: 00:00:53
-[2019-12-06 14:48:31] [00000]
-[2019-12-06 14:48:32] [00000] Query 40 processed 16384 rows (id BETWEEN 40788967 AND 41472732) for 0.89 sec
-[2019-12-06 14:48:32] [00000] Total processed 401408 of 1027511 rows (39 %), estimated time left: 00:00:51
-[2019-12-06 14:48:32] [00000]
-[2019-12-06 14:48:34] [00000] Query 41 processed 32768 rows (id BETWEEN 41472733 AND 43215629) for 1.86 sec
-[2019-12-06 14:48:34] [00000] Total processed 434176 of 1027511 rows (42 %), estimated time left: 00:00:47
-[2019-12-06 14:48:34] [00000]
-[2019-12-06 14:48:35] [00000] Query 42 processed 16384 rows (id BETWEEN 43215630 AND 44039196) for 1.02 sec
-[2019-12-06 14:48:35] [00000] Total processed 450560 of 1027511 rows (43 %), estimated time left: 00:00:46
-[2019-12-06 14:48:35] [00000]
-[2019-12-06 14:48:35] [00000] Query 43 processed 8192 rows (id BETWEEN 44039199 AND 44386982) for 0.35 sec
-[2019-12-06 14:48:35] [00000] Total processed 458752 of 1027511 rows (44 %), estimated time left: 00:00:45
-[2019-12-06 14:48:35] [00000]
-[2019-12-06 14:48:36] [00000] Query 44 processed 16384 rows (id BETWEEN 44386985 AND 45086919) for 0.80 sec
-[2019-12-06 14:48:36] [00000] Total processed 475136 of 1027511 rows (46 %), estimated time left: 00:00:43
-[2019-12-06 14:48:36] [00000]
-[2019-12-06 14:48:37] [00000] Query 45 processed 32768 rows (id BETWEEN 45086920 AND 45655026) for 1.39 sec
-[2019-12-06 14:48:37] [00000] Total processed 507904 of 1027511 rows (49 %), estimated time left: 00:00:39
-[2019-12-06 14:48:37] [00000]
-[2019-12-06 14:48:38] [00000] Query 46 processed 16384 rows (id BETWEEN 45655028 AND 45954067) for 0.62 sec
-[2019-12-06 14:48:38] [00000] Total processed 524288 of 1027511 rows (51 %), estimated time left: 00:00:37
-[2019-12-06 14:48:38] [00000]
-[2019-12-06 14:48:39] [00000] Query 47 processed 32768 rows (id BETWEEN 45954068 AND 46287604) for 1.28 sec
-[2019-12-06 14:48:39] [00000] Total processed 557056 of 1027511 rows (54 %), estimated time left: 00:00:34
-[2019-12-06 14:48:39] [00000]
-[2019-12-06 14:48:40] [00000] Query 48 processed 16384 rows (id BETWEEN 46287605 AND 46499354) for 0.68 sec
-[2019-12-06 14:48:40] [00000] Total processed 573440 of 1027511 rows (55 %), estimated time left: 00:00:32
-[2019-12-06 14:48:40] [00000]
-[2019-12-06 14:48:42] [00000] Query 49 processed 32768 rows (id BETWEEN 46499357 AND 46840850) for 1.36 sec
-[2019-12-06 14:48:42] [00000] Total processed 606208 of 1027511 rows (58 %), estimated time left: 00:00:29
-[2019-12-06 14:48:42] [00000]
-[2019-12-06 14:48:42] [00000] Query 50 processed 16384 rows (id BETWEEN 46840851 AND 46972769) for 0.63 sec
-[2019-12-06 14:48:42] [00000] Total processed 622592 of 1027511 rows (60 %), estimated time left: 00:00:28
-[2019-12-06 14:48:42] [00000]
-[2019-12-06 14:48:43] [00000] Query 51 processed 32768 rows (id BETWEEN 46972772 AND 47215810) for 1.28 sec
-[2019-12-06 14:48:43] [00000] Total processed 655360 of 1027511 rows (63 %), estimated time left: 00:00:25
-[2019-12-06 14:48:43] [00000]
-[2019-12-06 14:48:44] [00000] Query 52 processed 16384 rows (id BETWEEN 47215826 AND 47345636) for 0.64 sec
-[2019-12-06 14:48:44] [00000] Total processed 671744 of 1027511 rows (65 %), estimated time left: 00:00:24
-[2019-12-06 14:48:44] [00000]
-[2019-12-06 14:48:45] [00000] Query 53 processed 32768 rows (id BETWEEN 47345665 AND 47712596) for 1.27 sec
-[2019-12-06 14:48:45] [00000] Total processed 704512 of 1027511 rows (68 %), estimated time left: 00:00:21
-[2019-12-06 14:48:45] [00000]
-[2019-12-06 14:48:46] [00000] Query 54 processed 16384 rows (id BETWEEN 47712613 AND 47898628) for 0.58 sec
-[2019-12-06 14:48:46] [00000] Total processed 720896 of 1027511 rows (70 %), estimated time left: 00:00:20
-[2019-12-06 14:48:46] [00000]
-[2019-12-06 14:48:47] [00000] Query 55 processed 32768 rows (id BETWEEN 47898820 AND 48246522) for 1.19 sec
-[2019-12-06 14:48:47] [00000] Total processed 753664 of 1027511 rows (73 %), estimated time left: 00:00:17
-[2019-12-06 14:48:47] [00000]
-[2019-12-06 14:48:48] [00000] Query 56 processed 16384 rows (id BETWEEN 48246523 AND 48434299) for 0.61 sec
-[2019-12-06 14:48:48] [00000] Total processed 770048 of 1027511 rows (74 %), estimated time left: 00:00:16
-[2019-12-06 14:48:48] [00000]
-[2019-12-06 14:48:49] [00000] Query 57 processed 32768 rows (id BETWEEN 48434300 AND 48679802) for 1.12 sec
-[2019-12-06 14:48:49] [00000] Total processed 802816 of 1027511 rows (78 %), estimated time left: 00:00:14
-[2019-12-06 14:48:49] [00000]
-[2019-12-06 14:48:50] [00000] Query 58 processed 16384 rows (id BETWEEN 48679804 AND 48804791) for 0.59 sec
-[2019-12-06 14:48:50] [00000] Total processed 819200 of 1027511 rows (79 %), estimated time left: 00:00:13
-[2019-12-06 14:48:50] [00000]
-[2019-12-06 14:48:51] [00000] Query 59 processed 32768 rows (id BETWEEN 48804792 AND 49250685) for 1.23 sec
-[2019-12-06 14:48:51] [00000] Total processed 851968 of 1027511 rows (82 %), estimated time left: 00:00:11
-[2019-12-06 14:48:51] [00000]
-[2019-12-06 14:48:51] [00000] Query 60 processed 16384 rows (id BETWEEN 49250686 AND 49587398) for 0.61 sec
-[2019-12-06 14:48:51] [00000] Total processed 868352 of 1027511 rows (84 %), estimated time left: 00:00:10
-[2019-12-06 14:48:51] [00000]
-[2019-12-06 14:48:53] [00000] Query 61 processed 32768 rows (id BETWEEN 49587400 AND 50579907) for 1.56 sec
-[2019-12-06 14:48:53] [00000] Total processed 901120 of 1027511 rows (87 %), estimated time left: 00:00:07
-[2019-12-06 14:48:53] [00000]
-[2019-12-06 14:48:53] [00000] Query 62 processed 16384 rows (id BETWEEN 50579908 AND 51034839) for 0.68 sec
-[2019-12-06 14:48:53] [00000] Total processed 917504 of 1027511 rows (89 %), estimated time left: 00:00:06
-[2019-12-06 14:48:53] [00000]
-[2019-12-06 14:48:55] [00000] Query 63 processed 32768 rows (id BETWEEN 51034840 AND 52010180) for 1.57 sec
-[2019-12-06 14:48:55] [00000] Total processed 950272 of 1027511 rows (92 %), estimated time left: 00:00:05
-[2019-12-06 14:48:55] [00000]
-[2019-12-06 14:48:56] [00000] Query 64 processed 16384 rows (id BETWEEN 52010181 AND 52434593) for 0.83 sec
-[2019-12-06 14:48:56] [00000] Total processed 966656 of 1027511 rows (94 %), estimated time left: 00:00:04
-[2019-12-06 14:48:56] [00000]
-[2019-12-06 14:48:59] [00000] Query 65 processed 32768 rows (id BETWEEN 52434594 AND 53008406) for 3.24 sec
-[2019-12-06 14:48:59] [00000] Total processed 999424 of 1027511 rows (97 %), estimated time left: 00:00:02
-[2019-12-06 14:48:59] [00000]
-[2019-12-06 14:49:00] [00000] Query 66 processed 16384 rows (id BETWEEN 53008506 AND 53452287) for 0.84 sec
-[2019-12-06 14:49:00] [00000] Total processed 1015808 of 1027511 rows (98 %), estimated time left: 00:00:01
-[2019-12-06 14:49:00] [00000]
-[2019-12-06 14:49:01] [00000] Query 67 processed 11703 rows (id BETWEEN 53452288 AND 53860922) for 0.76 sec
-[2019-12-06 14:49:01] [00000] Total processed 1027511 of 1027511 rows (100 %), estimated time left: 00:00:00
-[2019-12-06 14:49:01] [00000]
-[2019-12-06 14:49:01] [00000] Done. 16737 rows per second, 1.09 queries per second
-[2019-12-06 14:49:01] completed in 1 m 1 s 415 ms
+Calculate total rows
+Query 1 processed 1 rows (id % 1 = (1 - 1) AND id BETWEEN 1 AND 1) for 0.09 sec
+Total processed 1 of 745 rows (0.13 %)
+Current date time: 2019-12-30 14:08:45, elapsed time: 00:00:00, estimated time: ?
+ 
+Query 2 processed 2 rows (id % 1 = (1 - 1) AND id BETWEEN 3 AND 4) for 0.16 sec
+Total processed 3 of 745 rows (0.40 %)
+Current date time: 2019-12-30 14:08:46, elapsed time: 00:00:00, estimated time: ?
+ 
+Query 3 processed 4 rows (id % 1 = (1 - 1) AND id BETWEEN 7 AND 24) for 0.31 sec
+Total processed 7 of 745 rows (0.94 %)
+Current date time: 2019-12-30 14:08:46, elapsed time: 00:00:01, estimated time: ?
+ 
+Query 4 processed 8 rows (id % 1 = (1 - 1) AND id BETWEEN 27 AND 124) for 0.63 sec
+Total processed 15 of 745 rows (2.01 %)
+Current date time: 2019-12-30 14:08:47, elapsed time: 00:00:01, estimated time: ?
+ 
+Query 5 processed 16 rows (id % 1 = (1 - 1) AND id BETWEEN 125 AND 144) for 1.26 sec
+Total processed 31 of 745 rows (4.16 %)
+Current date time: 2019-12-30 14:08:48, elapsed time: 00:00:02, estimated time: ?
+ 
+Query 6 processed 8 rows (id % 1 = (1 - 1) AND id BETWEEN 146 AND 166) for 0.63 sec
+Total processed 39 of 745 rows (5.23 %)
+Current date time: 2019-12-30 14:08:48, elapsed time: 00:00:03, estimated time: ?
+ 
+Query 7 processed 16 rows (id % 1 = (1 - 1) AND id BETWEEN 202 AND 234) for 1.25 sec
+Total processed 55 of 745 rows (7.38 %)
+Current date time: 2019-12-30 14:08:50, elapsed time: 00:00:04, estimated time: ?
+ 
+Query 8 processed 8 rows (id % 1 = (1 - 1) AND id BETWEEN 236 AND 253) for 0.64 sec
+Total processed 63 of 745 rows (8.46 %)
+Current date time: 2019-12-30 14:08:50, elapsed time: 00:00:05, estimated time: ?
+ 
+Query 9 processed 16 rows (id % 1 = (1 - 1) AND id BETWEEN 254 AND 302) for 1.25 sec
+Total processed 79 of 745 rows (10.60 %)
+Current date time: 2019-12-30 14:08:52, elapsed time: 00:00:06, estimated time: ?
+ 
+Query 10 processed 8 rows (id % 1 = (1 - 1) AND id BETWEEN 305 AND 316) for 0.63 sec
+Total processed 87 of 745 rows (11.68 %)
+Current date time: 2019-12-30 14:08:52, elapsed time: 00:00:07, estimated time: ?
+ 
+Query 11 processed 16 rows (id % 1 = (1 - 1) AND id BETWEEN 317 AND 340) for 1.24 sec
+Total processed 103 of 745 rows (13.83 %)
+Current date time: 2019-12-30 14:08:53, elapsed time: 00:00:08, estimated time: ?
+ 
+Query 12 processed 8 rows (id % 1 = (1 - 1) AND id BETWEEN 349 AND 362) for 0.62 sec
+Total processed 111 of 745 rows (14.90 %)
+Current date time: 2019-12-30 14:08:54, elapsed time: 00:00:09, estimated time: ?
+ 
+Query 13 processed 16 rows (id % 1 = (1 - 1) AND id BETWEEN 364 AND 390) for 1.24 sec
+Total processed 127 of 745 rows (17.05 %)
+Current date time: 2019-12-30 14:08:55, elapsed time: 00:00:10, estimated time: ?
+ 
+Query 14 processed 8 rows (id % 1 = (1 - 1) AND id BETWEEN 391 AND 399) for 0.62 sec
+Total processed 135 of 745 rows (18.12 %)
+Current date time: 2019-12-30 14:08:56, elapsed time: 00:00:11, estimated time: ?
+ 
+Query 15 processed 16 rows (id % 1 = (1 - 1) AND id BETWEEN 400 AND 435) for 1.24 sec
+Total processed 151 of 745 rows (20.27 %)
+Current date time: 2019-12-30 14:08:57, elapsed time: 00:00:12, estimated time: ?
+ 
+Query 16 processed 8 rows (id % 1 = (1 - 1) AND id BETWEEN 439 AND 452) for 0.62 sec
+Total processed 159 of 745 rows (21.34 %)
+Current date time: 2019-12-30 14:08:58, elapsed time: 00:00:12, estimated time: ?
+ 
+Query 17 processed 16 rows (id % 1 = (1 - 1) AND id BETWEEN 453 AND 470) for 1.24 sec
+Total processed 175 of 745 rows (23.49 %)
+Current date time: 2019-12-30 14:08:59, elapsed time: 00:00:14, estimated time: 00:00:45
+ 
+Query 18 processed 8 rows (id % 1 = (1 - 1) AND id BETWEEN 471 AND 486) for 0.62 sec
+Total processed 183 of 745 rows (24.56 %)
+Current date time: 2019-12-30 14:09:00, elapsed time: 00:00:14, estimated time: 00:00:44
+ 
+Query 19 processed 16 rows (id % 1 = (1 - 1) AND id BETWEEN 487 AND 507) for 1.24 sec
+Total processed 199 of 745 rows (26.71 %)
+Current date time: 2019-12-30 14:09:01, elapsed time: 00:00:16, estimated time: 00:00:43
+ 
+Query 20 processed 8 rows (id % 1 = (1 - 1) AND id BETWEEN 509 AND 518) for 0.62 sec
+Total processed 207 of 745 rows (27.79 %)
+Current date time: 2019-12-30 14:09:02, elapsed time: 00:00:16, estimated time: 00:00:42
+ 
+Query 21 processed 16 rows (id % 1 = (1 - 1) AND id BETWEEN 519 AND 537) for 1.24 sec
+Total processed 223 of 745 rows (29.93 %)
+Current date time: 2019-12-30 14:09:03, elapsed time: 00:00:17, estimated time: 00:00:41
+ 
+Query 22 processed 8 rows (id % 1 = (1 - 1) AND id BETWEEN 538 AND 547) for 0.62 sec
+Total processed 231 of 745 rows (31.01 %)
+Current date time: 2019-12-30 14:09:03, elapsed time: 00:00:18, estimated time: 00:00:40
+ 
+Query 23 processed 16 rows (id % 1 = (1 - 1) AND id BETWEEN 548 AND 572) for 1.24 sec
+Total processed 247 of 745 rows (33.15 %)
+Current date time: 2019-12-30 14:09:05, elapsed time: 00:00:19, estimated time: 00:00:39
+ 
+Query 24 processed 8 rows (id % 1 = (1 - 1) AND id BETWEEN 573 AND 580) for 0.62 sec
+Total processed 255 of 745 rows (34.23 %)
+Current date time: 2019-12-30 14:09:05, elapsed time: 00:00:20, estimated time: 00:00:38
+ 
+Query 25 processed 16 rows (id % 1 = (1 - 1) AND id BETWEEN 581 AND 604) for 1.24 sec
+Total processed 271 of 745 rows (36.38 %)
+Current date time: 2019-12-30 14:09:07, elapsed time: 00:00:21, estimated time: 00:00:37
+ 
+Query 26 processed 8 rows (id % 1 = (1 - 1) AND id BETWEEN 605 AND 613) for 0.62 sec
+Total processed 279 of 745 rows (37.45 %)
+Current date time: 2019-12-30 14:09:07, elapsed time: 00:00:22, estimated time: 00:00:36
+ 
+Query 27 processed 16 rows (id % 1 = (1 - 1) AND id BETWEEN 614 AND 637) for 1.24 sec
+Total processed 295 of 745 rows (39.60 %)
+Current date time: 2019-12-30 14:09:08, elapsed time: 00:00:23, estimated time: 00:00:35
+ 
+Query 28 processed 8 rows (id % 1 = (1 - 1) AND id BETWEEN 638 AND 646) for 0.62 sec
+Total processed 303 of 745 rows (40.67 %)
+Current date time: 2019-12-30 14:09:09, elapsed time: 00:00:24, estimated time: 00:00:34
+ 
+Query 29 processed 16 rows (id % 1 = (1 - 1) AND id BETWEEN 647 AND 665) for 1.24 sec
+Total processed 319 of 745 rows (42.82 %)
+Current date time: 2019-12-30 14:09:10, elapsed time: 00:00:25, estimated time: 00:00:33
+ 
+Query 30 processed 8 rows (id % 1 = (1 - 1) AND id BETWEEN 666 AND 673) for 0.62 sec
+Total processed 327 of 745 rows (43.89 %)
+Current date time: 2019-12-30 14:09:11, elapsed time: 00:00:26, estimated time: 00:00:33
+ 
+Query 31 processed 16 rows (id % 1 = (1 - 1) AND id BETWEEN 674 AND 704) for 1.24 sec
+Total processed 343 of 745 rows (46.04 %)
+Current date time: 2019-12-30 14:09:12, elapsed time: 00:00:27, estimated time: 00:00:31
+ 
+Query 32 processed 8 rows (id % 1 = (1 - 1) AND id BETWEEN 706 AND 715) for 0.62 sec
+Total processed 351 of 745 rows (47.11 %)
+Current date time: 2019-12-30 14:09:13, elapsed time: 00:00:27, estimated time: 00:00:31
+ 
+Query 33 processed 16 rows (id % 1 = (1 - 1) AND id BETWEEN 716 AND 746) for 1.24 sec
+Total processed 367 of 745 rows (49.26 %)
+Current date time: 2019-12-30 14:09:14, elapsed time: 00:00:29, estimated time: 00:00:29
+ 
+Query 34 processed 8 rows (id % 1 = (1 - 1) AND id BETWEEN 747 AND 764) for 0.62 sec
+Total processed 375 of 745 rows (50.34 %)
+Current date time: 2019-12-30 14:09:15, elapsed time: 00:00:29, estimated time: 00:00:29
+ 
+Query 35 processed 16 rows (id % 1 = (1 - 1) AND id BETWEEN 768 AND 784) for 1.24 sec
+Total processed 391 of 745 rows (52.48 %)
+Current date time: 2019-12-30 14:09:16, elapsed time: 00:00:30, estimated time: 00:00:28
+ 
+Query 36 processed 8 rows (id % 1 = (1 - 1) AND id BETWEEN 785 AND 792) for 0.62 sec
+Total processed 399 of 745 rows (53.56 %)
+Current date time: 2019-12-30 14:09:16, elapsed time: 00:00:31, estimated time: 00:00:27
+ 
+Query 37 processed 16 rows (id % 1 = (1 - 1) AND id BETWEEN 793 AND 821) for 1.24 sec
+Total processed 415 of 745 rows (55.70 %)
+Current date time: 2019-12-30 14:09:18, elapsed time: 00:00:32, estimated time: 00:00:26
+ 
+Query 38 processed 8 rows (id % 1 = (1 - 1) AND id BETWEEN 823 AND 833) for 0.62 sec
+Total processed 423 of 745 rows (56.78 %)
+Current date time: 2019-12-30 14:09:18, elapsed time: 00:00:33, estimated time: 00:00:25
+ 
+Query 39 processed 16 rows (id % 1 = (1 - 1) AND id BETWEEN 836 AND 868) for 1.24 sec
+Total processed 439 of 745 rows (58.93 %)
+Current date time: 2019-12-30 14:09:20, elapsed time: 00:00:34, estimated time: 00:00:24
+ 
+Query 40 processed 8 rows (id % 1 = (1 - 1) AND id BETWEEN 869 AND 879) for 0.62 sec
+Total processed 447 of 745 rows (60.00 %)
+Current date time: 2019-12-30 14:09:20, elapsed time: 00:00:35, estimated time: 00:00:23
+ 
+Query 41 processed 16 rows (id % 1 = (1 - 1) AND id BETWEEN 880 AND 903) for 1.24 sec
+Total processed 463 of 745 rows (62.15 %)
+Current date time: 2019-12-30 14:09:21, elapsed time: 00:00:36, estimated time: 00:00:22
+ 
+Query 42 processed 8 rows (id % 1 = (1 - 1) AND id BETWEEN 907 AND 914) for 0.62 sec
+Total processed 471 of 745 rows (63.22 %)
+Current date time: 2019-12-30 14:09:22, elapsed time: 00:00:37, estimated time: 00:00:21
+ 
+Query 43 processed 16 rows (id % 1 = (1 - 1) AND id BETWEEN 915 AND 930) for 1.24 sec
+Total processed 487 of 745 rows (65.37 %)
+Current date time: 2019-12-30 14:09:23, elapsed time: 00:00:38, estimated time: 00:00:20
+ 
+Query 44 processed 8 rows (id % 1 = (1 - 1) AND id BETWEEN 931 AND 942) for 0.62 sec
+Total processed 495 of 745 rows (66.44 %)
+Current date time: 2019-12-30 14:09:24, elapsed time: 00:00:39, estimated time: 00:00:19
+ 
+Query 45 processed 16 rows (id % 1 = (1 - 1) AND id BETWEEN 943 AND 962) for 1.24 sec
+Total processed 511 of 745 rows (68.59 %)
+Current date time: 2019-12-30 14:09:25, elapsed time: 00:00:40, estimated time: 00:00:18
+ 
+Query 46 processed 8 rows (id % 1 = (1 - 1) AND id BETWEEN 963 AND 975) for 0.62 sec
+Total processed 519 of 745 rows (69.66 %)
+Current date time: 2019-12-30 14:09:26, elapsed time: 00:00:40, estimated time: 00:00:18
+ 
+Query 47 processed 16 rows (id % 1 = (1 - 1) AND id BETWEEN 976 AND 994) for 1.24 sec
+Total processed 535 of 745 rows (71.81 %)
+Current date time: 2019-12-30 14:09:27, elapsed time: 00:00:42, estimated time: 00:00:16
+ 
+Query 48 processed 8 rows (id % 1 = (1 - 1) AND id BETWEEN 996 AND 1007) for 0.62 sec
+Total processed 543 of 745 rows (72.89 %)
+Current date time: 2019-12-30 14:09:28, elapsed time: 00:00:42, estimated time: 00:00:16
+ 
+Query 49 processed 16 rows (id % 1 = (1 - 1) AND id BETWEEN 1008 AND 1029) for 1.24 sec
+Total processed 559 of 745 rows (75.03 %)
+Current date time: 2019-12-30 14:09:29, elapsed time: 00:00:44, estimated time: 00:00:14
+ 
+Query 50 processed 8 rows (id % 1 = (1 - 1) AND id BETWEEN 1030 AND 1037) for 0.63 sec
+Total processed 567 of 745 rows (76.11 %)
+Current date time: 2019-12-30 14:09:29, elapsed time: 00:00:44, estimated time: 00:00:14
+ 
+Query 51 processed 16 rows (id % 1 = (1 - 1) AND id BETWEEN 1038 AND 1101) for 1.26 sec
+Total processed 583 of 745 rows (78.26 %)
+Current date time: 2019-12-30 14:09:31, elapsed time: 00:00:45, estimated time: 00:00:13
+ 
+Query 52 processed 8 rows (id % 1 = (1 - 1) AND id BETWEEN 1107 AND 1118) for 0.62 sec
+Total processed 591 of 745 rows (79.33 %)
+Current date time: 2019-12-30 14:09:31, elapsed time: 00:00:46, estimated time: 00:00:12
+ 
+Query 53 processed 16 rows (id % 1 = (1 - 1) AND id BETWEEN 1119 AND 1176) for 1.24 sec
+Total processed 607 of 745 rows (81.48 %)
+Current date time: 2019-12-30 14:09:33, elapsed time: 00:00:47, estimated time: 00:00:11
+ 
+Query 54 processed 8 rows (id % 1 = (1 - 1) AND id BETWEEN 1177 AND 1194) for 0.62 sec
+Total processed 615 of 745 rows (82.55 %)
+Current date time: 2019-12-30 14:09:33, elapsed time: 00:00:48, estimated time: 00:00:10
+ 
+Query 55 processed 16 rows (id % 1 = (1 - 1) AND id BETWEEN 1195 AND 1210) for 1.24 sec
+Total processed 631 of 745 rows (84.70 %)
+Current date time: 2019-12-30 14:09:34, elapsed time: 00:00:49, estimated time: 00:00:09
+ 
+Query 56 processed 8 rows (id % 1 = (1 - 1) AND id BETWEEN 1211 AND 1218) for 0.62 sec
+Total processed 639 of 745 rows (85.77 %)
+Current date time: 2019-12-30 14:09:35, elapsed time: 00:00:50, estimated time: 00:00:08
+ 
+Query 57 processed 16 rows (id % 1 = (1 - 1) AND id BETWEEN 1219 AND 1246) for 1.24 sec
+Total processed 655 of 745 rows (87.92 %)
+Current date time: 2019-12-30 14:09:36, elapsed time: 00:00:51, estimated time: 00:00:07
+ 
+Query 58 processed 8 rows (id % 1 = (1 - 1) AND id BETWEEN 1252 AND 1264) for 0.62 sec
+Total processed 663 of 745 rows (88.99 %)
+Current date time: 2019-12-30 14:09:37, elapsed time: 00:00:52, estimated time: 00:00:06
+ 
+Query 59 processed 16 rows (id % 1 = (1 - 1) AND id BETWEEN 1265 AND 1295) for 1.24 sec
+Total processed 679 of 745 rows (91.14 %)
+Current date time: 2019-12-30 14:09:38, elapsed time: 00:00:53, estimated time: 00:00:05
+ 
+Query 60 processed 8 rows (id % 1 = (1 - 1) AND id BETWEEN 1296 AND 1303) for 0.62 sec
+Total processed 687 of 745 rows (92.21 %)
+Current date time: 2019-12-30 14:09:39, elapsed time: 00:00:53, estimated time: 00:00:05
+ 
+Query 61 processed 16 rows (id % 1 = (1 - 1) AND id BETWEEN 1304 AND 1323) for 1.24 sec
+Total processed 703 of 745 rows (94.36 %)
+Current date time: 2019-12-30 14:09:40, elapsed time: 00:00:55, estimated time: 00:00:03
+ 
+Query 62 processed 8 rows (id % 1 = (1 - 1) AND id BETWEEN 1324 AND 1334) for 0.62 sec
+Total processed 711 of 745 rows (95.44 %)
+Current date time: 2019-12-30 14:09:41, elapsed time: 00:00:55, estimated time: 00:00:03
+ 
+Query 63 processed 16 rows (id % 1 = (1 - 1) AND id BETWEEN 1335 AND 1388) for 1.24 sec
+Total processed 727 of 745 rows (97.58 %)
+Current date time: 2019-12-30 14:09:42, elapsed time: 00:00:57, estimated time: 00:00:01
+ 
+Query 64 processed 8 rows (id % 1 = (1 - 1) AND id BETWEEN 1389 AND 1399) for 0.62 sec
+Total processed 735 of 745 rows (98.66 %)
+Current date time: 2019-12-30 14:09:43, elapsed time: 00:00:57, estimated time: 00:00:01
+ 
+Query 65 processed 10 rows (id % 1 = (1 - 1) AND id BETWEEN 1400 AND 1671) for 0.78 sec
+Total processed 745 of 745 rows (100.00 %)
+Current date time: 2019-12-30 14:09:43, elapsed time: 00:00:58, estimated time: 00:00:00
+ 
+Done. 13 rows per second, 1.12 queries per second
 ```
 
 Для ускорения выполнения SQL шаблон можно распараллелить по нескольким ядрам процессора:
