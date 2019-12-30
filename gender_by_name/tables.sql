@@ -1,3 +1,6 @@
+create type gender as enum ('male', 'female');
+create type name_type as enum ('last_name', 'middle_name');
+
 create table gender_by_ending
 (
     id        serial      not null constraint gender_by_ending_pkey primary key,
