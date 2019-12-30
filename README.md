@@ -1154,10 +1154,10 @@ DECLARE
     processed_rows int default 0; -- счётчик, сколько записей обновили, увеличивается на каждой итерации цикла
     total_rows int default 0; -- количество записей всего
     -- public variables (need to edit):
-    time_max numeric default 1; -- пороговое максимальное время выполнения 1-го запроса, в секундах
     cur CURSOR FOR SELECT * FROM {table}_{JiraTaskId} ORDER BY id; -- сортировка по id обязательна!
-    cpu_num smallint default 1; -- для распараллеливания скрипта для выполнения через bash и psql: номер текущего ядра процессора
-    cpu_max smallint default 1; -- для распараллеливания скрипта для выполнения через bash и psql: максимальное количество ядер процессора
+    time_max constant numeric default 1; -- пороговое максимальное время выполнения 1-го запроса, в секундах
+    cpu_num constant smallint default 1; -- для распараллеливания скрипта для выполнения через bash и psql: номер текущего ядра процессора
+    cpu_max constant smallint default 1; -- для распараллеливания скрипта для выполнения через bash и psql: максимальное количество ядер процессора
 BEGIN
     RAISE NOTICE 'Calculate total rows%', ' ';
  
