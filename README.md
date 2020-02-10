@@ -1103,7 +1103,7 @@ UPDATE users as u SET
   first_name = u2.first_name,
   last_name = u2.last_name
 FROM (VALUES
-  (1, 'hollis@weimann.biz', 'Hollis', 'O\'Connell'),
+  (1, 'hollis@weimann.biz', 'Hollis', 'O''Connell'),
   (2, 'robert@duncan.info', 'Robert', 'Duncan')
 ) as u2(id, email, first_name, last_name)
 WHERE u2.id = u.id;
