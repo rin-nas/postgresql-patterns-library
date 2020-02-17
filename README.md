@@ -721,13 +721,16 @@ SELECT json_explain('SELECT * FROM pg_class', ARRAY['ANALYSE'])->0;
 
 ```sql
 -- было
-SELECT * FROM t WHERE id < 1000 AND val IN(1, ..., 10000);
+SELECT * FROM t WHERE id < 1000 AND val IN (1, ..., 10000);
 
 -- стало (способ 1)
-SELECT * FROM t WHERE id IN (VALUES (1), ...(10000)) WHERE id < 1000;
+SELECT * FROM t WHERE id < 1000 AND val IN (VALUES (1), ..., (10000));
 
 -- стало (способ 2)
-SELECT * FROM t JOIN (VALUES (1), ...(10000)) AS v(val) UGING(val) WHERE id < 1000;
+SELECT * FROM t WHERE id < 1000 AND val IN (UNNEST(ARRAY[1, ...,10000]));
+
+-- стало (способ 3)
+SELECT * FROM t JOIN (VALUES (1), ..., (10000)) AS v(val) UGING(val) WHERE id < 1000;
 
 ```
 
