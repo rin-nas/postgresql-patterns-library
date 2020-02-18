@@ -1511,7 +1511,8 @@ do
     cat {JiraTaskId}.sql \
         | sed "s/cpu_num constant smallint default 1/cpu_num constant smallint default $cpu_num/g" \
         | sed "s/cpu_max constant smallint default 1/cpu_max constant smallint default $cpu_max/g" \
-        | psql --user={username} --dbname={dbname} --echo-all > {JiraTaskId}_job_$cpu_num.log 2>&1 &
+        | psql --user={username} --dbname={dbname} --echo-all --set="ON_ERROR_STOP=1" \
+               --log-file={JiraTaskId}_job_$cpu_num.log 2> {JiraTaskId}_job_$cpu_num.stderr.log &
 done
  
 jobs -l
