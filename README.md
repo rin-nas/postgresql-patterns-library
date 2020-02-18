@@ -1124,6 +1124,7 @@ WHERE u2.id = u.id;
 
 Скрипт ниже обрабатывает большую таблицу пачками по несколько (десятки/сотни/тысячи) записей.  В процесе работы размер пачки автоматические подстраивается под максимальное время работы для 1-й пачки (несколько секунд). 
 
+Файл `{JiraTaskId}.sql`:
 ```sql
 -- Запросы выполнять НЕ в транзакции!
  
@@ -1231,7 +1232,35 @@ $$;
 VACUUM VERBOSE ANALYZE {table};
 ```
 
-Пример отчёта выполненного блока DO
+Для ускорения выполнения SQL шаблон можно распараллелить по нескольким ядрам процессора:
+
+Файл `{JiraTaskId}.sh`:
+```bash
+#cpu_max=`nproc`
+cpu_max=$((`nproc` / 2))
+#echo "$cpu_max"
+#exit 0
+ 
+for ((cpu_num = 1; cpu_num <= cpu_max; cpu_num++))
+do
+    cat {JiraTaskId}.sql \
+        | sed "s/cpu_num constant smallint default 1/cpu_num constant smallint default $cpu_num/g" \
+        | sed "s/cpu_max constant smallint default 1/cpu_max constant smallint default $cpu_max/g" \
+        | psql --user={username} --dbname={dbname} --echo-all --set="ON_ERROR_STOP=1" \
+               --log-file={JiraTaskId}_job_$cpu_num.log 2> {JiraTaskId}_job_$cpu_num.stderr.log &
+done
+ 
+jobs -l
+ 
+#wait
+#echo "All done"
+```
+Скрипт `{JiraTaskId}.sh` нужно запускать в (Screen)[https://help.ubuntu.ru/wiki/screen]. Отслеживать прогресс выполнения каждого процесса можно командой:
+```bash
+$ tail -f {JiraTaskId}_job_{cpu_num}.log
+```
+
+Файл `{JiraTaskId}_job_{cpu_num}.log` (пример отчёта выполненного блока DO):
 ```
 Calculate total rows
 Query 1 processed 1 rows (id % 1 = (1 - 1) AND id BETWEEN 1 AND 1) for 0.09 sec
@@ -1495,30 +1524,6 @@ Total processed 745 of 745 rows (100.00 %)
 Current date time: 2019-12-30 14:09:43, elapsed time: 00:00:58, estimated time: 00:00:00
  
 Done. 13 rows per second, 1.12 queries per second
-```
-
-Для ускорения выполнения SQL шаблон можно распараллелить по нескольким ядрам процессора:
-
-`{JiraTaskId}.sh`:
-```bash
-#cpu_max=`nproc`
-cpu_max=$((`nproc` / 2))
-#echo "$cpu_max"
-#exit 0
- 
-for ((cpu_num = 1; cpu_num <= cpu_max; cpu_num++))
-do
-    cat {JiraTaskId}.sql \
-        | sed "s/cpu_num constant smallint default 1/cpu_num constant smallint default $cpu_num/g" \
-        | sed "s/cpu_max constant smallint default 1/cpu_max constant smallint default $cpu_max/g" \
-        | psql --user={username} --dbname={dbname} --echo-all --set="ON_ERROR_STOP=1" \
-               --log-file={JiraTaskId}_job_$cpu_num.log 2> {JiraTaskId}_job_$cpu_num.stderr.log &
-done
- 
-jobs -l
- 
-#wait
-#echo "All done"
 ```
 
 ## Модификация схемы данных (DDL)
