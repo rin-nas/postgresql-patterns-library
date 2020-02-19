@@ -57,7 +57,8 @@
    1. https://dataedo.com/kb/query/ Useful queries for popular relational databases to explore schema.
 
 # TODO
-Рассказать, как Postgresql можно обойтись без SQL_CALC_FOUND_ROWS и почему это лучше
+Рассказать, как Postgresql можно обойтись без SQL_CALC_FOUND_ROWS и почему это лучше.
+Загрузить `sphinx_wordforms.csv`.
 
 # UPDATE/DELETE million rows ideas
 
