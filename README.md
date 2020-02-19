@@ -254,10 +254,10 @@ FROM parsed
 
 #### Как определить пол по ФИО (фамилии, имени, отчеству) на русском языке?
 
-* [gender_by_name.sql](gender_by_name/gender_by_name.sql)
-* [tables.sql](gender_by_name/tables.sql)
-* [gender_by_ending.csv](gender_by_name/gender_by_ending.csv)
-* [person_name_dictionary.csv](gender_by_name/person_name_dictionary.csv)
+* [`gender_by_name.sql`](gender_by_name/gender_by_name.sql)
+* [`tables.sql`](gender_by_name/tables.sql)
+* [`gender_by_ending.csv`](gender_by_name/gender_by_ending.csv)
+* [`person_name_dictionary.csv`](gender_by_name/person_name_dictionary.csv)
 
 #### Как заквотировать строку для использования в регулярном выражении?
 ```sql
@@ -1122,14 +1122,14 @@ WHERE u2.id = u.id;
 1. Отображение прогресса выполнения в процентах и оставшегося времени завершения
 1. На реплику данные передаются постепенно небольшими порциями, а не одним огромным куском.
 
-Запросы в файле `({JiraTaskId}.sql)[modify_million_rows/{JiraTaskId}.sql]` обрабатывают большую таблицу пачками по несколько (десятки/сотни/тысячи) записей. В процесе работы размер пачки автоматические подстраивается под максимально установленное время работы для одной пачки (несколько секунд). 
+Запросы в файле [`{JiraTaskId}.sql`](modify_million_rows/{JiraTaskId}.sql) обрабатывают большую таблицу пачками по несколько (десятки/сотни/тысячи) записей. В процесе работы размер пачки автоматические подстраивается под максимально установленное время работы для одной пачки (несколько секунд). 
 
-Для ускорения выполнения SQL шаблон можно распараллелить по нескольким ядрам процессора скриптом `({JiraTaskId}.sh)[modify_million_rows/{JiraTaskId}.sh]`. Запускать его лучше в (Screen)[https://help.ubuntu.ru/wiki/screen]. Отслеживать прогресс выполнения каждого процесса можно командой:
+Для ускорения выполнения SQL шаблон можно распараллелить по нескольким ядрам процессора скриптом [`{JiraTaskId}.sh`](modify_million_rows/{JiraTaskId}.sh). Запускать его лучше в [Screen](https://help.ubuntu.ru/wiki/screen). Отслеживать прогресс выполнения каждого процесса можно командой:
 ```bash
 $ tail -f {JiraTaskId}_job_{cpu_num}.log
 ```
 
-Пример отчёта выполненного скрипта в файле `({JiraTaskId}_job_{cpu_num}.log)[modify_million_rows/{JiraTaskId}_job_{cpu_num}.log]`.
+Пример отчёта выполненного скрипта в файле [`{JiraTaskId}_job_{cpu_num}.log`](modify_million_rows/{JiraTaskId}_job_{cpu_num}.log).
 
 ## Модификация схемы данных (DDL)
 
