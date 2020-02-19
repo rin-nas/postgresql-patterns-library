@@ -290,6 +290,7 @@ ORDER BY
   name
 LIMIT 100
 ```
+Функции [`quote_like.sql`](functions/quote_like.sql), [`quote_regexp.sql`](functions/quote_regexp.sql)
 
 #### Как для слова с опечаткой (ошибкой) получить наиболее подходящие варианты слов для замены (исправление опечаток)?
 
