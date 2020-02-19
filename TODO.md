@@ -54,6 +54,7 @@
    1. https://www.percona.com/blog/2019/07/22/automatic-index-recommendations-in-postgresql-using-pg_qualstats-and-hypopg/
    1. https://tech.binary.com/parallel-query-without-parallel-query/
    1. https://tech.binary.com/lock-contention-in-postgres/ (интересный способ уменьшить блокировки)
+   1. https://dataedo.com/kb/query/ Useful queries for popular relational databases to explore schema.
 
 # TODO
 Рассказать, как Postgresql можно обойтись без SQL_CALC_FOUND_ROWS и почему это лучше
