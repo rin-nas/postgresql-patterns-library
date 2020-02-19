@@ -103,101 +103,11 @@ SELECT ARRAY_TO_STRING(ARRAY_AGG(DISTINCT s ORDER BY s), ', ') AS field_alias FR
 
 #### Как проверить email на валидность?
 
-Регулярное выражение взято и адаптировано [отсюда](https://github.com/rin-nas/regexp-patterns-library/)
-
-```sql
-create function is_email(email text)
-    returns boolean
-    language plpgsql
-as $$
-BEGIN
-    return regexp_match($1, $REGEXP$
-^
-(?<![-!#$%&'*+/=?^_`{|}~@."\]\\a-zA-Zа-яА-ЯёЁ\d])
-(?:
-    [-!#$%&'*+/=?^_`{|}~a-zA-Z\d]+
-  | [-!#$%&'*+/=?^_`{|}~а-яА-ЯёЁ\d]+
-  | "(?:(?:[^"\\]|\\.)+)"
-)
-(?:
-  \.
-  (?:
-      [-!#$%&'*+/=?^_`{|}~a-zA-Z\d]+
-    | [-!#$%&'*+/=?^_`{|}~а-яА-ЯёЁ\d]+
-    | "(?:[^"\\]|\\.)+"
-  )
-)*
-@
-(?:
-    (?:
-       (?: #домены 2-го и последующих уровней
-         (?!-)
-         (?:
-             (?:[a-zA-Z\d]|-(?!-)){1,63}
-           | (?:[а-яА-ЯёЁ\d]|-(?!-)){1,63}
-         )
-         (?<!-)
-         \.
-       )+
-       (?:  #домен 1-го уровня
-           [a-zA-Z]{2,63}
-         | [а-яА-ЯёЁ]{2,63}
-       )
-    )\M
-  | (?: #IPv4
-      (?<!\d)
-      (?!0+\.)
-      (?:1?\d\d?|2(?:[0-4]\d|5[0-5]))(?:\.(?:1?\d\d?|2(?:[0-4]\d|5[0-5]))){3}
-      (?!\d)
-    )
-  | \[ #IPv4 в квадратных скобках
-    (?:
-      (?<!\d)
-      (?!0+\.)
-      (?:1?\d\d?|2(?:[0-4]\d|5[0-5]))(?:\.(?:1?\d\d?|2(?:[0-4]\d|5[0-5]))){3}
-      (?!\d)
-    )
-    \]
-)
-$
-$REGEXP$, 'sx') is not null;
-
-END;
-$$;
-
-SELECT is_email('test.@domain.com');
-```
+Регулярное выражение в файле [`is_email.sql`](functions/is_email.sql) взято и адаптировано [отсюда](https://github.com/rin-nas/regexp-patterns-library/)
 
 #### Как [транслитерировать](https://ru.wikipedia.org/wiki/%D0%A2%D1%80%D0%B0%D0%BD%D1%81%D0%BB%D0%B8%D1%82%D0%B5%D1%80%D0%B0%D1%86%D0%B8%D1%8F) русские буквы на английские?
 
-```sql
-create or replace function public.slugify(str text)
-returns text
-language plpgsql
-as $$
-declare
-_out text;
-begin
-_out := translate(
-trim(both ' ' from lower(str)),
-'абвгдеёзийклмнопрстуфыэ',
-'abvgdeeziyklmnoprstufye'
-);
-_out := replace(_out, 'ж', 'zh');
-_out := replace(_out, 'х', 'kh');
-_out := replace(_out, 'ц', 'ts');
-_out := replace(_out, 'ч', 'ch');
-_out := replace(_out, 'ш', 'sh');
-_out := replace(_out, 'щ', 'sch');
-_out := replace(_out, 'ь', '');
-_out := replace(_out, 'ъ', '');
-_out := replace(_out, 'ю', 'yu');
-_out := replace(_out, 'я', 'ya');
-_out := regexp_replace(_out, '[^a-z0-9]+', '-', 'g');
-return _out;
-end
-$$;
-```
+См. [`slugify.sql`](functions/slugify.sql)
 
 #### Как распарсить CSV строку в таблицу?
 
@@ -260,29 +170,12 @@ FROM parsed
 * [`person_name_dictionary.csv`](gender_by_name/person_name_dictionary.csv)
 
 #### Как заквотировать строку для использования в регулярном выражении?
-```sql
-create function quote_regexp(text) returns text
-    stable
-    language plpgsql
-as
-$$
-BEGIN
-    RETURN REGEXP_REPLACE($1, '([[\](){}.+*^$|\\?-])', '\\\1', 'g');
-END;
-$$;
-```
+
+Смотри [`quote_regexp.sql`](functions/quote_regexp.sql)
 
 #### Как заквотировать строку для использования в операторе LIKE?
-```sql
-create function quote_like(text) returns text
-    immutable
-    strict
-    language sql
-as
-$$
-SELECT replace(replace(replace($1, '\', '\\'), '_', '\_'), '%', '\%');
-$$;
-```
+
+Смотри [`quote_like.sql`](functions/quote_like.sql)
 
 ### JSON
 
@@ -290,8 +183,10 @@ $$;
 
 ```sql
 SELECT * FROM (
-    VALUES ('[{"id" : 1, "created_at" : "2003-07-01", "name": "Sony"}, {"id" : 2, "created_at" : "2008-10-27", "name": "Samsung"}]'::jsonb),
-           ('[{"id" : 3, "created_at" : "2010-03-30", "name": "LG"},   {"id" : 4, "created_at" : "2018-12-09", "name": "Apple"}]'::jsonb)
+    VALUES ('[{"id" : 1, "created_at" : "2003-07-01", "name": "Sony"}, 
+              {"id" : 2, "created_at" : "2008-10-27", "name": "Samsung"}]'::jsonb),
+           ('[{"id" : 3, "created_at" : "2010-03-30", "name": "LG"},   
+             {"id" : 4, "created_at" : "2018-12-09", "name": "Apple"}]'::jsonb)
 ) AS t
 WHERE EXISTS(
           SELECT *
@@ -302,44 +197,21 @@ WHERE EXISTS(
 
 #### Как сравнить 2 JSON и получить отличия?
 
-```sql
-CREATE OR REPLACE FUNCTION jsonb_diff(l JSONB, r JSONB) RETURNS JSONB AS $json_diff$
-    SELECT jsonb_object_agg(a.key, a.value)
-    FROM (SELECT key, value FROM jsonb_each(l)) AS a(key,value)
-    LEFT OUTER JOIN (SELECT key, value FROM jsonb_each(r)) b(key,value) ON a.key = b.key
-    WHERE a.value != b.value OR b.key IS NULL;
-$json_diff$
-LANGUAGE sql;
-
-SELECT jsonb_diff('{"a":1,"b":2}'::JSONB, '{"a":1,"b":null}'::JSONB);
-```
+Смотри [`jsonb_diff.sql`](functions/jsonb_diff.sql)
 
 ### Массивы
 
 #### Агрегатная функция конкатенации (объединения) массивов
 
-```sql
-CREATE AGGREGATE array_cat_agg(anyarray) (
-    SFUNC     = array_cat
-   ,STYPE     = anyarray
-   ,INITCOND  = '{}'
-);
-SELECT id,  array_cat_agg(words::text[])
-FROM (VALUES
-             ('1', '{"foo","bar","zap","bing"}'),
-             ('2', '{"foo"}'),
-             ('1', '{"bar","zap"}'),
-             ('2', '{"bing"}'),
-             ('1', '{"bing"}'),
-             ('2', '{"foo","bar"}')) AS t(id, words)
-GROUP BY id;
-```
+Смотри [`array_cat_agg.sql`](functions/array_cat_agg.sql)
 
 #### Как получить одинаковые элементы массивов (пересечение массивов)?
 
 ```sql
 -- для 2-х массивов
-select array_agg(a) from unnest(array[1, 2, 3, 4, 5]) a where a = any(array[4, 5, 6, 7, 8]); -- {4,5}
+select array_agg(a) 
+from unnest(array[1, 2, 3, 4, 5]) a 
+where a = any(array[4, 5, 6, 7, 8]); -- {4,5}
 
 -- для N массивов
 select array_agg(a1)
@@ -421,172 +293,8 @@ LIMIT 100
 
 #### Как для слова с опечаткой (ошибкой) получить наиболее подходящие варианты слов для замены (исправление опечаток)?
 
-```sql
-CREATE EXTENSION IF NOT EXISTS fuzzymatch;
-CREATE EXTENSION IF NOT EXISTS pg_trgm;
- 
-CREATE INDEX /*CONCURRENTLY*/ IF NOT EXISTS custom_query_group_name_name_trigram_index ON public.custom_query_group_name USING GIN (lower(name) gin_trgm_ops);
-CREATE INDEX /*CONCURRENTLY*/ IF NOT EXISTS sphinx_wordforms_word_trigram_index ON public.sphinx_wordforms USING GIN (lower(word) gin_trgm_ops);
- 
-SELECT COUNT(*) FROM sphinx_wordforms; -- 1,241,939 записей
- 
--- drop function typos_correct(text, interval, boolean);
+Смотри [`typos_correct.sql`](functions/typos_correct.sql)
 
-CREATE OR REPLACE FUNCTION typos_correct(
-    words    text,
-    timeout  interval,
-    is_debug bool default false
-)
-RETURNS TABLE(
-    word_num      bigint,
-    word_from     text,
-    is_mistake    bool,
-    can_correct   bool,
-    words_to      jsonb,
-    words_details json
-)
-PARALLEL SAFE
-ROWS 10
-LANGUAGE SQL
-STABLE
-RETURNS NULL ON NULL INPUT
-AS $BODY$
-/*
-Описание параметров на входе:
-    words     Список слов, где разделителем является перенос строки \n.
-              Первые 2 строки -- исходная фраза и фраза в другой раскладке клавиатуры.
-              Остальные строки содержат по одному слову в исходной и другой раскладке клавиатуры.
-    timeout   Максимальное время выполнения, при превышении которого обработка слов прерывается.
-              В этом случае для некоторых слов из списка опечатки могут не исправиться.
-    is_debug  Режим отладки, при котором возвращается доп. инфа в поле words_details.
-
-Описание колонок таблицы на выходе:
-    word_num        Порядковый номер слова из запроса
-    word_from       Исходное слово/фраза
-    is_mistake      Исходное слово содержит опечатку (не найдено в словарях)?
-    can_correct     Можно исправить опечатку?
-    words_to        Исправленные слова без опечатки
-                    При однозначном исправлении всегда одно слово, иначе несколько
-    words_details   Доп. информация в режиме отладки (если входящий параметр is_debug=true)
-*/
--- EXPLAIN
-WITH
-    vars AS (
-        -- 0.21 -- это минимум, чтобы исправить "вадитль" на "водитель"
-        -- 0.15 -- это минимум, чтобы исправить "уёетчк" на "учетчик" (меньше уже нельзя, а то запрос работает медленно)
-        SELECT set_config('pg_trgm.word_similarity_threshold', 0.15::text, TRUE)::real AS word_similarity_threshold,
-               set_config('pg_trgm.similarity_threshold', 0.15::text, TRUE)::real AS similarity_threshold,
-               string_to_array(words, E'\n')::text[] AS words_from,
-               2 AS ins_cost,
-               2 AS del_cost,
-               1 AS sub_cost
-    ),
-    words AS (
-        SELECT
-            lower(q.word_from) AS word_from,
-            q.word_num - 1 AS word_num,
-            -- есть слово в словаре русского языка?
-            NOT EXISTS(
-                SELECT 1
-                FROM sphinx_wordforms AS dict
-                WHERE lower(dict.word) = lower(q.word_from)
-                  AND mistake = FALSE
-                  AND checked = TRUE
-                LIMIT 1
-            ) AND
-            -- есть слово в названиях профессий?
-            NOT EXISTS(
-                SELECT 1
-                FROM custom_query_group_name AS dict
-                WHERE lower(dict.name) = lower(q.word_from)
-                LIMIT 1
-            ) AS is_mistake
-        FROM unnest((SELECT words_from FROM vars)) WITH ORDINALITY AS q(word_from, word_num)
-    )
-    -- SELECT * FROM words_from; -- для отладки
-    , result AS (
-        SELECT *,
-           to_jsonb(ARRAY((
-               WITH t AS (
-                   SELECT *,
-                          round(extract(seconds FROM clock_timestamp() - now())::numeric, 4) AS execution_time,
-                          ROW_NUMBER() OVER w AS position,
-                          levenshtein_rank3 - LEAD(levenshtein_rank3) OVER w AS next_levenshtein_rank3_delta
-                   FROM (
-                            -- нельзя выносить подзапрос в WITH name AS (SELECT ...),
-                            -- т.к. план запроса меняется, итоговый запрос выполняется в 2 раза медленнее!
-                            SELECT q.word_num,
-                                   q.word_from,
-                                   t.name AS word_to,
-                                   round(word_similarity(q.word_from, t.name)::numeric, 4) AS word_similarity_rank,
-                                   round(similarity(q.word_from, t.name)::numeric, 4)      AS similarity_rank,
-                                   levenshtein(q.word_from, t.name)                                             AS levenshtein_distance1,
-                                   levenshtein(q.word_from, t.name, vars.ins_cost, vars.del_cost,vars.sub_cost) AS levenshtein_distance2,
-                                   round(sqrt(levenshtein(q.word_from, t.name) *
-                                              levenshtein(q.word_from, t.name, vars.ins_cost, vars.del_cost, vars.sub_cost))::numeric, 4) AS levenshtein_distance3, -- среднее геометрическое
-                                   round((1 - sqrt(levenshtein(q.word_from, t.name) *
-                                                   levenshtein(q.word_from, t.name, vars.ins_cost, vars.del_cost, vars.sub_cost)) / length(t.name))::numeric, 4) AS levenshtein_rank3
-                            FROM custom_query_group_name AS t, vars
-                            WHERE lower(t.name) % q.word_from -- используем GIN индекс!
-                        ) AS t
-                   WHERE TRUE
-                     AND levenshtein_distance1 < 5 AND levenshtein_rank3 > 0.55
-                       WINDOW w AS (ORDER BY levenshtein_distance1 ASC,
-                           levenshtein_rank3 DESC,
-                           word_similarity_rank DESC,
-                           similarity_rank DESC)
-                   ORDER BY levenshtein_distance1 ASC,
-                            levenshtein_rank3 DESC,
-                            word_similarity_rank DESC,
-                            similarity_rank DESC
-                   LIMIT 3
-                   --LIMIT 10 -- для отладки
-                   )
-                   SELECT to_jsonb(tt.*) FROM (
-                      SELECT *,
-                             -- если у нескольких кандидатов подряд рейтинг отличается незначительно,
-                             -- то это не точное исправление (автоисправлять нельзя, только предлагать варианты)
-                             position = 1
-                                 AND (next_levenshtein_rank3_delta IS NULL OR
-                                 -- 0.03 -- это минимум, чтобы исправить "онолитик" на "аналитик"
-                                 next_levenshtein_rank3_delta > 0.03) AS can_correct
-                      FROM t
-                      LIMIT 3
-                      --LIMIT 10 -- для отладки
-                   ) AS tt
-        ))) AS json
-    FROM words AS q
-    WHERE clock_timestamp() - now() < timeout -- ограничиваем время выполнения запроса!
-      AND q.is_mistake = TRUE
-      -- первые 2 элемента -- это всегда исходный текст и текст в другой раскладке клавиатуры
-      -- если один из этих элементов не является опечаткой, то прерываем цикл
-      AND NOT EXISTS(SELECT * FROM words AS s WHERE s.word_num < 2 AND s.is_mistake = FALSE)
-      -- если все отдельные слова не имеют опечаток, то прерываем цикл
-      AND (SELECT COUNT(*) = 2 OR (COUNT(*) - 2) / 2 != COUNT(*) FILTER (WHERE s.word_num >= 2 AND s.is_mistake = FALSE) FROM words AS s)
-    ORDER BY word_num ASC
-)
-SELECT w.word_num,
-       w.word_from,
-       w.is_mistake,
-       COALESCE(r.json->0->>'can_correct' = 'true', FALSE) AS can_correct,
-       CASE
-           WHEN r.json->0->>'can_correct' = 'true' THEN to_jsonb(ARRAY[r.json->0->>'word_to'])
-           ELSE (SELECT jsonb_agg(o->'word_to') FROM jsonb_array_elements(json) AS t(o))
-       END AS words_to,
-       CASE WHEN is_debug THEN jsonb_pretty(json)::json ELSE NULL END AS words_details
-FROM words AS w
-LEFT JOIN result AS r ON r.word_num = w.word_num
-ORDER BY w.word_num
-$BODY$;
-
--- Тестирование. Если какой-либо запрос не выполнится, то мы увидим текст ошибки.
---EXPLAIN
-SELECT * FROM typos_correct(E'повар-пивовар\ngjdfh-gbdjdfh\nповар\nпивовар\ngjdfh\ngbdjdfh', '200ms'::interval, true);
-SELECT * FROM typos_correct(E'бухалтер\n,e[fknth', '200ms'::interval, true);
-SELECT * FROM typos_correct(E'моляр\nvjkzh', '200ms'::interval, true);
-SELECT * FROM typos_correct(E'моляр\nvjkzh', '200ms'::interval, false);
-SELECT * FROM typos_correct(E'моляр\nvjkzh', '200ms'::interval);
-```
 **Пример результата запроса**
 
 word_num|word_from|is_mistake|can_correct|words_to|words_details
@@ -698,22 +406,7 @@ SELECT ot1.name AS name_1, ot2.name as name_2, ot3.name as name_3, ot4.id as id
 
 #### Как использовать вывод EXPLAIN запроса в другом запросе?
 
-```sql
-CREATE OR REPLACE FUNCTION json_explain(
-    query TEXT,
-    params TEXT[] DEFAULT ARRAY[]::text[]
-) RETURNS SETOF JSON AS $$
-BEGIN
-    RETURN QUERY
-    EXECUTE 'EXPLAIN ('
-         || ARRAY_TO_STRING(ARRAY_APPEND(params, 'FORMAT JSON'), ',')
-         || ')'
-         || query;
-END
-$$ LANGUAGE plpgsql;
-
-SELECT json_explain('SELECT * FROM pg_class', ARRAY['ANALYSE'])->0;
-```
+Смотри [`json_explain.sql`](functions/json_explain.sql)
 
 #### Как ускорить SELECT запросы c сотнями и тысячами значениями в IN(...)?
 
@@ -921,33 +614,9 @@ birthday   | created_at
 ### Как вычислить дистанцию между 2-мя точками на Земле по её поверхности в километрах?
 
 Если есть модуль [earthdistance](https://postgrespro.ru/docs/postgresql/10/earthdistance), то `(point(lon1, lat1) <@> point(lon2, lat2)) * 1.609344 AS distance_km`.
-Иначе `gc_dist(lat1, lon1, lat2, lon2) AS distance_km`.
+Иначе `gc_dist(lat1, lon1, lat2, lon2) AS distance_km`, смотри [`gc_dist.sql`](functions/gc_dist.sql)
 
 ```sql
-create or replace function gc_dist(
-    lat1 double precision, lon1 double precision,
-    lat2 double precision, lon2 double precision
-) returns double precision
-    language plpgsql
-AS $$
-    -- https://en.wikipedia.org/wiki/Haversine_formula
-    -- http://www.movable-type.co.uk/scripts/latlong.html
-    DECLARE R INT = 6371; -- km, https://en.wikipedia.org/wiki/Earth_radius
-    DECLARE dLat double precision = (lat2-lat1)*PI()/180;
-    DECLARE dLon double precision = (lon2-lon1)*PI()/180;
-    DECLARE a double precision = sin(dLat/2) * sin(dLat/2) +
-                                 cos(lat1*PI()/180) * cos(lat2*PI()/180) *
-                                 sin(dLon/2) * sin(dLon/2);
-    DECLARE c double precision = 2 * asin(sqrt(a));
-BEGIN
-    RETURN R * c;
-EXCEPTION
--- если координаты совпадают, то получим исключение, а падать нельзя
-WHEN numeric_value_out_of_range
-    THEN RETURN 0;
-END;
-$$;
-
 -- select * from pg_available_extensions where installed_version is not null;
 
 with t as (
