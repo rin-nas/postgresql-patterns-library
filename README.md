@@ -231,7 +231,7 @@ SELECT ARRAY(SELECT DISTINCT UNNEST(ARRAY[1,2,3,2,1]) ORDER BY 1); -- {1,2,3}
 
 -- готовая функция
 CREATE FUNCTION array_unique(anyarray) RETURNS anyarray AS $$
-SELECT array_agg(DISTINCT x) FROM unnest($1) t(x);
+SELECT array_agg(DISTINCT x ORDER BY x) FROM unnest($1) t(x);
 $$ LANGUAGE SQL IMMUTABLE;
 ```
 
