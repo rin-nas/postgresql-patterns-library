@@ -96,3 +96,26 @@ END LOOP;
 
 1. https://m.habr.com/en/company/lanit/blog/351160/ - PostgreSQL. Ускоряем деплой в семь раз с помощью «многопоточки»
 1. https://habr.com/ru/post/481610/ - PostgreSQL Antipatterns: обновляем большую таблицу под нагрузкой
+
+```
+DO $SYNTAX_CHECK$ BEGIN RETURN;
+    -- insert your SQL code here
+END; $SYNTAX_CHECK$;
+
+DO $$
+DECLARE
+    exception_message text;
+    exception_context text;
+BEGIN
+    BEGIN
+        ALTER TABLE v3_company_awards ADD CONSTRAINT v3_company_awards_year CHECK(year between 1900 and date_part('year', CURRENT_DATE));
+    EXCEPTION WHEN duplicate_object THEN
+        GET STACKED DIAGNOSTICS
+            exception_message = MESSAGE_TEXT,
+            exception_context = PG_EXCEPTION_CONTEXT;
+        RAISE NOTICE '%', exception_context;
+        RAISE NOTICE '%', exception_message;
+    END;
+
+END $$;
+```
