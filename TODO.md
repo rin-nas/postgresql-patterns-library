@@ -97,11 +97,14 @@ END LOOP;
 1. https://m.habr.com/en/company/lanit/blog/351160/ - PostgreSQL. Ускоряем деплой в семь раз с помощью «многопоточки»
 1. https://habr.com/ru/post/481610/ - PostgreSQL Antipatterns: обновляем большую таблицу под нагрузкой
 
+
 ```
+-- PostgreSQL syntax check without running the query
 DO $SYNTAX_CHECK$ BEGIN RETURN;
     -- insert your SQL code here
 END; $SYNTAX_CHECK$;
 
+-- Add constraint if it doesn't already exist
 DO $$
 DECLARE
     exception_message text;
