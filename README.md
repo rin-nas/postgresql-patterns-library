@@ -1225,14 +1225,16 @@ FROM pg_stat_bgwriter
 
 ### Как обезопасить приложение от тяжёлых миграций, приводящих к блокированию запросов?
 
-Вначале каждой миграции, которая выполняется внутри транзакции, нужно изменить настройки конфигурации [`lock_timeout`](https://postgrespro.ru/docs/postgresql/10/runtime-config-client#GUC-LOCK-TIMEOUT) и [`statement_timeout`](https://postgrespro.ru/docs/postgresql/10/runtime-config-client#GUC-STATEMENT-TIMEOUT) командой [SET LOCAL](https://postgrespro.ru/docs/postgresql/10/sql-set).
+Вначале каждой миграции, которая выполняется внутри транзакции, нужно изменить настройки конфигурации [`lock_timeout`](https://postgrespro.ru/docs/postgresql/10/runtime-config-client#GUC-LOCK-TIMEOUT) и [`statement_timeout`](https://postgrespro.ru/docs/postgresql/10/runtime-config-client#GUC-STATEMENT-TIMEOUT) и  [`idle_in_transaction_session_timeout`](https://postgrespro.ru/docs/postgresql/11/runtime-config-client#GUC-IDLE-IN-TRANSACTION-SESSION-TIMEOUT) командой [SET LOCAL](https://postgrespro.ru/docs/postgresql/10/sql-set).
 Действие SET LOCAL продолжается только до конца текущей транзакции, независимо от того, фиксируется она или нет. 
 При выполнении такой команды вне блока транзакции выдаётся предупреждение и больше ничего не происходит.
 
 ```sql
 BEGIN;
-SET LOCAL lock_timeout TO '5s';
-SET LOCAL statement_timeout TO '30min';
+-- ВНИМАНИЕ! Замечено в PostgreSQL 10.5, что lock_timeout работает не надёжно и DML запросы могут встать в очередь!
+SET LOCAL lock_timeout TO '3s'; -- Максимальное время блокирования других SQL запросов (простоя веб-сайта) во время миграции. Если будет превышено, то транзакция откатится.
+SET LOCAL statement_timeout TO '30min'; -- Максимальное время выполнения любого SQL запроса в этой транзакции. Если будет превышено, то транзакция откатится.
+SET LOCAL idle_in_transaction_session_timeout TO '10s'; -- Максимальное время простаивания транзакции. Если будет превышено, то транзакция откатится.
 
 /*
 Здесь SQL команды для миграции
