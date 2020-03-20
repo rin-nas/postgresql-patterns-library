@@ -80,6 +80,7 @@
    1. [Как обезопасить приложение от тяжёлых миграций, приводящих к блокированию запросов?](#Как-обезопасить-приложение-от-тяжёлых-миграций-приводящих-к-блокированию-запросов)
    1. [Simple index checking](#Simple-index-checking)
    1. [Как скопировать таблицы из одной базы данных в другую?](#Как-скопировать-таблицы-из-одной-базы-данных-в-другую)
+   1. [Как проверить синтаксис SQL кода без его выполнения?](#Как-проверить-синтаксис-SQL-кода-без-его-выполнения)
 
 ## Проектирование данных
 
@@ -1294,4 +1295,13 @@ order by ti.table_page_read desc, ii.idx_page_read desc
    
 ```bash
 pg_dump -U postgres -h 127.0.0.1 --exclude-table=_* --dbname={database_src} --schema=public --verbose | psql -U postgres -h 127.0.0.1 --dbname={database_dst} --single-transaction --set ON_ERROR_ROLLBACK=on 2> errors.txt
+```
+
+### Как проверить синтаксис SQL кода без его выполнения?
+```sql
+-- PostgreSQL syntax check without running the query
+DO $SYNTAX_CHECK$ BEGIN
+    RETURN;
+    -- insert your SQL code here
+END; $SYNTAX_CHECK$;
 ```
