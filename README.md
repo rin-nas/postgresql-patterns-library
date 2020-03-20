@@ -58,6 +58,7 @@
 
 **[Модификация схемы данных (DDL)](#Модификация-схемы-данных-DDL)**
    1. [Как добавить колонку в существующую таблицу без её блокирования?](#Как-добавить-колонку-в-существующую-таблицу-без-её-блокирования)
+   1. [Как добавить ограничение таблицы, если оно ещё не существует?](#Как-добавить-ограничение-таблицы-если-оно-ещё-не-существует)
    1. [Индексы](#Индексы)
       1. [Как сделать ограничение уникальности на колонку в существующей таблице без её блокирования?](#Как-сделать-ограничение-уникальности-на-колонку-в-существующей-таблице-без-её-блокирования)
       1. [Как сделать составной уникальный индекс, где одно из полей может быть null?](#Как-сделать-составной-уникальный-индекс-где-одно-из-полей-может-быть-null)
@@ -807,6 +808,30 @@ $ tail -f {JiraTaskId}_job_{cpu_num}.log
 ### Как добавить колонку в существующую таблицу без её блокирования?
 
 См. [Stackoverflow](https://ru.stackoverflow.com/questions/721985/%D0%9A%D0%B0%D0%BA-%D0%B4%D0%BE%D0%B1%D0%B0%D0%B2%D0%B8%D1%82%D1%8C-%D0%BF%D0%BE%D0%BB%D0%B5-%D0%B2-%D0%B1%D0%BE%D0%BB%D1%8C%D1%88%D1%83%D1%8E-%D1%82%D0%B0%D0%B1%D0%BB%D0%B8%D1%86%D1%83-postgresql-%D0%B1%D0%B5%D0%B7-%D0%B1%D0%BB%D0%BE%D0%BA%D0%B8%D1%80%D0%BE%D0%B2%D0%BA%D0%B8)
+
+### Как добавить ограничение таблицы, если оно ещё не существует?
+
+Реализация команды `ALTER TABLE ... ADD CONSTRAINT IF NOT EXISTS ...`, которая отсутствует в PostgreSQL 11.
+
+```sql
+-- Add constraint if it doesn't already exist
+DO $$
+DECLARE
+    exception_message text;
+    exception_context text;
+BEGIN
+    BEGIN
+        ALTER TABLE v3_company_awards ADD CONSTRAINT v3_company_awards_year CHECK(year between 1900 and date_part('year', CURRENT_DATE));
+    EXCEPTION WHEN duplicate_object THEN
+        GET STACKED DIAGNOSTICS
+            exception_message = MESSAGE_TEXT,
+            exception_context = PG_EXCEPTION_CONTEXT;
+        RAISE NOTICE '%', exception_context;
+        RAISE NOTICE '%', exception_message;
+    END;
+
+END $$;
+```
 
 ### Индексы
 
