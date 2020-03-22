@@ -62,7 +62,7 @@
 
 # UPDATE/DELETE million rows ideas
 
-```
+```sql
 LOOP
   UPDATE table SET flag=0 
   WHERE id IN (
