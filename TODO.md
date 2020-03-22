@@ -96,3 +96,18 @@ END LOOP;
 
 1. https://m.habr.com/en/company/lanit/blog/351160/ - PostgreSQL. Ускоряем деплой в семь раз с помощью «многопоточки»
 1. https://habr.com/ru/post/481610/ - PostgreSQL Antipatterns: обновляем большую таблицу под нагрузкой
+
+```sql
+explain
+with recursive fizzbuzz (num,val) as (
+    select 0, false
+    union
+    select (num + 1),
+           (num + 1) % 3 = 0
+    from fizzbuzz
+    where num < 100
+    )
+select num, val
+from fizzbuzz
+where num > 0;
+```
