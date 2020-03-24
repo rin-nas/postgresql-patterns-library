@@ -1323,6 +1323,9 @@ pg_dump -U postgres -h 127.0.0.1 --exclude-table=_* --dbname={database_src} --sc
 ```
 
 ### Как проверить синтаксис SQL кода без его выполнения?
+
+Готовая функция: [`is_sql_valid.sql`](functions/is_sql_valid.sql)
+
 ```sql
 -- PostgreSQL syntax check without running the query
 DO $SYNTAX_CHECK$ BEGIN
