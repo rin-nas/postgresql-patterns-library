@@ -21,4 +21,4 @@ END
 $$;
 
 -- проверяем, что работает
-SELECT is_sql_valid('SELECTx'), is_sql_valid('SELECT x');
+SELECT is_sql('SELECTx'), is_sql('SELECT x');
