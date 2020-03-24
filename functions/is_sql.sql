@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION is_sql_valid(sql text) returns boolean
+CREATE OR REPLACE FUNCTION is_sql(sql text) returns boolean
     language plpgsql
 AS
 $$
