@@ -1,0 +1,24 @@
+CREATE OR REPLACE FUNCTION is_sql_valid(sql text) returns boolean
+    language plpgsql
+AS
+$$
+DECLARE
+    exception_message text;
+    exception_context text;
+BEGIN
+    BEGIN
+        EXECUTE E'DO $IS_SQL_VALID$ BEGIN\nRETURN;\n' || trim(trailing E'; \r\n' from sql) || E';\nEND; $IS_SQL_VALID$;';
+    EXCEPTION WHEN syntax_error THEN
+        GET STACKED DIAGNOSTICS
+            exception_message = MESSAGE_TEXT,
+            exception_context = PG_EXCEPTION_CONTEXT;
+        RAISE NOTICE '%', exception_context;
+        RAISE NOTICE '%', exception_message;
+        RETURN FALSE;
+    END;
+    RETURN TRUE;
+END
+$$;
+
+-- проверяем, что работает
+SELECT is_sql_valid('SELECTx'), is_sql_valid('SELECT x');
