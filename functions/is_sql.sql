@@ -7,7 +7,7 @@ DECLARE
     exception_context text;
 BEGIN
     BEGIN
-        EXECUTE E'DO $IS_SQL_VALID$ BEGIN\nRETURN;\n' || trim(trailing E'; \r\n' from sql) || E';\nEND; $IS_SQL_VALID$;';
+        EXECUTE E'DO $IS_SQL$ BEGIN\nRETURN;\n' || trim(trailing E'; \r\n' from sql) || E';\nEND; $IS_SQL$;';
     EXCEPTION WHEN syntax_error THEN
         GET STACKED DIAGNOSTICS
             exception_message = MESSAGE_TEXT,
