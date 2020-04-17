@@ -111,3 +111,17 @@ select num, val
 from fizzbuzz
 where num > 0;
 ```
+
+```
+CREATE TABLE IF NOT EXISTS table1
+(
+    field1 integer NULL DEFAULT NULL,
+    field2 integer NULL DEFAULT NULL,
+    field3 integer NULL DEFAULT NULL,
+
+    -- проверяем, чтобы было заполнено любое и только 1 поле из списка
+    CONSTRAINT table1 CHECK (
+        array_length(array_remove(ARRAY[field1, field2, field3], null), 1) = 1
+    )
+);
+```
