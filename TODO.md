@@ -55,6 +55,7 @@
    1. https://tech.binary.com/parallel-query-without-parallel-query/
    1. https://tech.binary.com/lock-contention-in-postgres/ (интересный способ уменьшить блокировки)
    1. https://dataedo.com/kb/query/ Useful queries for popular relational databases to explore schema.
+   1. https://aws.amazon.com/ru/blogs/database/validating-database-objects-after-migration-using-aws-sct-and-aws-dms/ Validating database objects after migration using AWS SCT and AWS DMS
 
 # TODO
 Рассказать, как Postgresql можно обойтись без SQL_CALC_FOUND_ROWS и почему это лучше.
