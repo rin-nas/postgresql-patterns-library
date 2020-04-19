@@ -49,7 +49,7 @@
    1. https://pgday.ru/ru/2016/papers/62 Where is the space, Postgres?
    1. https://pgcookbook.ru/index.html
    1. https://wiki.postgresql.org/wiki/ArrXor
-   1. http://akorotkov.github.io/blog/2016/06/17/faceted-search/
+   1. http://akorotkov.github.io/blog/2016/06/17/faceted-search/ Фасетный поиск
    1. http://sqlfiddle.postgrespro.ru/ - песочница
    1. https://www.percona.com/blog/2019/07/22/automatic-index-recommendations-in-postgresql-using-pg_qualstats-and-hypopg/
    1. https://tech.binary.com/parallel-query-without-parallel-query/
@@ -111,18 +111,4 @@ with recursive fizzbuzz (num,val) as (
 select num, val
 from fizzbuzz
 where num > 0;
-```
-
-```
-CREATE TABLE IF NOT EXISTS table1
-(
-    field1 integer NULL DEFAULT NULL,
-    field2 integer NULL DEFAULT NULL,
-    field3 integer NULL DEFAULT NULL,
-
-    -- проверяем, чтобы было заполнено любое и только 1 поле из списка
-    CONSTRAINT table1 CHECK (
-        array_length(array_remove(ARRAY[field1, field2, field3], null), 1) = 1
-    )
-);
 ```
