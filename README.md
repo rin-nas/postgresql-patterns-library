@@ -110,7 +110,7 @@ SELECT ARRAY_TO_STRING(ARRAY_AGG(DISTINCT s ORDER BY s), ', ') AS field_alias FR
 
 #### Как [транслитерировать](https://ru.wikipedia.org/wiki/%D0%A2%D1%80%D0%B0%D0%BD%D1%81%D0%BB%D0%B8%D1%82%D0%B5%D1%80%D0%B0%D1%86%D0%B8%D1%8F) русские буквы на английские?
 
-См. [`slugify.sql`](functions/slugify.sql)
+См. [`slugify.sql`](functions/slugify.sql). [Всё о транслитерации](https://habr.com/ru/post/499574/)
 
 #### Как распарсить CSV строку в таблицу?
 
