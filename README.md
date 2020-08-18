@@ -269,7 +269,7 @@ WHERE words LIKE ANY (ARRAY['%bar%', '%zap%', '%fix%', '%new%']);
 См. так же [полнотекстовый поиск](https://postgrespro.ru/docs/postgresql/11/textsearch).
 
 ```sql
-CREATE INDEX /*CONCURRENTLY*/ IF NOT EXISTS t_name_trigram_index ON t USING GIN (lower(name) gin_trgm_ops);
+CREATE INDEX /*CONCURRENTLY*/ t_name_trigram_index ON t USING GIN (lower(name) gin_trgm_ops);
 
 WITH
 normalize AS (
@@ -643,7 +643,7 @@ dist1_km1 | dist2_km
 
 ```sql
 -- координаты (долготу, широту) лучше сразу хранить не в 2-х отдельных полях, а в одном поле с типом point
-create index if not exists region_point_idx on region using gist(point(map_center_x, map_center_y));
+create index region_point_idx on region using gist(point(map_center_x, map_center_y));
 
 --explain
 with t as (
@@ -854,7 +854,7 @@ ALTER TABLE group
 ### Как проверить, что при добавлении или обновлении записи заполнены N полей из M возможных?
 
 ```sql
-CREATE TABLE IF NOT EXISTS table1
+CREATE TABLE table1
 (
     field1 integer DEFAULT NULL,
     field2 integer DEFAULT NULL,
@@ -959,7 +959,7 @@ UNION ALL SELECT 'skill' AS table_name, 'deleted' AS action, COUNT(*) FROM delet
 
 -- удаляем битый индекс и создаём новый уникальный индекс
 DROP INDEX IF EXISTS skill.uniq_skill_name;
-CREATE UNIQUE INDEX IF NOT EXISTS uniq_skill_name ON skill (lower(name));
+CREATE UNIQUE INDEX uniq_skill_name ON skill (lower(name));
 ```
 
 #### Как временно отключить индекс?
