@@ -1177,7 +1177,11 @@ ORDER BY
 CREATE INDEX CONCURRENTLY new_index ON ...; -- делаем дубликат индекса old_index
 DROP INDEX CONCURRENTLY old_index;
 ALTER INDEX new_index RENAME TO old_index;
--- с PRIMARY KEY так просто не получится, тут подумать нужно, как из обезжиривать их без локов
+
+-- To recreate a primary key constraint, without blocking updates while the index is rebuilt:
+CREATE UNIQUE INDEX CONCURRENTLY dist_id_temp_idx ON distributors (dist_id);
+ALTER TABLE distributors DROP CONSTRAINT distributors_pkey,
+    ADD CONSTRAINT distributors_pkey PRIMARY KEY USING INDEX dist_id_temp_idx;
 ```
 
 ### Как получить список установленных расширений (extensions)?
