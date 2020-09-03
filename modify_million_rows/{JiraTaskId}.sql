@@ -30,6 +30,7 @@ DECLARE
     batch_rows int default 1; -- по сколько записей будем обновлять за 1 цикл
     processed_rows int default 0; -- счётчик, сколько записей обновили, увеличивается на каждой итерации цикла
     total_rows int default 0; -- количество записей всего
+    
     -- public variables (need to edit):
     cur CURSOR FOR SELECT * FROM {table}_{JiraTaskId} ORDER BY id; -- сортировка по id обязательна!
     time_max constant numeric default 1; -- пороговое максимальное время выполнения 1-го запроса, в секундах
@@ -39,6 +40,9 @@ BEGIN
     RAISE NOTICE 'Calculate total rows%', ' ';
  
     SELECT COUNT(*) INTO total_rows FROM {table}_{JiraTaskId};
+    
+    -- uncomment next command if you use PosgreSQL < 11
+    -- PERFORM dblink_connect('host=test dbname=test user=test password=test');
  
     FOR rec_start IN cur LOOP
         cycles := cycles + 1;
@@ -54,26 +58,35 @@ BEGIN
  
         query_time_start := clock_timestamp();
  
-            -- напишите здесь запрос для добавления записей:
+            -- напишите здесь запрос для добавления записей (PosgreSQL > 10):
             INSERT INTO ...
             SELECT ...
             FROM ... AS t
             WHERE t.id % cpu_max = (cpu_num - 1)
               AND t.id BETWEEN rec_start.id AND rec_stop.id;
+             
+            -- или напишите здесь запрос для удаления записей (PosgreSQL > 10):
+            DELETE FROM {table}
+            WHERE id % cpu_max = (cpu_num - 1)
+              AND id BETWEEN rec_start.id AND rec_stop.id;
  
-            -- или напишите здесь запрос для обновления записей:
+            -- или напишите здесь запрос для обновления записей (PosgreSQL > 10):
             UPDATE {table} AS n
             SET ...
             FROM {table}_{JiraTaskId} AS t
             WHERE t.id % cpu_max = (cpu_num - 1)
               AND t.id = n.id AND t.id BETWEEN rec_start.id AND rec_stop.id;
-             
-            -- или напишите здесь запрос для удаления записей:
-            DELETE FROM {table}
-            WHERE id % cpu_max = (cpu_num - 1)
-              AND id BETWEEN rec_start.id AND rec_stop.id;
+            
+            -- для PosgreSQL < 11 выполнение команд должно быть через dblink:
+            PERFORM dblink_exec('
+                UPDATE {table} AS n
+                SET ...
+                FROM {table}_{JiraTaskId} AS t
+                WHERE t.id % ' || cpu_max || ' = (' || cpu_num || ' - 1)
+                AND t.id = n.id AND t.id BETWEEN ' || rec_start.id || ' AND ' || rec_stop.id
+            );
  
-            -- comment next command if you use PosgreSQL < 11, but you will have one big long transaction
+            -- comment next command if you use PosgreSQL < 11
             COMMIT; -- https://www.postgresql.org/docs/11/plpgsql-transactions.html
  
         query_time_elapsed := round(extract('epoch' from clock_timestamp() - query_time_start)::numeric, 2);
@@ -96,6 +109,9 @@ BEGIN
         END IF;
  
     END LOOP;
+    
+    -- uncomment next command if you use PosgreSQL < 11
+    -- PERFORM dblink_disconnect();
  
     RAISE NOTICE 'Done. % rows per second, % queries per second', (processed_rows / total_time_elapsed)::int, round(cycles / total_time_elapsed, 2);
  
