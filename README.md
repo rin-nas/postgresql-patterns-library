@@ -1182,6 +1182,12 @@ ALTER INDEX new_index RENAME TO old_index;
 CREATE UNIQUE INDEX CONCURRENTLY dist_id_temp_idx ON distributors (dist_id);
 ALTER TABLE distributors DROP CONSTRAINT distributors_pkey,
     ADD CONSTRAINT distributors_pkey PRIMARY KEY USING INDEX dist_id_temp_idx;
+    
+-- для уникального ключа
+CREATE UNIQUE INDEX CONCURRENTLY new_unique_index ON ...;
+ALTER TABLE table_name
+    DROP CONSTRAINT old_unique_index,
+    ADD CONSTRAINT old_unique_index UNIQUE USING INDEX new_unique_index;
 ```
 
 ### Как получить список установленных расширений (extensions)?
