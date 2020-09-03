@@ -1,0 +1,1 @@
+VACUUM VERBOSE ANALYZE {table};
