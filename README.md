@@ -1184,7 +1184,7 @@ ALTER TABLE table_name
     DROP CONSTRAINT old_unique_index,
     ADD CONSTRAINT old_unique_index PRIMARY KEY USING INDEX new_unique_index;
     
--- для уникального индекса:
+-- для уникального индекса (если на ограничение есть ссылающиеся записи по внешнему ключу из других таблиц, то будет ошибка):
 CREATE UNIQUE INDEX CONCURRENTLY new_unique_index ON ...;
 ALTER TABLE table_name
     DROP CONSTRAINT old_unique_index,
