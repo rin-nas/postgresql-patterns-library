@@ -1170,20 +1170,20 @@ ORDER BY
 
 ### Как пересоздать индекс без блокировок?
 
-Цель перестроения индекса - уменьшить занимаемый размер из-за [фрагментации](https://github.com/ioguix/pgsql-bloat-estimation). Команда REINDEX имеет опцию [CONCURRENTLY](https://www.postgresql.org/docs/12/sql-reindex.html), которая появилась только в PostgreSQL 12. В более ранних версиях можно сделать так:
+Цель перестроения индекса - уменьшить занимаемый размер из-за [фрагментации](https://github.com/ioguix/pgsql-bloat-estimation). Команда REINDEX имеет опцию [CONCURRENTLY](https://www.postgresql.org/docs/12/sql-reindex.html), которая появилась только в PostgreSQL 12. В более ранних версиях можно сделать так (неблокирующая альтернатива команде REINDEX):
 
 ```sql
--- Неблокирующая альтернатива команде REINDEX:
+-- для неуникального индекса:
 CREATE INDEX CONCURRENTLY new_index ON ...; -- делаем дубликат индекса old_index
 DROP INDEX CONCURRENTLY old_index;
 ALTER INDEX new_index RENAME TO old_index;
 
--- To recreate a primary key constraint, without blocking updates while the index is rebuilt:
+-- для первичного ключа:
 CREATE UNIQUE INDEX CONCURRENTLY dist_id_temp_idx ON distributors (dist_id);
 ALTER TABLE distributors DROP CONSTRAINT distributors_pkey,
     ADD CONSTRAINT distributors_pkey PRIMARY KEY USING INDEX dist_id_temp_idx;
     
--- для уникального ключа
+-- для уникального индекса:
 CREATE UNIQUE INDEX CONCURRENTLY new_unique_index ON ...;
 ALTER TABLE table_name
     DROP CONSTRAINT old_unique_index,
