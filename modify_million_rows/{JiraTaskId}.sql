@@ -20,13 +20,15 @@ DECLARE
     time_max constant numeric default 1; -- пороговое максимальное время выполнения 1-го запроса, в секундах
     cpu_num constant smallint default 1; -- для распараллеливания скрипта для выполнения через bash и psql: номер текущего ядра процессора
     cpu_max constant smallint default 1; -- для распараллеливания скрипта для выполнения через bash и psql: максимальное количество ядер процессора
+    --connection_str text default 'host=test dbname=test user=test password=test'; -- uncomment this line if you use PosgreSQL < 11
+    
 BEGIN
     RAISE NOTICE 'Calculate total rows%', ' ';
  
     SELECT COUNT(*) INTO total_rows FROM {table}_{JiraTaskId};
     
     -- uncomment next command if you use PosgreSQL < 11
-    -- PERFORM dblink_connect('host=test dbname=test user=test password=test');
+    -- PERFORM dblink_connect(connection_str);
  
     FOR rec_start IN cur LOOP
         cycles := cycles + 1;
