@@ -822,7 +822,7 @@ DECLARE
     exception_context text;
 BEGIN
     BEGIN
-        ALTER TABLE v3_company_awards ADD CONSTRAINT v3_company_awards_year CHECK(year between 1900 and date_part('year', CURRENT_DATE));
+        ALTER TABLE company_awards ADD CONSTRAINT company_awards_year CHECK(year between 1900 and date_part('year', CURRENT_DATE));
     EXCEPTION WHEN duplicate_object THEN
         GET STACKED DIAGNOSTICS
             exception_message = MESSAGE_TEXT,
