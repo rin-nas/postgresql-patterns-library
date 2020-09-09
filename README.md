@@ -812,6 +812,7 @@ WHERE u2.id = u.id;
 
 ### Как добавить ограничение таблицы, если оно ещё не существует?
 
+Способ 1
 Реализация команды `ALTER TABLE ... ADD CONSTRAINT IF NOT EXISTS ...`, которая отсутствует в PostgreSQL 11.
 
 ```sql
@@ -832,6 +833,15 @@ BEGIN
     END;
 
 END $$;
+```
+
+Способ 2
+```sql
+BEGIN;
+    ALTER TABLE company_awards 
+         DROP CONSTRAINT IF EXISTS company_awards_year,
+         ADD CONSTRAINT company_awards_year CHECK(year between 1900 and date_part('year', CURRENT_DATE));
+COMMIT;
 ```
 
 ### Как изменить ограничение внешнего ключа без блокирования таблицы?
