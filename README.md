@@ -797,12 +797,13 @@ WHERE u2.id = u.id;
 1. На реплику данные передаются постепенно небольшими порциями, а не одним огромным куском.
 
 
-Рабочий набор файлов-шаблонов:
+Рабочий набор файлов-шаблонов и шаги выполнения:
 
 1. [`{JiraTaskId}_prepare.sql`](modify_million_rows/{JiraTaskId}_prepare.sql) — для последующего обновления или удаления сначала необходимо подготовить временную таблицу. Так же эта таблица является резервной копией для возможности отката.
 1. [`{JiraTaskId}.sql`](modify_million_rows/{JiraTaskId}.sql) — запросы этом в файле обрабатывают большую таблицу пачками по несколько (десятки/сотни/тысячи) записей. В процесе работы размер пачки автоматически подстраивается под максимально установленное время работы для одной пачки (несколько секунд).
+   1. [`{JiraTaskId}.sh`](modify_million_rows/{JiraTaskId}.sh) — скрипт для ускорения выполнения [`{JiraTaskId}.sql`](modify_million_rows/{JiraTaskId}.sql) путём распараллеливания по нескольким ядрам процессора. Запускать лучше в [Screen](https://help.ubuntu.ru/wiki/screen). Отслеживать прогресс выполнения каждого процесса можно командой: `$ tail -f {JiraTaskId}_job_{cpu_num}.log`. Пример отчёта выполненного скрипта в файле [`{JiraTaskId}_job_{cpu_num}.log`](modify_million_rows/{JiraTaskId}_job_{cpu_num}.log).
 1. [`{JiraTaskId}_finish.sql`](modify_million_rows/{JiraTaskId}_finish.sql) — завершить обработку (вакуумизация таблицы)
-1. [`{JiraTaskId}.sh`](modify_million_rows/{JiraTaskId}.sh) — скрипт для ускорения выполнения задачи путём распараллеливания [`{JiraTaskId}.sql`](modify_million_rows/{JiraTaskId}.sql) по нескольким ядрам процессора. Запускать лучше в [Screen](https://help.ubuntu.ru/wiki/screen). Отслеживать прогресс выполнения каждого процесса можно командой: `$ tail -f {JiraTaskId}_job_{cpu_num}.log`. Пример отчёта выполненного скрипта в файле [`{JiraTaskId}_job_{cpu_num}.log`](modify_million_rows/{JiraTaskId}_job_{cpu_num}.log).
+
 
 ## Модификация схемы данных (DDL)
 
