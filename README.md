@@ -972,13 +972,13 @@ CREATE UNIQUE INDEX uniq_skill_name ON skill (lower(name));
 
 #### Как временно отключить индекс?
 
-Способ 1
+Способ 1 (от пользователя postgres, но без блокировки)
 ```sql
 --Is it possible to temporarily disable an index in Postgres?
 update pg_index set indisvalid = false where indexrelid = 'test_pkey'::regclass
 ```
 
-Способ 2
+Способ 2 (в отдельной транзакции, но с блокировкой)
 ```sql
 begin;
 drop index foo_ndx;
