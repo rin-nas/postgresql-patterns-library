@@ -63,7 +63,10 @@
    1. https://dataedo.com/kb/query/ Useful queries for popular relational databases to explore schema.
    1. https://aws.amazon.com/ru/blogs/database/validating-database-objects-after-migration-using-aws-sct-and-aws-dms/ Validating database objects after migration using AWS SCT and AWS DMS
 
-# Btree and GIN indexes bloat
+# Btree, GIN, GIST indexes bloat
+
+https://stackoverflow.com/questions/56704625/index-bloat-on-gin-index-for-insert-only-table
+
 ```sql
 WITH constants AS (
   SELECT current_setting('block_size')::numeric AS bs, 23 AS hdr, 4 AS ma
