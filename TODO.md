@@ -65,7 +65,7 @@
 
 # Btree, GIN, GIST indexes bloat
 
-https://stackoverflow.com/questions/56704625/index-bloat-on-gin-index-for-insert-only-table
+source: https://stackoverflow.com/questions/56704625/index-bloat-on-gin-index-for-insert-only-table
 
 ```sql
 WITH constants AS (
