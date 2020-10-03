@@ -674,7 +674,7 @@ FROM (
 
 ### Как добавить или обновить записи одним запросом (UPSERT)?
 
-См. [INSERT... ON CONFLICT DO NOTHING/UPDATE и ROW LEVEL SECURITY](https://habr.com/post/264281/) (Habr)
+См. [INSERT... ON CONFLICT DO NOTHING/UPDATE](https://habr.com/post/264281/) (Habr)
 
 ### Как сделать `INSERT... ON CONFLICT DO NOTHING` без увеличения последовательности для дубликатов?
 
