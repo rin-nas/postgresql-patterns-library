@@ -36,6 +36,7 @@ s1 as (
     skip locked -- если строки заблокировать не удалось, пропускаем их (они уже заблокированы в параллельных транзакциях)
 ),
 s2 as (
+    -- такой же запрос, как выше, только без `for update of t skip locked`
     select id
     from t1 as t
     where name like 'a%'
