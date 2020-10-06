@@ -886,7 +886,7 @@ delete from t1 where name like 'a%';
 
 -- СТАЛО
 with options AS (
-    select 4096 as batch_limit
+    select 4096 as batch_limit -- на следующей итерации цикла приложения вместо 4096 нужно подставить значение next_limit
 ),
 s1 as (
     select id
