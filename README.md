@@ -493,6 +493,7 @@ ORDER BY kladr_id, duplicate_num
 ```sql
 SELECT extract(seconds FROM clock_timestamp() - now()) AS execution_time FROM pg_sleep(1.5);
 ```
+Это работает, потому что `now()` вычислится ещё на этапе планирования запроса, а `clock_timestamp()` на этапе выполнения.
 
 ### Как разбить большую таблицу по N тысяч записей, получив диапазоны id?
 
