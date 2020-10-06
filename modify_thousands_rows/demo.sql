@@ -39,6 +39,7 @@ s2 as (
     select id
     from t1 as t
     where name like 'a%'
+    limit (select batch_limit from options)
 ),
 d1 as (
     -- удаляем заблокированные записи
@@ -59,7 +60,7 @@ select
     -- вычисляем лимит для следующего выполнения этого запроса в цикле приложения; если 0, то выходим из цикла
     case
         -- если нет заблокированных удалённых записей, то возвращаем ноль
-        when r1.locked_deleted = 0 then 0
+        when (r1.locked_deleted + r2.remains_deleted) = 0 then 0
         --если время выполнения запроса > 1 секунды, то уменьшаем лимит в 2 раза, иначе увеличиваем лимит в 2 раза
         else (case when clock_timestamp() - now() > '1s' then (o.batch_limit / 2)::int else o.batch_limit * 2 end)
     end as next_limit
