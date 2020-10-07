@@ -695,19 +695,30 @@ table t1_id_seq; -- "last_value" is 2
 
 -- БЫЛО - при дубликатах последовательность всегда увеличивается,
 -- при активной вставке можно достичь её предела, на практике такое бывает!
-insert into t1 (name) values ('c'), ('a'); -- здесь будет ошибка
+
+-- здесь будет ошибка
+insert into t1 (name) values ('c'), ('a');
+
 table t1_id_seq; -- "last_value" is 4
 
-insert into t1 (name) values ('c'), ('a') on conflict do nothing; -- здесь ошибки не будет, 1 row affected
+-- здесь ошибки не будет
+insert into t1 (name) values ('c'), ('a') 
+on conflict do nothing 
+returning id;
+-- 1 row affected
+
 table t1_id_seq; -- "last_value" is 6
 
--- СТАЛО - при дубликатах последовательность не увеличиваются, но только в той же транзакции
--- при параллельном выполнении транзакций возможно увеличение последовательности, но это уже редкая ситуация
+-- СТАЛО
+
 insert into t1 (name)
 select name
 from (values ('c', 'a')) v(name)
+-- при дубликатах последовательность зря не увеличивается, но только в той же транзакции
 where not exists (select from t1 AS d where d.name = v.name)
-on conflict do nothing; -- при необходимости
+-- при параллельном выполнении возможно увеличение последовательности, но это уже редкая ситуация
+on conflict do nothing
+returning id;
 -- 1 row affected
 
 table t1_id_seq; -- "last_value" is 3
