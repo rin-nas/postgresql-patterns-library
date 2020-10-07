@@ -844,7 +844,7 @@ WHERE u2.id = u.id;
    1. [`{JiraTaskId}.sh`](modify_million_rows/{JiraTaskId}.sh) — скрипт для ускорения выполнения [`{JiraTaskId}.sql`](modify_million_rows/{JiraTaskId}.sql) путём распараллеливания по нескольким ядрам процессора. Запускать лучше в [Screen](https://help.ubuntu.ru/wiki/screen). Отслеживать прогресс выполнения каждого процесса можно командой: `$ tail -f {JiraTaskId}_job_{cpu_num}.log`. Пример отчёта выполненного скрипта в файле [`{JiraTaskId}_job_{cpu_num}.log`](modify_million_rows/{JiraTaskId}_job_{cpu_num}.log).
 1. [`{JiraTaskId}_finish.sql`](modify_million_rows/{JiraTaskId}_finish.sql) — завершить обработку (вакуумизация таблицы)
 
-### Как обновить или удалить десятки тысяч записей в таблице не блокируя все записи и не нагружая БД?
+### Как удалить десятки тысяч записей в таблице не блокируя все записи и не нагружая БД?
 
 [Данный запрос](modify_thousands_rows/demo.sql) хорошо подходит для:
 
