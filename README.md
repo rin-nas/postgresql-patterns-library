@@ -699,7 +699,7 @@ table t1_id_seq; -- "last_value" is 2
 -- здесь будет ошибка
 insert into t1 (name) values ('c'), ('a');
 
-table t1_id_seq; -- "last_value" is 4
+table t1_id_seq; -- "last_value" is 4 (зря увеличили последовательность на 2)
 
 -- здесь ошибки не будет
 insert into t1 (name) values ('c'), ('a') 
@@ -707,7 +707,7 @@ on conflict do nothing
 returning id;
 -- 1 row affected
 
-table t1_id_seq; -- "last_value" is 6
+table t1_id_seq; -- "last_value" is 6 (зря увеличили последовательность на 1)
 
 -- СТАЛО
 
@@ -718,6 +718,7 @@ from (values ('c', 'a')) v(name)
 where not exists (select from t1 AS d where d.name = v.name)
 -- при параллельном выполнении возможно увеличение последовательности, но это уже редкая ситуация
 on conflict do nothing
+-- id возвращаются только для добавленных записей
 returning id;
 -- 1 row affected
 
