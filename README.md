@@ -63,7 +63,7 @@
    1. [Как проверить, что при добавлении или обновлении записи заполнены N полей из M возможных?](#Как-проверить-что-при-добавлении-или-обновлении-записи-заполнены-N-полей-из-M-возможных)
   
 **[Индексы](#Индексы)**
-   1. [Как сделать ограничение уникальности на колонку в существующей таблице без её блокирования?](#Как-сделать-ограничение-уникальности-на-колонку-в-существующей-таблице-без-её-блокирования)
+   1. [Как создать или пересоздать индекс в существующей таблице без её блокирования?](#Как-создать-или-пересоздать-индекс-в-существующей-таблице-без-её-блокирования)
    1. [Как сделать составной уникальный индекс, где одно из полей может быть null?](#Как-сделать-составной-уникальный-индекс-где-одно-из-полей-может-быть-null)
    1. [Как починить сломаный уникальный индекс, имеющий дубликаты?](#Как-починить-сломаный-уникальный-индекс-имеющий-дубликаты)
    1. [Как временно отключить индекс?](#Как-временно-отключить-индекс)
@@ -75,7 +75,6 @@
    1. [Как получить список всех функций БД, включая триггерные процедуры?](#Как-получить-список-всех-функций-БД-включая-триггерные-процедуры)
    1. [Как получить список всех зависимостей (внешних ключей) между таблицами БД?](#Как-получить-список-всех-зависимостей-внешних-ключей-между-таблицами-БД)
    1. [Как получить статистику использования индексов?](#Как-получить-статистику-использования-индексов)
-   1. [Как создать или пересоздать индекс без блокировок?](#Как-создать-или-пересоздать-индекс-без-блокировок)
    1. [Как получить список установленных расширений (extensions)?](#Как-получить-список-установленных-расширений-extensions)
    1. [Как получить список таблиц с размером занимаемого места?](#Как-получить-список-таблиц-с-размером-занимаемого-места)
    1. [Как получить и изменить значения параметров конфигурации выполнения?](#Как-получить-и-изменить-значения-параметров-конфигурации-выполнения)
@@ -956,24 +955,37 @@ CREATE TABLE table1
 
 ## Индексы
 
-### Как сделать ограничение уникальности на колонку в существующей таблице без её блокирования?
+### Как создать или пересоздать индекс в существующей таблице без её блокирования?
 
-Запускать эти запросы нужно НЕ в транзакции, а вручную последовательно. Если при выполнении любого запроса произойдёт ошибка, то нужно выполнить все запросы заново.
+Создание или удаление индекса без блокировки обеспечивается конкурентным режимом и флагом [`CONCURRENTLY`](https://postgrespro.ru/docs/postgresql/12/sql-createindex#SQL-CREATEINDEX-CONCURRENTLY). Но у этого способа есть несущественные недостатки:
+1. Индекс создаётся/удаляется дольше.
+1. Запускать эти запросы нужно НЕ в транзакции, а вручную последовательно. В случае неудачи построения индекса в конкурентном режиме будет создан "нерабочий" индекс. В этом случае его нужно удалить и создать заново.
 
+Получить список всех "нерабочих" индексов в БД:
 ```sql
--- в случае неудачи построения индекса в конкурентном режиме создаётся "нерабочий" индекс и его нужно удалить
-DROP INDEX CONCURRENTLY IF EXISTS person_uniq_auth_id;
-
--- takes a long time, but doesn’t block queries
-CREATE UNIQUE INDEX CONCURRENTLY person_uniq_auth_id ON person (auth_id);
-
--- blocks queries, but only very briefly
--- ALTER TABLE person ADD CONSTRAINT person_uniq_auth_id UNIQUE USING INDEX person_uniq_auth_id;
+select indexrelid::regclass index_name, indrelid::regclass table_name from pg_index where not indisvalid
 ```
 
-### Как добавить новый индекс в существующую таблицу без её блокирования?
+Цель перестроения индекса - уменьшить занимаемый размер из-за [фрагментации](https://github.com/ioguix/pgsql-bloat-estimation). Команда REINDEX имеет опцию [CONCURRENTLY](https://www.postgresql.org/docs/12/sql-reindex.html), которая появилась только в PostgreSQL 12. В более ранних версиях можно сделать так (неблокирующая альтернатива команде REINDEX):
 
-См. [CREATE INDEX CONCURRENTLY](https://www.postgresql.org/docs/9.5/static/sql-createindex.html#SQL-CREATEINDEX-CONCURRENTLY)
+```sql
+-- для неуникального индекса:
+CREATE INDEX CONCURRENTLY new_index ON ...; -- делаем дубликат индекса old_index
+DROP INDEX CONCURRENTLY old_index;
+ALTER INDEX new_index RENAME TO old_index;
+
+-- для первичного ключа:
+CREATE UNIQUE INDEX CONCURRENTLY new_unique_index ON distributors (dist_id);
+ALTER TABLE table_name
+    DROP CONSTRAINT old_unique_index,
+    ADD CONSTRAINT old_unique_index PRIMARY KEY USING INDEX new_unique_index;
+    
+-- для уникального индекса (если на ограничение есть ссылающиеся записи по внешнему ключу из других таблиц, то будет ошибка):
+CREATE UNIQUE INDEX CONCURRENTLY new_unique_index ON ...;
+ALTER TABLE table_name
+    DROP CONSTRAINT old_unique_index,
+    ADD CONSTRAINT old_unique_index UNIQUE USING INDEX new_unique_index;
+```
 
 ### Как сделать составной уникальный индекс, где одно из полей может быть null?
 
@@ -1251,29 +1263,6 @@ WHERE
 ORDER BY
     idstat.idx_scan DESC,
     pg_relation_size(indexrelid) DESC
-```
-
-### Как создать или пересоздать индекс без блокировок?
-
-Цель перестроения индекса - уменьшить занимаемый размер из-за [фрагментации](https://github.com/ioguix/pgsql-bloat-estimation). Команда REINDEX имеет опцию [CONCURRENTLY](https://www.postgresql.org/docs/12/sql-reindex.html), которая появилась только в PostgreSQL 12. В более ранних версиях можно сделать так (неблокирующая альтернатива команде REINDEX):
-
-```sql
--- для неуникального индекса:
-CREATE INDEX CONCURRENTLY new_index ON ...; -- делаем дубликат индекса old_index
-DROP INDEX CONCURRENTLY old_index;
-ALTER INDEX new_index RENAME TO old_index;
-
--- для первичного ключа:
-CREATE UNIQUE INDEX CONCURRENTLY new_unique_index ON distributors (dist_id);
-ALTER TABLE table_name
-    DROP CONSTRAINT old_unique_index,
-    ADD CONSTRAINT old_unique_index PRIMARY KEY USING INDEX new_unique_index;
-    
--- для уникального индекса (если на ограничение есть ссылающиеся записи по внешнему ключу из других таблиц, то будет ошибка):
-CREATE UNIQUE INDEX CONCURRENTLY new_unique_index ON ...;
-ALTER TABLE table_name
-    DROP CONSTRAINT old_unique_index,
-    ADD CONSTRAINT old_unique_index UNIQUE USING INDEX new_unique_index;
 ```
 
 ### Как получить список установленных расширений (extensions)?
