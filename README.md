@@ -418,6 +418,7 @@ SELECT ot1.name AS name_1, ot2.name as name_2, ot3.name as name_3, ot4.id as id
 
 #### Как посмотреть на план выполнения запроса (EXPLAIN) в наглядном графическом виде?
 
+1. [Человекопонятное отображение EXPLAIN и советы](https://explain.tensor.ru/)
 1. [Postgres Explain Visualizer (Pev)](http://tatiyants.com/pev/) is a tool I wrote to make EXPLAIN output easier to grok. It creates a graphical representation of the query plan
 1. [PostgreSQL's explain analyze made readable](https://explain.depesz.com/)
 
