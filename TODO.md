@@ -28,6 +28,7 @@
 
 # StackOverflow
    1. https://stackoverflow.com/questions/7923237/return-pre-update-column-values-using-sql-only
+   1. https://stackoverflow.com/questions/11532550/atomic-update-select-in-postgres
    1. https://stackoverflow.com/questions/28550679/what-is-the-difference-between-lateral-and-a-subquery-in-postgresql
    1. https://stackoverflow.com/questions/8443716/postgres-unique-constraint-for-array
    1. https://stackoverflow.com/questions/20215724/need-foreign-key-as-array
