@@ -33,6 +33,8 @@
    1. https://stackoverflow.com/questions/8443716/postgres-unique-constraint-for-array
    1. https://stackoverflow.com/questions/20215724/need-foreign-key-as-array
    1. https://dba.stackexchange.com/questions/11329/monitoring-progress-of-index-construction-in-postgresql
+   1. https://stackoverflow.com/questions/34657669/find-rows-where-text-array-contains-value-similar-to-input
+   1. https://stackoverflow.com/questions/3994556/eliminate-duplicate-array-values-in-postgres
 
 # Other
    1. https://www.citusdata.com/blog/2018/02/22/seven-tips-for-dealing-with-postgres-locks/
