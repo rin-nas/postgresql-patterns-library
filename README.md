@@ -264,6 +264,7 @@ create schema if not exists test;
 
 CREATE OR REPLACE FUNCTION test.check_foreign_key_array(data anyarray, ref_schema text, ref_table text, ref_column text)
     RETURNS BOOL
+    RETURNS NULL ON NULL INPUT
     LANGUAGE plpgsql
 AS
 $body$
