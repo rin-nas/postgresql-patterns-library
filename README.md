@@ -907,6 +907,7 @@ SELECT true AS is_updated, updated_at
 FROM u
 UNION ALL
 SELECT false AS is_updated, updated_at
+FROM t
 WHERE id = 123 AND NOT EXISTS (SELECT * FROM u)
 ```
 
