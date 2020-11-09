@@ -35,6 +35,8 @@
    1. https://dba.stackexchange.com/questions/11329/monitoring-progress-of-index-construction-in-postgresql
    1. https://stackoverflow.com/questions/34657669/find-rows-where-text-array-contains-value-similar-to-input
    1. https://stackoverflow.com/questions/3994556/eliminate-duplicate-array-values-in-postgres
+   1. https://stackoverflow.com/questions/3942258/how-do-i-temporarily-disable-triggers-in-postgresql
+   1. https://stackoverflow.com/questions/38112379/disable-postgresql-foreign-key-checks-for-migrations
 
 # Other
    1. https://www.citusdata.com/blog/2018/02/22/seven-tips-for-dealing-with-postgres-locks/
