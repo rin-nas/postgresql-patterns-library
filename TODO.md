@@ -31,7 +31,6 @@
    1. https://stackoverflow.com/questions/11532550/atomic-update-select-in-postgres
    1. https://stackoverflow.com/questions/28550679/what-is-the-difference-between-lateral-and-a-subquery-in-postgresql
    1. https://stackoverflow.com/questions/8443716/postgres-unique-constraint-for-array
-   1. https://stackoverflow.com/questions/20215724/need-foreign-key-as-array
    1. https://dba.stackexchange.com/questions/11329/monitoring-progress-of-index-construction-in-postgresql
    1. https://stackoverflow.com/questions/34657669/find-rows-where-text-array-contains-value-similar-to-input
    1. https://stackoverflow.com/questions/3994556/eliminate-duplicate-array-values-in-postgres
