@@ -69,6 +69,7 @@
    1. https://dataedo.com/kb/query/ Useful queries for popular relational databases to explore schema. Database Data Dictionary Query Toolbox
    1. https://aws.amazon.com/ru/blogs/database/validating-database-objects-after-migration-using-aws-sct-and-aws-dms/ Validating database objects after migration using AWS SCT and AWS DMS
    1. http://morozovsk.blogspot.com/2011/07/array-function-arraydiff-in-postgresql.html `array_diff()` и `array_intersect()` и др.
+   1. https://begriffs.com/posts/2017-08-27-deferrable-sql-constraints.html
 
 # Btree, GIN, GIST indexes bloat
 
