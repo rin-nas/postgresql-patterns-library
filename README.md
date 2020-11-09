@@ -308,6 +308,17 @@ insert into test.t2 (id, t1_ids) values (default, array[1,2,3]); --ok
 insert into test.t2 (id, t1_ids) values (default, array[1,2,3,555]); --error
 ```
 
+Пример добавления ограничения для типа поля [ltree](https://postgrespro.ru/docs/postgrespro/12/ltree):
+```sql
+alter table region
+    add constraint region_tree_path_ids_check
+        check (
+                tree_path_ids::text ~ '^\d+(\.\d+)*$|^$' -- список родительских id через точку
+                and check_foreign_key_array(string_to_array(subpath(tree_path_ids, 0, -1)::text, '.')::int[], 'public', 'region', 'id')
+        )
+        not valid; --при необходимости
+```
+
 ### Поиск по фразе (точный и неточный)
 
 #### Как найти список строк, совпадающих со списком шаблонов?
