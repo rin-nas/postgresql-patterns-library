@@ -314,7 +314,7 @@ alter table region
     add constraint region_tree_path_ids_check
         check (
                 tree_path_ids::text ~ '^\d+(\.\d+)*$|^$' -- список родительских id через точку
-                and check_foreign_key_array(string_to_array(subpath(tree_path_ids, 0, -1)::text, '.')::int[], 'public', 'region', 'id')
+                and check_foreign_key_array(string_to_array(tree_path_ids::text, '.')::int[], 'public', 'region', 'id')
         )
         not valid; --при необходимости
 ```
