@@ -1057,6 +1057,7 @@ CREATE TABLE table1
 ```sql
 select indexrelid::regclass index_name, indrelid::regclass table_name from pg_index where not indisvalid
 ```
+В момент работы `create index concurrently` в списке будут присутствовать "нерабочие" индексы.
 
 Цель перестроения индекса - уменьшить занимаемый размер из-за [фрагментации](https://github.com/ioguix/pgsql-bloat-estimation). Команда REINDEX имеет опцию [CONCURRENTLY](https://www.postgresql.org/docs/12/sql-reindex.html), которая появилась только в PostgreSQL 12. В более ранних версиях можно сделать так (неблокирующая альтернатива команде REINDEX):
 
