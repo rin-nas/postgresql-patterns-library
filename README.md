@@ -1398,18 +1398,6 @@ ORDER BY total_time DESC -- самые долгие запросы по обще
 --LIMIT 100;
 ```
 
-```sql
--- самые популярные запросы
-SELECT
-(total_time / 1000 / 60) as time_total,
-(total_time / calls) as time_avg,
-query
-FROM pg_stat_statements
-ORDER BY 1 DESC
-LIMIT 100;
-```
-
-
 ### Как получить и изменить значения параметров конфигурации выполнения?
 
 #### получение значений параметров
