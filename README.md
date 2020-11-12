@@ -1392,7 +1392,7 @@ WHERE query ~* '(^|\n)\s*\m(insert\s+into|update|delete|truncate)\M' --толь�
 --WHERE query !~* '(^|\n)\s*\m(insert\s+into|update|delete|truncate)\M' --исключая DML запросы
 ORDER BY total_time DESC -- самые долгие запросы по общему времени выполнения
 --ORDER BY calls DESC      -- самые популярные по кол-ву
---ORDER BY mean_time DESC  -- самые медленные в среднем
+--ORDER BY mean_time DESC  -- самые медленные в среднем (total_time / calls)
 --ORDER BY max_time DESC   -- самые медленные в пике
 --ORDER BY rows DESC       -- больше всего возвращают строк
 --LIMIT 100;
