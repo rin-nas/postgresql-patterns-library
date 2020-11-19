@@ -221,7 +221,7 @@ inner join unnest(array[4, 5, 6, 7, 8]) a3 on a1 = a3; -- {4,5}
 
 #### Как получить уникальные элементы массива или отсортировать их?
 
-Лучше воспользоваться готовыми функциями `uniq()` и `sort()` из модуля [intarray](https://postgrespro.ru/docs/postgresql/12/intarray).
+Для `int[]` лучше воспользоваться готовыми функциями `uniq()` и `sort()` из модуля [intarray](https://postgrespro.ru/docs/postgresql/12/intarray).
 
 ```sql
 -- способ 1
