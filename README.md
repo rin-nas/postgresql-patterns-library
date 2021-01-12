@@ -579,10 +579,7 @@ SELECT extract(seconds FROM clock_timestamp() - now()) AS execution_time FRO
 
 ### Как разбить большую таблицу по N тысяч записей, получив диапазоны id?
 
-Применение:
-
-1. индексирование данных в поисковых движках типа Sphinx, Solr, Elastic Search
-2. ускорение выполнения запросов в PostgreSQL через их [распараллеливание](https://m.habr.com/company/lanit/blog/351160/)
+Применение: выгрузка из БД большого количества данных примерно одного объёма в каждой пачке. Например, индексирование данных в поисковых движках типа Sphinx, Solr, Elastic Search.
 
 ```sql
 WITH
