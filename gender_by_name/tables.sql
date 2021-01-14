@@ -14,7 +14,8 @@ comment on column gender_by_ending.ending is 'Окончание';
 comment on column gender_by_ending.gender is 'Пол';
 comment on column gender_by_ending.name_type is 'Тип last_name или middle_name';
 comment on column gender_by_ending.example is 'Пример';
-create index gender_by_ending_name_type_index on gender_by_ending (name_type);
+create index gender_by_ending_name_type on gender_by_ending (name_type);
+CREATE UNIQUE INDEX gender_by_ending_uniq ON gender_by_ending (lower(ending));
 
 create table person_name_dictionary
 (
