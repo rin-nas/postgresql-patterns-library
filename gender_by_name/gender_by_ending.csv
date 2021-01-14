@@ -178,4 +178,5 @@ id,ending,gender,name_type,example
 177,авна,female,middle_name,Ярославна
 178,евич,male,middle_name,"Витальевич, Алексеевич"
 179,кызы,female,last_name,Султан кызы
-180,ович,male,middle_name,
+180,ович,male,middle_name,Львович
+181,улы,male,last_name,Султан улы
