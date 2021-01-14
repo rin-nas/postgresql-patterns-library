@@ -1,5 +1,5 @@
-create type gender as enum ('male', 'female');
-create type name_type as enum ('last_name', 'middle_name');
+create type gender as enum ('male', 'female', 'unknown');
+create type name_type as enum ('last_name', 'middle_name', 'first_name');
 
 create table gender_by_ending
 (
@@ -26,4 +26,4 @@ create table person_name_dictionary
 comment on table person_name_dictionary is 'Словарь имен с полом';
 comment on column person_name_dictionary.name is 'Имя';
 comment on column person_name_dictionary.gender is 'Пол';
-create unique index person_name_dictionary_name_uindex on person_name_dictionary (lower(name::text));
+create unique index person_name_dictionary_name_uindex on person_name_dictionary (lower(name));
