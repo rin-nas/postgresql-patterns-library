@@ -16,7 +16,7 @@ DECLARE
     total_rows int default 0; -- количество записей всего
     
     -- public variables (need to edit):
-    cur CURSOR FOR SELECT * FROM {table}_{JiraTaskId} ORDER BY id; -- сортировка по id обязательна!
+    cur CURSOR FOR SELECT * FROM {table}_{JiraTaskId} ORDER BY id; -- здесь д.б. именно временная таблица, сортировка по id обязательна!
     time_max constant numeric default 1; -- пороговое максимальное время выполнения 1-го запроса, в секундах
     cpu_num constant smallint default 1; -- для распараллеливания скрипта для выполнения через bash и psql: номер текущего ядра процессора
     cpu_max constant smallint default 1; -- для распараллеливания скрипта для выполнения через bash и psql: максимальное количество ядер процессора
