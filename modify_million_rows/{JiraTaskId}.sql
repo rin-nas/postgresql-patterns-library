@@ -16,6 +16,7 @@ DECLARE
     total_rows int default 0; -- количество записей всего
     
     -- public variables (need to edit):
+    -- в этом запросе нужно исправить только название временной таблицы, остальное не трогать!
     cur CURSOR FOR SELECT * FROM {table}_{JiraTaskId} ORDER BY id; -- здесь д.б. именно временная таблица, сортировка по id обязательна!
     time_max constant numeric default 1; -- пороговое максимальное время выполнения 1-го запроса, в секундах
     cpu_num constant smallint default 1; -- для распараллеливания скрипта для выполнения через bash и psql: номер текущего ядра процессора
@@ -25,6 +26,7 @@ DECLARE
 BEGIN
     RAISE NOTICE 'Calculate total rows%', ' ';
  
+    -- в этом запросе нужно исправить только название временной таблицы, остальное не трогать!
     SELECT COUNT(*) INTO total_rows FROM {table}_{JiraTaskId};
     
     -- uncomment next command if you use PosgreSQL < 11
