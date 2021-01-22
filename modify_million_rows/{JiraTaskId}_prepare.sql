@@ -7,6 +7,7 @@ VACUUM VERBOSE ANALYZE {table};
 -- или подготавливаем в таблице данные для последующего удаления: id и все остальные поля
 -- таблица необходима для корректной работы скрипта {JiraTaskId}.sql и одновременно является резервной копией для возможности отката
 DROP TABLE IF EXISTS {table}_{JiraTaskId};
+
 CREATE TABLE {table}_{JiraTaskId} AS
 SELECT id/*значения в колонке id должны быть уникальными!*/, ...
 FROM {table}, ...
