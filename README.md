@@ -638,7 +638,7 @@ WHERE id BETWEEN 162655 AND 6594323
 ```sql
 
 --отфильтровываем лишние записи и оставляем только колонку id, для каждого id получаем номер пачки
---CREATE TABLE {table}_{JiraTaskId} AS
+CREATE TABLE {table}_{JiraTaskId} AS
 SELECT id,
        ((row_number() OVER (ORDER BY id) - 1) / 100000)::integer AS part
 FROM company
