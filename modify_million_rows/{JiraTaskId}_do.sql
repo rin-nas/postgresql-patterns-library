@@ -1,6 +1,6 @@
 -- Запросы выполнять НЕ в транзакции!
 
-DO $$
+DO $do$
 DECLARE
     -- private variables (do not edit):
     total_time_start timestamp default clock_timestamp();
@@ -104,4 +104,4 @@ BEGIN
     RAISE NOTICE 'Done. % rows per second, % queries per second', (processed_rows / total_time_elapsed)::int, round(cycles / total_time_elapsed, 2);
  
 END
-$$;
+$do$;
