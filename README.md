@@ -581,6 +581,8 @@ SELECT extract(seconds FROM clock_timestamp() - now()) AS execution_time FRO
 
 Применение: выгрузка из БД большого количества данных примерно одного объёма в каждой пачке. Например, индексирование данных в поисковых движках типа Sphinx, Solr, Elastic Search.
 
+**Вариант 1**
+
 ```sql
 WITH
 -- отфильтровываем лишние записи и оставляем только колонку id
@@ -628,12 +630,28 @@ WHERE id BETWEEN 162655 AND 6594323
   AND is_publish_status = TRUE
   AND is_spam = FALSE;
 ```
-Если условие в фильтрации данных тяжёлое, то лучше выбирать по спискам id для каждого диапазона, например:
+
+**Вариант 2**
+
+Если условие в фильтрации данных очень тяжёлое, то лучше выбирать по спискам id для каждого диапазона, например:
 
 ```sql
-SELECT *
-FROM resume
-WHERE id IN (/*список id через запятую*/);
+
+--отфильтровываем лишние записи и оставляем только колонку id, для каждого id получаем номер пачки
+--CREATE TABLE {table}_{JiraTaskId} AS
+SELECT id,
+       ((row_number() OVER (ORDER BY id) - 1) / 100000)::integer AS part
+FROM company
+WHERE is_check_moderator = TRUE
+  AND is_spam = FALSE;
+
+--строим индекс для ускорения выборок в последующих запросах
+CREATE UNIQUE INDEX {table}_{JiraTaskId}_uniq ON {table}_{JiraTaskId} (part, id);
+
+--далее можно последовательно или параллельно выполнять SQL запросы для каждого диапазона, например:
+select *
+from company as c
+where id in (select id from {table}_{JiraTaskId} where part = 0)
 ```
 
 ### Как выполнить следующий SQL запрос, если предыдущий не вернул результат?
