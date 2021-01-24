@@ -954,7 +954,7 @@ WHERE u2.id = u.id;
 1. [`{JiraTaskId}_prepare.sql`](modify_million_rows/{JiraTaskId}_prepare.sql) — для последующего обновления или удаления сначала необходимо подготовить временную таблицу. Так же эта таблица является резервной копией для возможности отката.
 1. [`{JiraTaskId}_do.sql`](modify_million_rows/{JiraTaskId}_do.sql) — запросы этом в файле обрабатывают большую таблицу пачками по несколько (десятки/сотни/тысячи) записей. В процесе работы размер пачки автоматически подстраивается под максимально установленное время работы для одной пачки (несколько секунд).
    1. [`{JiraTaskId}_do.sh`](modify_million_rows/{JiraTaskId}_do.sh) — скрипт для ускорения выполнения [`{JiraTaskId}_do.sql`](modify_million_rows/{JiraTaskId}_do.sql) путём распараллеливания по нескольким ядрам процессора. Запускать лучше в [Screen](https://help.ubuntu.ru/wiki/screen). Отслеживать прогресс выполнения каждого процесса можно командой: `$ tail -f {JiraTaskId}_do_{cpu_num}.log`. Пример отчёта выполненного скрипта в файле [`{JiraTaskId}_do_{cpu_num}.log`](modify_million_rows/{JiraTaskId}_do_{cpu_num}.log).
-1. [`{JiraTaskId}_finish.sql`](modify_million_rows/{JiraTaskId}_finish.sql) — завершить обработку (вакуумизация таблицы)
+1. [`{JiraTaskId}_finish.sql`](modify_million_rows/{JiraTaskId}_finish.sql) — завершить обработку (вакуумизация таблицы, удаление временной таблицы)
 
 ### Как удалить десятки тысяч записей в таблице не блокируя все записи и не нагружая БД?
 
