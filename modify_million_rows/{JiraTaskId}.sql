@@ -35,7 +35,7 @@ BEGIN
     FOR rec_start IN cur LOOP
         cycles := cycles + 1;
  
-        --EXIT WHEN cycles > 15; -- для отладки
+        --EXIT WHEN cycles > 20; -- для отладки
  
         FETCH RELATIVE (batch_rows - 1) FROM cur INTO rec_stop;
  
