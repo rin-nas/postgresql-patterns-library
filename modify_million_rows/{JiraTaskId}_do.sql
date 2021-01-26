@@ -18,9 +18,9 @@ DECLARE
     -- public variables (need to edit):
     -- в этом запросе нужно исправить только название временной таблицы, остальное не трогать!
     cur CURSOR FOR SELECT * FROM {table}_{JiraTaskId} ORDER BY id; -- здесь д.б. именно временная таблица, сортировка по id обязательна!
-    time_max constant numeric default 1; -- пороговое максимальное время выполнения 1-го запроса, в секундах
-    cpu_num constant smallint default 1; -- для распараллеливания скрипта для выполнения через bash и psql: номер текущего ядра процессора
-    cpu_max constant smallint default 1; -- для распараллеливания скрипта для выполнения через bash и psql: максимальное количество ядер процессора
+    time_max constant numeric default 1; -- пороговое максимальное время выполнения 1-го запроса, в секундах (рекомендуется 1 секунда)
+    cpu_num constant smallint default 1; -- для распараллеливания скрипта для выполнения через {JiraTaskId}_do.sh: номер текущего ядра процессора
+    cpu_max constant smallint default 1; -- для распараллеливания скрипта для выполнения через {JiraTaskId}_do.sh: максимальное количество ядер процессора
     --connection_str text default 'host=test dbname=test user=test password=test'; -- uncomment this line if you use PosgreSQL < 11
     
 BEGIN
