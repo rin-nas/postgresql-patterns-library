@@ -195,7 +195,7 @@ from fizzbuzz
 where num > 0;
 ```
 
-```
+```sql
 CREATE OR REPLACE FUNCTION replace_pairs(str text, input jsonb)
     RETURNS text
     LANGUAGE plpgsql AS
