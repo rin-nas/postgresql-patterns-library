@@ -61,6 +61,7 @@
    1. https://pgcookbook.ru/index.html
    1. https://wiki.postgresql.org/wiki/ArrXor
    1. http://akorotkov.github.io/blog/2016/06/17/faceted-search/ Фасетный поиск
+   1. https://postgrespro.ru/media/2016/11/08/pgconfeu-fts-2016.pdf Better Full Text Search in PostgreSQL
    1. http://sqlfiddle.postgrespro.ru/ - песочница
    1. https://www.percona.com/blog/2019/07/22/automatic-index-recommendations-in-postgresql-using-pg_qualstats-and-hypopg/
    1. https://tech.binary.com/parallel-query-without-parallel-query/
