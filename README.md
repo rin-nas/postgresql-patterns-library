@@ -714,8 +714,8 @@ FROM (
 SELECT
    array_agg(x) over () as frame,
    x,
-   sum(x) over () as sum,
-   x :: float / sum(x) over () as part
+   sum(x) over () as total_sum,
+   round(x * 100 / sum(x) over (), 2) as percent
 FROM generate_series(1, 4) as t (x);
 ```
 
