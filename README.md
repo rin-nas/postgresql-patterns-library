@@ -1416,15 +1416,19 @@ select * from pg_available_extensions where installed_version is not null;
 ### Как получить список таблиц с размером занимаемого места?
 
 ```sql
-SELECT nspname || '.' || relname AS "relation",
-       pg_size_pretty(pg_total_relation_size(C.oid)) AS "total_size"
-FROM pg_class C
-  LEFT JOIN pg_namespace N ON (N.oid = C.relnamespace)
-WHERE nspname NOT IN ('pg_catalog', 'information_schema')
-      AND C.relkind <> 'i'
+WITH t AS (
+    SELECT nspname || '.' || relname AS "relation",
+           pg_total_relation_size(c.oid) AS "total_size"
+    FROM pg_class AS c
+    JOIN pg_namespace AS n ON (n.oid = c.relnamespace)
+    WHERE nspname NOT IN ('pg_catalog', 'information_schema')
+      AND c.relkind <> 'i'
       AND nspname !~ '^pg_toast'
-ORDER BY pg_total_relation_size(C.oid) DESC
-LIMIT 100
+      --AND relname LIKE 'tabe_name%'
+)
+(SELECT relation, pg_size_pretty(total_size) AS total_size_petty FROM t ORDER BY total_size DESC)
+UNION ALL
+SELECT 'TOTAL', pg_size_pretty(SUM(total_size)) FROM t;
 ```
 
 ### Как получить список самых популярных и медленных SQL запросов?
