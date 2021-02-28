@@ -113,56 +113,47 @@ SELECT ARRAY_TO_STRING(ARRAY_AGG(DISTINCT s ORDER BY s), ', ') AS field_alias FR
 
 #### Как распарсить CSV строку в таблицу?
 
-[Выполнить SQL](https://www.db-fiddle.com/f/eqsGTTqAmH1QoQ8LL63jM/0) или [Выполнить SQL](http://sqlfiddle.postgrespro.ru/#!22/0/6439)
-```sql
--- EXPLAIN --ANALYSE
-WITH
-    -- https://en.wikipedia.org/wiki/Comma-separated_values
-    -- https://postgrespro.ru/docs/postgresql/10/sql-copy
-    data AS (SELECT -- скопируйте сюда данные в формате CSV
-                    ' 501 ; 8300000000000 ; ";Автономный ;"";округ""
-  ""Ненецкий"";";test1
-                      751;8600800000000; "  Автономный округ ""Ханты-Мансийский"", Район Советский" ;
-                     1755;8700300000000;Автономный округ Чукотский, Район Билибинский
-                     1725;7501900000000;Край Забайкальский, Район Петровск-Забайкальский
+Смотри [`csv_parse.sql`](functions/csv_parse.sql)
 
-                  ;;
-                       711;2302100000000;Край Краснодарский, Район Лабинский
-                       729;2401600000000;Край Красноярский, Район Иланский
-                       765;2700700000000;Край Хабаровский, Район Вяземский' AS csv),
-    options AS (SELECT -- задайте символ, разделяющий столбцы в строках файла,
-                       -- возможные вариаты: ';', ',', '\t' (табуляция)
-                       ';' AS delimiter),
-    prepared AS (SELECT REPLACE('(?: ([^"<delimiter>\r\n]*)         #1
-                                   | \x20* ("(?:[^"]+|"")*") \x20*  #2
-                                 ) (<delimiter>|[\r\n]+)', '<delimiter>', options.delimiter) AS parse_pattern
-                 FROM options),
-    parsed AS (
-        SELECT * FROM (
-            SELECT
-                (SELECT ARRAY_AGG(
-                    CASE WHEN LENGTH(field) > 1 AND
-                              LEFT(field, 1) = '"' AND
-                              RIGHT(field, 1) = '"' THEN REPLACE(SUBSTRING(field, 2, LENGTH(field) - 2), '""', '"')
-                         ELSE NULLIF(TRIM(field), '')
-                    END
-                    ORDER BY num)
-                 FROM unnest(string_to_array(t.row, E'\x01;\x02')) WITH ORDINALITY AS q(field, num)
-                ) AS row
-            FROM data, prepared,
-                 regexp_split_to_table(
-                     regexp_replace(data.csv || E'\n', prepared.parse_pattern, E'\\1\\2\x01\\3\x02', 'gx'),
-                     '\x01[\r\n]+\x02'
-                 ) AS t(row)
-            ) AS t
-        WHERE row IS NOT NULL AND array_to_string(row, '') != ''
-    )
-SELECT
+[Выполнить SQL](http://sqlfiddle.postgrespro.ru/#!22/0/17354) или [Выполнить SQL](https://www.db-fiddle.com/f/eqsGTTqAmH1QoQ8LL63jM/1)
+
+Запрос
+
+```sql
+select
     CASE WHEN row[1] ~ '^\d+$' THEN row[1]::integer ELSE NULL END AS id,
     row[2] AS kladr_id,
-    row[3] AS ancestors
-FROM parsed
+    row[3] AS name
+from csv_parse($$
+id; kladr_id; name
+501 ; 8300000000000 ; ";Автономный ;"";округ""
+  ""Ненецкий"";";unknown
+      751;8600800000000; "  Автономный округ ""Ханты-Мансийский"", Район Советский" ;
+     1755;8700300000000;  Автономный округ Чукотский, Район Билибинский
+     1725;7501900000000;Край Забайкальский, Район Петровск-Забайкальский
+
+  ;;
+       711;2302100000000;Край Краснодарский, Район Лабинский
+       729;2401600000000;Край Красноярский, Район Иланский
+       765;2700700000000;Край Хабаровский, Район Вяземский
+       765;;
+$$, ';', false) as row;
 ```
+
+Результат
+
+id|kladr_id|name
+-:|:-------|:---
+\<null>|kladr_id|name
+501|8300000000000|;Автономный ;";округ"\n"Ненецкий";
+751|8600800000000|&nbsp;&nbsp;Автономный округ "Ханты-Мансийский"| Район Советский
+1755|8700300000000|Автономный округ Чукотский| Район Билибинский
+1725|7501900000000|Край Забайкальский| Район Петровск-Забайкальский
+711|2302100000000|Край Краснодарский| Район Лабинский
+729|2401600000000|Край Красноярский| Район Иланский
+765|2700700000000|Край Хабаровский| Район Вяземский
+765|\<null>|\<null>
+
 
 #### Как определить пол по ФИО (фамилии, имени, отчеству) на русском языке?
 
