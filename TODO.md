@@ -142,8 +142,8 @@ ORDER BY raw_waste DESC, bloat DESC
 
 1. Рассказать, как Postgresql можно обойтись без SQL_CALC_FOUND_ROWS и почему это лучше.
 1. Загрузить `sphinx_wordforms.csv`.
-1. https://git.rabota.space/rdw/x/-/blob/develop/src/Rdw/X/NameSurnameSecondNameExtractor.php переделать на SQL
-1. delete from person_name_dictionary where lower(name) in ('женя', 'саша'); -- 'female' gender fix
+1. /rdw/x/-/blob/develop/src/Rdw/X/NameSurnameSecondNameExtractor.php переделать на SQL
+1. update gender_by_name() and dictionares
 
 # UPDATE/DELETE million rows ideas
 
