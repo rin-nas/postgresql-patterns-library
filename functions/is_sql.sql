@@ -20,5 +20,5 @@ BEGIN
 END
 $$;
 
--- проверяем, что работает
+-- TEST
 SELECT is_sql('SELECTx'), is_sql('SELECT x');
