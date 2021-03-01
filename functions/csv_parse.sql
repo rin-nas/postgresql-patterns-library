@@ -43,6 +43,7 @@ begin
 end;
 $func$;
 
+-- TEST
 select
     CASE WHEN row[1] ~ '^\d+$' THEN row[1]::integer ELSE NULL END AS id,
     row[2] AS kladr_id,
