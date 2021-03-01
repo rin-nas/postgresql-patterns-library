@@ -1,4 +1,5 @@
---PostgreSQL умеет читать и писать CSV в файл на сервере БД. Это парсер CSV (по спецификации) из строки.
+-- Parse CSV strings with PostgreSQL
+-- PostgreSQL умеет читать и писать CSV в файл на сервере БД. А это парсер CSV (по спецификации) из строки.
 create or replace function csv_parse(
     data text, -- данные в формате CSV
     delimiter char(1) default ',',  -- задайте символ, разделяющий столбцы в строках файла, возможные вариаты: ';', ',', E'\t' (табуляция)
