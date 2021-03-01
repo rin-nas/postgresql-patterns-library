@@ -113,7 +113,9 @@ SELECT ARRAY_TO_STRING(ARRAY_AGG(DISTINCT s ORDER BY s), ', ') AS field_alias FR
 
 #### Как распарсить CSV строку в таблицу?
 
-PostgreSQL умеет читать и писать CSV в файл на сервере БД. Это парсер CSV (по спецификации) из строки. Смотри [`csv_parse.sql`](functions/csv_parse.sql)
+PostgreSQL умеет читать и писать CSV в файл на сервере БД. А это парсер CSV из строки. Смотри [`csv_parse.sql`](functions/csv_parse.sql)
+
+Область применения — массовое добавление и обновление записей в таблицах БД через SQL миграции БД и административные интерфейсы.
 
 [Выполнить SQL](http://sqlfiddle.postgrespro.ru/#!22/0/17354) или [Выполнить SQL](https://www.db-fiddle.com/f/eqsGTTqAmH1QoQ8LL63jM/1)
 
