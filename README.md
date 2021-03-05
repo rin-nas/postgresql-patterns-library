@@ -551,7 +551,7 @@ WHERE id != ALL(ARRAY( --performance workaround for PostgreSQL 12
 `1,000` или `1,050` - не так важно. При таких значениях у пользователей сохраняется возможность оценки и принятия решения.
 А в GUI перед значениями, при необходимости, значение можно показывать так: `1,000+` или `≈1,050`.
 
-```
+```sql
 create schema if not exists test;
 
 drop table if exists test.count_approximate;
