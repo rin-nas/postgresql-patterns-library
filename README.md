@@ -34,6 +34,7 @@
       1. [Как ускорить SELECT запросы с тысячами значений в IN(...)?](#Как-ускорить-SELECT-запросы-c-тысячами-значениями-в-IN)
       1. [Как использовать вывод EXPLAIN запроса в другом запросе?](#Как-использовать-вывод-EXPLAIN-запроса-в-другом-запросе)
       1. [Как ускорить SELECT запрос после переезда с PostgreSQL v10 на v12?](#Как-ускорить-SELECT-запрос-после-переезда-с-PostgreSQL-v10-на-v12)
+      1. [Как ускорить SELECT COUNT(\*) запрос?](#Как-ускорить-SELECT-COUNT-запрос)
    1. [Как получить записи-дубликаты по значению полей?](#Как-получить-записи-дубликаты-по-значению-полей)
    1. [Как получить время выполнения запроса в его результате?](#Как-получить-время-выполнения-запроса-в-его-результате)
    1. [Как разбить большую таблицу по N тысяч записей, получив диапазоны id?](#Как-разбить-большую-таблицу-по-N-тысяч-записей-получив-диапазоны-id)
@@ -538,6 +539,51 @@ WHERE id != ALL(ARRAY( --performance workaround for PostgreSQL 12
     SELECT DISTINCT t2.entity_id FROM t2 WHERE ...
 ));
 ```
+
+#### Как ускорить SELECT COUNT(\*) запрос?
+
+Сценарий использования: SQL запрос, вычисляющий кол-во записей по условию или среднее числовое значение.
+
+Объём данных растёт, а ответ клиенту всегда нужно отдавать очень быстро.
+Если SQL запрос оптимизиции уже не поддаётся или очень много данных, то его можно ускорить через приближённые вычисления.
+В таком запросе будет погрешность вычислений. Чем быстрее вычисление, тем больше погрешность.
+На количествах `> 1,000` уже можно использовать приближённые вычисления для задач, требующих немедленного ответа (задачи реального времени).
+`1,000` или `1,050` - не так важно. При таких значениях у пользователей сохраняется возможность оценки и принятия решения.
+А в GUI перед значениями, при необходимости, значение можно показывать так: `1,000+` или `≈1,050`.
+
+```
+create schema if not exists test;
+
+drop table if exists test.count_approximate;
+
+create table if not exists test.count_approximate as
+select md5(i::text) as s from generate_series(1, 10000000) as t(i);
+
+select count(*) > 1000 as is_approximate_need
+from (
+    select
+    from test.count_approximate as t
+    where s ~ 'aa$'
+    LIMIT 1000 + 1
+) t;
+--1 row retrieved starting from 1 in 273 ms (execution: 218 ms, fetching: 55 ms)
+
+select count(*) --38823
+from test.count_approximate as t
+where s ~ 'aa$';
+--1 row retrieved starting from 1 in 6 s 941 ms (execution: 6 s 899 ms, fetching: 42 ms)
+
+select count(*) * 100 --39200
+from test.count_approximate as t tablesample bernoulli(1) repeatable (37)
+where s ~ 'aa$';
+--1 row retrieved starting from 1 in 528 ms (execution: 489 ms, fetching: 39 ms)
+
+select count(*) * 100 --42500
+from test.count_approximate as t tablesample system(1) repeatable (37)
+where s ~ 'aa$';
+--1 row retrieved starting from 1 in 139 ms (execution: 100 ms, fetching: 39 ms)
+```
+См. [Tablesample In PostgreSQL](https://www.2ndquadrant.com/en/blog/tablesample-in-postgresql-9-5-2/)
 
 ### Как получить записи-дубликаты по значению полей?
 
