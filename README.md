@@ -562,24 +562,24 @@ select md5(i::text) as s from generate_series(1, 10000000) as t(i);
 select count(*) > 1000 as is_approximate_need
 from (
     select
-    from test.count_approximate as t
+    from test.count_approximate
     where s ~ 'aa$'
     LIMIT 1000 + 1
 ) t;
 --1 row retrieved starting from 1 in 273 ms (execution: 218 ms, fetching: 55 ms)
 
 select count(*) --38823
-from test.count_approximate as t
+from test.count_approximate
 where s ~ 'aa$';
 --1 row retrieved starting from 1 in 6 s 941 ms (execution: 6 s 899 ms, fetching: 42 ms)
 
 select count(*) * 100 --39200
-from test.count_approximate as t tablesample bernoulli(1) repeatable (37)
+from test.count_approximate tablesample bernoulli(1) repeatable (37)
 where s ~ 'aa$';
 --1 row retrieved starting from 1 in 528 ms (execution: 489 ms, fetching: 39 ms)
 
 select count(*) * 100 --42500
-from test.count_approximate as t tablesample system(1) repeatable (37)
+from test.count_approximate tablesample system(1) repeatable (37)
 where s ~ 'aa$';
 --1 row retrieved starting from 1 in 139 ms (execution: 100 ms, fetching: 39 ms)
 ```
