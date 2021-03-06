@@ -559,6 +559,8 @@ drop table if exists test.count_approximate;
 create table if not exists test.count_approximate as
 select md5(i::text) as s from generate_series(1, 10000000) as t(i);
 
+create unique index on test.count_approximate (i);
+
 select count(*) > 1000 as is_approximate_need
 from (
     select
@@ -582,6 +584,12 @@ select count(*) * 100 --42500
 from test.count_approximate tablesample system(1) repeatable (37)
 where s ~ 'aa$';
 --1 row retrieved starting from 1 in 139 ms (execution: 100 ms, fetching: 39 ms)
+
+-- PostgreSQL < 9.5 ?
+select (count(*) filter (where  s ~ 'aa$')) * 100 --38300
+from test.count_approximate
+where (i % 100) = 0;
+--1 row retrieved starting from 1 in 1 s 790 ms (execution: 1 s 767 ms, fetching: 23 ms)
 ```
 См. [Tablesample In PostgreSQL](https://www.2ndquadrant.com/en/blog/tablesample-in-postgresql-9-5-2/)
 
