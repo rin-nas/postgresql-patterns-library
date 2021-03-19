@@ -236,14 +236,3 @@ GROUP BY calls_date
 ORDER BY calls_date ASC
 limit 100;
 ```
-
-# Validation
-
-```sql
--- https://developer.mozilla.org/en-US/docs/Web/CSS/color_value
--- https://regex101.com/r/CMQKwv/3/
-CREATE DOMAIN css_color AS varchar(9) CHECK(VALUE ~ '^#[a-fA-F\d]{3}(?:[a-fA-F\d]{3})?$|^#[a-fA-F\d]{4}(?:[a-fA-F\d]{4})?$');
-
-select '$777'::css_color; --error
-select '#777'::css_color; --ok
-```
