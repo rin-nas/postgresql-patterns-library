@@ -5,6 +5,7 @@
 **[Получение пользовательских данных](#Получение-пользовательских-данных)**
    1. [Валидация и домены](#Валидация-и-домены)
       1. [Как проверить email на валидность?](#Как-проверить-email-на-валидность)
+      1. [Как проверить CSS цвет на валидность?](#Как-проверить-css-color-на-валидность)
    1. [Строки](#Строки)
       1. [Агрегатная функция конкатенации строк (аналог `group_concat()` в MySQL)](#Агрегатная-функция-конкатенации-строк-аналог-group_concat-в-MySQL)
       1. [Как транслитерировать русские буквы на английские?](#Как-транслитерировать-русские-буквы-на-английские)
@@ -104,6 +105,16 @@ CREATE DOMAIN email AS varchar(320) CHECK(VALUE = trim(VALUE) AND VALUE LIKE '%_
 ```
 Регулярное выражение в файле [`is_email.sql`](functions/is_email.sql) взято и адаптировано [отсюда](https://github.com/rin-nas/regexp-patterns-library/)
 
+#### Как проверить CSS цвет на валидность?
+
+```sql
+-- https://developer.mozilla.org/en-US/docs/Web/CSS/color_value
+-- https://regex101.com/r/CMQKwv/3/
+CREATE DOMAIN css_color AS varchar(9) CHECK(VALUE ~ '^#[a-fA-F\d]{3}(?:[a-fA-F\d]{3})?$|^#[a-fA-F\d]{4}(?:[a-fA-F\d]{4})?$');
+
+select '$777'::css_color; --error
+select '#777'::css_color; --ok
+```
 
 ### Строки
 
