@@ -219,3 +219,20 @@ $func$;
 -- test
 select replace_pairs('aaabaaba', '{"aa":2, "a":1}'::jsonb); -- 21b2b1
 ```
+
+```sql
+SELECT to_char(last_event_at, 'YYYY-MM-DD') as calls_date, COUNT(*) AS cnt
+FROM cts__cdr
+WHERE last_event_at > '2021-01-01'
+GROUP BY calls_date
+ORDER BY calls_date ASC
+limit 100;
+
+SELECT last_event_at::date as calls_date, COUNT(*) AS cnt
+FROM cts__cdr
+WHERE last_event_at > '2021-01-01'
+GROUP BY calls_date
+ORDER BY calls_date ASC
+limit 100;
+```
+
