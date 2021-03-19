@@ -6,6 +6,7 @@
    1. [Валидация и домены](#Валидация-и-домены)
       1. [Как проверить email на валидность?](#Как-проверить-email-на-валидность)
       1. [Как проверить CSS цвет на валидность?](#Как-проверить-CSS-цвет-на-валидность)
+      1. [Как проверить ИНН на валидность?](#Как-проверить-ИНН-на-валидность)
    1. [Строки](#Строки)
       1. [Агрегатная функция конкатенации строк (аналог `group_concat()` в MySQL)](#Агрегатная-функция-конкатенации-строк-аналог-group_concat-в-MySQL)
       1. [Как транслитерировать русские буквы на английские?](#Как-транслитерировать-русские-буквы-на-английские)
@@ -101,7 +102,10 @@
 #### Как проверить email на валидность?
 
 ```sql
-CREATE DOMAIN email AS varchar(320) CHECK(VALUE = trim(VALUE) AND VALUE LIKE '%_@_%._%' AND is_email(VALUE));
+CREATE DOMAIN email AS text CHECK(length(VALUE) BETWEEN 6 AND 320 AND VALUE = trim(VALUE) AND VALUE LIKE '%_@_%._%' AND is_email(VALUE));
+
+select 'e@m.ai'::email; --ok
+select 'e@m.__'::email; --error
 ```
 Регулярное выражение в файле [`is_email.sql`](functions/is_email.sql) взято и адаптировано [отсюда](https://github.com/rin-nas/regexp-patterns-library/)
 
@@ -110,10 +114,30 @@ CREATE DOMAIN email AS varchar(320) CHECK(VALUE = trim(VALUE) AND VALUE LIKE '%_
 ```sql
 -- https://developer.mozilla.org/en-US/docs/Web/CSS/color_value
 -- https://regex101.com/r/CMQKwv/3/
-CREATE DOMAIN css_color AS varchar(9) CHECK(VALUE ~ '^#[a-fA-F\d]{3}(?:[a-fA-F\d]{3})?$|^#[a-fA-F\d]{4}(?:[a-fA-F\d]{4})?$');
+CREATE DOMAIN css_color AS text CHECK(length(VALUE) BETWEEN 4 AND 9 AND VALUE ~ '^#[a-fA-F\d]{3}(?:[a-fA-F\d]{3})?$|^#[a-fA-F\d]{4}(?:[a-fA-F\d]{4})?$');
 
-select '$777'::css_color; --error
 select '#777'::css_color; --ok
+select '$777'::css_color; --error
+```
+
+#### Как проверить ИНН на валидность?
+
+https://ru.wikipedia.org/wiki/Идентификационный_номер_налогоплательщика
+
+```sql
+CREATE DOMAIN inn10 AS text CHECK(length(VALUE) = 10 AND VALUE ~ '^\d+$'); -- ИНН юридического лица
+CREATE DOMAIN inn12 AS text CHECK(length(VALUE) = 12 AND VALUE ~ '^\d+$'); -- ИНН физического лица и ИП
+CREATE DOMAIN inn AS text CHECK(length(VALUE) IN (10, 12) AND VALUE ~ '^\d+$'); -- ИНН юридического или физического лица или ИП
+
+select '1234567890'::inn; --ok
+select '123456789012'::inn; --ok
+select '1234567890'::inn10; --ok
+select '123456789012'::inn12; --ok
+
+select '12345678901'::inn; --error
+select '1234567890123'::inn; --error
+select '12345678901'::inn10; --error
+select '1234567890123'::inn12; --error
 ```
 
 ### Строки
