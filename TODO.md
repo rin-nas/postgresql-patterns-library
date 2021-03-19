@@ -25,6 +25,7 @@
    1. https://github.com/lesovsky/uber-scripts - Scripts for Linux system administrators
    1. https://github.com/NikolayS/postgres_dba - The missing set of useful tools for Postgres DBA
    1. https://github.com/NikolayS/awesome-postgres - links
+   1. https://github.com/Basje/postgres-domains - validation
 
 # StackOverflow
    1. https://stackoverflow.com/questions/7923237/return-pre-update-column-values-using-sql-only
@@ -70,7 +71,6 @@
    1. https://aws.amazon.com/ru/blogs/database/validating-database-objects-after-migration-using-aws-sct-and-aws-dms/ Validating database objects after migration using AWS SCT and AWS DMS
    1. http://morozovsk.blogspot.com/2011/07/array-function-arraydiff-in-postgresql.html `array_diff()` и `array_intersect()` и др.
    1. https://begriffs.com/posts/2017-08-27-deferrable-sql-constraints.html
-   1. https://github.com/Basje/postgres-domains
 
 # Btree, GIN, GIST indexes bloat
 
