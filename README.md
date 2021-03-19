@@ -102,7 +102,7 @@
 #### Как проверить email на валидность?
 
 ```sql
-CREATE DOMAIN email AS text CHECK(length(VALUE) BETWEEN 6 AND 320 AND VALUE = trim(VALUE) AND VALUE LIKE '%_@_%._%' AND is_email(VALUE));
+CREATE DOMAIN email AS text CHECK(length(VALUE) BETWEEN 6 AND 320 AND VALUE = trim(VALUE) AND VALUE LIKE '_%@_%.__%' AND is_email(VALUE));
 
 select 'e@m.ai'::email; --ok
 select 'e@m.__'::email; --error
