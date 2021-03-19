@@ -1,3 +1,4 @@
+-- https://regex101.com/r/Q4dsL5/14
 create function is_email(email text)
     returns boolean
     language plpgsql
