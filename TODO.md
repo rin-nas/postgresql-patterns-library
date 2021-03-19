@@ -237,3 +237,12 @@ ORDER BY calls_date ASC
 limit 100;
 ```
 
+# Domains
+
+```sql
+CREATE DOMAIN css_color AS varchar(9)
+    CHECK(VALUE ~ '^#[a-fA-F\d]{3}(?:[a-fA-F\d]{3})?$|^#[a-fA-F\d]{4}(?:[a-fA-F\d]{4})?$');
+
+select '$777'::css_color; --error
+select '#777'::css_color; --ok
+```
