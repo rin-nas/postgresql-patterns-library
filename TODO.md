@@ -72,6 +72,12 @@
    1. http://morozovsk.blogspot.com/2011/07/array-function-arraydiff-in-postgresql.html `array_diff()` и `array_intersect()` и др.
    1. https://begriffs.com/posts/2017-08-27-deferrable-sql-constraints.html
    1. https://begriffs.com/posts/2017-10-21-sql-domain-integrity.html
+   1. https://begriffs.com/posts/2018-03-20-user-defined-order.html
+      1. https://ru.wikipedia.org/wiki/Дерево_Штерна_—_Броко
+      1. https://www.youtube.com/watch?v=qPeD87HJ0UA&ab_channel=InsightsintoMathematics
+      1. https://wiki.postgresql.org/wiki/User-specified_ordering_with_fractions
+      2. https://github.com/begriffs/pg_rational
+      3. https://begriffs.com/pdf/dec2frac.pdf
 
 # Btree, GIN, GIST indexes bloat
 
