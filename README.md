@@ -969,7 +969,7 @@ table t1_id_seq; -- "last_value" is 6 (зря увеличили последо�
 -- СТАЛО
 
 insert into t1 as t (name)
-select name
+select *
 from (values ('c', 'a')) v(name)
 -- при дубликатах последовательность зря не увеличивается, но только в той же транзакции
 where not exists (select from t1 AS d where d.name = v.name)
