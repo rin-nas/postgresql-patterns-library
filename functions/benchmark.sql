@@ -1,7 +1,7 @@
 -- PostgreSQL equivalent of MySQL's BENCHMARK() function
 
 CREATE OR REPLACE FUNCTION benchmark(loop_count int,
-                                     sql text, -- query or function
+                                     sql_expr text, -- SQL expression
                                      is_cache_plan boolean default true) returns interval
     immutable
     strict
@@ -12,10 +12,10 @@ $$
 BEGIN
 
     if is_cache_plan then
-        EXECUTE 'select ($1) from generate_series(1, $2)' using sql, loop_count;
+        EXECUTE 'select ($1) from generate_series(1, $2)' using sql_expr, loop_count;
     else
         FOR i IN 1..loop_count LOOP
-            EXECUTE 'select ($1)' using sql;
+            EXECUTE 'select ($1)' using sql_expr;
         END LOOP;
     end if;
 
