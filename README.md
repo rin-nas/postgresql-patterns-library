@@ -644,7 +644,7 @@ where (i % 100) = 0;
 
 #### Как выполнить функцию N тысяч раз и измерить скорость выполнения?
 
-PostgreSQL equivalent of MySQL's `benchmark()` function.
+Аналог функции `benchmark()` в MySQL.
 Смотри [`benchmark.sql`](functions/benchmark.sql)
 
 
