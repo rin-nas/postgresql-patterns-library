@@ -600,11 +600,6 @@ WHERE id != ALL(ARRAY( --performance workaround for PostgreSQL 12
 `1,000` или `1,050` - не так важно. При таких значениях у пользователей сохраняется возможность оценки и принятия решения.
 А в GUI перед значениями, при необходимости, значение можно показывать так: `1,000+` или `≈1,050` или `1 тыс.`.
 
-#### Как выполнить функцию N тысяч раз и измерить скорость выполнения?
-
-PostgreSQL equivalent of MySQL's `benchmark()` function.
-Смотри [`benchmark.sql`](functions/benchmark.sql)
-
 ```sql
 create schema if not exists test;
 
@@ -646,6 +641,12 @@ where (i % 100) = 0;
 --1 row retrieved starting from 1 in 1 s 790 ms (execution: 1 s 767 ms, fetching: 23 ms)
 ```
 См. [Tablesample In PostgreSQL](https://www.2ndquadrant.com/en/blog/tablesample-in-postgresql-9-5-2/)
+
+#### Как выполнить функцию N тысяч раз и измерить скорость выполнения?
+
+PostgreSQL equivalent of MySQL's `benchmark()` function.
+Смотри [`benchmark.sql`](functions/benchmark.sql)
+
 
 ### Как получить записи-дубликаты по значению полей?
 
