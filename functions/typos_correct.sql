@@ -63,7 +63,7 @@ WITH
             q.word_num - 1 AS word_num,
             -- есть слово в словаре русского языка?
             NOT EXISTS(
-                SELECT 1
+                SELECT 
                 FROM sphinx_wordforms AS dict
                 WHERE lower(dict.word) = lower(q.word_from)
                   AND mistake = FALSE
@@ -72,9 +72,10 @@ WITH
             ) AND
             -- есть слово в названиях профессий?
             NOT EXISTS(
-                SELECT 1
+                SELECT 
                 FROM custom_query_group_name AS dict
-                WHERE lower(dict.name) = lower(q.word_from)
+                --WHERE lower(q.word_from) = lower(dict.name)
+                WHERE lower(q.word_from) = ANY(string_to_array(lower(dict.name), ' ')) --Теперь корректор сравнивает каждое слово запроса с каждым словом из name (профессии). Сравнение именно по словам, иначе "программист net" и "bim менеджер" снова станут "программист туе" и "ишь менеджер".
                 LIMIT 1
             ) AS is_mistake
         FROM unnest((SELECT words_from FROM vars)) WITH ORDINALITY AS q(word_from, word_num)
@@ -136,7 +137,7 @@ WITH
       AND q.is_mistake = TRUE
       -- первые 2 элемента -- это всегда исходный текст и текст в другой раскладке клавиатуры
       -- если один из этих элементов не является опечаткой, то прерываем цикл
-      AND NOT EXISTS(SELECT * FROM words AS s WHERE s.word_num < 2 AND s.is_mistake = FALSE)
+      AND NOT EXISTS(SELECT FROM words AS s WHERE s.word_num < 2 AND s.is_mistake = FALSE)
       -- если все отдельные слова не имеют опечаток, то прерываем цикл
       AND (SELECT COUNT(*) = 2 OR (COUNT(*) - 2) / 2 != COUNT(*) FILTER (WHERE s.word_num >= 2 AND s.is_mistake = FALSE) FROM words AS s)
     ORDER BY word_num ASC
