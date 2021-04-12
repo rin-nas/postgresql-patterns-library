@@ -1160,7 +1160,9 @@ begin
         return;  
     end if;  
     
-    perform from client c where c.id = new.client_id for update;  -- <-- важный момент с блокировкой для параллельных транзакций
+    -- важный момент с блокировкой для параллельных транзакций:
+    perform pg_xact_advisory_lock(hashint8(new.client_id)); -- TODO hashint8 - недокументированная функция, нужно заменить?
+    --perform from client c where c.id = new.client_id for update;  -- или альтернативный вариант с блокировкой записи
     
     if (select count(*) from order o where o.client_id = new.client_id) > 5 then
         raise sqlstate '23U01' using message='Too many orders';  
