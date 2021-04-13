@@ -87,7 +87,7 @@
    1. [Как получить список всех зависимостей (внешних ключей) между таблицами БД?](#Как-получить-список-всех-зависимостей-внешних-ключей-между-таблицами-БД)
    1. [Как получить статистику использования индексов?](#Как-получить-статистику-использования-индексов)
    1. [Как получить список установленных расширений (extensions)?](#Как-получить-список-установленных-расширений-extensions)
-   1. [Как получить список таблиц с размером занимаемого места?](#Как-получить-список-таблиц-с-размером-занимаемого-места)
+   1. [Как получить список таблиц с размером занимаемого места и примерным количеством строк?](#Как-получить-список-таблиц-с-размером-занимаемого-места-и-примерным-количеством-строк)
    1. [Как получить список самых ресурсоёмких SQL запросов?](#Как-получить-список-самых-ресурсоёмких-SQL-запросов)
    1. [Как получить и изменить значения параметров конфигурации выполнения?](#Как-получить-и-изменить-значения-параметров-конфигурации-выполнения)
    1. [Как получить все активные в данный момент процессы автовакуумa и время их работы?](#Как-получить-все-активные-в-данный-момент-процессы-автовакуумa-и-время-их-работы)
@@ -1572,22 +1572,35 @@ ORDER BY
 select * from pg_available_extensions where installed_version is not null;
 ```
 
-### Как получить список таблиц с размером занимаемого места?
+### Как получить список таблиц с размером занимаемого места и примерным количеством строк?
 
 ```sql
 WITH t AS (
-    SELECT nspname || '.' || relname AS "relation",
-           pg_total_relation_size(c.oid) AS "total_size"
+    SELECT n.nspname || '.' || c.relname AS relation,
+           pg_total_relation_size(c.oid) AS total_size,
+           (select reltuples::bigint
+            from pg_class
+            where  oid = (n.nspname || '.' || c.relname)::regclass
+           ) as rows_estimate_count
     FROM pg_class AS c
-    JOIN pg_namespace AS n ON (n.oid = c.relnamespace)
+    JOIN pg_namespace AS n ON n.oid = c.relnamespace
     WHERE nspname NOT IN ('pg_catalog', 'information_schema')
-      AND c.relkind <> 'i'
+      AND c.relkind not in ('i', 'S') -- without indexes and sequences
       AND nspname !~ '^pg_toast'
-      --AND relname LIKE 'tabe_name%'
+    --AND relname LIKE 'tabe_name%'
 )
-(SELECT relation, pg_size_pretty(total_size) AS total_size_petty FROM t ORDER BY total_size DESC)
+  (SELECT relation,
+          pg_size_pretty(total_size) AS total_size_pretty,
+          regexp_replace(rows_estimate_count::text, '(?<=\d)(?<!\.[^.]*)(?=(\d\d\d)+(?!\d))', ',', 'g') as rows_estimate_count_pretty
+     FROM t
+ --ORDER BY total_size DESC
+ ORDER BY rows_estimate_count DESC
+      )
 UNION ALL
-SELECT 'TOTAL', pg_size_pretty(SUM(total_size)) FROM t;
+(SELECT 'TOTAL',
+        pg_size_pretty(SUM(total_size)),
+        regexp_replace(SUM(rows_estimate_count)::text, '(?<=\d)(?<!\.[^.]*)(?=(\d\d\d)+(?!\d))', ',', 'g')
+ FROM t);
 ```
 
 ### Как получить список самых ресурсоёмких SQL запросов?
