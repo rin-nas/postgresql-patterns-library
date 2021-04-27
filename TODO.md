@@ -242,3 +242,8 @@ GROUP BY calls_date
 ORDER BY calls_date ASC
 limit 100;
 ```
+
+```
+--substr_count()
+SELECT array_length (string_to_array ('1524215121518546516323203210856879', '1'), 1) - 1
+```
