@@ -1098,14 +1098,14 @@ WHERE id = 123 AND NOT EXISTS (SELECT * FROM u)
 
 ```sql
 UPDATE users as u SET
-  email = u2.email,
-  first_name = u2.first_name,
-  last_name = u2.last_name
+  email = v.email,
+  first_name = v.first_name,
+  last_name = v.last_name
 FROM (VALUES
   (1, 'hollis@weimann.biz', 'Hollis', 'O''Connell'),
   (2, 'robert@duncan.info', 'Robert', 'Duncan')
-) as u2(id, email, first_name, last_name)
-WHERE u2.id = u.id;
+) as v(id, email, first_name, last_name)
+WHERE v.id = u.id;
 ```
 
 ### Как обновить или удалить миллионы записей в таблице не блокируя все записи и не нагружая БД?
