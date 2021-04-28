@@ -1617,7 +1617,9 @@ UNION ALL
 ```sql
 SELECT
     (total_time / 1000 / 60) as total_time_minutes,
-    *
+    round((total_time * 100 / sum(total_time) over())::numeric, 2) as percent,
+    query, calls, mean_time, stddev_time, rows,
+    shared_blks_hit, shared_blks_read
 FROM pg_stat_statements
 WHERE query ~* '(^|\n)\s*\m(insert\s+into|update|delete|truncate)\M' --только DML запросы
 --WHERE query !~* '(^|\n)\s*\m(insert\s+into|update|delete|truncate)\M' --исключая DML запросы
