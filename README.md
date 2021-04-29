@@ -127,9 +127,9 @@ select '$777'::css_color; --error
 https://ru.wikipedia.org/wiki/Идентификационный_номер_налогоплательщика
 
 ```sql
-CREATE DOMAIN inn10 AS text CHECK(length(VALUE) = 10 AND VALUE ~ '^\d+$'); -- ИНН юридического лица
-CREATE DOMAIN inn12 AS text CHECK(length(VALUE) = 12 AND VALUE ~ '^\d+$'); -- ИНН физического лица и ИП
-CREATE DOMAIN inn AS text CHECK(length(VALUE) IN (10, 12) AND VALUE ~ '^\d+$'); -- ИНН юридического или физического лица или ИП
+CREATE DOMAIN inn10 AS text CHECK(is_inn10(VALUE)); -- ИНН юридического лица
+CREATE DOMAIN inn12 AS text CHECK(is_inn12(VALUE)); -- ИНН физического лица и ИП
+CREATE DOMAIN inn AS text CHECK(is_inn10(VALUE) OR is_inn12(VALUE)); -- ИНН юридического или физического лица или ИП
 
 select '1234567890'::inn; --ok
 select '123456789012'::inn; --ok
@@ -141,6 +141,8 @@ select '1234567890123'::inn; --error
 select '12345678901'::inn10; --error
 select '1234567890123'::inn12; --error
 ```
+
+[`is_inn.sql`](functions/is_inn.sql)
 
 ### Строки
 
