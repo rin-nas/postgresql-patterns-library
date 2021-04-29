@@ -1582,6 +1582,7 @@ select * from pg_available_extensions where installed_version is not null;
 ### Как получить список таблиц с размером занимаемого места и примерным количеством строк?
 
 ```sql
+-- получить список таблиц с размером занимаемого места и примерным количеством строк
 WITH t AS (
     SELECT n.nspname || '.' || c.relname AS relation,
            pg_total_relation_size(c.oid) AS total_size,
@@ -1597,16 +1598,20 @@ WITH t AS (
     --AND relname LIKE 'tabe_name%'
 )
   (SELECT relation,
-          pg_size_pretty(total_size) AS total_size_pretty,
-          regexp_replace(rows_estimate_count::text, '(?<=\d)(?<!\.[^.]*)(?=(\d\d\d)+(?!\d))', ',', 'g') as rows_estimate_count_pretty
+          pg_size_pretty(total_size) as total_size_pretty,
+          round(total_size * 100 / sum(total_size) over(), 2) as total_size_percent,
+          regexp_replace(rows_estimate_count::text, '(?<=\d)(?<!\.[^.]*)(?=(\d\d\d)+(?!\d))', ',', 'g') as rows_estimate_count_pretty,
+          round(rows_estimate_count * 100 / sum(rows_estimate_count) over(), 2) as rows_estimate_count_percent
      FROM t
- --ORDER BY total_size DESC
- ORDER BY rows_estimate_count DESC
+ ORDER BY total_size DESC
+ --ORDER BY rows_estimate_count DESC
       )
 UNION ALL
 (SELECT 'TOTAL',
         pg_size_pretty(SUM(total_size)),
-        regexp_replace(SUM(rows_estimate_count)::text, '(?<=\d)(?<!\.[^.]*)(?=(\d\d\d)+(?!\d))', ',', 'g')
+        100,
+        regexp_replace(SUM(rows_estimate_count)::text, '(?<=\d)(?<!\.[^.]*)(?=(\d\d\d)+(?!\d))', ',', 'g'),
+        100
  FROM t);
 ```
 
