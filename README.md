@@ -1201,7 +1201,10 @@ DECLARE
     exception_context text;
 BEGIN
     BEGIN
-        ALTER TABLE company_awards ADD CONSTRAINT company_awards_year CHECK(year between 1900 and date_part('year', CURRENT_DATE));
+        ALTER TABLE company_awards 
+            ADD CONSTRAINT company_awards_year CHECK(year between 1900 and date_part('year', CURRENT_DATE))
+                NOT VALID -- чтобы БД не проверяла ограничение на всех записях в таблице (закомментируйте, при необходимости)
+            ;
     EXCEPTION WHEN duplicate_object THEN
         GET STACKED DIAGNOSTICS
             exception_message = MESSAGE_TEXT,
@@ -1217,7 +1220,9 @@ END $$;
 ```sql
 ALTER TABLE company_awards 
     DROP CONSTRAINT IF EXISTS company_awards_year,
-    ADD CONSTRAINT company_awards_year CHECK(year between 1900 and date_part('year', CURRENT_DATE));
+    ADD CONSTRAINT company_awards_year CHECK(year between 1900 and date_part('year', CURRENT_DATE))
+        NOT VALID -- чтобы БД не проверяла ограничение на всех записях в таблице (закомментируйте, при необходимости)
+    ;
 ```
 
 ### Как изменить ограничение внешнего ключа без блокирования таблицы?
