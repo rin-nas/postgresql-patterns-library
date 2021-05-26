@@ -1,67 +1,146 @@
-create function gender_by_name(first_name character varying, last_name character varying, middle_name character varying) returns gender
-    language plpgsql
+create or replace function gender_by_name(
+    full_name text, -- ФИО, где фамилия имя и отчество могут следовать в любом порядке
+                    -- или Ф\nИ\nО с переносами строк (порядок следования Ф, И, О важен) улучшит качество разпознавания
+    is_strict boolean default false -- для неоднозначных ситуаций не учитывает веса и всегда возвращает unknown
+) returns gender
+    immutable
+    strict -- returns null if any parameter is null
+    language sql
+    parallel safe -- Postgres 10 or later
 as
+$func$
+
+with enter_sentence as (
+    select lower((regexp_matches(phrase,
+            $$
+                #выделяем слова из текста, отделяем прилипшие друг к другу
+                  [A-Z](?:[a-z]+|\.)   #En
+                | [А-ЯЁ](?:[а-яё]+|\.) #Ru
+                | [A-Z]+    #EN
+                | [А-ЯЁ]+   #RU
+                | [a-z]+    #en
+                | [а-яё]+   #ru
+            $$, 'gx'))[1]) as word,
+           (array['L', 'F', 'M'])[position] as type  -- L - lastname, F - firstname, M - middlename
+    from unnest(string_to_array(full_name, e'\n')) with ordinality t(phrase, position)
+    where array_length(regexp_split_to_array(full_name, '\n\s*'), 1) = 3
+)
+, enter_sentence2 as (
+    select distinct on (word) * from enter_sentence order by word, type --дедупликация слов
+)
+--select * from enter_sentence2; --отладка
+, sentence as (
+    select lower((regexp_matches(t[1], '[a-zа-яё]+', 'ig'))[1]) as word,
+           (array['L', 'F', 'M'])[row_number() over ()] as type -- L - lastname, F - firstname, M - middlename
+    from regexp_matches(full_name,
 $$
-DECLARE
-    weight int;
-    is_male bool;
-    valid_name_regex varchar;
-BEGIN
-    valid_name_regex := '[а-яё ]{2,}';
-    weight := 0;
+#выделяем слова из текста, учитываем слова через дефис и в скобках, отделяем прилипшие друг к другу
+  [A-Z](?:[a-z]+ (?:-       [A-Z][a-z]+)*
+                 (?:\s*\(\s*[A-Z][a-z]+\s*\))*
+         |\.
+       ) #En
+| [А-ЯЁ](?:[а-яё]+ (?:-       [А-ЯЁ][а-яё]+)*
+                   (?:\s*\(\s*[А-ЯЁ][а-яё]+\s*\))*
+          |\.
+        ) #Ru
+| [A-Z]+ (?:-       [A-Z]+)*
+         (?:\s*\(\s*[A-Z]+\s*\))*    #EN
+| [А-ЯЁ]+ (?:-       [А-ЯЁ]+)*
+          (?:\s*\(\s*[А-ЯЁ]+\s*\))*  #RU
+| [a-z]+ (?:-       [a-z]+)*
+         (?:\s*\(\s*[a-z]+\s*\))*    #en
+| [а-яё]+ (?:-       [а-яё]+)*
+          (?:\s*\(\s*[а-яё]+\s*\))*  #ru
+$$, 'gx') as t
+)
+, sentence2 as (
+    select distinct on (word) * from sentence order by word, type --дедупликация слов
+)
+--select * from sentence2; --отладка
+, found as (
+    -- проверка имён
+    select distinct on (s.word)
+        d.gender, s.word, 'F' as found_type, es.type as enter_type,
+        -- используем популярность имён, чтобы корректно определялся пол для ФИО типа "величко ольга", "ким александр", "герман анна"
+        -- по словарю величко - мужское имя, а ольга - женское, но в данном ФИО величко - это фамилия
+        -- т.к. имя находится по полному совпадению, то вес имени выше, чем у фамилии и отчества
+        1 + coalesce(d.popularity, 0) as weight
+    from sentence2 as s
+    join person_name_dictionary as d
+         on d.gender is not null -- пропускаем неоднозначные имена типа "никита"
+         and s.word in (lower(d.name), lower(d.name_translit))
+    left join enter_sentence2 as es on es.word = s.word
 
-    first_name := lower(first_name);
-    last_name := lower(last_name);
-    middle_name := lower(middle_name);
+    union all
 
-    -- Проверка имени
-    IF first_name is not null and first_name similar to valid_name_regex THEN
-        select pnd.gender='male' INTO is_male
-        from person_name_dictionary pnd
-        where lower(pnd.name)=lower($1);
+    --проверка фамилий
+    select distinct on (s.word)
+         d.gender, s.word, 'L' as found_type, es.type as enter_type,
+         1 as weight
+    from sentence2 as s
+    join gender_by_ending as d
+         on d.gender is not null
+         and d.name_type = 'last_name'
+         and length(s.word) > length(d.ending)
+         and lower(right(s.word, length(d.ending))) in (lower(d.ending), lower(d.ending_translit))
+    left join enter_sentence2 as es on es.word = s.word
 
-        if is_male THEN
-            weight := weight + 1;
-        elseif is_male = false THEN
-            weight := weight - 1;
-        end if;
-    END IF;
+    union all
 
-    -- Проверка отчества
-    is_male := null;
-    IF middle_name is not null AND middle_name similar to valid_name_regex THEN
-        select sbe.gender='male' into is_male
-        from gender_by_ending sbe
-        where sbe.name_type='middle_name' and right($3, length(sbe.ending)) = sbe.ending;
+    --проверка отчеств
+    select distinct on (s.word)
+         d.gender, s.word, 'M' as found_type, es.type as enter_type,
+         1 as weight
+    from sentence2 as s
+    join gender_by_ending as d
+         on d.gender is not null
+         and d.name_type = 'middle_name'
+         and lower(right(s.word, length(d.ending))) in (lower(d.ending), lower(d.ending_translit))
+    left join enter_sentence2 as es on es.word = s.word
+)
+--select * from found; -- отладка
+, found1 as (
+    select distinct on (gender, word) * --e'кызы\nэркин\nайпери' (эркин находится в имени и фамилии мужского пола)
+    from found
+    order by gender, word, weight desc
+)
+, found2 as (
+    -- корректировка весов для e'си-ян-пин\nелена\n' и e'саид\nалина\nакбари'
+    select max(gender)                                         as gender,
+           array_to_string(array_agg(word order by word), ' ') as word,
+           max(found_type)                                     as found_type,
+           max(enter_type)                                     as enter_type,
+           sum(weight) - count(*) + 1                          as weight
+    from found1
+    group by gender, found_type--, enter_type
+)
+--select * from found2; -- отладка
+, stat as (
+    --пользователи путают Ф,И,О местами и надеяться только на позицию нельзя!
+    select sum((f.gender = 'male')::int * f.weight)
+               + (count(distinct f.word) != count(f.word))::int -- решение об увеличении веса на основе позиции
+               * sum((f.gender = 'male' and f.found_type = coalesce(f.enter_type, '*'))::int) -- тест: e'холин\nникита\n'
+               as male_weight,
+           sum((f.gender = 'female')::int * f.weight)
+               + (count(distinct f.word) != count(f.word))::int -- решение об увеличении веса на основе позиции
+               * sum((f.gender = 'female' and f.found_type = coalesce(f.enter_type, '*'))::int)
+               as female_weight
+    from found2 as f
+    -- игнорируем ФИО разных людей типа 'алексей иванович светлана николаевна' или 'калинина марина сергей иванов'
+    where not(select count(distinct f.gender) filter (where f.found_type = 'F') = 2
+                     and 2 in (count(distinct f.gender) filter (where f.found_type = 'M'),
+                               count(distinct f.gender) filter (where f.found_type = 'L'))
+                from found2 as f)
+)
+--select * from stat; -- отладка
+select case when is_strict and s.male_weight > 0 and s.female_weight > 0 then 'unknown'
+           --ФИО от нескольких разных людей не должны определяться
+            when s.male_weight > 0 and s.female_weight > 0
+                 and full_name ~* '([,/\\;+]|\m(и|или|семья)\M)|[а-я](ины|[оеё]вы|[цс]кие|[внтлр]ые|[кчн]ие)\M' then 'unknown'
+            when s.male_weight - s.female_weight > 0 then 'male'
+            when s.male_weight - s.female_weight < 0 then 'female'
+            else 'unknown'
+       end::gender as gender
+from stat as s;
 
-        if is_male THEN
-            weight := weight + 1;
-        elseif is_male = false THEN
-            weight := weight - 1;
-        end if;
-    END IF;
-
-    -- Проверка фамилии
-    is_male := null;
-    IF weight < 2 and last_name is not null and last_name similar to valid_name_regex THEN
-        select sbe.gender='male' into is_male
-        from gender_by_ending sbe
-        where sbe.name_type='last_name' and right($2, length(sbe.ending)) = sbe.ending;
-
-        if is_male THEN
-            weight := weight + 1;
-        elseif is_male = false THEN
-            weight := weight - 1;
-        end if;
-    END IF;
-
-    if weight = 0 THEN
-        RETURN null;
-    elseif weight > 0 THEN
-        RETURN 'male';
-    else
-        RETURN 'female';
-    end if;
-
-END;
-$$;
+$func$;
