@@ -66,6 +66,7 @@ BEGIN
               AND t.id = n.id AND t.id BETWEEN rec_start.id AND rec_stop.id;
             
             -- для PosgreSQL < 11 выполнение команд должно быть через dblink:
+            /*
             PERFORM dblink_exec('
                 UPDATE {table} AS n
                 SET ...
@@ -73,6 +74,7 @@ BEGIN
                 WHERE t.id % ' || cpu_max || ' = (' || cpu_num || ' - 1)
                 AND t.id = n.id AND t.id BETWEEN ' || rec_start.id || ' AND ' || rec_stop.id
             );
+            */
  
             -- comment next command if you use PosgreSQL < 11
             COMMIT; -- https://www.postgresql.org/docs/11/plpgsql-transactions.html
