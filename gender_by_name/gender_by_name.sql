@@ -1,3 +1,5 @@
+create type gender as enum ('male', 'female', 'unknown');
+
 create or replace function gender_by_name(
     full_name text, -- ФИО, где фамилия имя и отчество могут следовать в любом порядке
                     -- или Ф\nИ\nО с переносами строк (порядок следования Ф, И, О важен) улучшит качество разпознавания
