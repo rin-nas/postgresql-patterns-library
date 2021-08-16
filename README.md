@@ -72,6 +72,7 @@
    1. [Как добавить ограничение таблицы, если оно ещё не существует?](#Как-добавить-ограничение-таблицы-если-оно-ещё-не-существует)
    1. [Как изменить ограничение внешнего ключа без блокирования таблицы?](#Как-изменить-ограничение-внешнего-ключа-без-блокирования-таблицы)
    1. [Как проверить, что при добавлении или обновлении записи заполнены N полей из M возможных?](#Как-проверить-что-при-добавлении-или-обновлении-записи-заполнены-N-полей-из-M-возможных)
+   1. [Как из enum типа удалить значение?](Как-из-enum-типа-удалить-значение)
   
 **[Индексы](#Индексы)**
    1. [Как создать или пересоздать индекс в существующей таблице без её блокирования?](#Как-создать-или-пересоздать-индекс-в-существующей-таблице-без-её-блокирования)
@@ -1258,6 +1259,27 @@ CREATE TABLE table1
 );
 ```
 
+### Как из enum типа удалить значение?
+
+```sql
+# rename the existing type
+ALTER TYPE status_enum RENAME TO status_enum_old;
+
+# create the new type
+CREATE TYPE status_enum AS ENUM('queued', 'running', 'done');
+
+# update the columns to use the new type
+ALTER TABLE job ALTER COLUMN job_status TYPE status_enum USING job_status::text::status_enum;
+# if you get an error, see bottom of post
+
+# remove the old type
+DROP TYPE status_enum_old;
+```
+
+**Errors**
+
+* `invalid input value for enum {enum name}: "{some value}"` - One or more rows have a value ("{some value}") that is not in your new type. You must handle these rows before you can update the column type.
+* `default for column "{column_name}" cannot be cast automatically to type {enum_name}` - The default value for the column is not in your new type. You must change or remove the default value for the column before you can update the column type.
 
 ## Индексы
 
