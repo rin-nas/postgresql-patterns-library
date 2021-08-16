@@ -1261,6 +1261,8 @@ CREATE TABLE table1
 
 ### Как из enum типа удалить значение?
 
+PostgreSQL <= 12
+
 ```sql
 # rename the existing type
 ALTER TYPE status_enum RENAME TO status_enum_old;
