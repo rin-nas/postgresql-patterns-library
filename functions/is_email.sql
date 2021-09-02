@@ -1,10 +1,13 @@
 -- https://regex101.com/r/Q4dsL5/14
-create function is_email(email text)
-    returns boolean
-    language plpgsql
-as $$
-BEGIN
-    return regexp_match($1, $REGEXP$
+
+create function is_email(email text) returns boolean
+    PARALLEL SAFE
+    LANGUAGE SQL
+    STABLE
+    RETURNS NULL ON NULL INPUT
+as
+$BODY$
+	select regexp_match($1, $REGEXP$
 ^
 (?<![-!#$%&'*+/=?^_`{|}~@."\]\\a-zA-Zа-яА-ЯёЁ\d])
 (?:
@@ -55,7 +58,6 @@ BEGIN
 $
 $REGEXP$, 'sx') is not null;
 
-END;
-$$;
+$BODY$;
 
-SELECT is_email('test.@domain.com');
+SELECT is_email('test.@domain.com'), is_email('test@domain.com');
