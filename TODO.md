@@ -22,6 +22,8 @@
       1. needed_indexessql
       1. unneeded_indexessql
    1. https://github.com/k1aus/parallelsql - A sql extenstion that parallizes sql queries using dblink
+      1. https://tech.binary.com/parallel-query-without-parallel-query/
+      1. https://chumaky.team/blog/postgres-parallel-jobs
    1. https://github.com/ioguix/pgsql-bloat-estimation - Queries to mesure statistical bloat in btree indexes and tables for PostgreSQL
    1. https://github.com/lesovsky/uber-scripts - Scripts for Linux system administrators
    1. https://github.com/NikolayS/postgres_dba - The missing set of useful tools for Postgres DBA
@@ -66,7 +68,6 @@
    1. https://postgrespro.ru/media/2016/11/08/pgconfeu-fts-2016.pdf Better Full Text Search in PostgreSQL
    1. http://sqlfiddle.postgrespro.ru/ - песочница
    1. https://www.percona.com/blog/2019/07/22/automatic-index-recommendations-in-postgresql-using-pg_qualstats-and-hypopg/
-   1. https://tech.binary.com/parallel-query-without-parallel-query/
    1. https://tech.binary.com/lock-contention-in-postgres/ (интересный способ уменьшить блокировки)
    1. **https://dataedo.com/kb/query/** Useful queries for popular relational databases to explore schema. Database Data Dictionary Query Toolbox
    1. https://aws.amazon.com/ru/blogs/database/validating-database-objects-after-migration-using-aws-sct-and-aws-dms/ Validating database objects after migration using AWS SCT and AWS DMS
