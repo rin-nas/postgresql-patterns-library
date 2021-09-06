@@ -1,3 +1,4 @@
+-- check SQL syntax
 CREATE OR REPLACE FUNCTION is_sql(sql text) returns boolean
     language plpgsql
 AS
