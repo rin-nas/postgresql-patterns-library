@@ -1,4 +1,4 @@
--- check SQL syntax
+-- check SQL syntax exactly in your PostgreSQL version
 CREATE OR REPLACE FUNCTION is_sql(sql text) returns boolean
     language plpgsql
 AS
