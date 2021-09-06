@@ -54,9 +54,9 @@ BEGIN
               AND t.id BETWEEN rec_start.id AND rec_stop.id;
              
             -- или напишите здесь запрос для удаления записей (PosgreSQL > 10):
-            DELETE FROM {table}
-            WHERE id % cpu_max = (cpu_num - 1)
-              AND id BETWEEN rec_start.id AND rec_stop.id;
+            DELETE FROM {table} AS t
+            WHERE t.id % cpu_max = (cpu_num - 1)
+              AND t.id BETWEEN rec_start.id AND rec_stop.id;
  
             -- или напишите здесь запрос для обновления записей (PosgreSQL > 10):
             UPDATE {table} AS n
