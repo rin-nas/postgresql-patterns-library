@@ -60,7 +60,7 @@ BEGIN
  
             -- или напишите здесь запрос для обновления записей (PosgreSQL > 10):
             UPDATE {table} AS n
-            SET ...
+            SET {column} = t.{column}, ...
             FROM {table}_{JiraTaskId} AS t
             WHERE t.id % cpu_max = (cpu_num - 1)
               AND t.id = n.id AND t.id BETWEEN rec_start.id AND rec_stop.id;
