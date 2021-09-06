@@ -13,4 +13,5 @@ $BODY$
 
 $BODY$;
 
+-- TEST
 select email_parse('my@email@gmail.com.uk'); -- {my@email,gmail.com.uk}
