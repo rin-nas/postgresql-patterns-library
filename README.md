@@ -955,7 +955,8 @@ where ...;
 
 ### Как добавить или обновить записи одним запросом (UPSERT)?
 
-См. [INSERT ... ON CONFLICT DO NOTHING/UPDATE](https://habr.com/post/264281/) (Habr)
+* См. [INSERT ... ON CONFLICT DO NOTHING/UPDATE](https://habr.com/post/264281/) (Habr)
+* Элегантная [реализация на PL/pgSQL](https://postgrespro.ru/docs/postgresql/12/plpgsql-control-structures#PLPGSQL-UPSERT-EXAMPLE) из официальной документации PostgreSQL
 
 ### Как сделать `INSERT ... ON CONFLICT ...` без увеличения последовательности для дубликатов?
 
