@@ -1,5 +1,5 @@
 
-create or replace function depers.email_parse(email text)
+create or replace function email_parse(email text)
     returns table (username text, domain text)
     stable
     returns null on null input
