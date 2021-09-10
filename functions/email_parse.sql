@@ -15,5 +15,5 @@ $$
 $$;
 
 -- TEST
-select * from depers.email_parse('111@222@ya.ru');
-select (depers.email_parse('111@222@ya.ru')).domain;
+select * from email_parse('111@222@ya.ru');
+select (email_parse('111@222@ya.ru')).domain;
