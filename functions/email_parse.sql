@@ -1,17 +1,19 @@
 
-create function email_parse(email text) returns text[]
-    PARALLEL SAFE
-    LANGUAGE SQL
-    STABLE
-    RETURNS NULL ON NULL INPUT
+create or replace function depers.email_parse(email text)
+    returns table (username text, domain text)
+    stable
+    returns null on null input
+    parallel safe
+    language sql
 as
-$BODY$
-
+$$
     -- парсит email, возвращает массив из 2-х элементов, в первом имя пользователя, а во втором домен
     -- возвращает null, если строка не является email (минимальная проверка синтаксиса)
-    select regexp_match(email, '^(.+)@([^@]+)$', '');
-
-$BODY$;
+    select t[1] as username,
+           t[2] as domain
+    from regexp_match(email, '^(.+)@([^@]+)$', '') as t
+$$;
 
 -- TEST
-select email_parse('my@email@gmail.com.uk'); -- {my@email,gmail.com.uk}
+select * from depers.email_parse('111@222@ya.ru');
+select (depers.email_parse('111@222@ya.ru')).domain;
