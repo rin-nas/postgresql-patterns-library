@@ -20,4 +20,6 @@ $$;
 
 --TEST
 select t.country_code, t.area_code, t.local_number
-from phone_parse('+375 17 1234567') as t
+from phone_parse('+375 17 1234567') as t;
+
+select (phone_parse('+375 17 1234567')).country_code as t;
