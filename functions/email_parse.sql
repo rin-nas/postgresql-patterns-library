@@ -1,6 +1,6 @@
 
 create or replace function email_parse(email text)
-    -- парсит email, возвращает record из 2-х элементов: username и domain
+    -- парсит email, возвращает record из 2-х элементов
     -- возвращает null, если строка не является email (минимальная проверка синтаксиса)
     returns table (username text, domain text)
     stable
