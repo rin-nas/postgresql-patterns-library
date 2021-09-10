@@ -18,4 +18,4 @@ AS $$
 $$;
 
 -- TEST
-select depers.random_string(10);
+select random_string(10);
