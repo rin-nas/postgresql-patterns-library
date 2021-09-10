@@ -3,7 +3,7 @@
 create or replace function csv_parse(
     data text, -- данные в формате CSV
     delimiter char(1) default ',',  -- задайте символ, разделяющий столбцы в строках файла, возможные вариаты: ';', ',', E'\t' (табуляция)
-    header boolean default true -- содержит строку заголовка с именами столбцов, игнорировать её?
+    header boolean default true -- содержит строку заголовка с именами столбцов?
 ) returns setof text[]
     immutable
     strict
