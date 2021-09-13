@@ -249,3 +249,16 @@ limit 100;
 --substr_count()
 SELECT array_length (string_to_array ('1524215121518546516323203210856879', '1'), 1) - 1
 ```
+
+For `bit_list()` function, like MySQL's `make_set()`
+```c
+unsigned int bitCount (unsigned int value) {
+    unsigned int count = 0;
+    while (value > 0) {           // until all bits are zero
+        if ((value & 1) == 1)     // check lower bit
+            count++;
+        value >>= 1;              // shift bits, removing lower bit
+    }
+    return count;
+}
+```
