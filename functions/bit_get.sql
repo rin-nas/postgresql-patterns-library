@@ -45,8 +45,8 @@ $$;
 --TEST
 do $$
 BEGIN
-    assert (bit_get(7, 4) is false);
-    assert (bit_get(8, 4) is true);
-    assert (bit_get(13, 4) is true);
+    assert not bit_get(7, 4);
+    assert bit_get(8, 4);
+    assert bit_get(13, 4);
 end;
 $$;
