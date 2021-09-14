@@ -241,10 +241,12 @@ where 10 & (1 << (num::int-1)) > 0;
 ```sql
 with t as (
     select exec_time,
-           round(greatest(sqrt(exec_time) - 1, 0), 2) as sleep_time
+           round(greatest(sqrt(exec_time) - 1, 0), 2) as sleep_time,
+           round(greatest(sqrt(exec_time*2) - 2, 0), 2) as sleep_time2
     from generate_series(0.1, 60, 0.1) as exec_time
 )
 select *,
-       round(sleep_time * 100 / exec_time, 1) as percent
+       round(sleep_time * 100 / exec_time, 1) as percent,
+       round(sleep_time2 * 100 / exec_time, 1) as percent2
 from t
 ```
