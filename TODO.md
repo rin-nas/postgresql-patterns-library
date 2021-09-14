@@ -246,7 +246,7 @@ limit 100;
 ```
 
 MySQL's [`make_set()`](https://dev.mysql.com/doc/refman/8.0/en/string-functions.html#function_make-set) function equivalent:
-```
+```sql
 select to_json(array_agg(name))
 from unnest(array['a','b','c', 'd']::text[]) with ordinality as s(name, num)
 where 10 & (1 << (num::int-1)) > 0;
