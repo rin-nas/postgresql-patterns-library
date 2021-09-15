@@ -620,7 +620,7 @@ select md5(i::text) as s from generate_series(1, 10000000) as t(i);
 
 create unique index on test.count_approximate (i);
 
-select count(*) > 1000 as is_approximate_need
+select count(*)
 from (
     select
     from test.count_approximate
@@ -629,10 +629,8 @@ from (
 ) t;
 --1 row retrieved starting from 1 in 273 ms (execution: 218 ms, fetching: 55 ms)
 
-select count(*) --38823
-from test.count_approximate
-where s ~ 'aa$';
---1 row retrieved starting from 1 in 6 s 941 ms (execution: 6 s 899 ms, fetching: 42 ms)
+-- если предыдущий запрос вернул <= 1000 записей, то больше ничего делать не нужно
+-- иначе считаем приближённое количество запией
 
 select count(*) * 100 --39200
 from test.count_approximate tablesample bernoulli(1) repeatable (37)
@@ -649,6 +647,13 @@ select (count(*) filter (where  s ~ 'aa$')) * 100 --38300
 from test.count_approximate
 where (i % 100) = 0;
 --1 row retrieved starting from 1 in 1 s 790 ms (execution: 1 s 767 ms, fetching: 23 ms)
+
+-- для сравнения, подсчёт точного кол-ва записей работает медленно:
+select count(*) --38823
+from test.count_approximate
+where s ~ 'aa$';
+--1 row retrieved starting from 1 in 6 s 941 ms (execution: 6 s 899 ms, fetching: 42 ms)
+
 ```
 См. [Tablesample In PostgreSQL](https://www.2ndquadrant.com/en/blog/tablesample-in-postgresql-9-5-2/)
 
