@@ -251,9 +251,8 @@ select *,
 from t
 ```
 
-
 Битовый тип годится только для хранения > 64 вариантов значений (битов). Обоснование:
-```
+```sql
 select pg_column_size(0::smallint), --2 байта
        pg_column_size(0::int), --4
        pg_column_size(0::bigint), --8
