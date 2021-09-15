@@ -237,17 +237,19 @@ where 10 & (1 << (num::int-1)) > 0;
 ```
 
 Как защитить БД от внезапных нагрузок, создаваемых приложениями? Например в периодически запускаемых фоновых (background) задачах.
-Предполагаемое решение — измерять скорость выполнения каждого запроса (SELECT или DML) в приложении. Если оно превышает 1 секунду, значит ресурсов БД нехватает и после выполнения запроса приложение нужно замедлить, т.е. "поспать" некоторое время. Это даст "продохнуть" БД и адаптироваться под её нагрузку. Длительность сна можно высчитывать по формуле, отталкиваясь от длительности выполнения запроса. См. распределение значений запросом
+Предполагаемое решение — измерять скорость выполнения каждого запроса (SELECT или DML) в приложении. Если оно превышает N секунд, значит ресурсов БД нехватает и после выполнения запроса приложение нужно замедлить, т.е. "поспать" некоторое время. Это даст "продохнуть" БД и адаптироваться под её нагрузку. Длительность сна можно высчитывать по формуле, отталкиваясь от длительности выполнения запроса. См. распределение значений запросом
 ```sql
 with t as (
     select exec_time,
-           round(greatest(sqrt(exec_time) - 1, 0), 2) as sleep_time,
-           round(greatest(sqrt(exec_time * 2) - 2, 0), 2) as sleep_time2
+           round(greatest(sqrt(exec_time * 1) - 1, 0), 2) as sleep_time1,
+           round(greatest(sqrt(exec_time * 2) - 2, 0), 2) as sleep_time2,
+           round(greatest(sqrt(exec_time * 3) - 3, 0), 2) as sleep_time3
     from generate_series(0.1, 60, 0.1) as exec_time
 )
-select *,
-       round(sleep_time * 100 / exec_time, 1) as percent,
-       round(sleep_time2 * 100 / exec_time, 1) as percent2
+select exec_time,
+       sleep_time1, round(sleep_time1 * 100 / exec_time, 0) as percent1,
+       sleep_time2, round(sleep_time2 * 100 / exec_time, 0) as percent2,
+       sleep_time3, round(sleep_time3 * 100 / exec_time, 0) as percent3
 from t
 ```
 
