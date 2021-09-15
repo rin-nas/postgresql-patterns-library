@@ -231,7 +231,7 @@ select to_json(array_agg(name))
 from unnest(array['a','b','c', 'd']::text[]) with ordinality as s(name, num)
 where 10 & (1 << (num::int-1)) > 0;
 
-select array_agg(num)
+select array_agg(name)
 from unnest(string_to_array('a,b,c,d', ',')) with ordinality as s(name, num)
 where 10 & (1 << (num::int-1)) > 0;
 ```
