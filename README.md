@@ -105,7 +105,13 @@
 #### Как проверить email на валидность?
 
 ```sql
-CREATE DOMAIN email AS text CHECK(length(VALUE) BETWEEN 6 AND 320 AND VALUE = trim(VALUE) AND VALUE LIKE '_%@_%.__%' AND is_email(VALUE));
+CREATE DOMAIN email AS text CHECK(
+    length(VALUE) BETWEEN 6 AND 320
+    AND VALUE = trim(VALUE)
+    AND VALUE LIKE '_%@_%.__%'
+    AND depers.is_email(VALUE)
+);
+
 
 select 'e@m.ai'::email; --ok
 select 'e@m.__'::email; --error
@@ -117,7 +123,10 @@ select 'e@m.__'::email; --error
 ```sql
 -- https://developer.mozilla.org/en-US/docs/Web/CSS/color_value
 -- https://regex101.com/r/CMQKwv/3/
-CREATE DOMAIN css_color AS text CHECK(length(VALUE) BETWEEN 4 AND 9 AND VALUE ~ '^#[a-fA-F\d]{3}(?:[a-fA-F\d]{3})?$|^#[a-fA-F\d]{4}(?:[a-fA-F\d]{4})?$');
+CREATE DOMAIN css_color AS text CHECK(
+    length(VALUE) BETWEEN 4 AND 9 
+    AND VALUE ~ '^#[a-fA-F\d]{3}(?:[a-fA-F\d]{3})?$|^#[a-fA-F\d]{4}(?:[a-fA-F\d]{4})?$'
+);
 
 select '#777'::css_color; --ok
 select '$777'::css_color; --error
