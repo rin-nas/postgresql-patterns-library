@@ -109,7 +109,7 @@ CREATE DOMAIN email AS text CHECK(
     length(VALUE) BETWEEN 6 AND 320
     AND VALUE = trim(VALUE)
     AND VALUE LIKE '_%@_%.__%'
-    AND depers.is_email(VALUE)
+    AND is_email(VALUE)
 );
 
 
