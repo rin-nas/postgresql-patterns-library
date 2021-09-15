@@ -75,14 +75,11 @@ BEGIN
 
         current_start_id := next_start_id;
         EXECUTE query USING current_start_id, batch_rows, cpu_num, cpu_max INTO STRICT next_start_id, affected_rows;
+        COMMIT; -- https://www.postgresql.org/docs/12/plpgsql-transactions.html
 
         query_time_elapsed := round(extract('epoch' from clock_timestamp() - query_time_start)::numeric, 2);
         total_time_elapsed := round(extract('epoch' from clock_timestamp() - total_time_start)::numeric, 2);
         processed_rows := processed_rows + affected_rows;
-
-        EXIT WHEN affected_rows < batch_rows OR next_start_id IS NULL OR NOT FOUND;
-
-        COMMIT; -- https://www.postgresql.org/docs/12/plpgsql-transactions.html
 
         IF cycles > 16 THEN
             estimated_time := ((total_rows * total_time_elapsed / processed_rows - total_time_elapsed)::int::text || 's')::interval;
@@ -92,6 +89,8 @@ BEGIN
         RAISE NOTICE 'Total processed % of % rows (% %%)', processed_rows, total_rows, round(processed_rows * 100.0 / total_rows, 2);
         RAISE NOTICE 'Current date time: %, elapsed time: %, estimated time: %', clock_timestamp()::timestamp(0), (clock_timestamp() - total_time_start)::interval(0), COALESCE(estimated_time::text, '?');
         RAISE NOTICE ''; -- just new line
+
+        EXIT WHEN affected_rows < batch_rows OR next_start_id IS NULL OR NOT FOUND;
 
         IF query_time_elapsed <= time_max THEN
             batch_rows := batch_rows * 2;
