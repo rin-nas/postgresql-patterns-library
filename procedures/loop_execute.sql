@@ -1,4 +1,4 @@
--- выполняет DML запрос в цикле, автоматически адаптируясь под нагрузку БД
+-- выполняет DML запрос в цикле, автоматически адаптируется под нагрузку БД, показывает в psql консоли время выполнения - сколько прошло и сколько примерно осталось
 create or replace procedure loop_execute(
     table_name regclass, -- название основной таблицы (дополненное схемой, при необходимости), из которой будут читаться порциями данные для последующей модификации записей
     query text, --CTE запрос с SELECT, INSERT/UPDATE/DELETE и SELECT запросами для модификации записей
@@ -14,8 +14,8 @@ DECLARE
     query_time_start timestamp;
     query_time_elapsed numeric not null default 0; -- фактическое время выполнения 1-го запроса, в секундах
     estimated_time interval; -- оценочное время, сколько осталось работать
-    current_start_id bigint not null default 0;
-    next_start_id bigint not null default 0;
+    current_start_id bigint default 0;
+    next_start_id bigint default 0;
     affected_rows bigint not null default 0;
     cycles int not null default 0; -- счётчик для цикла
     batch_rows int not null default 1; -- по сколько записей будем обновлять за 1 цикл
@@ -75,13 +75,14 @@ BEGIN
 
         current_start_id := next_start_id;
         EXECUTE query USING current_start_id, batch_rows, cpu_num, cpu_max INTO STRICT next_start_id, affected_rows;
-        EXIT WHEN affected_rows = 0;
-
-        COMMIT; -- https://www.postgresql.org/docs/12/plpgsql-transactions.html
 
         query_time_elapsed := round(extract('epoch' from clock_timestamp() - query_time_start)::numeric, 2);
         total_time_elapsed := round(extract('epoch' from clock_timestamp() - total_time_start)::numeric, 2);
         processed_rows := processed_rows + affected_rows;
+
+        EXIT WHEN affected_rows < batch_rows OR next_start_id IS NULL OR NOT FOUND;
+
+        COMMIT; -- https://www.postgresql.org/docs/12/plpgsql-transactions.html
 
         IF cycles > 16 THEN
             estimated_time := ((total_rows * total_time_elapsed / processed_rows - total_time_elapsed)::int::text || 's')::interval;
