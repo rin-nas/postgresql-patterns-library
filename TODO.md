@@ -250,3 +250,13 @@ select *,
        round(sleep_time2 * 100 / exec_time, 1) as percent2
 from t
 ```
+
+
+Битовый тип годится только для хранения > 64 вариантов значений (битов). Обоснование:
+```
+select pg_column_size(0::smallint), --2 байта
+       pg_column_size(0::int), --4
+       pg_column_size(0::bigint), --8
+       pg_column_size(0::bit(8)), --9
+       pg_column_size(0::bit(16)) --10
+```
