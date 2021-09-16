@@ -99,7 +99,7 @@ BEGIN
         ELSIF batch_rows > 1 THEN
             batch_rows := batch_rows / 2;
         ELSE
-            PERFORM pg_sleep(greatest(sqrt(query_time_elapsed) - 1, 0)); --try to save DB from overload
+            PERFORM pg_sleep(greatest(sqrt(query_time_elapsed * time_max) - time_max, 0)); --try to save DB from overload
         END IF;
 
     END LOOP;
