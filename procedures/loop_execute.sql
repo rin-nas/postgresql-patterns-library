@@ -92,7 +92,7 @@ BEGIN
         RAISE NOTICE 'Current date time: %, elapsed time: %, estimated time: %', clock_timestamp()::timestamp(0), (clock_timestamp() - total_time_start)::interval(0), COALESCE(estimated_time::text, '?');
         RAISE NOTICE ''; -- just new line
 
-        EXIT WHEN affected_rows < batch_rows OR next_start_id IS NULL OR NOT FOUND;
+        EXIT WHEN affected_rows < batch_rows OR next_start_id IS NULL;
 
         IF query_time_elapsed <= time_max THEN
             batch_rows := batch_rows * 2;
