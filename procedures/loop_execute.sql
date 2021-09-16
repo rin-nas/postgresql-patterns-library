@@ -123,6 +123,7 @@ call loop_execute(
             FROM v3_person_email
             WHERE id > $1
               AND id % $4/*cpu_max*/ = ($3/*cpu_num*/ - 1)
+              AND email IS NOT NULL AND TRIM(email) != ''
               AND NOT depers.is_email_ignore(email)
             ORDER BY id
             LIMIT $2
@@ -149,6 +150,7 @@ call loop_execute(
             FROM v3_person_email
             WHERE id > $1
               AND id % $4/*cpu_max*/ = ($3/*cpu_num*/ - 1)
+              AND email IS NOT NULL AND TRIM(email) != ''
               AND NOT(
                     octet_length(email) BETWEEN 6 AND 320
                     AND email = trim(email)
