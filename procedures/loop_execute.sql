@@ -14,7 +14,7 @@ DECLARE
     query_time_start timestamp;
     query_time_elapsed numeric not null default 0; -- фактическое время выполнения 1-го запроса, в секундах
     estimated_time interval; -- оценочное время, сколько осталось работать
-    current_start_id bigint default 0;
+    current_start_id bigint not null default 0;
     next_start_id bigint default 0;
     affected_rows bigint not null default 0;
     cycles int not null default 0; -- счётчик для цикла
