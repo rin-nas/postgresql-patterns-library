@@ -17,4 +17,4 @@ $$;
 --TEST
 
 -- MD5 to BigInt
-select hex_to_bigint(md5('test'));
+select hex_to_bigint(md5('test')); -- -3756160627640895497
