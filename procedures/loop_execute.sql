@@ -44,7 +44,7 @@ BEGIN
                        AND pg_attribute.attnum = any(pg_index.indkey)
                        AND pg_index.indisunique
                        AND pg_attribute.attname = 'id'
-                       AND format_type(pg_attribute.atttypid, pg_attribute.atttypmod) = 'integer') THEN
+                       AND format_type(pg_attribute.atttypid, pg_attribute.atttypmod) in ('integer', 'bigint')) THEN
         RAISE EXCEPTION 'Table % should has a column "id" with type "integer" and primary/unique index!', table_name;
     ELSIF query !~* '\mid\M\s*>\s*\$1\M' THEN
         RAISE EXCEPTION 'Entry "id > $1" is not found in your query!' USING HINT = 'Add "id > $1" to WHERE clause of SELECT query.';
