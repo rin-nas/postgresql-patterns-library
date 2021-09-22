@@ -1,11 +1,13 @@
 -- Выполняет DML запрос в цикле
 -- Автоматически адаптируется под нагрузку БД
 -- Показывает в psql консоли время выполнения - сколько прошло и сколько примерно осталось
-create or replace procedure loop_execute(
-    table_name regclass, -- название основной таблицы (дополненное схемой, при необходимости), из которой будут читаться порциями данные для последующей модификации записей
-    query text, --CTE запрос с SELECT, INSERT/UPDATE/DELETE и SELECT запросами для модификации записей
-    cpu_num smallint default 1, -- для распараллеливания скрипта для выполнения через {JiraTaskId}_do.sh: номер текущего ядра процессора
-    cpu_max smallint default 1  -- для распараллеливания скрипта для выполнения через {JiraTaskId}_do.sh: максимальное количество ядер процессора
+create or replace procedure depers.loop_execute(
+    table_name regclass, -- название основной таблицы (дополненное схемой, при необходимости), из которой данные порциями в цикле будут читаться и модифицироваться
+    query text, -- CTE запрос с SELECT, INSERT/UPDATE/DELETE и SELECT запросами для модификации записей
+    cpu_num integer default 1, -- номер текущего ядра процессора (для распараллеливания скрипта для выполнения через {JiraTaskId}_do.sh:)
+    cpu_max integer default 1, -- максимальное количество ядер процессора (для распараллеливания скрипта для выполнения через {JiraTaskId}_do.sh:)
+    is_rollback boolean default false, -- откатывать запрос после каждого выполнения в цикле (для целей тестирования)
+    cycles_max integer default null -- максимальное количество циклов (для целей тестирования)
 )
     language plpgsql
 as
@@ -26,6 +28,8 @@ DECLARE
     total_id int not null default 0; -- количество записей всего, где id не null
     total_distinct_id int not null default 0; -- количество уникальных записей всего, где id не null
     time_max constant numeric not null default 1; -- пороговое максимальное время выполнения 1-го запроса, в секундах (рекомендуется 1 секунда)
+    rows_per_second numeric default 0;
+    queries_per_second numeric default 0;
 BEGIN
 
     -- валидация 1
@@ -54,12 +58,17 @@ BEGIN
         RAISE EXCEPTION 'Argument cpu_max should be between 1 and 256, but % given!', cpu_max;
     ELSIF cpu_num > cpu_max THEN
         RAISE EXCEPTION 'Argument cpu_num should be <= cpu_max! Given cpu_num = %, cpu_max = %', cpu_num, cpu_max;
+    ELSIF cycles_max < 0 THEN
+        RAISE EXCEPTION 'Argument cycles_max should be >= 0, but % given', cycles_max;
     END IF;
+
+    --RAISE NOTICE e'Query:\n%\n', query;
 
     query_time_start := clock_timestamp();
     RAISE NOTICE 'Calculating total rows and checking unique id values for table %s ...', table_name;
     EXECUTE 'SELECT COUNT(*), COUNT(id), COUNT(DISTINCT id) FROM ' || table_name INTO total_rows, total_id, total_distinct_id;
     query_time_elapsed := round(extract('epoch' from clock_timestamp() - query_time_start)::numeric, 2);
+    total_time_elapsed := round(extract('epoch' from clock_timestamp() - total_time_start)::numeric, 2);
     RAISE NOTICE 'Done. % total rows found for % sec', total_rows, query_time_elapsed;
 
     -- валидация 2
@@ -70,14 +79,19 @@ BEGIN
     END IF;
 
     LOOP
+        EXIT WHEN cycles >= cycles_max;
         cycles := cycles + 1;
-        --EXIT WHEN cycles > 20; -- для отладки
 
         query_time_start := clock_timestamp();
 
         current_start_id := next_start_id;
         EXECUTE query USING current_start_id, batch_rows, cpu_num, cpu_max INTO STRICT next_start_id, affected_rows;
-        COMMIT; -- https://www.postgresql.org/docs/12/plpgsql-transactions.html
+
+        IF is_rollback THEN
+            ROLLBACK AND CHAIN;
+        ELSE
+            COMMIT AND CHAIN; -- https://www.postgresql.org/docs/12/plpgsql-transactions.html
+        END IF;
 
         query_time_elapsed := round(extract('epoch' from clock_timestamp() - query_time_start)::numeric, 2);
         total_time_elapsed := round(extract('epoch' from clock_timestamp() - total_time_start)::numeric, 2);
@@ -87,7 +101,8 @@ BEGIN
             estimated_time := ((total_rows * total_time_elapsed / processed_rows - total_time_elapsed)::int::text || 's')::interval;
         END IF;
 
-        RAISE NOTICE 'Query % processed % rows (id %% %/*cpu_max*/ = (%/*cpu_num*/ - 1) AND id > %) for % sec', cycles, affected_rows, cpu_max, cpu_num, current_start_id, query_time_elapsed;
+        RAISE NOTICE 'Query % processed % rows (id %% %/*cpu_max*/ = (%/*cpu_num*/ - 1) AND id > %) for % sec %',
+            cycles, affected_rows, cpu_max, cpu_num, current_start_id, query_time_elapsed, case when is_rollback then 'ROLLBACK MODE!' else '' end;
         RAISE NOTICE 'Total processed % of % rows (% %%)', processed_rows, total_rows, round(processed_rows * 100.0 / total_rows, 2);
         RAISE NOTICE 'Current date time: %, elapsed time: %, estimated time: %', clock_timestamp()::timestamp(0), (clock_timestamp() - total_time_start)::interval(0), COALESCE(estimated_time::text, '?');
         RAISE NOTICE ''; -- just new line
@@ -104,7 +119,12 @@ BEGIN
 
     END LOOP;
 
-    RAISE NOTICE 'Done. % rows per second, % queries per second', (processed_rows / total_time_elapsed)::int, round(cycles / total_time_elapsed, 2);
+    IF total_time_elapsed > 0 THEN
+        rows_per_second    := (processed_rows / total_time_elapsed)::int;
+        queries_per_second := round(cycles / total_time_elapsed, 2);
+    END IF;
+
+    RAISE NOTICE 'Done. % rows per second, % queries per second', rows_per_second, queries_per_second;
 
 END
 $procedure$;
