@@ -31,6 +31,7 @@ DECLARE
     total_rows int not null default 0; -- количество записей всего
     total_id int not null default 0; -- количество записей всего, где id не null
     total_distinct_id int not null default 0; -- количество уникальных записей всего, где id не null
+    uniq_column_name_quoted text; -- название primary/unique колонки (квотированнное)
     uniq_column_name text; -- название primary/unique колонки
     uniq_column_type text; -- тип primary/unique колонки
     query_count text;
@@ -62,13 +63,15 @@ BEGIN
     ORDER BY pg_index.indisprimary DESC -- primary key in priority
     LIMIT 1;
 
+    uniq_column_name_quoted := regexp_replace(quote_ident(uniq_column_name), '([[\](){}.+*^$|\\?-])', '\\\1', 'g');
+
     -- валидация 2
     IF uniq_column_name IS NULL THEN
         RAISE EXCEPTION 'Table % should has a some column with primary/unique index!', table_name;
-    ELSIF query !~* format('\m%s\M\s*>\s*\$1\M', quote_regexp(quote_ident(uniq_column_name))) THEN
+    ELSIF query !~* format('\m%s\M\s*>\s*\$1\M', uniq_column_name_quoted) THEN
         RAISE EXCEPTION 'Entry "% > $1" is not found in your query!', quote_ident(uniq_column_name)
             USING HINT = format('Add "%I > $1" to WHERE clause of SELECT query.', uniq_column_name);
-    ELSIF query !~* format('\morder\s+by\s+%s\M(?!\s+desc\M)', quote_regexp(quote_ident(uniq_column_name))) THEN
+    ELSIF query !~* format('\morder\s+by\s+%s\M(?!\s+desc\M)', uniq_column_name_quoted) THEN
         RAISE EXCEPTION 'Entry "ORDER BY %" is not found in your query!', quote_ident(uniq_column_name)
             USING HINT = format('Add "ORDER BY %I ASC" to end of SELECT query.', uniq_column_name);
     ELSIF query !~* '\mlimit\M\s+\$2\M' THEN
