@@ -1,7 +1,7 @@
 -- Выполняет DML запрос в цикле
 -- Автоматически адаптируется под нагрузку БД
 -- Показывает в psql консоли время выполнения - сколько прошло и сколько примерно осталось
-create or replace procedure depers.loop_execute(
+create or replace procedure loop_execute(
     table_name regclass, -- название основной таблицы (дополненное схемой, при необходимости), из которой данные порциями в цикле будут читаться и модифицироваться
     query text, -- CTE запрос с SELECT, INSERT/UPDATE/DELETE и SELECT запросами для модификации записей
     is_rollback boolean default false, -- откатывать запрос после каждого выполнения в цикле (для целей тестирования)
