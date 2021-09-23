@@ -179,7 +179,7 @@ call loop_execute(
                    coalesce(depers.hash_email_username(email), 'id' || id || '@invalid.email') AS email
             FROM v3_person_email
             WHERE id > $1
-              AND id % $4/*cpu_max*/ = ($3/*cpu_num*/ - 1)
+              AND use_cpu(id, 1, 4)
               AND email IS NOT NULL AND TRIM(email) != ''
               AND NOT depers.is_email_ignore(email)
             ORDER BY id
@@ -206,7 +206,7 @@ call loop_execute(
             SELECT id
             FROM v3_person_email
             WHERE id > $1
-              AND id % $4/*cpu_max*/ = ($3/*cpu_num*/ - 1)
+              AND use_cpu(id, 1, 4)
               AND email IS NOT NULL AND TRIM(email) != ''
               AND NOT(
                     octet_length(email) BETWEEN 6 AND 320
