@@ -1,4 +1,4 @@
-create or replace function depers.email_parse(
+create or replace function email_parse(
     email text,
     username out text,
     domain out text
@@ -28,4 +28,7 @@ $$;
 -- TEST
 select * from email_parse('111@222@ya.ru');
 select (email_parse('111@222@ya.ru')).domain;
-select e.domain is not null and e.username is not null as is_email from depers.email_parse('123@') as e;
+
+select e.domain is not null 
+       and e.username is not null as is_email 
+from email_parse('123@') as e;
