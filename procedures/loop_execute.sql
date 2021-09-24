@@ -87,6 +87,7 @@ BEGIN
     query_time_elapsed := round(extract('epoch' from clock_timestamp() - query_time_start)::numeric, 2);
     total_time_elapsed := round(extract('epoch' from clock_timestamp() - total_time_start)::numeric, 2);
     RAISE NOTICE 'Done. % total rows found for % sec', total_rows, query_time_elapsed;
+    RAISE NOTICE ' '; -- just new line
 
     -- валидация 3
     IF total_rows != total_id THEN
