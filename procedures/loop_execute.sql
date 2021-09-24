@@ -142,7 +142,7 @@ BEGIN
             clock_timestamp()::timestamp(0),
             (clock_timestamp() - total_time_start)::interval(0),
             COALESCE(estimated_time::text, '?'), round(total_processed_rows * 100.0 / total_rows, 2);
-        RAISE NOTICE ''; -- just new line
+        RAISE NOTICE ' '; -- just new line
 
         EXIT WHEN affected_rows < batch_rows OR stop_id_bigint IS NULL OR stop_id_text IS NULL;
 
