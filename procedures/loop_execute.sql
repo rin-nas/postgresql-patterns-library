@@ -47,7 +47,7 @@ BEGIN
 
     -- валидация 1
     IF table_name IS NULL OR query IS NULL THEN
-        RAISE EXCEPTION 'Procedure arguments cannot has NULL values!';
+        RAISE EXCEPTION 'Procedure arguments cannot have NULL values!';
     END IF;
 
     SELECT pg_attribute.attname,
