@@ -27,9 +27,11 @@ END;
 $$;
 
 --TEST
-select sum(use_cpu(g, 1, 3)::int) from generate_series(1, 10000) as g; --3333
-select sum(use_cpu(g, 2, 3)::int) from generate_series(1, 10000) as g; --3334
-select sum(use_cpu(g, 3, 3)::int) from generate_series(1, 10000) as g; --3333
+select
+   sum(use_cpu(g, 1, 3)::int), --3333
+   sum(use_cpu(g, 2, 3)::int), --3334
+   sum(use_cpu(g, 3, 3)::int) --3333
+from generate_series(1, 10000) as g;
 
 create or replace function use_cpu(
     str text,
@@ -60,7 +62,8 @@ END;
 $$;
 
 --TEST
-select sum(use_cpu(g::text, 1, 3)::int) from generate_series(1, 10000) as g; --3307
-select sum(use_cpu(g::text, 2, 3)::int) from generate_series(1, 10000) as g; --3358
-select sum(use_cpu(g::text, 3, 3)::int) from generate_series(1, 10000) as g; --3335
-
+select
+   sum(use_cpu(g::text, 1, 3)::int), --3307
+   sum(use_cpu(g::text, 2, 3)::int), --3358
+   sum(use_cpu(g::text, 3, 3)::int) --3335
+from generate_series(1, 10000) as g;
