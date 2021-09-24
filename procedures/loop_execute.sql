@@ -137,7 +137,7 @@ BEGIN
             cycles, affected_rows, processed_rows,
             --uniq_column_name, quote_literal(case when uniq_column_type in ('integer', 'bigint') then start_id_bigint::text else start_id_text end),
             query_time_elapsed, case when is_rollback then ', ROLLBACK MODE!' else '' end;
-        RAISE NOTICE 'Total: affected % rows, processed % of % rows', total_affected_rows, total_processed_rows, total_rows;
+        RAISE NOTICE 'Affected % rows, processed % of % total rows', total_affected_rows, total_processed_rows, total_rows;
         RAISE NOTICE 'Current datetime: %, elapsed time: %, estimated time: %, progress: % %%',
             clock_timestamp()::timestamp(0),
             (clock_timestamp() - total_time_start)::interval(0),
