@@ -13,10 +13,14 @@ create or replace function phone_parse(
     language sql
 as
 $$
+--https://www.cm.com/blog/how-to-format-international-telephone-numbers/
 select t[1] as country_code,
        t[2] as area_code,
        t[3] as local_number
-from regexp_match(phone, '^\+(\d+) (\d+) (\d+)$', '') as t
+from regexp_match(phone, '^\+(\d{1,3}) (\d+) (\d+)$', '') as t
+where length(regexp_replace(phone, '\D+', '', 'g'))
+      between 7 --https://stackoverflow.com/questions/14894899/what-is-the-minimum-length-of-a-valid-international-phone-number
+      and 15 --https://en.wikipedia.org/wiki/E.164 and https://en.wikipedia.org/wiki/Telephone_numbering_plan
 $$;
 
 --TEST
