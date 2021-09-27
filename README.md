@@ -106,7 +106,7 @@
 
 ```sql
 CREATE DOMAIN email AS text CHECK(
-    length(VALUE) BETWEEN 6 AND 320
+    octet_length(VALUE) BETWEEN 6 AND 320
     AND VALUE = trim(VALUE)
     AND VALUE LIKE '_%@_%.__%'
     AND is_email(VALUE)
