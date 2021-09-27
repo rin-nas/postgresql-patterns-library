@@ -11,9 +11,10 @@ create or replace procedure loop_execute(
 as
 $procedure$
 DECLARE
-    --ограничения
+    --ограничения и константы
     time_max constant numeric not null default 1; -- пороговое максимальное время выполнения 1-го запроса, в секундах (рекомендуется 1 секунда)
     batch_rows int not null default 1; -- сколько записей будем модифицировать за 1 цикл (значение автоматически подстраивается под time_max)
+    quote_regexp text not null default '([[\](){}.+*^$|\\?-])';
 
     --статистика
     total_time_start timestamp not null default clock_timestamp();
