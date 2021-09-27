@@ -9,26 +9,25 @@ create or replace function email_parse(
     stable
     returns null on null input
     parallel safe
-    language plpgsql
+    language sql
 as
 $$
-declare
     -- https://en.wikipedia.org/wiki/Email_address
-    username_max_length smallint default 64;
-    domain_max_length smallint default 255;
-begin
-    select case when octet_length(t[1]) > username_max_length then null else t[1] end as username,
-           case when octet_length(t[2]) > domain_max_length then null else t[2] end as domain
-    into username, domain
-    from regexp_match(email, '^(.+)@([^@]+)$', '') as t;
-end
+    select t[1] as username, t[2] as domain
+    from regexp_match(email, '^(.+)@([^@]+)$', '') as t
+    where octet_length(t[1]) <= 64 and octet_length(t[2]) <= 255;
 $$;
 
-
 -- TEST
-select * from email_parse('111@222@ya.ru');
-select (email_parse('111@222@ya.ru')).domain;
-
-select e.domain is not null 
-       and e.username is not null as is_email 
-from email_parse('123@') as e;
+do $$
+    begin
+        --positive
+        assert (select username = '111@222'
+                       and domain = 'ya.ru'
+                from email_parse('111@222@ya.ru') as t);
+        assert (email_parse('111@222@ya.ru')).domain = 'ya.ru';
+        --negative
+        assert email_parse('123@') is null;
+        assert email_parse('@123') is null;
+    end;
+$$;
