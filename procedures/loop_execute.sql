@@ -96,7 +96,13 @@ BEGIN
     ELSIF query !~* '\mlimit\M\s+\$2\M' THEN
         RAISE EXCEPTION 'Entry "LIMIT $2" is not found in your CTE query!'
             USING HINT = 'Add "LIMIT $2" to end of SELECT subquery.';
-    ELSIF query !~* format('\mSELECT\s+MAX\(%I\)(\s+(AS\s+)?[a-z_]+)?\s*,\s*COUNT\(\*\)(\s+(AS\s+)?[a-z_]+)?\s+FROM\s+m\s*(;\s*)?$', uniq_column_name) THEN
+    ELSIF regexp_match(query,
+                        $regexp$
+                          \mSELECT \s+
+                              MAX\(%I\)    (\s+ (AS\s+)? ([a-z_]+|"([^"]|"")*") )?  \s*,\s*
+                              COUNT\(\*\)  (\s+ (AS\s+)? ([a-z_]+|"([^"]|"")*") )?  \s+
+                          FROM \s+ ([a-z_]+|"([^"]|"")*") \s* (;\s*)? $
+                        $regexp$, 'ix') is not null THEN
         RAISE EXCEPTION 'Incorrect last subquery in your CTE query!'
             USING HINT = last_subquery_exception_hint;
     END IF;
