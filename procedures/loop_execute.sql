@@ -209,14 +209,14 @@ $procedure$;
 --Примеры использования
 ------------------------------------------------------------------------------------------------------------------------
 
---обезличиваем email
+--деперсонализация (обезличивание) email
 call loop_execute(
-    'v3_person_email',
+    'person_email',
     $$
         WITH s AS (
             SELECT id,
-                   coalesce(depers.hash_email_username(email), 'id' || id || '@invalid.email') AS email
-            FROM v3_person_email
+                   depers.hash_email_username(email, id) AS email
+            FROM person_email
             WHERE id > $1
               AND use_cpu(id, 1, 4)
               AND email IS NOT NULL AND TRIM(email) != ''
@@ -225,7 +225,7 @@ call loop_execute(
             LIMIT $2
         ),
         m AS (
-            UPDATE v3_person_email AS u
+            UPDATE person_email AS u
             SET email = s.email
             FROM s
             WHERE s.id = u.id
@@ -237,13 +237,13 @@ call loop_execute(
     $$
 );
 
--- удаляем невалидные email
+-- удаление невалидных email
 call loop_execute(
-    'v3_person_email',
+    'person_email',
     $$
         WITH s AS (
             SELECT id
-            FROM v3_person_email
+            FROM person_email
             WHERE id > $1
               AND use_cpu(id, 1, 4)
               AND email IS NOT NULL AND TRIM(email) != ''
@@ -257,7 +257,7 @@ call loop_execute(
             LIMIT $2
         ),
         m AS (
-            DELETE FROM v3_person_email AS d
+            DELETE FROM person_email AS d
             WHERE id IN (SELECT id FROM s)
             RETURNING d.id
         )
