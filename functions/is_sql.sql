@@ -1,5 +1,5 @@
 -- check SQL syntax exactly in your PostgreSQL version
-CREATE OR REPLACE FUNCTION depers.is_sql(sql text, is_notice boolean default false)
+CREATE OR REPLACE FUNCTION is_sql(sql text, is_notice boolean default false)
     returns boolean
     returns null on null input
     parallel safe
@@ -29,7 +29,7 @@ $$;
 -- TEST
 do $$
     begin
-        assert not depers.is_sql('SELECTx', true);
-        assert depers.is_sql('SELECT x');
+        assert not is_sql('SELECTx', true);
+        assert is_sql('SELECT x');
     end;
 $$;
