@@ -1,20 +1,27 @@
--- Выполняет DML запрос в цикле
--- Автоматически адаптируется под нагрузку БД
--- Показывает в psql консоли время выполнения - сколько прошло и сколько примерно осталось
-create or replace procedure loop_execute(
-    table_name regclass, -- название основной таблицы (дополненное схемой, при необходимости), из которой данные порциями в цикле будут читаться и модифицироваться
-    query text, -- CTE запрос с SELECT, INSERT/UPDATE/DELETE и SELECT запросами для модификации записей
+/*
+Процедура для обработки строк в больших таблицах (тысячи и миллионы строк) с контролируемым временем блокировки строк на запись.
+Принцип работы -- выполняет CTE DML запрос в цикле. В завершении каждого цикла изменения фиксируются (либо откатываются для целей тестирования, это настраивается).
+Автоматически адаптируется под нагрузку на БД. На реплику данные передаются постепенно небольшими порциями, а не одним огромным куском.
+В процессе обработки показывает в psql консоли:
+   * количество модифицированных и обработанных записей в таблице
+   * сколько времени прошло, сколько примерно времени осталось до завершения, прогресс выполнения в процентах
+Процедура не предназначена для выполнения в транзакции.
+*/
+create or replace procedure depers.loop_execute(
+    table_name  regclass, -- название основной таблицы (дополненное схемой, при необходимости), из которой данные порциями в цикле будут читаться и модифицироваться
+    query       text, -- CTE запрос с SELECT, INSERT/UPDATE/DELETE и SELECT запросами для модификации записей
+    batch_rows  int     default 1, -- сколько записей будем модифицировать за 1 цикл (значение автоматически подстраивается под time_max), рекомендуется 1
+    time_max    numeric default 1, -- пороговое максимальное время выполнения 1-го запроса, в секундах, рекомендуется 1
     is_rollback boolean default false, -- откатывать запрос после каждого выполнения в цикле (для целей тестирования)
-    cycles_max integer default null -- максимальное количество циклов (для целей тестирования)
+    cycles_max  integer default null -- максимальное количество циклов (для целей тестирования)
 )
     language plpgsql
 as
 $procedure$
 DECLARE
     --ограничения и константы
-    time_max constant numeric not null default 1; -- пороговое максимальное время выполнения 1-го запроса, в секундах (рекомендуется 1 секунда)
-    batch_rows int not null default 1; -- сколько записей будем модифицировать за 1 цикл (значение автоматически подстраивается под time_max)
-    quote_regexp text not null default '([[\](){}.+*^$|\\?-])';
+    quote_regexp constant text not null default '([[\](){}.+*^$|\\?-])'; -- регулярное выражение для квотирования регулярнгого выражения
+    last_subquery_exception_hint text not null default e'Last subquery must be:\nSELECT MAX(%I) AS stop_id, COUNT(*) AS affected_rows FROM m';
 
     --статистика
     total_time_start timestamp not null default clock_timestamp();
@@ -27,6 +34,7 @@ DECLARE
     cycles int not null default 0; -- счётчик для цикла
     total_affected_rows int not null default 0; -- сколько всего записей модифицировал пользовательский запрос
     total_processed_rows int not null default 0; -- сколько всего записей просмотрел пользовательский запрос
+    is_calc_estimated_time boolean not null default false;
 
     -- в таблице table_name:
     total_rows int not null default 0; -- количество записей всего
@@ -35,7 +43,7 @@ DECLARE
     uniq_column_name_quoted text; -- название primary/unique колонки (квотированнное)
     uniq_column_name text; -- название primary/unique колонки
     uniq_column_type text; -- тип primary/unique колонки
-    query_count text;
+    query_count text; -- SQL запрос для получения processed_rows
 
     -- для пользовательского запроса query, выполняемого в цикле:
     start_id_bigint bigint not null default 0;
@@ -46,11 +54,18 @@ DECLARE
     processed_rows bigint not null default 0; --сколько записей просмотрел пользовательский запрос
 BEGIN
 
-    -- валидация 1
-    IF table_name IS NULL OR query IS NULL THEN
-        RAISE EXCEPTION 'Procedure arguments cannot have NULL values!';
+    -- 1) проверка входящих параметров
+    IF table_name IS NULL OR query IS NULL OR time_max IS NULL OR batch_rows IS NULL THEN
+        RAISE EXCEPTION 'Procedure arguments must not have NULL values (except cycles_max)!';
+    ELSIF cycles_max < 0 THEN
+        RAISE EXCEPTION 'Argument cycles_max must be >= 0, but % given', cycles_max;
+    ELSIF time_max not between 1 AND 10 THEN
+        RAISE EXCEPTION 'Argument time_max must between 1 and 10, but % given', time_max;
+    ELSIF batch_rows not between 1 AND 1024 THEN
+        RAISE EXCEPTION 'Argument batch_rows must between 1 and 1024, but % given', batch_rows;
     END IF;
 
+    -- 2) проверка наличия уникального ключа
     SELECT pg_attribute.attname,
            format_type(pg_attribute.atttypid, pg_attribute.atttypmod)
     INTO uniq_column_name, uniq_column_type
@@ -64,23 +79,29 @@ BEGIN
     ORDER BY pg_index.indisprimary DESC -- primary key in priority
     LIMIT 1;
 
-    uniq_column_name_quoted := regexp_replace(quote_ident(uniq_column_name), '([[\](){}.+*^$|\\?-])', '\\\1', 'g');
-
-    -- валидация 2
     IF uniq_column_name IS NULL THEN
-        RAISE EXCEPTION 'Table % should has a some column with primary/unique index!', table_name;
-    ELSIF query !~* format('\m%s\M\s*>\s*\$1\M', uniq_column_name_quoted) THEN
-        RAISE EXCEPTION 'Entry "% > $1" is not found in your query!', quote_ident(uniq_column_name)
-            USING HINT = format('Add "%I > $1" to WHERE clause of SELECT query.', uniq_column_name);
-    ELSIF query !~* format('\morder\s+by\s+%s\M(?!\s+desc\M)', uniq_column_name_quoted) THEN
-        RAISE EXCEPTION 'Entry "ORDER BY %" is not found in your query!', quote_ident(uniq_column_name)
-            USING HINT = format('Add "ORDER BY %I ASC" to end of SELECT query.', uniq_column_name);
-    ELSIF query !~* '\mlimit\M\s+\$2\M' THEN
-        RAISE EXCEPTION 'Entry "LIMIT $2" is not found in your query!' USING HINT = 'Add "LIMIT $2" to end of SELECT query.';
-    ELSIF cycles_max < 0 THEN
-        RAISE EXCEPTION 'Argument cycles_max should be >= 0, but % given', cycles_max;
+        RAISE EXCEPTION 'Table % must has a some column with primary/unique index!', table_name;
     END IF;
 
+    -- 3) проверка необходимых частей в пользовательском запросе (защита от дурака)
+    uniq_column_name_quoted := regexp_replace(quote_ident(uniq_column_name), quote_regexp, '\\\1', 'g');
+    last_subquery_exception_hint  := format(last_subquery_exception_hint, uniq_column_name);
+
+    IF query !~* format('\m%s\M\s*>\s*\$1\M', uniq_column_name_quoted) THEN
+        RAISE EXCEPTION 'Entry "% > $1" is not found in your CTE query!', quote_ident(uniq_column_name)
+            USING HINT = format('Add "%I > $1" to WHERE clause of SELECT subquery.', uniq_column_name);
+    ELSIF query !~* format('\morder\s+by\s+%s\M(?!\s+desc\M)', uniq_column_name_quoted) THEN
+        RAISE EXCEPTION 'Entry "ORDER BY %" is not found in your CTE query!', quote_ident(uniq_column_name)
+            USING HINT = format('Add "ORDER BY %I ASC" to end of SELECT subquery.', uniq_column_name);
+    ELSIF query !~* '\mlimit\M\s+\$2\M' THEN
+        RAISE EXCEPTION 'Entry "LIMIT $2" is not found in your CTE query!'
+            USING HINT = 'Add "LIMIT $2" to end of SELECT subquery.';
+    ELSIF query !~* format('\mSELECT\s+MAX\(%I\)(\s+(AS\s+)?[a-z_]+)?\s*,\s*COUNT\(\*\)(\s+(AS\s+)?[a-z_]+)?\s+FROM\s+m\s*(;\s*)?$', uniq_column_name) THEN
+        RAISE EXCEPTION 'Incorrect last subquery in your CTE query!'
+            USING HINT = last_subquery_exception_hint;
+    END IF;
+
+    -- 4) подсчёт общего кол-ва записей, проверка уникального ключа на значения NULL
     query_time_start := clock_timestamp();
     RAISE NOTICE 'Calculating total rows, checking null and unique values for column %.% ...', table_name, uniq_column_name;
     EXECUTE format('SELECT COUNT(*), COUNT(%2$I), COUNT(DISTINCT %2$I) FROM %1$s', table_name, uniq_column_name)
@@ -90,7 +111,6 @@ BEGIN
     RAISE NOTICE 'Done. % total rows found for % sec', total_rows, query_time_elapsed;
     RAISE NOTICE ' '; -- just new line
 
-    -- валидация 3
     IF total_rows != total_id THEN
         RAISE EXCEPTION 'Column %.% has % NULL values!', table_name, uniq_column_name, (total_rows - total_id)
             USING HINT = format('Remove all NULL values for %I column.', uniq_column_name);
@@ -110,10 +130,20 @@ BEGIN
         IF uniq_column_type IN ('integer', 'bigint') THEN
             start_id_bigint := stop_id_bigint;
             EXECUTE query USING start_id_bigint, batch_rows INTO STRICT stop_id_bigint, affected_rows;
+            IF start_id_bigint >= stop_id_bigint THEN
+                ROLLBACK AND CHAIN;
+                RAISE EXCEPTION 'Infinity cycle has been found (start_id=% >= stop_id=%)! There are mistake in your CTE query.', start_id_bigint, stop_id_bigint
+                    USING HINT = last_subquery_exception_hint;
+            END IF;
             EXECUTE query_count USING start_id_bigint, stop_id_bigint INTO processed_rows;
         ELSIF uniq_column_type ~* '\m(varying|character|text|char|varchar)\M' THEN
             start_id_text := stop_id_text;
             EXECUTE query USING start_id_text, batch_rows INTO STRICT stop_id_text, affected_rows;
+            IF start_id_text >= stop_id_text THEN
+                ROLLBACK AND CHAIN;
+                RAISE EXCEPTION 'Infinity cycle has been found (start_id=% >= stop_id=%)! There are mistake in your CTE query.', quote_literal(start_id_text), quote_literal(stop_id_text)
+                    USING HINT = last_subquery_exception_hint;
+            END IF;
             EXECUTE query_count USING start_id_text, stop_id_text INTO processed_rows;
         ELSE
             RAISE EXCEPTION 'Column %.% has unsupported type % ', table_name, uniq_column_name, uniq_column_type USING HINT = 'You can add support by modify procedure :-)';
@@ -130,7 +160,8 @@ BEGIN
         total_affected_rows  := total_affected_rows  + affected_rows;
         total_processed_rows := total_processed_rows + processed_rows;
 
-        IF cycles > 16 THEN
+        is_calc_estimated_time := not is_calc_estimated_time and (cycles > 16 or query_time_elapsed > time_max);
+        IF is_calc_estimated_time THEN
             estimated_time := ((total_rows * total_time_elapsed / total_processed_rows - total_time_elapsed)::int::text || 's')::interval;
         END IF;
 
@@ -151,7 +182,7 @@ BEGIN
         IF query_time_elapsed <= time_max THEN
             batch_rows := batch_rows * 2;
         ELSIF batch_rows > 1 THEN
-            batch_rows := batch_rows / 2;
+            batch_rows := (batch_rows / 2)::int;
         ELSE
             PERFORM pg_sleep(greatest(sqrt(query_time_elapsed * time_max) - time_max, 0)); --try to save DB from overload
         END IF;
