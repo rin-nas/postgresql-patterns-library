@@ -1,4 +1,4 @@
-CREATE FUNCTION depers.array_unique(anyarray)
+CREATE FUNCTION array_unique(anyarray)
     RETURNS anyarray
     stable
     returns null on null input
