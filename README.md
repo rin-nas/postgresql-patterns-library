@@ -269,7 +269,7 @@ WHERE EXISTS(
 
 Используйте комбинацию перечисляемого типа и массива. Пример: 
 
-```
+```sql
 CREATE TYPE finger_type AS ENUM ('one', 'two', 'three', 'four', 'five');
 CREATE TABLE my_table (
     fingers finger_type[] CHECK(/*cardinality(fingers) > 0 and*/
