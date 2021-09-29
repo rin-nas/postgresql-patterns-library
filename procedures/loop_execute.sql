@@ -91,16 +91,16 @@ BEGIN
     ELSIF query !~* format('\morder\s+by\s+%s\M(?!\s+desc\M)', uniq_column_name_quoted) THEN
         RAISE EXCEPTION 'Entry "ORDER BY %" is not found in your CTE query!', quote_ident(uniq_column_name)
             USING HINT = format('Add "ORDER BY %I ASC" to end of SELECT subquery.', uniq_column_name);
-    ELSIF query !~* '\mlimit\M\s+\$2\M' THEN
+    ELSIF query !~* '\mlimit\s+\$2\M' THEN
         RAISE EXCEPTION 'Entry "LIMIT $2" is not found in your CTE query!'
             USING HINT = 'Add "LIMIT $2" to end of SELECT subquery.';
     ELSIF regexp_match(query,
-                        $regexp$
-                          \mSELECT \s+
-                              MAX\(%I\)    (\s+ (AS\s+)? ([a-z_]+|"([^"]|"")*") )?  \s*,\s*
-                              COUNT\(\*\)  (\s+ (AS\s+)? ([a-z_]+|"([^"]|"")*") )?  \s+
-                          FROM \s+ ([a-z_]+|"([^"]|"")*") \s* (;\s*)? $
-                        $regexp$, 'ix') is not null THEN
+                       format($regexp$
+                                  \mSELECT \s+
+                                      MAX\(%s\)    (\s+ (AS\s+)? ([a-z_]+|"([^"]|"")*") )?  \s*,\s*
+                                      COUNT\(\*\)  (\s+ (AS\s+)? ([a-z_]+|"([^"]|"")*") )?  \s+
+                                  FROM \s+ ([a-z_]+|"([^"]|"")*") \s* (;\s*)? $
+                              $regexp$, uniq_column_name_quoted), 'ix') is null THEN
         RAISE EXCEPTION 'Incorrect last subquery in your CTE query!'
             USING HINT = format(last_subquery_exception_hint, uniq_column_name);
     END IF;
