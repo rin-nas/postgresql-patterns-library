@@ -19,9 +19,10 @@ create or replace procedure loop_execute(
 as
 $procedure$
 DECLARE
-    --ограничения и константы
+    --константы
     quote_regexp constant text not null default '([[\](){}.+*^$|\\?-])'; -- регулярное выражение для квотирования регулярнгого выражения
-    last_subquery_exception_hint text not null default e'Last subquery must be:\nSELECT MAX(%I) AS stop_id, COUNT(*) AS affected_rows FROM m';
+    query_count constant text default 'SELECT COUNT(*) FROM %1$s WHERE %2$I > $1 AND %2$I <= $2'; -- SQL запрос для получения processed_rows
+    last_subquery_exception_hint constant text not null default e'Last subquery must be:\nSELECT MAX(%I) AS stop_id, COUNT(*) AS affected_rows FROM m';
 
     --статистика
     total_time_start timestamp not null default clock_timestamp();
@@ -38,12 +39,9 @@ DECLARE
 
     -- в таблице table_name:
     total_rows int not null default 0; -- количество записей всего
-    total_id int not null default 0; -- количество записей всего, где id не null
-    total_distinct_id int not null default 0; -- количество уникальных записей всего, где id не null
     uniq_column_name_quoted text; -- название primary/unique колонки (квотированнное)
     uniq_column_name text; -- название primary/unique колонки
     uniq_column_type text; -- тип primary/unique колонки
-    query_count text; -- SQL запрос для получения processed_rows
 
     -- для пользовательского запроса query, выполняемого в цикле:
     start_id_bigint bigint not null default 0;
@@ -65,7 +63,7 @@ BEGIN
         RAISE EXCEPTION 'Argument batch_rows must between 1 and 1024, but % given', batch_rows;
     END IF;
 
-    -- 2) проверка наличия уникального ключа
+    -- 2) проверка наличия not null уникального ключа
     SELECT pg_attribute.attname,
            format_type(pg_attribute.atttypid, pg_attribute.atttypmod)
     INTO uniq_column_name, uniq_column_type
@@ -75,17 +73,17 @@ BEGIN
       AND pg_class.relnamespace = pg_namespace.oid
       AND pg_attribute.attrelid = pg_class.oid
       AND pg_attribute.attnum = any(pg_index.indkey)
+      AND pg_attribute.attnotnull
       AND pg_index.indisunique
     ORDER BY pg_index.indisprimary DESC -- primary key in priority
     LIMIT 1;
 
     IF uniq_column_name IS NULL THEN
-        RAISE EXCEPTION 'Table % must has a some column with primary/unique index!', table_name;
+        RAISE EXCEPTION 'Table % must has a column with primary/unique not null index!', table_name;
     END IF;
 
     -- 3) проверка необходимых частей в пользовательском запросе (защита от дурака)
     uniq_column_name_quoted := regexp_replace(quote_ident(uniq_column_name), quote_regexp, '\\\1', 'g');
-    last_subquery_exception_hint  := format(last_subquery_exception_hint, uniq_column_name);
 
     IF query !~* format('\m%s\M\s*>\s*\$1\M', uniq_column_name_quoted) THEN
         RAISE EXCEPTION 'Entry "% > $1" is not found in your CTE query!', quote_ident(uniq_column_name)
@@ -104,28 +102,17 @@ BEGIN
                           FROM \s+ ([a-z_]+|"([^"]|"")*") \s* (;\s*)? $
                         $regexp$, 'ix') is not null THEN
         RAISE EXCEPTION 'Incorrect last subquery in your CTE query!'
-            USING HINT = last_subquery_exception_hint;
+            USING HINT = format(last_subquery_exception_hint, uniq_column_name);
     END IF;
 
-    -- 4) подсчёт общего кол-ва записей, проверка уникального ключа на значения NULL
+    -- 4) подсчёт общего кол-ва записей
     query_time_start := clock_timestamp();
-    RAISE NOTICE 'Calculating total rows, checking null and unique values for column %.% ...', table_name, uniq_column_name;
-    EXECUTE format('SELECT COUNT(*), COUNT(%2$I), COUNT(DISTINCT %2$I) FROM %1$s', table_name, uniq_column_name)
-        INTO total_rows, total_id, total_distinct_id;
+    RAISE NOTICE 'Calculating total rows for table % ...', table_name;
+    EXECUTE format('SELECT COUNT(*) FROM %1$s', table_name) INTO total_rows;
     query_time_elapsed := round(extract('epoch' from clock_timestamp() - query_time_start)::numeric, 2);
     total_time_elapsed := round(extract('epoch' from clock_timestamp() - total_time_start)::numeric, 2);
     RAISE NOTICE 'Done. % total rows found for % sec', total_rows, query_time_elapsed;
     RAISE NOTICE ' '; -- just new line
-
-    IF total_rows != total_id THEN
-        RAISE EXCEPTION 'Column %.% has % NULL values!', table_name, uniq_column_name, (total_rows - total_id)
-            USING HINT = format('Remove all NULL values for %I column.', uniq_column_name);
-    ELSIF total_id != total_distinct_id THEN --избыточная проверка
-        RAISE EXCEPTION 'Column %.% has % duplicate values!', table_name, uniq_column_name, (total_id - total_distinct_id)
-            USING HINT = format('Remove all duplicate values for %I column.', uniq_column_name);
-    END IF;
-
-    query_count := format('SELECT COUNT(*) FROM %1$s WHERE %2$s > $1 AND %2$s <= $2', table_name, uniq_column_name);
 
     LOOP
         EXIT WHEN cycles >= cycles_max;
@@ -138,21 +125,24 @@ BEGIN
             EXECUTE query USING start_id_bigint, batch_rows INTO STRICT stop_id_bigint, affected_rows;
             IF start_id_bigint >= stop_id_bigint THEN
                 ROLLBACK AND CHAIN;
-                RAISE EXCEPTION 'Infinity cycle has been found (start_id=% >= stop_id=%)! There are mistake in your CTE query.', start_id_bigint, stop_id_bigint
-                    USING HINT = last_subquery_exception_hint;
+                RAISE EXCEPTION 'Infinity cycle has been found (start_id=% >= stop_id=%)! There are mistake in your CTE query.',
+                                start_id_bigint, stop_id_bigint
+                    USING HINT = format(last_subquery_exception_hint, uniq_column_name);
             END IF;
-            EXECUTE query_count USING start_id_bigint, stop_id_bigint INTO processed_rows;
+            EXECUTE format(query_count, table_name, uniq_column_name) USING start_id_bigint, stop_id_bigint INTO processed_rows;
         ELSIF uniq_column_type ~* '\m(varying|character|text|char|varchar)\M' THEN
             start_id_text := stop_id_text;
             EXECUTE query USING start_id_text, batch_rows INTO STRICT stop_id_text, affected_rows;
             IF start_id_text >= stop_id_text THEN
                 ROLLBACK AND CHAIN;
-                RAISE EXCEPTION 'Infinity cycle has been found (start_id=% >= stop_id=%)! There are mistake in your CTE query.', quote_literal(start_id_text), quote_literal(stop_id_text)
-                    USING HINT = last_subquery_exception_hint;
+                RAISE EXCEPTION 'Infinity cycle has been found (start_id=% >= stop_id=%)! There are mistake in your CTE query.',
+                                quote_literal(start_id_text), quote_literal(stop_id_text)
+                    USING HINT = format(last_subquery_exception_hint, uniq_column_name);
             END IF;
-            EXECUTE query_count USING start_id_text, stop_id_text INTO processed_rows;
+            EXECUTE format(query_count, table_name, uniq_column_name) USING start_id_text, stop_id_text INTO processed_rows;
         ELSE
-            RAISE EXCEPTION 'Column %.% has unsupported type % ', table_name, uniq_column_name, uniq_column_type USING HINT = 'You can add support by modify procedure :-)';
+            RAISE EXCEPTION 'Column %.% has unsupported type % ', table_name, uniq_column_name, uniq_column_type
+                USING HINT = 'You can add support by modify procedure :-)';
         END IF;
 
         IF is_rollback THEN
@@ -176,7 +166,7 @@ BEGIN
             cycles, affected_rows, processed_rows,
             --uniq_column_name, quote_literal(case when uniq_column_type in ('integer', 'bigint') then start_id_bigint::text else start_id_text end),
             query_time_elapsed, case when is_rollback then ', ROLLBACK MODE!' else '' end;
-        RAISE NOTICE 'Affected % rows, processed % of % total rows', total_affected_rows, total_processed_rows, total_rows;
+        RAISE NOTICE 'Total: affected % rows, processed % rows', total_affected_rows, total_processed_rows;
         RAISE NOTICE 'Current datetime: %, elapsed time: %, estimated time: %, progress: % %%',
             clock_timestamp()::timestamp(0),
             (clock_timestamp() - total_time_start)::interval(0),
@@ -204,65 +194,3 @@ BEGIN
 
 END
 $procedure$;
-
-------------------------------------------------------------------------------------------------------------------------
---Примеры использования
-------------------------------------------------------------------------------------------------------------------------
-
---деперсонализация (обезличивание) email
-call loop_execute(
-    'person_email',
-    $$
-        WITH s AS (
-            SELECT id,
-                   depers.hash_email_username(email, id) AS email
-            FROM person_email
-            WHERE id > $1
-              AND use_cpu(id, 1, 4)
-              AND email IS NOT NULL AND TRIM(email) != ''
-              AND NOT depers.is_email_ignore(email)
-            ORDER BY id
-            LIMIT $2
-        ),
-        m AS (
-            UPDATE person_email AS u
-            SET email = s.email
-            FROM s
-            WHERE s.id = u.id
-            RETURNING u.id
-        )
-        SELECT MAX(id)  AS next_start_id,
-               COUNT(*) AS affected_rows
-        FROM m;
-    $$
-);
-
--- удаление невалидных email
-call loop_execute(
-    'person_email',
-    $$
-        WITH s AS (
-            SELECT id
-            FROM person_email
-            WHERE id > $1
-              AND use_cpu(id, 1, 4)
-              AND email IS NOT NULL AND TRIM(email) != ''
-              AND NOT(
-                    octet_length(email) BETWEEN 6 AND 320
-                    AND email = trim(email)
-                    AND email LIKE '_%@_%.__%'
-                    AND is_email(email)
-                )
-            ORDER BY id
-            LIMIT $2
-        ),
-        m AS (
-            DELETE FROM person_email AS d
-            WHERE id IN (SELECT id FROM s)
-            RETURNING d.id
-        )
-        SELECT MAX(id)  AS next_start_id,
-               COUNT(*) AS affected_rows
-        FROM m;
-    $$
-);
