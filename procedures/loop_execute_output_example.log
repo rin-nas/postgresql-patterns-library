@@ -1,0 +1,60 @@
+Calculating total rows for table table_name ...
+Done. 70733 total rows found for 0.02 sec
+Query 1: affected 100 rows, processed 113 rows, elapsed 0.04 sec, ROLLBACK MODE!
+Total: affected 100 rows, processed 113 rows
+Current datetime: 2021-09-29 12:19:04, elapsed time: 00:00:00, estimated time: ?, progress: 0.16 %
+Query 2: affected 200 rows, processed 233 rows, elapsed 0.06 sec, ROLLBACK MODE!
+Total: affected 300 rows, processed 346 rows
+Current datetime: 2021-09-29 12:19:04, elapsed time: 00:00:00, estimated time: ?, progress: 0.49 %
+Query 3: affected 400 rows, processed 476 rows, elapsed 0.12 sec, ROLLBACK MODE!
+Total: affected 700 rows, processed 822 rows
+Current datetime: 2021-09-29 12:19:04, elapsed time: 00:00:00, estimated time: ?, progress: 1.16 %
+Query 4: affected 800 rows, processed 923 rows, elapsed 0.26 sec, ROLLBACK MODE!
+Total: affected 1500 rows, processed 1745 rows
+Current datetime: 2021-09-29 12:19:05, elapsed time: 00:00:01, estimated time: ?, progress: 2.47 %
+Query 5: affected 1600 rows, processed 1874 rows, elapsed 0.51 sec, ROLLBACK MODE!
+Total: affected 3100 rows, processed 3619 rows
+Current datetime: 2021-09-29 12:19:05, elapsed time: 00:00:01, estimated time: ?, progress: 5.12 %
+Query 6: affected 3200 rows, processed 3698 rows, elapsed 0.89 sec, ROLLBACK MODE!
+Total: affected 6300 rows, processed 7317 rows
+Current datetime: 2021-09-29 12:19:06, elapsed time: 00:00:02, estimated time: ?, progress: 10.34 %
+Query 7: affected 6400 rows, processed 6853 rows, elapsed 2.00 sec, ROLLBACK MODE!
+Total: affected 12700 rows, processed 14170 rows
+Current datetime: 2021-09-29 12:19:08, elapsed time: 00:00:04, estimated time: 00:00:16, progress: 20.03 %
+Query 8: affected 3200 rows, processed 3366 rows, elapsed 0.85 sec, ROLLBACK MODE!
+Total: affected 15900 rows, processed 17536 rows
+Current datetime: 2021-09-29 12:19:09, elapsed time: 00:00:05, estimated time: 00:00:16, progress: 24.79 %
+Query 9: affected 6400 rows, processed 6754 rows, elapsed 1.58 sec, ROLLBACK MODE!
+Total: affected 22300 rows, processed 24290 rows
+Current datetime: 2021-09-29 12:19:10, elapsed time: 00:00:06, estimated time: 00:00:12, progress: 34.34 %
+Query 10: affected 3200 rows, processed 3378 rows, elapsed 0.83 sec, ROLLBACK MODE!
+Total: affected 25500 rows, processed 27668 rows
+Current datetime: 2021-09-29 12:19:11, elapsed time: 00:00:07, estimated time: 00:00:12, progress: 39.12 %
+Query 11: affected 6400 rows, processed 6759 rows, elapsed 2.21 sec, ROLLBACK MODE!
+Total: affected 31900 rows, processed 34427 rows
+Current datetime: 2021-09-29 12:19:14, elapsed time: 00:00:09, estimated time: 00:00:10, progress: 48.67 %
+Query 12: affected 3200 rows, processed 3363 rows, elapsed 0.88 sec, ROLLBACK MODE!
+Total: affected 35100 rows, processed 37790 rows
+Current datetime: 2021-09-29 12:19:14, elapsed time: 00:00:10, estimated time: 00:00:10, progress: 53.43 %
+Query 13: affected 6400 rows, processed 6785 rows, elapsed 1.64 sec, ROLLBACK MODE!
+Total: affected 41500 rows, processed 44575 rows
+Current datetime: 2021-09-29 12:19:16, elapsed time: 00:00:12, estimated time: 00:00:07, progress: 63.02 %
+Query 14: affected 3200 rows, processed 3400 rows, elapsed 0.81 sec, ROLLBACK MODE!
+Total: affected 44700 rows, processed 47975 rows
+Current datetime: 2021-09-29 12:19:17, elapsed time: 00:00:13, estimated time: 00:00:07, progress: 67.83 %
+Query 15: affected 6400 rows, processed 6787 rows, elapsed 1.56 sec, ROLLBACK MODE!
+Total: affected 51100 rows, processed 54762 rows
+Current datetime: 2021-09-29 12:19:18, elapsed time: 00:00:14, estimated time: 00:00:04, progress: 77.42 %
+Query 16: affected 3200 rows, processed 3383 rows, elapsed 0.93 sec, ROLLBACK MODE!
+Total: affected 54300 rows, processed 58145 rows
+Current datetime: 2021-09-29 12:19:19, elapsed time: 00:00:15, estimated time: 00:00:04, progress: 82.20 %
+Query 17: affected 6400 rows, processed 7227 rows, elapsed 1.49 sec, ROLLBACK MODE!
+Total: affected 60700 rows, processed 65372 rows
+Current datetime: 2021-09-29 12:19:21, elapsed time: 00:00:17, estimated time: 00:00:01, progress: 92.42 %
+Query 18: affected 3200 rows, processed 4670 rows, elapsed 0.78 sec, ROLLBACK MODE!
+Total: affected 63900 rows, processed 70042 rows
+Current datetime: 2021-09-29 12:19:22, elapsed time: 00:00:17, estimated time: 00:00:01, progress: 99.02 %
+Query 19: affected 468 rows, processed 691 rows, elapsed 0.11 sec, ROLLBACK MODE!
+Total: affected 64368 rows, processed 70733 rows
+Current datetime: 2021-09-29 12:19:22, elapsed time: 00:00:18, estimated time: 00:00:00, progress: 100.00 %
+Done. 4021 rows per second, 1.08 queries per second
