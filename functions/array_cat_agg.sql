@@ -3,6 +3,8 @@ CREATE AGGREGATE array_cat_agg(anyarray) (
    ,STYPE     = anyarray
    ,INITCOND  = '{}'
 );
+
+--TEST
 SELECT id,  array_cat_agg(words::text[])
 FROM (VALUES
              ('1', '{"foo","bar","zap","bing"}'),
