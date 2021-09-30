@@ -301,7 +301,7 @@ where not exists(select
                  from cts__cdr as d
                  where d.history = t.history
                    and d.ctid < t.ctid
-                   and d.history is not null
+                   --and d.history is not null
                  )
 --and history is not null
 limit 100;
