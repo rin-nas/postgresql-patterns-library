@@ -226,7 +226,7 @@ limit 100;
 --execution: 36 s
 
 -- стало так
--- быстрое решение, но сбольшим расходом по памяти для больших N
+-- быстрое решение, но с большим расходом по памяти для больших N
 explain --Limit  (cost=1.53..1.64 rows=11 width=32)
 with recursive t (ctid, value, values) as (
     (select ctid, history, array[history::text]
