@@ -190,11 +190,12 @@ select pg_column_size(0::smallint), --2 байта
 # Как быстро получить первые N уникальных значений из колонки таблицы без использования индексов (как я ускорял запрос)
 
 ```sql
+-- было так
 explain -- Limit  (cost=3293253.59..3293254.09 rows=100 width=1037)
 select distinct history
 from cts__cdr
 limit 100;
---execution: > 30m ?
+--execution: > 30m ? (недождался)
 
 explain  -- Limit  (cost=1113569.59..1113582.82 rows=100 width=1069)
 select min(history)
@@ -224,6 +225,7 @@ where not exists(select
 limit 100;
 --execution: 36 s
 
+-- стало так
 -- быстрое решение, но сбольшим расходом по памяти для больших N
 explain --Limit  (cost=1.53..1.64 rows=11 width=32)
 with recursive t (ctid, value, values) as (
@@ -240,7 +242,6 @@ with recursive t (ctid, value, values) as (
 )
 select value from t limit 100;
 --execution: 64 ms
-
 /*
 Можно было бы обойтись без колонки histories и искать дубликаты подзапросом: WHERE not exists(select from t as d where p.history = d.history)
 Но, к сожалению, БД возвращает ошибку [42P19] ERROR: recursive reference to query "t" must not appear within a subquery
