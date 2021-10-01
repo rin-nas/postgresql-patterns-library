@@ -227,21 +227,21 @@ limit 100;
 
 -- стало так
 -- быстрое решение, но с большим расходом по памяти для больших N
-explain --Limit  (cost=1.53..1.64 rows=11 width=32)
+explain --Limit  (cost=1.91..2.02 rows=11 width=32)
 with recursive t (ctid, value, values) as (
-    (select ctid, history, array[history::text]
+    (select ctid, history, array[md5(history::text)::uuid]
      from cts__cdr
-     --where history is not null
+     --where history is not null and history::text !~ '^\s*$'
      limit 1)
     union all
-    (select p.ctid, p.history,  t.values || p.history::text
+    (select p.ctid, p.history, t.values || md5(p.history::text)::uuid
      from cts__cdr p
-     inner join t on p.ctid > t.ctid and p.history != all(t.values)
-     --where p.history is not null
+     inner join t on p.ctid > t.ctid and md5(p.history::text)::uuid != all(t.values)
+     --where p.history is not null and p.history::text !~ '^\s*$'
      limit 1)
 )
-select value from t limit 100;
---execution: 64 ms
+select value from t limit 100
+--execution: 85 ms
 /*
 Можно было бы обойтись без колонки histories и искать дубликаты подзапросом: WHERE not exists(select from t as d where p.history = d.history)
 Но, к сожалению, БД возвращает ошибку [42P19] ERROR: recursive reference to query "t" must not appear within a subquery
