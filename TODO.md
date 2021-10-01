@@ -324,6 +324,11 @@ with recursive t (ctid, history , histories) as (
 select history from t limit 100;
 --execution: 159 ms
 
+/*
+Можно было бы обойтись без колонки histories и искать дубликаты подзапросом: WHERE not exists(select from t as d where p.history = d.history)
+Но, к сожалению, БД возвращает ошибку [42P19] ERROR: recursive reference to query "t" must not appear within a subquery
+*/
+
 -- оптимальное, но громоздкое решение для больших N, на практике нужно обернуть в функцию
 do $$
 declare
