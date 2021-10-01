@@ -270,31 +270,31 @@ select pg_column_size(0::smallint), --2 байта
 ```
 
 
-# Как я боролся с тормозами запроса "получить первые N уникальных записей"
+# Как быстро получить первые N уникальных значений из колонки таблицы без использования индексов (как я ускорял запрос)
 
 ```sql
-explain --execution: > 30m ?
+explain -- Limit  (cost=3293253.59..3293254.09 rows=100 width=1037)
 select distinct history
 from cts__cdr
 limit 100;
--- Limit  (cost=3293253.59..3293254.09 rows=100 width=1037)
+--execution: > 30m ?
 
-explain --execution: 10 m 6 s
+explain  -- Limit  (cost=1113569.59..1113582.82 rows=100 width=1069)
 select min(history)
 from cts__cdr
 group by history
 limit 100;
--- Limit  (cost=1113569.59..1113582.82 rows=100 width=1069)
+--execution: 10 m 6 s
 
-explain --execution: 1 m 20 s
+explain --Limit  (cost=1125020.27..1125034.43 rows=100 width=48)
 select min(history)
 from cts__cdr
 group by md5(history)::uuid
 limit 100;
---Limit  (cost=1125020.27..1125034.43 rows=100 width=48)
+--execution: 1 m 20 s
 
 
-explain --execution: 36 s
+explain -- Limit  (cost=968190.32..968224.11 rows=100 width=1037)
 select history
 from cts__cdr as t
 where not exists(select
@@ -305,10 +305,27 @@ where not exists(select
                  )
 --and history is not null
 limit 100;
--- Limit  (cost=968190.32..968224.11 rows=100 width=1037)
+--execution: 36 s
 
-------------------
-do $$ --completed in 111 ms
+-- быстрое решение, но сбольшим расходом по памяти для больших N
+explain --Limit  (cost=1.53..1.64 rows=11 width=32)
+with recursive t (ctid, history , histories) as (
+    (select ctid, history, array[history::text]
+     from cts__cdr p
+     --where history is not null
+     limit 1)
+    union all
+    (select p.ctid, p.history,  t.histories || p.history::text
+     from cts__cdr p
+     inner join t on p.ctid > t.ctid and p.history != all(t.histories)
+     --where p.history is not null
+     limit 1)
+)
+select history from t limit 100;
+--execution: 159 ms
+
+-- оптимальное, но громоздкое решение для больших N, на практике нужно обернуть в функцию
+do $$
 declare
     rec record;
     counter int default 0;
@@ -319,7 +336,6 @@ begin
     ) on commit drop;
 
     FOR rec IN select history as v from cts__cdr
-    --FOR rec IN select v from unnest(array [2,2,4,3,3,1,9,2,5,2,3,4,5,5,7,8,9]::int[]) as h (v)
     LOOP
         insert into t (v) values(md5(rec.v)::uuid) on conflict do nothing;
         if FOUND then
@@ -332,4 +348,5 @@ begin
 
 end
 $$;
+--completed in 111 ms
 ```
