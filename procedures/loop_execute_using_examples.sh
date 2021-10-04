@@ -19,7 +19,6 @@ if cat "${name}.sql" | grep -P -e "${regexp}"; then
 else
     echo "Функция use_cpu() для распараллеливания SQL запроса по ${cpu_max} ядрам процессора НЕ найдена! Будет использовано только 1 ядро.
     cpu_max=1
-    exit 0 #ok
 fi
 
 echo "Распараллеливаем SQL запрос по ${cpu_max} ядрам процессора"
