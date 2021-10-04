@@ -1,3 +1,5 @@
+#Распарралеливани выполнения SQL по ядрам процессора
+
 #cpu_max=`nproc`
 cpu_max=$((`nproc` / 2))
 #echo "$cpu_max"
