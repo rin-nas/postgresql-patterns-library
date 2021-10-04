@@ -4,12 +4,12 @@ call loop_execute(
     $$
         WITH s AS (
             SELECT id,
-                   depers.hash_email_username(email, id) AS email
+                   hash_email_username(email, id) AS email
             FROM person_email
             WHERE id > $1
               AND use_cpu(id, 1, 4)
               AND email IS NOT NULL AND TRIM(email) != ''
-              AND NOT depers.is_email_ignore(email)
+              AND NOT is_email_ignore(email)
             ORDER BY id
             LIMIT $2
         ),
