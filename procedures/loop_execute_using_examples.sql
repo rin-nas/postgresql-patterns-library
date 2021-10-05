@@ -7,7 +7,7 @@ call loop_execute(
                    hash_email_username(email, id) AS email
             FROM person_email
             WHERE id > $1
-              AND use_cpu(id, 1, 4)
+              AND use_cpu(id, 1, 4) --https://github.com/rin-nas/postgresql-patterns-library/blob/master/functions/use_cpu.sql
               AND email IS NOT NULL AND TRIM(email) != ''
               AND NOT is_email_ignore(email)
             ORDER BY id
@@ -34,7 +34,7 @@ call loop_execute(
             SELECT id
             FROM person_email
             WHERE id > $1
-              AND use_cpu(id, 1, 4)
+              AND use_cpu(id, 1, 4) --https://github.com/rin-nas/postgresql-patterns-library/blob/master/functions/use_cpu.sql
               AND email IS NOT NULL AND TRIM(email) != ''
               AND NOT(
                     octet_length(email) BETWEEN 6 AND 320
