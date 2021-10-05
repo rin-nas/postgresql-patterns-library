@@ -57,6 +57,7 @@ BEGIN
         RAISE EXCEPTION 'Argument cpu_num should be <= cpu_max! Given cpu_num = %, cpu_max = %', cpu_num, cpu_max;
     END IF;
 
+    -- https://github.com/rin-nas/postgresql-patterns-library/blob/master/functions/crc32.sql
     RETURN abs(crc32(str)) % cpu_max = cpu_num - 1;
 END;
 $$;
