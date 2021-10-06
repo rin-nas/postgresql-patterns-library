@@ -16,14 +16,13 @@ database='database' #modify me!
 regexp="\buse_cpu\s*\(\s*([^,]+)\s*,\s*[0-9]+\s*,\s*[0-9]+\s*\)"
 
 if cat "${name}.sql" | grep -q -P -e "${regexp}"; then
+    echo "Распараллеливаем SQL запрос по ${cpu_max} ядрам процессора"
 else
     echo "В SQL запросе нет вызова функции use_cpu()."
     echo "Поэтому распараллеливания выполнения по ${cpu_max} ядрам процессора не будет!"
     echo "Будет использовано только 1 ядро."
     cpu_max=1
 fi
-
-echo "Распараллеливаем SQL запрос по ${cpu_max} ядрам процессора"
 
 for ((cpu_num = 1; cpu_num <= cpu_max; cpu_num++))
 do
