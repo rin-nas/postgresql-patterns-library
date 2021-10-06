@@ -30,7 +30,7 @@
    1. https://github.com/NikolayS/awesome-postgres - links
    1. https://github.com/Basje/postgres-domains - validation
    1. https://gist.github.com/david-sanabria/0d3ff67eb56d2750502aed4186d6a4a7 - `CREATE OR REPLACE FUNCTION base62_encode( long_number bigint ) RETURNS text`
-   1. https://gist.github.com/matheusoliveira/9488951 - Simple PostgreSQL functions to manipulate json objects
+   1. https://gist.github.com/matheusoliveira/9488951 - Simple PostgreSQL functions to manipulate json objects: json_append(), json_delete(), json_merge(), json_update(), json_lint(), json_unlint()
 
 # StackOverflow
    1. https://stackoverflow.com/questions/7923237/return-pre-update-column-values-using-sql-only
