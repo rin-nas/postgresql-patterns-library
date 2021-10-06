@@ -5,9 +5,9 @@ cpu_max=$((`nproc` / 2))
 #echo "$cpu_max"
 
 name=`basename $0 .sh`
-user='user'         #modify me!
 host='host'         #modify me!
 database='database' #modify me!
+user='user'         #modify me!
 #пароль укажите в файле ~/.pgpass, нельзя хранить в GIT этот файл с настоящими настройками подключения к БД!
 
 #exit 0
