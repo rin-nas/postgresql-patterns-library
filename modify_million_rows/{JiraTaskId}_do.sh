@@ -8,7 +8,7 @@ name=`basename $0 .sh`
 host='host'         #modify me!
 database='database' #modify me!
 user='user'         #modify me!
-#пароль укажите в файле ~/.pgpass, нельзя хранить в GIT этот файл с настоящими настройками подключения к БД!
+#пароль укажите в файле ~/.pgpass
 
 #exit 0
  
