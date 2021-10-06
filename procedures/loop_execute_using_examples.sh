@@ -16,6 +16,7 @@ user='user'         #modify me!
 regexp="\buse_cpu\s*\(\s*([^,]+)\s*,\s*[0-9]+\s*,\s*[0-9]+\s*\)"
 
 if cat "${name}.sql" | grep -q -P -e "${regexp}"; then
+    echo "В SQL запросе есть вызов функции use_cpu()."
     echo "Распараллеливаем SQL запрос по ${cpu_max} ядрам процессора"
 else
     echo "В SQL запросе нет вызова функции use_cpu()."
