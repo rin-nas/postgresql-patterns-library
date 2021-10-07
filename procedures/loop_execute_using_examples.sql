@@ -38,7 +38,7 @@ call loop_execute(
             SELECT id
             FROM person_email
             WHERE id > $1
-              AND use_cpu(id, 1, 4) --https://github.com/rin-nas/postgresql-patterns-library/blob/master/functions/use_cpu.sql
+              AND use_cpu(id, 1, 1) --https://github.com/rin-nas/postgresql-patterns-library/blob/master/functions/use_cpu.sql
               AND email IS NOT NULL AND TRIM(email) != ''
               AND NOT(
                     octet_length(email) BETWEEN 6 AND 320
