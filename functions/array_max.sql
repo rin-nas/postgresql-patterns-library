@@ -1,5 +1,5 @@
 CREATE FUNCTION array_max(anyarray)
-    RETURNS anyarray
+    RETURNS anyelement
     stable
     returns null on null input
     parallel safe
