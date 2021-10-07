@@ -1,4 +1,4 @@
-CREATE FUNCTION depers.array_min(anyarray)
+CREATE FUNCTION array_min(anyarray)
     RETURNS anyarray
     stable
     returns null on null input
