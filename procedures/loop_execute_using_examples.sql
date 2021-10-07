@@ -2,20 +2,20 @@
 call loop_execute(
     'person_email',
     $$
-        WITH s AS (
+        WITH s (id, value) AS (
             SELECT id,
-                   hash_email_username(email, id) AS email
+                   hash_email_username(email, id)
             FROM person_email
             WHERE id > $1
-              AND use_cpu(id, 1, 4) --https://github.com/rin-nas/postgresql-patterns-library/blob/master/functions/use_cpu.sql
+              AND use_cpu(id, 1, 1) --https://github.com/rin-nas/postgresql-patterns-library/blob/master/functions/use_cpu.sql
               AND email IS NOT NULL AND TRIM(email) != ''
               AND NOT is_email_ignore(email)
             ORDER BY id
             LIMIT $2
         ),
-        m AS (
+        m (id) AS (
             UPDATE person_email AS u
-            SET email = s.email
+            SET email = s.value
             FROM s
             WHERE s.id = u.id
             RETURNING u.id
@@ -23,7 +23,11 @@ call loop_execute(
         SELECT MAX(id)  AS next_start_id,
                COUNT(*) AS affected_rows
         FROM m;
-    $$
+    $$,
+    100,  --batch_rows
+    1,    --time_max
+    true, --is_rollback (for test)
+    10    --cycles_max (for test)
 );
 
 -- удаление невалидных email
