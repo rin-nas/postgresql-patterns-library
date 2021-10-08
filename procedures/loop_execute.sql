@@ -13,7 +13,11 @@ create or replace procedure loop_execute(
     batch_rows  int     default 1, -- сколько записей будем модифицировать за 1 цикл (значение автоматически подстраивается под time_max), рекомендуется 1
     time_max    numeric default 1, -- пороговое максимальное время выполнения 1-го запроса, в секундах, рекомендуется 1
     is_rollback boolean default false, -- откатывать запрос после каждого выполнения в цикле (для целей тестирования)
-    cycles_max  integer default null -- максимальное количество циклов (для целей тестирования)
+    cycles_max  integer default null, -- максимальное количество циклов (для целей тестирования)
+    --возвращаемые из процедуры данные:
+    inout total_table_rows int default 0, -- сколько всего записей в таблице
+    inout total_affected_rows int default 0, -- сколько всего записей модифицировал пользовательский запрос
+    inout total_processed_rows int default 0 -- сколько всего записей просмотрел пользовательский запрос
 )
     language plpgsql
 as
@@ -35,12 +39,9 @@ DECLARE
     rows_per_second numeric default 0;
     queries_per_second numeric default 0;
     cycles int not null default 0; -- счётчик для цикла
-    total_affected_rows int not null default 0; -- сколько всего записей модифицировал пользовательский запрос
-    total_processed_rows int not null default 0; -- сколько всего записей просмотрел пользовательский запрос
     is_calc_estimated_time boolean not null default false;
 
     -- в таблице table_name:
-    total_rows int not null default 0; -- количество записей всего
     uniq_column_name_quoted text; -- название primary/unique колонки (квотированнное)
     uniq_column_name text; -- название primary/unique колонки
     uniq_column_type text; -- тип primary/unique колонки
@@ -110,10 +111,10 @@ BEGIN
     -- 4) подсчёт общего кол-ва записей
     query_time_start := clock_timestamp();
     RAISE NOTICE 'Calculating total rows for table % ...', table_name;
-    EXECUTE format('SELECT COUNT(*) FROM %1$s', table_name) INTO total_rows;
+    EXECUTE format('SELECT COUNT(*) FROM %1$s', table_name) INTO total_table_rows;
     query_time_elapsed := round(extract('epoch' from clock_timestamp() - query_time_start)::numeric, 2);
     total_time_elapsed := round(extract('epoch' from clock_timestamp() - total_time_start)::numeric, 2);
-    RAISE NOTICE 'Done. % total rows found for % sec', total_rows, query_time_elapsed;
+    RAISE NOTICE 'Done. % total rows found for % sec', total_table_rows, query_time_elapsed;
     RAISE NOTICE ' '; -- just new line
 
     LOOP
@@ -160,7 +161,7 @@ BEGIN
 
         is_calc_estimated_time := not is_calc_estimated_time and (cycles > 16 or query_time_elapsed > time_max);
         IF is_calc_estimated_time THEN
-            estimated_time := ((total_rows * total_time_elapsed / total_processed_rows - total_time_elapsed)::int::text || 's')::interval;
+            estimated_time := ((total_table_rows * total_time_elapsed / total_processed_rows - total_time_elapsed)::int::text || 's')::interval;
         END IF;
 
         --RAISE NOTICE 'Query %, affected % rows, processed % rows (% > %) for % sec %',
@@ -172,7 +173,7 @@ BEGIN
         RAISE NOTICE 'Current datetime: %, elapsed time: %, estimated time: %, progress: % %%',
             clock_timestamp()::timestamp(0),
             (clock_timestamp() - total_time_start)::interval(0),
-            COALESCE(estimated_time::text, '?'), round(total_processed_rows * 100.0 / total_rows, 2);
+            COALESCE(estimated_time::text, '?'), round(total_processed_rows * 100.0 / total_table_rows, 2);
         RAISE NOTICE ' '; -- just new line
 
         EXIT WHEN affected_rows < batch_rows OR stop_id_bigint IS NULL OR stop_id_text IS NULL;
