@@ -7,7 +7,7 @@
    * сколько времени прошло, сколько примерно времени осталось до завершения, прогресс выполнения в процентах
 Процедура не предназначена для выполнения в транзакции.
 */
-create or replace procedure loop_execute(
+create or replace procedure depers.loop_execute(
     --обязательные параметры:
     table_name  regclass, -- название основной таблицы (дополненное схемой, при необходимости), из которой данные порциями в цикле будут читаться и модифицироваться
     query       text, -- CTE запрос с SELECT, INSERT/UPDATE/DELETE и SELECT запросами для модификации записей
@@ -17,9 +17,13 @@ create or replace procedure loop_execute(
     is_rollback boolean default false, -- откатывать запрос после каждого выполнения в цикле (для целей тестирования)
     cycles_max  integer default null, -- максимальное количество циклов (для целей тестирования)
     --возвращаемые из процедуры параметры:
-    inout total_table_rows int default 0, -- сколько всего записей в таблице
-    inout total_affected_rows int default 0, -- сколько всего записей модифицировал пользовательский запрос
-    inout total_processed_rows int default 0 -- сколько всего записей просмотрел пользовательский запрос
+    inout result record default null
+    /*
+        result.table_rows     int     -- сколько всего записей в таблице
+        result.affected_rows  int     -- сколько всего записей модифицировал пользовательский запрос в таблице
+        result.processed_rows int     -- сколько всего записей просмотрел пользовательский запрос в таблице
+        result.time_elapsed   numeric -- длительность выполнения, в секундах
+    */
 )
     language plpgsql
 as
@@ -34,16 +38,17 @@ DECLARE
 
     --статистика
     total_time_start timestamp not null default clock_timestamp();
-    total_time_elapsed numeric not null default 0; -- время выполнения всех запросов, в секундах
-    query_time_start timestamp;
-    query_time_elapsed numeric not null default 0; -- фактическое время выполнения 1-го запроса, в секундах
+    total_time_elapsed numeric not null default 0; -- длительность выполнения всех запросов, в секундах
+    total_table_rows int not null default 0; -- сколько всего записей в таблице
+    total_affected_rows int not null default 0; -- сколько всего записей модифицировал пользовательский запрос в таблице
+    total_processed_rows int not null default 0; -- сколько всего записей просмотрел пользовательский запрос в таблице
     estimated_time interval; -- оценочное время, сколько осталось работать
     rows_per_second numeric default 0;
     queries_per_second numeric default 0;
     cycles int not null default 0; -- счётчик для цикла
     is_calc_estimated_time boolean not null default false;
 
-    -- в таблице table_name:
+    -- свойства таблицы table_name:
     uniq_column_name_quoted text; -- название primary/unique колонки (квотированнное)
     uniq_column_name text; -- название primary/unique колонки
     uniq_column_type text; -- тип primary/unique колонки
@@ -55,18 +60,29 @@ DECLARE
     stop_id_text text default '';
     affected_rows bigint not null default 0; --сколько записей модифицировал пользовательский запрос
     processed_rows bigint not null default 0; --сколько записей просмотрел пользовательский запрос
+    query_time_start timestamp;
+    query_time_elapsed numeric not null default 0; -- длительность выполнения одного запроса, в секундах
 BEGIN
 
     -- 1) проверка входящих параметров
-    IF table_name IS NULL OR query IS NULL OR time_max IS NULL OR batch_rows IS NULL THEN
+    IF table_name IS NULL OR
+       query IS NULL OR
+       batch_rows IS NULL OR
+       time_max IS NULL OR
+       is_rollback IS NULL THEN
         RAISE EXCEPTION 'Procedure arguments must not have NULL values (except cycles_max)!';
-    ELSIF cycles_max < 0 THEN
-        RAISE EXCEPTION 'Argument cycles_max must be >= 0, but % given', cycles_max;
-    ELSIF time_max not between 1 AND 10 THEN
-        RAISE EXCEPTION 'Argument time_max must between 1 and 10, but % given', time_max;
     ELSIF batch_rows not between 1 AND 1024 THEN
         RAISE EXCEPTION 'Argument batch_rows must between 1 and 1024, but % given', batch_rows;
+    ELSIF time_max not between 1 AND 10 THEN
+        RAISE EXCEPTION 'Argument time_max must between 1 and 10, but % given', time_max;
+    ELSIF cycles_max < 0 THEN
+        RAISE EXCEPTION 'Argument cycles_max must be >= 0, but % given', cycles_max;
     END IF;
+
+    SELECT null::int as table_rows,
+           null::int as affected_rows,
+           null::int as processed_rows,
+           null::numeric as time_elapsed INTO result;
 
     -- 2) проверка наличия not null уникального ключа
     SELECT pg_attribute.attname,
@@ -114,8 +130,13 @@ BEGIN
     query_time_start := clock_timestamp();
     RAISE NOTICE 'Calculating total rows for table % ...', table_name;
     EXECUTE format('SELECT COUNT(*) FROM %1$s', table_name) INTO total_table_rows;
+
     query_time_elapsed := round(extract('epoch' from clock_timestamp() - query_time_start)::numeric, 2);
     total_time_elapsed := round(extract('epoch' from clock_timestamp() - total_time_start)::numeric, 2);
+
+    result.table_rows   := total_table_rows;
+    result.time_elapsed := total_time_elapsed;
+
     RAISE NOTICE 'Done. % total rows found for % sec', total_table_rows, query_time_elapsed;
     RAISE NOTICE ' '; -- just new line
 
@@ -158,8 +179,13 @@ BEGIN
 
         query_time_elapsed := round(extract('epoch' from clock_timestamp() - query_time_start)::numeric, 2);
         total_time_elapsed := round(extract('epoch' from clock_timestamp() - total_time_start)::numeric, 2);
+
         total_affected_rows  := total_affected_rows  + affected_rows;
         total_processed_rows := total_processed_rows + processed_rows;
+
+        result.time_elapsed   := total_time_elapsed;
+        result.affected_rows  := total_affected_rows;
+        result.processed_rows := total_processed_rows;
 
         is_calc_estimated_time := not is_calc_estimated_time and (cycles > 16 or query_time_elapsed > time_max);
         IF is_calc_estimated_time THEN
