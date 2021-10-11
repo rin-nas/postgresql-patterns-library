@@ -62,4 +62,8 @@ $BODY$;
 
 SELECT is_email('test.@domain.com'), is_email('test@domain.com');
        
---TODO add tests with email from https://en.wikipedia.org/wiki/International_email
+/*
+TODO add tests with email from 
+	https://en.wikipedia.org/wiki/Email_address
+	https://en.wikipedia.org/wiki/International_email
+*/
