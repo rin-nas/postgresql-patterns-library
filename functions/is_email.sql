@@ -1,5 +1,3 @@
--- Регулярное выражение взято и адаптировано из https://github.com/rin-nas/regexp-patterns-library/ (https://regex101.com/r/Q4dsL5/14)
-
 create function is_email(email text) returns boolean
     PARALLEL SAFE
     LANGUAGE SQL
@@ -7,7 +5,8 @@ create function is_email(email text) returns boolean
     RETURNS NULL ON NULL INPUT
 as
 $BODY$
-	select regexp_match($1, $REGEXP$
+-- Регулярное выражение взято и адаптировано из https://github.com/rin-nas/regexp-patterns-library/
+select regexp_match($1, $REGEXP$
 ^
 (?<![-!#$%&'*+/=?^_`{|}~@."\]\\a-zA-Zа-яА-ЯёЁ\d])
 (?:
