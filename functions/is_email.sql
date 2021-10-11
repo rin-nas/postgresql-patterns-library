@@ -1,4 +1,4 @@
--- https://regex101.com/r/Q4dsL5/14
+-- Регулярное выражение взято и адаптировано из https://github.com/rin-nas/regexp-patterns-library/ (https://regex101.com/r/Q4dsL5/14)
 
 create function is_email(email text) returns boolean
     PARALLEL SAFE
