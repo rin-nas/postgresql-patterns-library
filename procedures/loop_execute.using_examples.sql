@@ -41,11 +41,11 @@ call loop_execute(
             WHERE id > $1
               AND use_parallel(id, 1, 1)
               AND email IS NOT NULL -- skip NULL
-              AND email !~ '^\s*$' --skip empty
+              AND email !~ '^\s*$'  --skip empty (similar NULL)
               AND NOT(
                     AND octet_length(email) BETWEEN 6 AND 320 -- https://en.wikipedia.org/wiki/Email_address
-                    AND email LIKE '_%@_%.__%' -- rough, but quick check email syntax
-                    AND is_email(email) -- accurate, but slow check email syntax
+                    AND email LIKE '_%@_%.__%'                -- rough, but quick check email syntax
+                    AND is_email(email)                       -- accurate, but slow check email syntax
                   )
             ORDER BY id
             LIMIT $2
