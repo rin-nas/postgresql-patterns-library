@@ -5,8 +5,11 @@
 **[Получение пользовательских данных](#Получение-пользовательских-данных)**
    1. [Валидация и домены](#Валидация-и-домены)
       1. [Как проверить email на валидность?](#Как-проверить-email-на-валидность)
+      1. [Как найти все невалидные email в таблице?](#Как-найти-все-невалидные-email-в-таблице)
+      1. [Как удалить все невалидные email из большой таблицы?](#Как-удалить-все-невалидные-email-из-большой-таблицы)
       1. [Как проверить CSS цвет на валидность?](#Как-проверить-CSS-цвет-на-валидность)
       1. [Как проверить ИНН на валидность?](#Как-проверить-ИНН-на-валидность)
+      1. [Как провалидировать значение поля, только если оно явно указано в UPDATE запросе?](#Как-провалидировать-значение-поля-только-если-оно-явно-указано-в-UPDATE-запросе?)
    1. [Строки](#Строки)
       1. [Агрегатная функция конкатенации строк (аналог `group_concat()` в MySQL)](#Агрегатная-функция-конкатенации-строк-аналог-group_concat-в-MySQL)
       1. [Как транслитерировать русские буквы на английские?](#Как-транслитерировать-русские-буквы-на-английские)
@@ -107,17 +110,58 @@
 
 ```sql
 CREATE DOMAIN email AS text CHECK(
-    octet_length(VALUE) BETWEEN 6 AND 320
-    AND VALUE = trim(VALUE)
-    AND VALUE LIKE '_%@_%.__%'
-    AND is_email(VALUE)
+    VALUE ~ '^\s*$' -- empty (similar NULL)
+    OR (
+      octet_length(VALUE) BETWEEN 6 AND 320 -- https://en.wikipedia.org/wiki/Email_address
+      AND VALUE LIKE '_%@_%.__%'            -- rough, but quick check email syntax
+      AND is_email(VALUE)                   -- accurate, but slow check email syntax
+    )
 );
 
 
-select 'e@m.ai'::email; --ok
-select 'e@m.__'::email; --error
+--TEST
+
+do $$
+    begin
+        assert null::email is null;
+        assert 'e@m.ai'::email is not null;
+    end
+$$;
+
+
+do $$
+    BEGIN
+        assert 'e@m.__'::email is not null ; --raise exception [23514] ERROR: value for domain email violates check constraint "email_check"
+    EXCEPTION WHEN SQLSTATE '23514' THEN
+    END;
+$$;
 ```
-Регулярное выражение в файле [`is_email.sql`](functions/is_email.sql) взято и адаптировано [отсюда](https://github.com/rin-nas/regexp-patterns-library/)
+
+См. [`is_email.sql`](functions/is_email.sql)
+
+#### Как найти все невалидные email в таблице?
+
+```sql
+SELECT email
+FROM person_email
+WHERE email IS NOT NULL    -- skip NULL
+      AND email !~ '^\s*$' -- skip empty (similar NULL)
+      NOT(
+        AND octet_length(email) BETWEEN 6 AND 320 -- https://en.wikipedia.org/wiki/Email_address
+        AND email LIKE '_%@_%.__%'                -- rough, but quick check email syntax
+        AND is_email(email)                       -- accurate, but slow check email syntax
+    )
+```
+
+См. [`is_email.sql`](functions/is_email.sql)
+
+#### Как удалить все невалидные email из большой таблицы?
+
+Если строк в таблице немного, то подойдёт простой `DELETE FROM table_name WHERE ...`.
+Если в таблице миллионы строк, то процесс может занятуться надолго.
+При этом записи в таблице так же заблокируются надолго, а конкурентные запросы на модификацию записей, которые связаны с этой таблицей, выстроятся в очередь.
+Решение -- удалять нужно не всё сразу, а по частям.
+Пример см. [`loop_execute.using_examples.sql`](procedures/loop_execute.using_examples.sql)
 
 #### Как проверить CSS цвет на валидность?
 
@@ -159,6 +203,40 @@ select '1234567890123'::inn12; --error
 ```
 
 [`is_inn.sql`](functions/is_inn.sql)
+
+#### Как провалидировать значение поля, только если оно явно указано в UPDATE запросе?
+
+Ограничения [`CHECK()`](https://postgrespro.ru/docs/postgresql/12/ddl-constraints#DDL-CONSTRAINTS-CHECK-CONSTRAINTS) для каждого поля таблицы срабатывают каждый раз при добавлении или обновлении записи таблицы. При добавлении записи всё логично -- добавляемое значение нужно проверять, даже если это значение по-умолчанию. Однако, в запросе на обновление даных даже неважно, изменилось значение поля на самом деле или нет (ну почему так сделано?). Если в `CHECK` проверка ресурсоёмая, то она может существенно замедлить обновление большого количества записей в таблице. Пример ресурсоёмкой проверки -- валидация синтаксиса email функцией [`is_email()`](functions/is_email.sql).
+
+Обойти данную проблему можно с использованием триггеров. 
+Предположим, есть таблица `person` с колонкой `email`.
+
+```sql
+CREATE OR REPLACE FUNCTION person_email_check() RETURNS TRIGGER
+    LANGUAGE plpgsql AS
+$$
+BEGIN
+    PERFORM NEW.email::email;
+    RETURN NEW;
+END;
+$$;
+
+-- добавление
+DROP TRIGGER IF EXISTS person_email_check_insert ON v3_person_email;
+CREATE TRIGGER person_email_check_insert
+    BEFORE INSERT ON person
+    FOR EACH ROW
+    WHEN NEW.email IS NOT NULL
+    EXECUTE PROCEDURE person_email_check();
+
+--обновление
+DROP TRIGGER IF EXISTS person_email_check_update ON v3_person_email;
+CREATE TRIGGER person_email_check_update
+    BEFORE UPDATE OF email ON person -- поле явно указано в UPDATE запросе!
+    FOR EACH ROW
+    WHEN NEW.email IS NOT NULL AND NEW.email IS DISTINCT FROM OLD.email -- значение изменилось
+    EXECUTE PROCEDURE person_email_check();
+```
 
 ### Строки
 
