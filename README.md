@@ -145,7 +145,7 @@ $$;
 SELECT email
 FROM person_email
 WHERE email IS NOT NULL    -- skip NULL
-      AND email !~ '^\s*$' -- skip empty (similar NULL)
+      AND email !~ '^\s*$' -- skip empty (similar NULL for NOT NULL column)
       NOT(
         AND octet_length(email) BETWEEN 6 AND 320 -- https://en.wikipedia.org/wiki/Email_address
         AND email LIKE '_%@_%.__%'                -- rough, but quick check email syntax
