@@ -277,6 +277,7 @@ $$;
 # Decode \uXXXX
 
 https://stackoverflow.com/questions/20124393/convert-escaped-unicode-character-back-to-actual-character-in-postgresql/69554541
+https://stackoverflow.com/questions/10111654/how-to-convert-literal-u-sequences-into-utf-8
 
 Solution *without* using PL/pgSQL functions and EXECUTE trick, *without* SQL injection vulnerable. Pure SQL.
 
