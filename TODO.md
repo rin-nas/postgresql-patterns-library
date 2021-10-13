@@ -243,7 +243,7 @@ with recursive t (ctid, value, values) as (
 select value from t limit 100
 --execution: 85 ms
 /*
-Можно было бы обойтись без колонки histories и искать дубликаты подзапросом: WHERE not exists(select from t as d where p.history = d.history)
+Можно было бы обойтись без колонки values и искать дубликаты подзапросом: WHERE not exists(select from t as d where p.history = d.history)
 Но, к сожалению, БД возвращает ошибку [42P19] ERROR: recursive reference to query "t" must not appear within a subquery
 */
 
