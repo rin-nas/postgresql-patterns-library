@@ -231,13 +231,11 @@ explain --Limit  (cost=1.91..2.02 rows=11 width=32)
 with recursive t (ctid, value, values) as (
     (select ctid, history, array[md5(history::text)::uuid]
      from cts__cdr
-     --where history is not null and history::text !~ '^\s*$'
      limit 1)
     union all
     (select p.ctid, p.history, t.values || md5(p.history::text)::uuid
      from cts__cdr p
      inner join t on p.ctid > t.ctid and md5(p.history::text)::uuid != all(t.values)
-     --where p.history is not null and p.history::text !~ '^\s*$'
      limit 1)
 )
 select value from t limit 100
