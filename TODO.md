@@ -273,3 +273,24 @@ end
 $$;
 --completed in 111 ms
 ```
+
+# Decode \uXXXX
+
+Solution *without* using PL/pgSQL functions and EXECUTE trick, *without* SQL injection vulnerable. Pure SQL.
+
+Query:
+```
+    select string_agg(
+                case
+                    when left(m[1], 2) in ('\u', '\U')
+                    then chr(('x' || lpad(substring(m[1], 3), 8, '0'))::bit(32)::int)
+                    else m[1]
+                end,
+                ''
+            )
+    from regexp_matches('\u017D\u010F\u00E1r, Нello \u270C, Привет!\U0001F603', '\\u[\da-fA-F]{4}|\\U[\da-fA-F]{8}|.',  'g') as s(m);
+    -- TODO \ud83d\ude03 is the same as \U0001F603, but does not work, see https://github.com/rin-nas/php5-utf8/blob/master/UTF8.php#L2546
+    --from regexp_matches('\u017D\u010F\u00E1r, Нello \u270C, Привет!\U0001F603 \ud83d\ude03', '\\u[\da-fA-F]{4}|\\U[\da-fA-F]{8}|.',  'g') as s(m);
+```
+
+Of course, you can make function from this query to hide implementation and get usability.
