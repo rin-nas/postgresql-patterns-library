@@ -29,7 +29,10 @@ $$;
 -- TEST
 do $$
     begin
-        assert not is_sql('SELECTx', true);
+        --positive
         assert is_sql('SELECT x');
+        
+        --negative
+        assert not is_sql('SELECTx', true);
     end;
 $$;
