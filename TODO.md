@@ -295,3 +295,21 @@ from regexp_matches('\u017D\u010F\u00E1r, Нello \u270C, Привет!\U0001F603
 ```
 
 Of course, you can make function from this query to hide implementation and get usability.
+
+# Как очень быстро избавиться от bloat в маленьких таблицах, но очень интенсивных по записи
+
+В таблицах, где записей < 1000, есть очень быстрый способ "огнетушителя" избавиться от bloat. Проверил на прод БД. Всё работает отлично.
+
+```sql
+DO $$
+    BEGIN
+        SET LOCAL lock_timeout TO '3s'; -- Максимальное время блокирования других SQL запросов (простоя веб-сайта) во время миграции. Если будет превышено, то транзакция откатится.
+        IF pg_try_advisory_xact_lock('service__workers'::regclass::oid::bigint) THEN -- запрещаем этот код выполняться параллельно (блокировка действует до конца транзакции)
+            LOCK TABLE service__workers IN SHARE MODE; -- защищаем таблицу от параллельного изменения данных, при этом читать из таблицы можно (блокировка действует до конца транзакции)
+            CREATE TEMPORARY TABLE service__workers__tmp ON COMMIT DROP AS SELECT * FROM service__workers;
+            TRUNCATE service__workers; -- немедленно высвобождаем место ОС
+            INSERT INTO service__workers SELECT * FROM service__workers__tmp;
+        END IF;
+    END;
+$$;
+```
