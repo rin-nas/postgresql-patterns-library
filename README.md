@@ -1724,6 +1724,7 @@ WITH t AS (
     SELECT n.nspname || '.' || c.relname AS relation,
            pg_relation_size(c.oid) AS table_size,
            pg_indexes_size(c.oid) AS indexes_size,
+           pg_total_relation_size(c.oid) - pg_relation_size(c.oid) - pg_indexes_size(c.oid) AS unused_size,
            pg_total_relation_size(c.oid) AS total_size,
            (select reltuples::bigint
             from pg_class
@@ -1739,6 +1740,7 @@ WITH t AS (
     (SELECT relation,
             pg_size_pretty(table_size) as table_size_pretty,
             pg_size_pretty(indexes_size) as indexes_size_pretty,
+            pg_size_pretty(total_size - table_size - indexes_size) as unused_size_pretty,
             pg_size_pretty(total_size) as total_size_pretty,
             coalesce(round(total_size * 100 / nullif(sum(total_size) over(), 0), 2), 0) as total_size_percent,
             regexp_replace(rows_estimate_count::text, '(?<=\d)(?<!\.[^.]*)(?=(\d\d\d)+(?!\d))', ',', 'g') as rows_estimate_count_pretty,
@@ -1751,6 +1753,7 @@ UNION ALL
 (SELECT 'TOTAL',
         pg_size_pretty(SUM(table_size)),
         pg_size_pretty(SUM(indexes_size)),
+        pg_size_pretty(SUM(unused_size)),
         pg_size_pretty(SUM(total_size)),
         100,
         regexp_replace(SUM(rows_estimate_count)::text, '(?<=\d)(?<!\.[^.]*)(?=(\d\d\d)+(?!\d))', ',', 'g'),
