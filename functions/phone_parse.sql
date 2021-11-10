@@ -5,8 +5,8 @@ create or replace function phone_parse(
     local_number out text
 )
     /*
-    Парсит номер телефона в международном формате: +<countryCode><space><areaCode><space><localNumber>
-    или в локальном формате. Для маленьких стран <areaCode> может отсутствовать.
+    Парсит номер телефона в международном формате E.164 или в локальном формате.
+    Для маленьких стран area_code может отсутствовать.
     Возвращает null, если строка не является номером телефона (минимальная проверка синтаксиса).
     */
     returns record
@@ -20,7 +20,7 @@ with t as (
     -- грубая проверка проверка синтаксиса и нормализация номера телефона
     select array_to_string((string_to_array(n, ' '))[1:3], ' ') ||
            array_to_string((string_to_array(n, ' '))[4:], '') as n
-    from trim(regexp_replace(phone, '[+ ()\-.]+', ' ', 'g')) as n
+    from trim(regexp_replace(phone, '(^ *\+|[ ()\-./]+)', ' ', 'g')) as n
     where octet_length(phone) between (8 + 1/*+*/) and (15 * 2/*учитывам пробелы*/)
       -- в международном формате или с national prefix
       and phone ~ '^\+\d|^(?:[018]|0[126]|04[45])\x20'
