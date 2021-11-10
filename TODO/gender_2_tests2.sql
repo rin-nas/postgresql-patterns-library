@@ -4,7 +4,7 @@ do $$
         rec record;
     begin
 
-        insert into v3_person (name, surname, second_name)
+        insert into person (name, surname, second_name)
         select 'Александр'     as name,
                'Филов'         as surname,
                'Александрович' as second_name
@@ -14,7 +14,7 @@ do $$
         assert rec.gender = 'male';
 
         ----------------------------------
-        UPDATE v3_person
+        UPDATE person
         SET name        = 'Александр',
             surname     = 'Филов',
             second_name = 'Александрович'
@@ -25,7 +25,7 @@ do $$
         assert rec.gender = 'male';
 
         ----------------------------------
-        UPDATE v3_person
+        UPDATE person
         SET name        = 'Александра',
             surname     = 'Филова',
             second_name = 'Александровна'
@@ -36,7 +36,7 @@ do $$
         assert rec.gender = 'female';
 
         ----------------------------------
-        UPDATE v3_person
+        UPDATE person
         SET name        = 'Александр',
             surname     = 'Филов',
             second_name = 'Александрович',
@@ -48,7 +48,7 @@ do $$
         assert rec.gender = 'male';
 
         ----------------------------------
-        UPDATE v3_person
+        UPDATE person
         SET name        = 'Александра',
             surname     = 'Филова',
             second_name = 'Александровна',
@@ -60,7 +60,7 @@ do $$
         assert rec.gender = 'female';
 
         ----------------------------------
-        UPDATE v3_person
+        UPDATE person
         SET name        = 'Александр',
             surname     = 'Филов',
             second_name = 'Александрович',
@@ -72,7 +72,7 @@ do $$
         assert rec.gender = 'female';
 
         ----------------------------------
-        UPDATE v3_person
+        UPDATE person
         SET name        = 'Александра',
             surname     = 'Филова',
             second_name = 'Александровна',
@@ -86,7 +86,7 @@ do $$
         -- теперь те же запросы, но в обратной последовательности:
 
         ----------------------------------
-        UPDATE v3_person
+        UPDATE person
         SET name        = 'Александра',
             surname     = 'Филова',
             second_name = 'Александровна',
@@ -98,7 +98,7 @@ do $$
         assert rec.gender = 'male';
 
         ----------------------------------
-        UPDATE v3_person
+        UPDATE person
         SET name        = 'Александр',
             surname     = 'Филов',
             second_name = 'Александрович',
@@ -110,7 +110,7 @@ do $$
         assert rec.gender = 'female';
 
         ----------------------------------
-        UPDATE v3_person
+        UPDATE person
         SET name        = 'Александра',
             surname     = 'Филова',
             second_name = 'Александровна',
@@ -122,7 +122,7 @@ do $$
         assert rec.gender = 'female';
 
         ----------------------------------
-        UPDATE v3_person
+        UPDATE person
         SET name        = 'Александр',
             surname     = 'Филов',
             second_name = 'Александрович',
@@ -134,7 +134,7 @@ do $$
         assert rec.gender = 'male';
 
         ----------------------------------
-        UPDATE v3_person
+        UPDATE person
         SET name        = 'Александра',
             surname     = 'Филова',
             second_name = 'Александровна'
@@ -145,7 +145,7 @@ do $$
         assert rec.gender = 'female';
 
         ----------------------------------
-        UPDATE v3_person
+        UPDATE person
         SET name        = 'Александр',
             surname     = 'Филов',
             second_name = 'Александрович'
@@ -156,7 +156,9 @@ do $$
         assert rec.gender = 'male';
 
         ----------------------------------
-        delete from v3_person where id = rec.id;
+        delete from person where id = rec.id;
 
     end
 $$;
+
+-- @UNDO
