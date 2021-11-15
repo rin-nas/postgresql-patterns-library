@@ -1,3 +1,5 @@
+-- inspired by https://postgres.ai/blog/20210923-zero-downtime-postgres-schema-migrations-lock-timeout-and-retries
+
 create or replace procedure execute_attempt(
     --обязательные параметры:
     query text,
