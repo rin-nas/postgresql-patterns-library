@@ -5,7 +5,7 @@ create or replace procedure execute_attempt(
     query text,
     --необязательные параметры:
     lock_timeout text default '100ms',
-    max_attempts smallint default '50'
+    max_attempts smallint default 50
 )
     language plpgsql
 as
