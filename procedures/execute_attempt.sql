@@ -43,9 +43,9 @@ comment on procedure execute_attempt(
     --обязательные параметры:
     query text,
     --необязательные параметры:
-    lock_timeout interval default '100ms',
-    max_attempts smallint default '100'
-) is $$
+    lock_timeout text,
+    max_attempts smallint
+    ) is $$
     Процедура предназначена для безопасного выполнения DDL запроосов в БД.
     Пытается выполнить запрос с учётом ограничения lock_timeout.
     В случае неудачи делает задержку выполнения и повторяет попытку N раз.
