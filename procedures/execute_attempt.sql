@@ -10,33 +10,35 @@ create or replace procedure execute_attempt(
     language plpgsql
 as
 $procedure$
-    declare
-        is_completed boolean := false;
-        delay numeric;
-        total_time_start timestamp not null default clock_timestamp();
-        total_time_elapsed numeric not null default 0; -- длительность выполнения всех запросов, в секундах
-    begin
-        perform set_config('lock_timeout', lock_timeout, true);
+declare
+    lock_timeout_old text default current_setting('lock_timeout');
+    is_completed boolean := false;
+    delay numeric;
+    total_time_start timestamp not null default clock_timestamp();
+    total_time_elapsed numeric not null default 0; -- длительность выполнения всех запросов, в секундах
+begin
+    perform set_config('lock_timeout', lock_timeout, true);
 
-        for i in 1..max_attempts loop
-            begin
-                execute query;
-                is_completed := true;
-                exit;
-            exception when lock_not_available then
-                total_time_elapsed := round(extract('epoch' from clock_timestamp() - total_time_start)::numeric, 2);
-                delay := round(greatest(sqrt(total_time_elapsed * 1), 1), 2);
-                raise warning 'Attempt % of % to execute query failed due lock timeout %, next replay after % second', i, max_attempts, lock_timeout, delay;
-                perform pg_sleep(delay);
-            end;
-        end loop;
+    for i in 1..max_attempts loop
+        begin
+            execute query;
+            perform set_config('lock_timeout', lock_timeout_old, true);
+            is_completed := true;
+            exit;
+        exception when lock_not_available then
+            total_time_elapsed := round(extract('epoch' from clock_timestamp() - total_time_start)::numeric, 2);
+            delay := round(greatest(sqrt(total_time_elapsed * 1), 1), 2);
+            raise warning 'Attempt % of % to execute query failed due lock timeout %, next replay after % second', i, max_attempts, lock_timeout, delay;
+            perform pg_sleep(delay);
+        end;
+    end loop;
 
-        if is_completed then
-            raise info 'Execute success';
-        else
-            raise exception 'Execute failed';
-        end if;
-    end
+    if is_completed then
+        raise info 'Execute success';
+    else
+        raise exception 'Execute failed';
+    end if;
+end
 $procedure$;
 
 comment on procedure execute_attempt(
