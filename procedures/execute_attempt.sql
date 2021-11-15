@@ -16,7 +16,7 @@ $procedure$
         total_time_start timestamp not null default clock_timestamp();
         total_time_elapsed numeric not null default 0; -- длительность выполнения всех запросов, в секундах
     begin
-        perform set_config('lock_timeout', lock_timeout, false);
+        perform set_config('lock_timeout', lock_timeout, true);
 
         for i in 1..max_attempts loop
             begin
