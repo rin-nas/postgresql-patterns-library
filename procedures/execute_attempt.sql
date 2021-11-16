@@ -12,7 +12,7 @@ as
 $procedure$
 declare
     lock_timeout_old text default current_setting('lock_timeout');
-    is_completed boolean := false;
+    is_completed boolean default false;
     delay numeric;
     total_time_start timestamp not null default clock_timestamp();
     total_time_elapsed numeric not null default 0; -- длительность выполнения всех запросов, в секундах
@@ -22,7 +22,6 @@ begin
     for i in 1..max_attempts loop
         begin
             execute query;
-            perform set_config('lock_timeout', lock_timeout_old, true);
             is_completed := true;
             exit;
         exception when lock_not_available then
@@ -32,6 +31,8 @@ begin
             perform pg_sleep(delay);
         end;
     end loop;
+
+    perform set_config('lock_timeout', lock_timeout_old, true);
 
     if is_completed then
         raise info 'Execute success';
