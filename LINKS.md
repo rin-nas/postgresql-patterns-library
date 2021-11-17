@@ -45,6 +45,7 @@
    1. https://stackoverflow.com/questions/38112379/disable-postgresql-foreign-key-checks-for-migrations
 
 # Other
+   1. https://postgres.ai/blog/20211018-postgresql-lock-trees
    1. https://www.citusdata.com/blog/2018/02/22/seven-tips-for-dealing-with-postgres-locks/
    1. http://cwestblog.com/2018/10/27/postgresql-query-hierarchical-data-without-recursion/
    1. http://cwestblog.com/2018/10/29/postgresql-recursively-query-hierarchical-data/
