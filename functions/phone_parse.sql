@@ -24,8 +24,10 @@ with t as (
            array_to_string((string_to_array(n, ' '))[4:], '') as n
     from trim(regexp_replace(phone, '(^ *\+|[ ()\-./]+)', ' ', 'g')) as n
     where octet_length(phone) between (8 + 1/*+*/) and (15 * 2/*учитывам пробелы*/)
-      -- в международном формате или с national prefix
-      and phone ~ '^\+\d|^(?:[018]|0[126]|04[45])\x20'
+      -- начинается со знака "+" и цифры (E.164 с возможными разделителями групп цифр)
+      -- или начинается с national prefix и пробела
+      -- или содержит только цифры (E.164 без знака "+")
+      and phone ~ '^\+\d|^(?:[018]|0[126]|04[45])\x20|^\d+$'
 )
 select trim(replace(p[1], '8 ', '7')) as country_code,
        nullif(p[2], '') as area_code,
@@ -74,6 +76,10 @@ do $$
         assert (select country_code = '7'
                    and area_code = '499'
                    and local_number = '1234567'
+                from phone_parse('74991234567'));
+        assert (select country_code = '7'
+                   and area_code = '499'
+                   and local_number = '1234567'
                 from phone_parse('+7 (499) 1234567'));
         assert (select country_code = '7'
                    and area_code = '499'
@@ -109,6 +115,10 @@ do $$
                    and area_code = '17'
                    and local_number = '1234567'
                 from phone_parse('+375171234567'));
+        assert (select country_code = '375'
+                   and area_code = '17'
+                   and local_number = '1234567'
+                from phone_parse('375171234567'));
 
         assert (select country_code = '373'
                    and area_code = '68'
