@@ -27,6 +27,8 @@ DECLARE
     alias_regexp constant text not null default format('(\s+(AS\s+)?%s)?', ident_regexp); -- регулярное выражение для захвата названия SQL необязательного псевдонима (таблицы, колонки и др.)
     query_count constant text default 'SELECT COUNT(*) FROM %1$s WHERE %2$I > $1 AND %2$I <= $2'; -- SQL запрос для получения processed_rows
     last_subquery_exception_hint constant text not null default e'Last subquery must be:\nSELECT MAX(%I) AS stop_id, COUNT(*) AS affected_rows FROM m';
+    lock_timeout_old constant text not null default current_setting('lock_timeout');
+    max_attempts constant smallint not null default 100;
 
     --статистика
     total_time_start timestamp not null default clock_timestamp();
@@ -54,6 +56,9 @@ DECLARE
     processed_rows bigint not null default 0; --сколько записей просмотрел пользовательский запрос
     query_time_start timestamp;
     query_time_elapsed numeric not null default 0; -- длительность выполнения одного запроса, в секундах
+    time_start timestamp;
+    time_elapsed numeric not null default 0;
+    delay numeric;
 BEGIN
 
     -- 1) проверка входящих параметров
@@ -136,47 +141,109 @@ BEGIN
         EXIT WHEN cycles >= cycles_max;
         cycles := cycles + 1;
 
-        query_time_start := clock_timestamp();
+        PERFORM set_config('lock_timeout', (time_max * 1000)::text, true);
 
         IF is_disable_user_triggers THEN
-            EXECUTE format('ALTER TABLE %s DISABLE TRIGGER USER', table_name);
+            time_start := clock_timestamp();
+            FOR cur_attempt IN 1..max_attempts LOOP
+                BEGIN
+                    EXECUTE format('ALTER TABLE %s DISABLE TRIGGER USER', table_name);
+                    EXIT; --запрос выполнился успешно, выходим из цикла FOR ... LOOP
+                EXCEPTION WHEN lock_not_available THEN
+                    IF cur_attempt < max_attempts THEN
+                        time_elapsed := round(extract('epoch' from clock_timestamp() - time_start)::numeric, 2);
+                        delay := round(greatest(sqrt(time_elapsed * 1), 1), 2);
+                        RAISE WARNING 'Attempt % of % to execute query failed due lock timeout % second, next replay after % second',
+                            cur_attempt, max_attempts, time_max, delay;
+                        PERFORM pg_sleep(delay);
+                    ELSE
+                        RAISE WARNING 'Attempt % of % to execute query failed due lock timeout % second',
+                            cur_attempt, max_attempts, time_max;
+                        RAISE; -- raise the original exception
+                    END IF;
+                END;
+            END LOOP; --FOR
         END IF;
 
-        IF uniq_column_type IN ('integer', 'bigint') THEN
-            start_id_bigint := stop_id_bigint;
-            EXECUTE query USING start_id_bigint, batch_rows INTO STRICT stop_id_bigint, affected_rows;
-            IF start_id_bigint >= stop_id_bigint THEN
-                ROLLBACK AND CHAIN;
-                RAISE EXCEPTION 'Infinity cycle has been found (start_id=% >= stop_id=%)! There are mistake in your CTE query.',
-                                start_id_bigint, stop_id_bigint
-                    USING HINT = format(last_subquery_exception_hint, uniq_column_name);
-            END IF;
-            EXECUTE format(query_count, table_name, uniq_column_name) USING start_id_bigint, stop_id_bigint INTO processed_rows;
-        ELSIF uniq_column_type ~* '\m(varying|character|text|char|varchar)\M' THEN
-            start_id_text := stop_id_text;
-            EXECUTE query USING start_id_text, batch_rows INTO STRICT stop_id_text, affected_rows;
-            IF start_id_text >= stop_id_text THEN
-                ROLLBACK AND CHAIN;
-                RAISE EXCEPTION 'Infinity cycle has been found (start_id=% >= stop_id=%)! There are mistake in your CTE query.',
-                                quote_literal(start_id_text), quote_literal(stop_id_text)
-                    USING HINT = format(last_subquery_exception_hint, uniq_column_name);
-            END IF;
-            EXECUTE format(query_count, table_name, uniq_column_name) USING start_id_text, stop_id_text INTO processed_rows;
-        ELSE
-            RAISE EXCEPTION 'Column %.% has unsupported type % ', table_name, uniq_column_name, uniq_column_type
-                USING HINT = 'You can add support by modify procedure :-)';
+        query_time_start := clock_timestamp();
+        time_start := clock_timestamp();
+        FOR cur_attempt IN 1..max_attempts LOOP
+            BEGIN
+
+                IF uniq_column_type IN ('integer', 'bigint') THEN
+                    start_id_bigint := stop_id_bigint;
+                    EXECUTE query USING start_id_bigint, batch_rows INTO STRICT stop_id_bigint, affected_rows;
+                    IF start_id_bigint >= stop_id_bigint THEN
+                        ROLLBACK AND CHAIN;
+                        RAISE EXCEPTION 'Infinity cycle has been found (start_id=% >= stop_id=%)! There are mistake in your CTE query.',
+                                        start_id_bigint, stop_id_bigint
+                            USING HINT = format(last_subquery_exception_hint, uniq_column_name);
+                    END IF;
+                    EXECUTE format(query_count, table_name, uniq_column_name) USING start_id_bigint, stop_id_bigint INTO processed_rows;
+                ELSIF uniq_column_type ~* '\m(varying|character|text|char|varchar)\M' THEN
+                    start_id_text := stop_id_text;
+                    EXECUTE query USING start_id_text, batch_rows INTO STRICT stop_id_text, affected_rows;
+                    IF start_id_text >= stop_id_text THEN
+                        ROLLBACK AND CHAIN;
+                        RAISE EXCEPTION 'Infinity cycle has been found (start_id=% >= stop_id=%)! There are mistake in your CTE query.',
+                                        quote_literal(start_id_text), quote_literal(stop_id_text)
+                            USING HINT = format(last_subquery_exception_hint, uniq_column_name);
+                    END IF;
+                    EXECUTE format(query_count, table_name, uniq_column_name) USING start_id_text, stop_id_text INTO processed_rows;
+                ELSE
+                    RAISE EXCEPTION 'Column %.% has unsupported type % ', table_name, uniq_column_name, uniq_column_type
+                        USING HINT = 'You can add support by modify procedure :-)';
+                END IF;
+
+                EXIT; --запрос выполнился успешно, выходим из цикла FOR ... LOOP
+
+            EXCEPTION WHEN lock_not_available THEN
+                IF cur_attempt < max_attempts THEN
+                    time_elapsed := round(extract('epoch' from clock_timestamp() - time_start)::numeric, 2);
+                    delay := round(greatest(sqrt(time_elapsed * 1), 1), 2);
+                    RAISE WARNING 'Attempt % of % to execute query failed due lock timeout % second, next replay after % second',
+                        cur_attempt, max_attempts, time_max, delay;
+                    PERFORM pg_sleep(delay);
+                ELSE
+                    RAISE WARNING 'Attempt % of % to execute query failed due lock timeout % second',
+                        cur_attempt, max_attempts, time_max;
+                    RAISE; -- raise the original exception
+                END IF;
+            END;
+
+        END LOOP; --FOR
+        query_time_elapsed := round(extract('epoch' from clock_timestamp() - query_time_start)::numeric, 2);
+
+        IF is_disable_user_triggers and not is_rollback THEN
+            time_start := clock_timestamp();
+            FOR cur_attempt IN 1..max_attempts LOOP
+                BEGIN
+                    EXECUTE format('ALTER TABLE %s ENABLE TRIGGER USER', table_name);
+                    EXIT; --запрос выполнился успешно, выходим из цикла FOR ... LOOP
+                EXCEPTION WHEN lock_not_available THEN
+                    IF cur_attempt < max_attempts THEN
+                        time_elapsed := round(extract('epoch' from clock_timestamp() - time_start)::numeric, 2);
+                        delay := round(greatest(sqrt(time_elapsed * 1), 1), 2);
+                        RAISE WARNING 'Attempt % of % to execute query failed due lock timeout % second, next replay after % second',
+                            cur_attempt, max_attempts, time_max, delay;
+                        PERFORM pg_sleep(delay);
+                    ELSE
+                        RAISE WARNING 'Attempt % of % to execute query failed due lock timeout % second',
+                            cur_attempt, max_attempts, time_max;
+                        RAISE; -- raise the original exception
+                    END IF;
+                END;
+            END LOOP; --FOR
         END IF;
+
+        PERFORM set_config('lock_timeout', lock_timeout_old, true);
 
         IF is_rollback THEN
             ROLLBACK AND CHAIN;
         ELSE
-            IF is_disable_user_triggers THEN
-                EXECUTE format('ALTER TABLE %s ENABLE TRIGGER USER', table_name);
-            END IF;
             COMMIT AND CHAIN; -- https://www.postgresql.org/docs/12/plpgsql-transactions.html
         END IF;
 
-        query_time_elapsed := round(extract('epoch' from clock_timestamp() - query_time_start)::numeric, 2);
         total_time_elapsed := round(extract('epoch' from clock_timestamp() - total_time_start)::numeric, 2);
 
         total_affected_rows  := total_affected_rows  + affected_rows;
