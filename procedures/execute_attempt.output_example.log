@@ -1,3 +1,4 @@
+--failed story example
 call execute_attempt('alter table person alter column email type varchar(320)')
 [2021-11-18 01:39:58] [01000] Attempt 1 of 50 to execute query failed due lock timeout 100ms, next replay after 1.00 second
 [2021-11-18 01:40:00] [01000] Attempt 2 of 50 to execute query failed due lock timeout 100ms, next replay after 1.10 second
@@ -52,3 +53,19 @@ call execute_attempt('alter table person alter column email type varchar(320)')
 [2021-11-18 01:50:07] [55P03] ERROR: canceling statement due to lock timeout
 [2021-11-18 01:50:07] Where: SQL statement "alter table person alter column email type varchar(320)"
 [2021-11-18 01:50:07] PL/pgSQL function depers.execute_attempt(text,text,integer) line 12 at EXECUTE
+
+-- success story example
+call execute_attempt('DROP TABLE IF EXISTS table_name')
+[2021-12-01 17:59:00] [01000] Attempt 1 of 50 to execute query failed due lock timeout 100ms, next replay after 1.00 second
+[2021-12-01 17:59:01] [01000] Attempt 2 of 50 to execute query failed due lock timeout 100ms, next replay after 1.10 second
+[2021-12-01 17:59:04] [01000] Attempt 3 of 50 to execute query failed due lock timeout 100ms, next replay after 1.56 second
+[2021-12-01 17:59:05] [01000] Attempt 4 of 50 to execute query failed due lock timeout 100ms, next replay after 2.02 second
+[2021-12-01 17:59:07] [01000] Attempt 5 of 50 to execute query failed due lock timeout 100ms, next replay after 2.49 second
+[2021-12-01 17:59:09] [01000] Attempt 6 of 50 to execute query failed due lock timeout 100ms, next replay after 2.97 second
+[2021-12-01 17:59:12] [01000] Attempt 7 of 50 to execute query failed due lock timeout 100ms, next replay after 3.45 second
+[2021-12-01 17:59:16] [01000] Attempt 8 of 50 to execute query failed due lock timeout 100ms, next replay after 3.93 second
+[2021-12-01 17:59:20] [01000] Attempt 9 of 50 to execute query failed due lock timeout 100ms, next replay after 4.41 second
+[2021-12-01 17:59:24] [01000] Attempt 10 of 50 to execute query failed due lock timeout 100ms, next replay after 4.90 second
+[2021-12-01 17:59:29] [01000] Attempt 11 of 50 to execute query failed due lock timeout 100ms, next replay after 5.39 second
+[2021-12-01 17:59:35] [01000] Attempt 12 of 50 to execute query failed due lock timeout 100ms, next replay after 5.87 second
+[2021-12-01 17:59:41] completed in 40 s 638 ms
