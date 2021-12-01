@@ -702,6 +702,7 @@ WHERE id != ALL(ARRAY( --performance workaround for PostgreSQL 12
 
 #### Как ускорить SELECT COUNT(\*) запрос?
 
+
 Сценарий использования: SQL запрос, вычисляющий кол-во записей по условию или среднее числовое значение.
 
 Объём данных растёт, а ответ клиенту всегда нужно отдавать очень быстро.
@@ -710,6 +711,8 @@ WHERE id != ALL(ARRAY( --performance workaround for PostgreSQL 12
 На количествах `> 1,000` уже можно использовать приближённые вычисления для задач, требующих немедленного ответа (задачи реального времени).
 `1,000` или `1,050` - не так важно. При таких значениях у пользователей сохраняется возможность оценки и принятия решения.
 А в GUI перед значениями, при необходимости, значение можно показывать так: `1,000+` или `≈1,050` или `1 тыс.`.
+
+##### Решение 1
 
 ```sql
 create schema if not exists test;
@@ -757,6 +760,10 @@ where s ~ 'aa$';
 
 ```
 См. [Tablesample In PostgreSQL](https://www.2ndquadrant.com/en/blog/tablesample-in-postgresql-9-5-2/)
+
+##### Решение 2
+
+PostgreSQL [extension](https://github.com/citusdata/postgresql-hll) adding HyperLogLog data structures as a native data type.
 
 #### Как выполнить функцию N тысяч раз и измерить скорость выполнения?
 
