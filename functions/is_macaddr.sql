@@ -2,7 +2,7 @@ create or replace function is_macaddr(str text)
     returns boolean
     stable
     returns null on null input
-    parallel safe -- Postgres 10 or later
+    parallel unsafe --(ERROR:  cannot start subtransactions during a parallel operation)
     language sql
 as
 $$
