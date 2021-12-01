@@ -2,7 +2,7 @@
 CREATE OR REPLACE FUNCTION is_sql(sql text, is_notice boolean default false)
     returns boolean
     returns null on null input
-    parallel safe
+    parallel unsafe --(ERROR:  cannot start subtransactions during a parallel operation)
     language plpgsql
 AS
 $$
