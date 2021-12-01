@@ -2,7 +2,7 @@
 create or replace function is_json(str text, is_notice boolean default false)
     RETURNS boolean
     returns null on null input
-    parallel safe
+    parallel unsafe --(ERROR:  cannot start subtransactions during a parallel operation)
     stable
     language plpgsql
 as
