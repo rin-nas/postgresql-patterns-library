@@ -4,7 +4,7 @@ create or replace procedure loop_execute(
     query       text, -- CTE запрос с SELECT, INSERT/UPDATE/DELETE и SELECT запросами для модификации записей
     --необязательные параметры:
     is_disable_user_triggers boolean default false, --выключать срабатывание пользовательских триггеров в таблице
-    batch_rows  int     default 1, -- сколько записей будем модифицировать за 1 цикл (значение автоматически подстраивается под time_max), рекомендуется 1
+    batch_rows  integer default 1, -- сколько записей будем модифицировать за 1 цикл (значение автоматически подстраивается под time_max), рекомендуется 1
     time_max    numeric default 1, -- пороговое максимальное время выполнения 1-го запроса, в секундах, рекомендуется 1
     is_rollback boolean default false, -- откатывать запрос после каждого выполнения в цикле (для целей тестирования)
     cycles_max  integer default null, -- максимальное количество циклов (для целей тестирования)
@@ -197,18 +197,26 @@ BEGIN
 
                 EXIT; --запрос выполнился успешно, выходим из цикла FOR ... LOOP
 
-            EXCEPTION WHEN lock_not_available THEN
-                IF cur_attempt < max_attempts THEN
-                    time_elapsed := round(extract('epoch' from clock_timestamp() - time_start)::numeric, 2);
-                    delay := round(greatest(sqrt(time_elapsed * 1), 1), 2);
-                    RAISE WARNING 'Attempt % of % to execute query failed due lock timeout % second, next replay after % second',
-                        cur_attempt, max_attempts, time_max, delay;
-                    PERFORM pg_sleep(delay);
-                ELSE
-                    RAISE WARNING 'Attempt % of % to execute query failed due lock timeout % second',
-                        cur_attempt, max_attempts, time_max;
+            EXCEPTION
+                WHEN lock_not_available THEN
+                    IF cur_attempt < max_attempts THEN
+                        time_elapsed := round(extract('epoch' from clock_timestamp() - time_start)::numeric, 2);
+                        delay := round(greatest(sqrt(time_elapsed * 1), 1), 2);
+                        RAISE WARNING 'Attempt % of % to execute query failed due lock timeout % second, next replay after % second',
+                            cur_attempt, max_attempts, time_max, delay;
+                        PERFORM pg_sleep(delay);
+                    ELSE
+                        RAISE WARNING 'Attempt % of % to execute query failed due lock timeout % second',
+                            cur_attempt, max_attempts, time_max;
+                        RAISE; -- raise the original exception
+                    END IF;
+                WHEN others THEN
+                    IF uniq_column_type IN ('integer', 'bigint') THEN
+                        RAISE WARNING 'EXECUTE SQL statement using: $1 := %, $2 := %', start_id_bigint, batch_rows;
+                    ELSIF uniq_column_type ~* '\m(varying|character|text|char|varchar)\M' THEN
+                        RAISE WARNING 'EXECUTE SQL statement using: $1 := %, $2 := %', quote_literal(start_id_text), batch_rows;
+                    END IF;
                     RAISE; -- raise the original exception
-                END IF;
             END;
 
         END LOOP; --FOR
