@@ -2,18 +2,17 @@
 
 create or replace function phone_parse(
     phone text,
-    allow_calling_codes     bool default true,  --разрешить номера телефонов с используемыми кодами стран
-    allow_national_prefixes bool default true,  --разрешить номера телефонов с национальными префиксами
-    allow_spare_codes       bool default false, --разрешить номера телефонов с неназначенными (резервными) кодами стран
+    allow_calling_codes       bool default true,  --разрешить номера телефонов с используемыми кодами стран
+    allow_national_prefixes   bool default true,  --разрешить номера телефонов с национальными префиксами
+    allow_spare_codes         bool default false, --разрешить номера телефонов с неназначенными (резервными) кодами стран
+    begins_special_spare_code bool default false, --Начинается со специального резервного кода
+                                                  --210 (для валидных номеров) или 214 (для невалидных номеров).
+                                                  --Используется в обезличивании персональных данных для уникальных
+                                                  --номеров телефонов в качестве временного номера телефона.
     country_code out int,
     area_code out text,
     local_number out text
 )
-    /*
-    Парсит номер телефона в международном формате E.164 или в локальном формате.
-    Для маленьких стран area_code может отсутствовать.
-    Возвращает null, если строка не является номером телефона (минимальная проверка синтаксиса).
-    */
     returns record
     stable
     returns null on null input
@@ -24,23 +23,15 @@ $$
 with t as (
     -- грубая проверка проверка синтаксиса и нормализация номера телефона
     select array_to_string((string_to_array(n, ' '))[1:3], ' ') ||
-           array_to_string((string_to_array(n, ' '))[4:], '') as n
-    from trim(regexp_replace(phone, '(?:^ *\+|[ ()\-./]+)', ' ', 'g')) as n
-    where octet_length(phone) between (8 + 1/*+*/) and (15 * 2/*учитывам пробелы*/)
-      -- начинается со знака "+" и цифры (E.164 с возможными разделителями групп цифр)
-      -- или начинается с national prefix и не цифры
-      -- или содержит только цифры (E.164 без знака "+")
-      and phone ~ '^\+\d|^(?:[018]|0[126]|04[45])\D|^\d+$'
-)
-select trim(replace(p[1], '8 ', '7'))::int as country_code,
-       p[5] as area_code, -- do not convert empty sting to null!
-       trim(p[6])       as local_number
-from t
-cross join regexp_match(t.n,
-       -- регулярное выражение для захвата телефонного кода страны сгенерировано автоматически, см. extra/phone.sql
+           array_to_string((string_to_array(n, ' '))[4:], '') as n,
        '^
-        ( #1 country_code
-          ( #2 calling code
+        ( #1 special spare country code
+            $21[04]  #valid (210) or invalid (214) phone number ($ is special marker, see below!)
+            \x20?
+        )?
+        ( #2 country_code
+          ( #3 calling code
+            #регулярное выражение для захвата телефонного кода страны сгенерировано автоматически, см. extra/phone.sql
             [17]
             |2(?:[07]|1[1-368]|[2-46]\d|5[0-8]|9[017-9])
             |3(?:[0-469]|5\d|7[0-8]|8[0-35-79])
@@ -50,10 +41,10 @@ cross join regexp_match(t.n,
             |8(?:[07][08]|[1246]|5[02356]|8[0-368])
             |9(?:[0-58]|6[0-8]|7[0-79]|9[2-68])
           )
-          | ( #3 #national prefix
+          | ( #4 national prefix
               [018]|0[126]|04[45]
             )\x20
-          | ( #4 spare_code
+          | ( #5 spare_code
               2(?:1[04579]|59|8\d|9[2-6])
               |384
               |42[24-9]
@@ -62,17 +53,42 @@ cross join regexp_match(t.n,
               |9(?:78|90)
             )
         )
-        \x20?
-        (\d*)  #5 area_code
-        (\x20\d+|\d{7})  #6 local_number
-       $', 'x') as p
+        (?:
+            ((?:\x20?\d)*)  #6 area_code
+            ((?:\x20?\d){7})  #7 local_number long
+          | ((?:\x20?\d){5,6}) #8 local_number short
+        )
+        $' as re
+    from trim(regexp_replace(phone,
+                             '(?:^\+|[ ()\-./]+)',
+                             case when left(phone, 1) = '+' then '' else ' ' end, --speed improves
+                             'g')) as n
+    where octet_length(phone) between (8 + 1/*+*/) and (15 * 2/*учитывам пробелы*/)
+      -- начинается со знака "+" и цифры (E.164 с возможными разделителями групп цифр)
+      -- или начинается с national prefix и не цифры
+      -- или содержит только цифры (E.164 без знака "+")
+      and phone ~ '^\+\d|^(?:[018]|0[126]|04[45])\D|^\d+$'
+)
+--select * from t;
+select trim(replace(p[2], '8 ', '7'))::int as country_code,
+       replace(coalesce(p[6], ''), ' ', '') as area_code, -- do not convert empty sting to null!
+       replace(coalesce(p[7], p[8]), ' ', '') as local_number
+from t
+cross join regexp_match(t.n,
+                        case when begins_special_spare_code then regexp_replace(t.re, '\$(?=21\[04\])', '')
+                             else t.re
+                        end,
+                        'x') as p
 -- проверяем кол-во цифр
 where octet_length(replace(t.n, ' ', ''))
           between 8 --https://stackoverflow.com/questions/14894899/what-is-the-minimum-length-of-a-valid-international-phone-number
           and 15 --https://en.wikipedia.org/wiki/E.164 and https://en.wikipedia.org/wiki/Telephone_numbering_plan
-      and (allow_calling_codes     or p[2] is null)
-      and (allow_national_prefixes or p[3] is null)
-      and (allow_spare_codes       or p[4] is null);
+      and p[2] is not null --country_code
+      and coalesce(p[7], p[8]) is not null --local_number
+      and (allow_calling_codes     or p[3] is null)
+      and (allow_national_prefixes or p[4] is null)
+      and (allow_spare_codes       or p[5] is null)
+      and (not begins_special_spare_code or p[1] is not null);
 $$;
 
 comment on function phone_parse(
@@ -80,13 +96,14 @@ comment on function phone_parse(
     allow_calling_codes     bool,
     allow_national_prefixes bool,
     allow_spare_codes       bool,
+    begins_special_spare_code bool,
     country_code out text,
     area_code    out text,
     local_number out text
 ) is $$
-Парсит номер телефона в международном формате E.164 или в локальном формате.
-Для маленьких стран area_code может отсутствовать.
-Возвращает null, если строка не является номером телефона (минимальная проверка синтаксиса).
+    Парсит номер телефона в международном формате E.164 или в локальном формате.
+    Для маленьких стран area_code может отсутствовать.
+    Возвращает null, если строка не является номером телефона (минимальная проверка синтаксиса).
 $$;
 
 -- TEST
@@ -119,8 +136,8 @@ do $$
                 from phone_parse('8 4991234567'));
 
         assert (select country_code = 54
-                   and area_code = '9'
-                   and local_number = '2982123456'
+                   and area_code = '9298'
+                   and local_number = '2123456'
                 from phone_parse('+54 9 2982 123456'));
 
         assert (select country_code = 375
@@ -141,8 +158,8 @@ do $$
                 from phone_parse('375171234567'));
 
         assert (select country_code = 373
-                   and area_code = '68'
-                   and local_number = '007777'
+                   and area_code = '6'
+                   and local_number = '8007777'
                 from phone_parse('+373 68 007777'));
 
         assert (select country_code = 971
@@ -150,15 +167,33 @@ do $$
                    and local_number = '6721797'
                 from phone_parse('+971 2 672 1797'));
 
+        -- short phone number
         assert (select country_code = 677
                    and area_code  = ''
                    and local_number = '12345'
                 from phone_parse('+677 12345'));
 
+        -- short phone number
+        assert (select country_code = 677
+                   and area_code  = ''
+                   and local_number = '123456'
+                from phone_parse('+677 123456'));
+
+        -- special spare code
+        assert (select country_code = 210
+                           and area_code  = '7906'
+                           and local_number = '1234567'
+                from phone_parse('+21079061234567', true, true, true, false));
+        assert (select country_code = 7
+                           and area_code  = '906'
+                           and local_number = '1234567'
+                from phone_parse('+21479061234567', true, true, true, true));
+
         --negative
         assert phone_parse('74991234567', false, true, true) is null;
         assert phone_parse('8 4991234567', true, false, true) is null;
         assert phone_parse('210 4991234567', true, true, false) is null;
+        assert phone_parse('9991234567') is null; --invalid phone number
         assert phone_parse('+677 1234') is null; --minimum length
         assert phone_parse('+375 17 12345671234567890') is null; --maximum length
     end
