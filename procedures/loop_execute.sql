@@ -23,12 +23,13 @@ $procedure$
 DECLARE
     --константы
     quote_regexp constant text not null default '([[\](){}.+*^$|\\?-])';  -- регулярное выражение для квотирования данных в регулярном выражении
-    ident_regexp constant text not null default '([a-z_]+|"([^"]|"")+")'; -- регулярное выражение для захвата названия SQL идентификатора (таблицы, колонки и др.)
+    ident_regexp constant text not null default '([a-zA-Z_]+[a-zA-Z_\d]*|"([^"]|"")+")'; -- регулярное выражение для захвата названия SQL идентификатора (таблицы, колонки и др.)
     alias_regexp constant text not null default format('(\s+(AS\s+)?%s)?', ident_regexp); -- регулярное выражение для захвата названия SQL необязательного псевдонима (таблицы, колонки и др.)
-    query_count constant text default 'SELECT COUNT(*) FROM %1$s WHERE %2$I > $1 AND %2$I <= $2'; -- SQL запрос для получения processed_rows
+    query_count constant text not null default 'SELECT COUNT(*) FROM %1$s WHERE %2$I > $1 AND %2$I <= $2'; -- SQL запрос для получения processed_rows
     last_subquery_exception_hint constant text not null default e'Last subquery must be:\nSELECT MAX(%I) AS stop_id, COUNT(*) AS affected_rows FROM m';
     lock_timeout_old constant text not null default current_setting('lock_timeout');
-    max_attempts constant smallint not null default 100;
+    max_attempts constant smallint not null default 200;
+    app_name constant text not null default regexp_replace(current_setting('application_name'), '\s*/\d+(?:\.\d+)?%', '');
 
     --статистика
     total_time_start timestamp not null default clock_timestamp();
@@ -41,6 +42,8 @@ DECLARE
     queries_per_second numeric default 0;
     cycles int not null default 0; -- счётчик для цикла
     is_calc_estimated_time boolean not null default false;
+    progress numeric not null default 0;
+    app_name_new text not null default '';
 
     -- свойства таблицы table_name:
     uniq_column_name_quoted text; -- название primary/unique колонки (квотированнное)
@@ -106,7 +109,7 @@ BEGIN
     IF query !~* format('\m%s\M\s*>\s*\$1\M', uniq_column_name_quoted) THEN
         RAISE EXCEPTION 'Entry "% > $1" is not found in your CTE query!', quote_ident(uniq_column_name)
             USING HINT = format('Add "%I > $1" to WHERE clause of SELECT subquery.', uniq_column_name);
-    ELSIF query !~* format('\morder\s+by\s+%s\M(?!\s+desc\M)', uniq_column_name_quoted) THEN
+    ELSIF query !~* format('\morder\s+by\s+(%s\.)?%s\M(?!\s+desc\M)', ident_regexp, uniq_column_name_quoted) THEN
         RAISE EXCEPTION 'Entry "ORDER BY %" is not found in your CTE query!', quote_ident(uniq_column_name)
             USING HINT = format('Add "ORDER BY %I ASC" to end of SELECT subquery.', uniq_column_name);
     ELSIF query !~* '\mlimit\s+\$2\M' THEN
@@ -153,11 +156,11 @@ BEGIN
                     IF cur_attempt < max_attempts THEN
                         time_elapsed := round(extract('epoch' from clock_timestamp() - time_start)::numeric, 2);
                         delay := round(greatest(sqrt(time_elapsed * 1), 1), 2);
-                        RAISE WARNING 'Attempt % of % to execute query failed due lock timeout % second, next replay after % second',
+                        RAISE WARNING 'Attempt % of % to execute query (disable user triggers) failed due lock timeout % s, next replay after % s',
                             cur_attempt, max_attempts, time_max, delay;
                         PERFORM pg_sleep(delay);
                     ELSE
-                        RAISE WARNING 'Attempt % of % to execute query failed due lock timeout % second',
+                        RAISE WARNING 'Attempt % of % to execute query (disable user triggers) failed due lock timeout % s',
                             cur_attempt, max_attempts, time_max;
                         RAISE; -- raise the original exception
                     END IF;
@@ -200,13 +203,14 @@ BEGIN
             EXCEPTION
                 WHEN lock_not_available THEN
                     IF cur_attempt < max_attempts THEN
+                        batch_rows := greatest((batch_rows / 2)::int, 1);
                         time_elapsed := round(extract('epoch' from clock_timestamp() - time_start)::numeric, 2);
                         delay := round(greatest(sqrt(time_elapsed * 1), 1), 2);
-                        RAISE WARNING 'Attempt % of % to execute query failed due lock timeout % second, next replay after % second',
+                        RAISE WARNING 'Attempt % of % to execute CTE query failed due lock timeout % s, next replay after % s',
                             cur_attempt, max_attempts, time_max, delay;
                         PERFORM pg_sleep(delay);
                     ELSE
-                        RAISE WARNING 'Attempt % of % to execute query failed due lock timeout % second',
+                        RAISE WARNING 'Attempt % of % to execute CTE query failed due lock timeout % s',
                             cur_attempt, max_attempts, time_max;
                         RAISE; -- raise the original exception
                     END IF;
@@ -232,11 +236,11 @@ BEGIN
                     IF cur_attempt < max_attempts THEN
                         time_elapsed := round(extract('epoch' from clock_timestamp() - time_start)::numeric, 2);
                         delay := round(greatest(sqrt(time_elapsed * 1), 1), 2);
-                        RAISE WARNING 'Attempt % of % to execute query failed due lock timeout % second, next replay after % second',
+                        RAISE WARNING 'Attempt % of % to execute query (enable user triggers) failed due lock timeout % s, next replay after % s',
                             cur_attempt, max_attempts, time_max, delay;
                         PERFORM pg_sleep(delay);
                     ELSE
-                        RAISE WARNING 'Attempt % of % to execute query failed due lock timeout % second',
+                        RAISE WARNING 'Attempt % of % to execute query (enable user triggers) failed due lock timeout % s',
                             cur_attempt, max_attempts, time_max;
                         RAISE; -- raise the original exception
                     END IF;
@@ -265,6 +269,7 @@ BEGIN
         IF is_calc_estimated_time THEN
             estimated_time := ((total_table_rows * total_time_elapsed / total_processed_rows - total_time_elapsed)::int::text || 's')::interval;
         END IF;
+        progress := round(total_processed_rows * 100.0 / total_table_rows, 2);
 
         --RAISE NOTICE 'Query %, affected % rows, processed % rows (% > %) for % sec %',
         RAISE NOTICE 'Query %: affected % rows, processed % rows, elapsed % sec%',
@@ -275,8 +280,14 @@ BEGIN
         RAISE NOTICE 'Current datetime: %, elapsed time: %, estimated time: %, progress: % %%',
             clock_timestamp()::timestamp(0),
             (clock_timestamp() - total_time_start)::interval(0),
-            COALESCE(estimated_time::text, '?'), round(total_processed_rows * 100.0 / total_table_rows, 2);
+            COALESCE(estimated_time::text, '?'),
+            progress;
         RAISE NOTICE ' '; -- just new line
+
+        app_name_new := concat(app_name, ' /', progress, '%');
+        if octet_length(app_name_new) < 64 then
+            PERFORM set_config('application_name', app_name_new, true);
+        end if;
 
         EXIT WHEN affected_rows < batch_rows OR stop_id_bigint IS NULL OR stop_id_text IS NULL;
 
