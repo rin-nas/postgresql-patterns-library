@@ -17,7 +17,7 @@ create or replace function path_parse(
     Compatible with https://nodejs.org/api/path.html#pathparsepath
     */
     returns record
-    stable
+    immutable
     returns null on null input
     parallel safe
     language sql
