@@ -1,12 +1,15 @@
 create or replace function is_macaddr(str text)
     returns boolean
-    stable
+    immutable
     returns null on null input
     parallel unsafe --(ERROR:  cannot start subtransactions during a parallel operation)
     language sql
 as
 $$
-    select regexp_match(
+select
+    octet_length(str) between 17 --08:00:2b:01:02:03
+                          and 23 --08:00:2b:01:02:03:04:05
+    and regexp_match(
         str,
         --https://postgrespro.ru/docs/postgresql/12/datatype-net-types#DATATYPE-MACADDR
         $regexp$
