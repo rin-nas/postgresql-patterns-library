@@ -3,7 +3,7 @@
 --вычисляет crc32 от строки, возвращает число
 create or replace function crc32(t text)
     returns bigint
-    stable
+    immutable
     returns null on null input
     parallel safe
     language plpgsql
