@@ -1,10 +1,12 @@
+-- TODO add support for https://datatracker.ietf.org/doc/html/rfc3966  (see https://habr.com/ru/post/278345/)
+
 create or replace function phone_normalize(
     country_code int,
     area_code text,
     local_number text
 )
     returns text
-    stable
+    immutable
     --returns null on null input
     parallel safe
     language plpgsql
@@ -13,8 +15,10 @@ $$
 declare
     phone text;
 begin
+    -- not valid speed improves
     if country_code not between 0 and 999
-        or (area_code is null and local_number is null)
+       or coalesce(length(area_code), 0) + coalesce(length(local_number), 0) not between 5 and 100
+       or concat_ws('', area_code, local_number) !~ '\d\d\D*\d\d'
     then
         return null;
     end if;
@@ -29,7 +33,7 @@ begin
     phone := replace(phone, '/', '');
     --raise notice 'stage 1: %', phone;
 
-    if phone !~ '^\d+$'
+    if phone !~ '^\d{5,15}$'
     then
         return null;
     end if;
@@ -84,10 +88,44 @@ comment on function phone_normalize(
 Возвращает null, если строка не является номером телефона (минимальная проверка синтаксиса).
 $$;
 
+create or replace function phone_normalize(
+    country_code text,
+    area_code text,
+    local_number text
+)
+    returns text
+    stable
+    --returns null on null input
+    parallel safe
+    language sql
+as
+$$
+    select phone_normalize(
+                   nullif(trim(country_code), '')::int,
+                   area_code,
+                   local_number
+               )
+$$;
+
+create or replace function phone_normalize(
+    phone text
+)
+    returns text
+    stable
+    returns null on null input
+    parallel safe
+    language sql
+as
+$$
+    select phone_normalize(null, null, phone);
+$$;
+
+
 --TEST
 do $$
     begin
         --positive
+        assert phone_normalize(' ',null,'+7 (977) 123-45-67') = '+79771234567';
         assert phone_normalize(null,null,'+7 (977) 123-45-67') = '+79771234567';
         assert phone_normalize(null,null,'+ 7 (977) 123-45-67') = '+79771234567';
         assert phone_normalize(null,null,'++ 7 (977) 123-45-67 доб 123 Мария') = '+79771234567';
@@ -108,11 +146,12 @@ do $$
         assert phone_normalize(null,'977','123 45 67') = '+79771234567';
         assert phone_normalize(null,'831 66 1-23-45',null) = '+78316612345';
 
-        assert phone_normalize(7,'','8 977 123 45 67') = '+79771234567';
+        assert phone_normalize('7','','8 977 123 45 67') = '+79771234567';
         assert phone_normalize(7,'8 977','123 45 67') = '+79771234567';
         assert phone_normalize(8,'7 977','123 45 67') = '+79771234567';
         assert phone_normalize(7,'977','1234567') = '+79771234567';
         assert phone_normalize(8,null,'8 9771234567') = '+79771234567';
+        assert phone_normalize('8 977 1234567') = '+79771234567';
 
         --negative
         assert phone_normalize(-1,'977','1234567') is null;
