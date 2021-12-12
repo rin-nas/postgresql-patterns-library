@@ -14,7 +14,7 @@ create or replace function phone_parse(
     local_number out text
 )
     returns record
-    stable
+    immutable
     returns null on null input
     parallel safe
     language sql
