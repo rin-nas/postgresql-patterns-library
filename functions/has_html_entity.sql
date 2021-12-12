@@ -1,12 +1,13 @@
 create or replace function has_html_entity(str text)
     returns boolean
-    stable
+    immutable
     returns null on null input
     parallel safe -- Postgres 10 or later
     language sql
 as
 $$
-select regexp_match(
+select position('&' in str) > 0 --speed improves
+       and regexp_match(
             str,
             --https://stackoverflow.com/questions/15532252/why-is-reg-being-rendered-as-without-the-bounding-semicolon
             --https://html.spec.whatwg.org/multipage/named-characters.html#named-character-references
