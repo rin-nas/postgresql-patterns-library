@@ -3,13 +3,15 @@
 -- https://www.php.net/manual/ru/function.crypt.php
 create or replace function is_crypt(str text)
     returns boolean
-    stable
+    immutable
     returns null on null input
     parallel safe -- Postgres 10 or later
     language sql
 as
 $$
-select regexp_match(
+select
+    octet_length(str) between (5+22) and 118 --speed improves
+    and regexp_match(
             str,
             --$id$salt$encrypted
             --$id$rounds=yyy$salt$encrypted
