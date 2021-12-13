@@ -1,19 +1,32 @@
-CREATE OR REPLACE FUNCTION replace_pairs(str text, input jsonb)
-    RETURNS text
-    LANGUAGE plpgsql AS
-$func$
-DECLARE
-    rec record;
-BEGIN
-    FOR rec IN
-        SELECT * FROM jsonb_each_text(input) ORDER BY length(key) DESC
-        LOOP
-            str := replace(str, rec.key, rec.value);
-    END LOOP;
+-- TODO https://wiki.postgresql.org/wiki/Multi_Replace_plpgsql
 
-    RETURN str;
-END
+create or replace function replace_pairs(str text, input jsonb)
+    returns text
+    immutable
+    returns null on null input
+    parallel safe -- postgres 10 or later
+    language plpgsql
+as
+$func$
+declare
+    rec record;
+begin
+    for rec in
+        select * from jsonb_each_text(input) order by length(key) desc
+    loop
+        str := replace(str, rec.key, rec.value);
+    end loop;
+
+    return str;
+end
 $func$;
 
--- test
-select replace_pairs('aaabaaba', '{"aa":2, "a":1}'::jsonb); -- 21b2b1
+-- TEST
+do $$
+begin
+    assert replace_pairs('aaabaaba', jsonb_build_object(
+        'aa', 2,
+        'a', 1
+    )) = '21b2b1';
+end
+$$;
