@@ -7,7 +7,7 @@ create or replace function use_parallel(
     -- Принимает решение, использовать преданный номер ядра процессора или нет
     -- Пример: WHERE use_parallel(id, 1, 5)
     returns boolean
-    stable
+    immutable
     returns null on null input
     parallel safe
     language plpgsql
@@ -43,7 +43,7 @@ create or replace function use_parallel(
     -- Принимает решение, использовать преданный номер процессора или нет
     -- Пример: WHERE use_parallel('mike@domain.com', 1, 5)
     returns boolean
-    stable
+    immutable
     returns null on null input
     parallel safe
     language plpgsql
