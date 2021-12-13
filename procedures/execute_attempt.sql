@@ -27,6 +27,7 @@ begin
             if cur_attempt < max_attempts then
                 time_elapsed := round(extract('epoch' from clock_timestamp() - time_start)::numeric, 2);
                 delay := round(greatest(sqrt(time_elapsed * 1), 1), 2);
+                delay := round(((random() * (delay - 1)) + 1)::numeric, 2);
                 raise warning
                     'Attempt % of % to execute query failed due lock timeout %, next replay after % second',
                     cur_attempt, max_attempts, lock_timeout, delay;
