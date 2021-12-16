@@ -56,3 +56,10 @@ comment on procedure execute_attempt(
     Пытается выполнить запрос с учётом ограничения lock_timeout.
     В случае неудачи делает задержку выполнения и повторяет попытку N раз.
 $$;
+
+/*
+TODO
+Наблюдал следующую ситуацию. 
+Выполнил для большой таблицы call execute_attempt('alter table tbl alter column id type bigint using id::bigint');
+После этого INSERT запросы в эту таблицу выстроились в очередь. Пришлось alter table отменить, он сам не отвалился по таймауту.
+*/
