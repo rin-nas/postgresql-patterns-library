@@ -1,4 +1,3 @@
-DROP DOMAIN IF EXISTS phone;
 CREATE DOMAIN phone AS text CHECK(
     octet_length(VALUE)
         BETWEEN 1/*+*/ + 8  --https://stackoverflow.com/questions/14894899/what-is-the-minimum-length-of-a-valid-international-phone-number
