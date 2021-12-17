@@ -9,6 +9,7 @@
       1. [Как удалить все невалидные email из большой таблицы?](#Как-удалить-все-невалидные-email-из-большой-таблицы)
       1. [Как проверить CSS цвет на валидность?](#Как-проверить-CSS-цвет-на-валидность)
       1. [Как проверить ИНН на валидность?](#Как-проверить-ИНН-на-валидность)
+      1. [Как проверить номер телефона на валидность?](#Как-проверить-номер-телефона-на-валидность?)
       1. [Как провалидировать значение поля, только если оно явно указано в UPDATE запросе?](#Как-провалидировать-значение-поля-только-если-оно-явно-указано-в-UPDATE-запросе)
    1. [Строки](#Строки)
       1. [Агрегатная функция конкатенации строк (аналог `group_concat()` в MySQL)](#Агрегатная-функция-конкатенации-строк-аналог-group_concat-в-MySQL)
@@ -203,6 +204,27 @@ select '1234567890123'::inn12; --error
 ```
 
 [`is_inn.sql`](functions/is_inn.sql)
+
+#### Как проверить номер телефона на валидность?
+
+Номер телефона в международном формате E.164:
+
+```sql
+DROP DOMAIN IF EXISTS phone CASCADE;
+CREATE DOMAIN phone AS text CHECK(
+    octet_length(VALUE)
+        BETWEEN 1/*+*/ + 8  --https://stackoverflow.com/questions/14894899/what-is-the-minimum-length-of-a-valid-international-phone-number
+            AND 1/*+*/ + 15 --https://en.wikipedia.org/wiki/E.164 and https://en.wikipedia.org/wiki/Telephone_numbering_plan
+                       + 3  --reserved for depersonalization
+    AND VALUE ~ '^\+\d+$' --international E.164 format
+);
+```
+
+См. ещё функции:
+  1. [`phone_normalize.sql`](functions/phone_normalize.sql)
+  1. [`phone_parse.sql`](functions/phone_parse.sql)
+  1. [`phone_format.sql`](functions/phone_format.sql)
+  1. [`phone_format_record.sql`](functions/phone_format_record.sql)
 
 #### Как провалидировать значение поля, только если оно явно указано в UPDATE запросе?
 
