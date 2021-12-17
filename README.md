@@ -115,7 +115,7 @@ CREATE DOMAIN email AS text CHECK(
     (
       octet_length(VALUE) BETWEEN 6 AND 320 -- https://en.wikipedia.org/wiki/Email_address
       AND VALUE LIKE '_%@_%.__%'            -- rough, but quick check email syntax
-      AND is_email(VALUE)                   -- accurate, but slow check email syntax
+      --AND is_email(VALUE)                 -- accurate, but slow check email syntax (DO NOT USE IN DOMAIN!)
     )
 );
 
