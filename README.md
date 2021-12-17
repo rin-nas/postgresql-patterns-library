@@ -109,36 +109,7 @@
 
 #### Как проверить email на валидность?
 
-```sql
-CREATE DOMAIN email AS text CHECK(
-    -- VALUE ~ '^\s*$' OR -- empty (similar NULL for NOT NULL column)
-    (
-      octet_length(VALUE) BETWEEN 6 AND 320 -- https://en.wikipedia.org/wiki/Email_address
-      AND VALUE LIKE '_%@_%.__%'            -- rough, but quick check email syntax
-      --AND is_email(VALUE)                 -- accurate, but very slow check email syntax (DO NOT USE IN DOMAIN!)
-    )
-);
-
-
---TEST
-
-do $$
-    begin
-        assert null::email is null;
-        assert 'e@m.ai'::email is not null;
-    end
-$$;
-
-
-do $$
-    BEGIN
-        assert 'e@m.'::email is not null ; --raise exception [23514] ERROR: value for domain email violates check constraint "email_check"
-    EXCEPTION WHEN SQLSTATE '23514' THEN
-    END;
-$$;
-```
-
-См. [`is_email.sql`](functions/is_email.sql)
+Домен [`email.sql`](domains/email.sql) и функция [`is_email.sql`](functions/is_email.sql)
 
 #### Как найти все невалидные email в таблице?
 
@@ -154,7 +125,7 @@ WHERE email IS NOT NULL    -- skip NULL
     )
 ```
 
-См. [`is_email.sql`](functions/is_email.sql)
+Функция [`is_email.sql`](functions/is_email.sql)
 
 #### Как удалить все невалидные email из большой таблицы?
 
@@ -166,59 +137,19 @@ WHERE email IS NOT NULL    -- skip NULL
 
 #### Как проверить CSS цвет на валидность?
 
-```sql
--- https://developer.mozilla.org/en-US/docs/Web/CSS/color_value
--- https://regex101.com/r/CMQKwv/3/
-CREATE DOMAIN css_color AS text CHECK(
-    octet_length(VALUE) BETWEEN 4 AND 9 
-    AND VALUE ~ '^#[a-fA-F\d]{3}(?:[a-fA-F\d]{3})?$|^#[a-fA-F\d]{4}(?:[a-fA-F\d]{4})?$'
-);
-
-select '#777'::css_color; --ok
-select '$777'::css_color; --error
-```
+Домен [`css_color.sql`](domains/css_color.sql)
 
 #### Как проверить ИНН на валидность?
 
 https://ru.wikipedia.org/wiki/Идентификационный_номер_налогоплательщика
 
-```sql
-CREATE DOMAIN inn10 AS text CHECK(is_inn10(VALUE)); -- ИНН юридического лица
-CREATE DOMAIN inn12 AS text CHECK(is_inn12(VALUE)); -- ИНН физического лица и ИП
-CREATE DOMAIN inn AS text CHECK(is_inn10(VALUE) OR is_inn12(VALUE)); -- ИНН юридического или физического лица или ИП
+Домены [`inn.sql`](domains/inn.sql), [`inn10.sql`](domains/inn10.sql), [`inn12.sql`](domains/inn12.sql).
 
-select '7725088527'::inn; --ok
-select '7715034360'::inn10; --ok
-select '773370857141'::inn; --ok
-select '344809916052'::inn12; --ok
-
-select '1234567890'::inn; --error
-select '123456789012'::inn; --error
-select '1234567890'::inn10; --error
-select '123456789012'::inn12; --error
-
-select '12345678901'::inn; --error
-select '1234567890123'::inn; --error
-select '12345678901'::inn10; --error
-select '1234567890123'::inn12; --error
-```
-
-[`is_inn.sql`](functions/is_inn.sql)
+Функции [`is_inn.sql`](functions/is_inn.sql), [`is_inn10.sql`](functions/is_inn10.sql), [`is_inn12.sql`](functions/is_inn12.sql).
 
 #### Как проверить номер телефона на валидность?
 
-Номер телефона в международном формате E.164:
-
-```sql
-DROP DOMAIN IF EXISTS phone CASCADE;
-CREATE DOMAIN phone AS text CHECK(
-    octet_length(VALUE)
-        BETWEEN 1/*+*/ + 8  --https://stackoverflow.com/questions/14894899/what-is-the-minimum-length-of-a-valid-international-phone-number
-            AND 1/*+*/ + 15 --https://en.wikipedia.org/wiki/E.164 and https://en.wikipedia.org/wiki/Telephone_numbering_plan
-                       + 3  --reserved for depersonalization
-    AND VALUE ~ '^\+\d+$' --international E.164 format
-);
-```
+Домен [`phone.sql`](domains/phone.sql) для валидации номера телефона в международном формате E.164
 
 См. ещё функции:
   1. [`phone_normalize.sql`](functions/phone_normalize.sql)
