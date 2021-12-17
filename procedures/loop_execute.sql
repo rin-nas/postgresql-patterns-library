@@ -1,13 +1,18 @@
 create or replace procedure loop_execute(
     --обязательные параметры:
-    table_name  regclass, -- название основной таблицы (дополненное схемой, при необходимости), из которой данные порциями в цикле будут читаться и модифицироваться
+    table_name  regclass, -- название основной таблицы (дополненное схемой через точку, при необходимости),
+                          -- из которой данные порциями в цикле будут читаться и модифицироваться
     query       text, -- CTE запрос с SELECT, INSERT/UPDATE/DELETE и SELECT запросами для модификации записей
     --необязательные параметры:
     is_disable_user_triggers boolean default false, --выключать срабатывание пользовательских триггеров в таблице
-    batch_rows  integer default 1, -- сколько записей будем модифицировать за 1 цикл (значение автоматически подстраивается под time_max), рекомендуется 1
+    batch_rows  integer default 1, -- стартовое значение, сколько записей будем модифицировать за 1 цикл (рекомендуется 1)
+                                   -- значение автоматически подстраивается под time_max
     time_max    numeric default 1, -- пороговое максимальное время выполнения 1-го запроса, в секундах, рекомендуется 1
     is_rollback boolean default false, -- откатывать запрос после каждого выполнения в цикле (для целей тестирования)
     cycles_max  integer default null, -- максимальное количество циклов (для целей тестирования)
+    total_table_rows integer default null, -- сколько всего записей в таблице (для вычисления прогресса выполнения)
+                                           -- если null, то автоматически вычисляется приблизительное значение, но быстро
+                                           -- если < 0, то автоматически вычисляется точное значение, но медленно
     --возвращаемые из процедуры параметры:
     inout result record default null
     /*
@@ -25,16 +30,17 @@ DECLARE
     quote_regexp constant text not null default '([[\](){}.+*^$|\\?-])';  -- регулярное выражение для квотирования данных в регулярном выражении
     ident_regexp constant text not null default '([a-zA-Z_]+[a-zA-Z_\d]*|"([^"]|"")+")'; -- регулярное выражение для захвата названия SQL идентификатора (таблицы, колонки и др.)
     alias_regexp constant text not null default format('(\s+(AS\s+)?%s)?', ident_regexp); -- регулярное выражение для захвата названия SQL необязательного псевдонима (таблицы, колонки и др.)
-    query_count constant text not null default 'SELECT COUNT(*) FROM %1$s WHERE %2$I > $1 AND %2$I <= $2'; -- SQL запрос для получения processed_rows
+    query_type_regexp constant text not null default '\m(?:(INSERT)\s+INTO|(UPDATE)(?:\s+ONLY)?|(DELETE)\s+FROM(?:\s+ONLY)?)\s+%s\M';
+    count_query constant text not null default 'SELECT COUNT(*) FROM %1$s WHERE %2$I > $1 AND %2$I <= $2'; -- SQL запрос для получения processed_rows
     last_subquery_exception_hint constant text not null default e'Last subquery must be:\nSELECT MAX(%I) AS stop_id, COUNT(*) AS affected_rows FROM m';
-    lock_timeout_old constant text not null default current_setting('lock_timeout');
+    old_lock_timeout constant text not null default current_setting('lock_timeout');
     max_attempts constant smallint not null default 200;
     app_name constant text not null default regexp_replace(current_setting('application_name'), '\s*/\d+(?:\.\d+)?%', '');
+    multiplier constant int not null default 2;
 
     --статистика
     total_time_start timestamp not null default clock_timestamp();
     total_time_elapsed numeric not null default 0; -- длительность выполнения всех запросов, в секундах
-    total_table_rows int not null default 0; -- сколько всего записей в таблице
     total_affected_rows int not null default 0; -- сколько всего записей модифицировал пользовательский запрос в таблице
     total_processed_rows int not null default 0; -- сколько всего записей просмотрел пользовательский запрос в таблице
     estimated_time interval; -- оценочное время, сколько осталось работать
@@ -46,7 +52,8 @@ DECLARE
     app_name_new text not null default '';
 
     -- свойства таблицы table_name:
-    uniq_column_name_quoted text; -- название primary/unique колонки (квотированнное)
+    table_name_quoted text; -- название таблицы (квотированнное) для использования в рег. выражении
+    uniq_column_name_quoted text; -- название primary/unique колонки (квотированнное) для использования в рег. выражении
     uniq_column_name text; -- название primary/unique колонки
     uniq_column_type text; -- тип primary/unique колонки
 
@@ -59,9 +66,11 @@ DECLARE
     processed_rows bigint not null default 0; --сколько записей просмотрел пользовательский запрос
     query_time_start timestamp;
     query_time_elapsed numeric not null default 0; -- длительность выполнения одного запроса, в секундах
+    query_type text; --тип запроса: INSERT/UPDATE/DELETE
+    triggers_count int; --количество пользовательских триггеров для типа запроса query_type
     time_start timestamp;
     time_elapsed numeric not null default 0;
-    delay numeric;
+    delay numeric; --задержка в секундах при возникновении блокировок
 BEGIN
 
     -- 1) проверка входящих параметров
@@ -89,7 +98,7 @@ BEGIN
            format_type(pg_attribute.atttypid, pg_attribute.atttypmod)
     INTO uniq_column_name, uniq_column_type
     FROM pg_index, pg_class, pg_attribute, pg_namespace
-    WHERE pg_class.oid = table_name
+    WHERE pg_class.oid = loop_execute.table_name
       AND pg_index.indrelid = pg_class.oid
       AND pg_class.relnamespace = pg_namespace.oid
       AND pg_attribute.attrelid = pg_class.oid
@@ -103,10 +112,15 @@ BEGIN
         RAISE EXCEPTION 'Table % must has a column with primary/unique not null index!', table_name;
     END IF;
 
-    -- 3) проверка необходимых частей в пользовательском запросе (защита от дурака)
+    -- 3) проверка необходимых частей в пользовательском запросе (в т.ч. защита от дурака)
+    table_name_quoted       := regexp_replace(table_name::text, quote_regexp, '\\\1', 'g');
     uniq_column_name_quoted := regexp_replace(quote_ident(uniq_column_name), quote_regexp, '\\\1', 'g');
+    query_type              := (array_remove(regexp_match(query, format(query_type_regexp, table_name_quoted)), null))[1];
 
-    IF query !~* format('\m%s\M\s*>\s*\$1\M', uniq_column_name_quoted) THEN
+    IF query_type IS NULL THEN
+        RAISE EXCEPTION 'Unknown CTE query type, expected INSERT/UPDATE/DELETE!'
+             USING HINT = 'Does CTE query has an INSERT/UPDATE/DELETE subquery?';
+    ELSIF query !~* format('\m%s\M\s*>\s*\$1\M', uniq_column_name_quoted) THEN
         RAISE EXCEPTION 'Entry "% > $1" is not found in your CTE query!', quote_ident(uniq_column_name)
             USING HINT = format('Add "%I > $1" to WHERE clause of SELECT subquery.', uniq_column_name);
     ELSIF query !~* format('\morder\s+by\s+(%s\.)?%s\M(?!\s+desc\M)', ident_regexp, uniq_column_name_quoted) THEN
@@ -128,8 +142,15 @@ BEGIN
 
     -- 4) подсчёт общего кол-ва записей
     query_time_start := clock_timestamp();
-    RAISE NOTICE 'Calculating total rows for table % ...', table_name;
-    EXECUTE format('SELECT COUNT(*) FROM %1$s', table_name) INTO total_table_rows;
+    IF total_table_rows IS NULL THEN
+        RAISE NOTICE 'Calculating estimate total rows for table % ...', table_name;
+        select reltuples::bigint into total_table_rows
+        from pg_class
+        where oid = loop_execute.table_name;
+    ELSIF total_table_rows < 0 THEN
+        RAISE NOTICE 'Calculating exact total rows for table % ...', table_name;
+        EXECUTE format('SELECT COUNT(*) FROM %1$s', table_name) INTO total_table_rows;
+    END IF;
 
     query_time_elapsed := round(extract('epoch' from clock_timestamp() - query_time_start)::numeric, 2);
     total_time_elapsed := round(extract('epoch' from clock_timestamp() - total_time_start)::numeric, 2);
@@ -139,6 +160,25 @@ BEGIN
 
     RAISE NOTICE 'Done. % total rows found for % sec', total_table_rows, query_time_elapsed;
     RAISE NOTICE ' '; -- just new line
+
+    -- 5) нет необходимости явно отключать пользовательские триггеры, если их нет (их отключение -- это блокировка таблицы)
+    IF is_disable_user_triggers THEN
+        select count(*)
+        into triggers_count
+        from pg_trigger as t
+        cross join lateral (
+            select array_agg(types.name)
+            from (values (4, 'INSERT'), (8, 'DELETE'), (16, 'UPDATE')) types(num, name)
+            where types.num & t.tgtype != 0
+        ) as type(names)
+        where tgrelid = loop_execute.table_name
+          and not tgisinternal
+          and query_type = ANY(names);
+
+        RAISE NOTICE 'Table % has % triggers for event %', table_name, triggers_count, query_type;
+        RAISE NOTICE ' '; -- just new line
+        is_disable_user_triggers := triggers_count > 0;
+    END IF;
 
     LOOP
         EXIT WHEN cycles >= cycles_max;
@@ -155,7 +195,8 @@ BEGIN
                 EXCEPTION WHEN lock_not_available THEN
                     IF cur_attempt < max_attempts THEN
                         time_elapsed := round(extract('epoch' from clock_timestamp() - time_start)::numeric, 2);
-                        delay := round(greatest(sqrt(time_elapsed * 1), 1), 2);
+                        delay := round(greatest(sqrt(time_elapsed * time_max), time_max), 2);
+                        delay := round(((random() * (delay - time_max)) + time_max)::numeric, 2);
                         RAISE WARNING 'Attempt % of % to execute query (disable user triggers) failed due lock timeout % s, next replay after % s',
                             cur_attempt, max_attempts, time_max, delay;
                         PERFORM pg_sleep(delay);
@@ -182,7 +223,7 @@ BEGIN
                                         start_id_bigint, stop_id_bigint
                             USING HINT = format(last_subquery_exception_hint, uniq_column_name);
                     END IF;
-                    EXECUTE format(query_count, table_name, uniq_column_name) USING start_id_bigint, stop_id_bigint INTO processed_rows;
+                    EXECUTE format(count_query, table_name, uniq_column_name) USING start_id_bigint, stop_id_bigint INTO processed_rows;
                 ELSIF uniq_column_type ~* '\m(varying|character|text|char|varchar)\M' THEN
                     start_id_text := stop_id_text;
                     EXECUTE query USING start_id_text, batch_rows INTO STRICT stop_id_text, affected_rows;
@@ -192,7 +233,7 @@ BEGIN
                                         quote_literal(start_id_text), quote_literal(stop_id_text)
                             USING HINT = format(last_subquery_exception_hint, uniq_column_name);
                     END IF;
-                    EXECUTE format(query_count, table_name, uniq_column_name) USING start_id_text, stop_id_text INTO processed_rows;
+                    EXECUTE format(count_query, table_name, uniq_column_name) USING start_id_text, stop_id_text INTO processed_rows;
                 ELSE
                     RAISE EXCEPTION 'Column %.% has unsupported type % ', table_name, uniq_column_name, uniq_column_type
                         USING HINT = 'You can add support by modify procedure :-)';
@@ -203,9 +244,10 @@ BEGIN
             EXCEPTION
                 WHEN lock_not_available THEN
                     IF cur_attempt < max_attempts THEN
-                        batch_rows := greatest((batch_rows / 2)::int, 1);
+                        batch_rows := greatest((batch_rows / multiplier)::int, 1);
                         time_elapsed := round(extract('epoch' from clock_timestamp() - time_start)::numeric, 2);
-                        delay := round(greatest(sqrt(time_elapsed * 1), 1), 2);
+                        delay := round(greatest(sqrt(time_elapsed * time_max), time_max), 2);
+                        delay := round(((random() * (delay - time_max)) + time_max)::numeric, 2);
                         RAISE WARNING 'Attempt % of % to execute CTE query failed due lock timeout % s, next replay after % s',
                             cur_attempt, max_attempts, time_max, delay;
                         PERFORM pg_sleep(delay);
@@ -226,7 +268,7 @@ BEGIN
         END LOOP; --FOR
         query_time_elapsed := round(extract('epoch' from clock_timestamp() - query_time_start)::numeric, 2);
 
-        IF is_disable_user_triggers and not is_rollback THEN
+        IF is_disable_user_triggers THEN
             time_start := clock_timestamp();
             FOR cur_attempt IN 1..max_attempts LOOP
                 BEGIN
@@ -235,7 +277,8 @@ BEGIN
                 EXCEPTION WHEN lock_not_available THEN
                     IF cur_attempt < max_attempts THEN
                         time_elapsed := round(extract('epoch' from clock_timestamp() - time_start)::numeric, 2);
-                        delay := round(greatest(sqrt(time_elapsed * 1), 1), 2);
+                        delay := round(greatest(sqrt(time_elapsed * time_max), time_max), 2);
+                        delay := round(((random() * (delay - time_max)) + time_max)::numeric, 2);
                         RAISE WARNING 'Attempt % of % to execute query (enable user triggers) failed due lock timeout % s, next replay after % s',
                             cur_attempt, max_attempts, time_max, delay;
                         PERFORM pg_sleep(delay);
@@ -248,7 +291,7 @@ BEGIN
             END LOOP; --FOR
         END IF;
 
-        PERFORM set_config('lock_timeout', lock_timeout_old, true);
+        PERFORM set_config('lock_timeout', old_lock_timeout, true);
 
         IF is_rollback THEN
             ROLLBACK AND CHAIN;
@@ -260,12 +303,17 @@ BEGIN
 
         total_affected_rows  := total_affected_rows  + affected_rows;
         total_processed_rows := total_processed_rows + processed_rows;
+        IF total_processed_rows > total_table_rows THEN
+            --в случае приблизительного вычисления кол-ва строк в таблице
+            total_table_rows := total_processed_rows;
+            result.table_rows := total_table_rows;
+        END IF;
 
         result.time_elapsed   := total_time_elapsed;
         result.affected_rows  := total_affected_rows;
         result.processed_rows := total_processed_rows;
 
-        is_calc_estimated_time := not is_calc_estimated_time and (cycles > 16 or query_time_elapsed > time_max);
+        is_calc_estimated_time := not is_calc_estimated_time and (cycles > 10 or (query_time_elapsed > time_max and cycles > 4));
         IF is_calc_estimated_time THEN
             estimated_time := ((total_table_rows * total_time_elapsed / total_processed_rows - total_time_elapsed)::int::text || 's')::interval;
         END IF;
@@ -292,11 +340,15 @@ BEGIN
         EXIT WHEN affected_rows < batch_rows OR stop_id_bigint IS NULL OR stop_id_text IS NULL;
 
         IF query_time_elapsed <= time_max THEN
-            batch_rows := batch_rows * 2;
+            batch_rows := case when query_time_elapsed = 0 then batch_rows * multiplier
+                               else least((batch_rows * time_max / query_time_elapsed)::int, batch_rows * multiplier)
+                          end;
         ELSIF batch_rows > 1 THEN
-            batch_rows := (batch_rows / 2)::int;
+            batch_rows := greatest((batch_rows * time_max / query_time_elapsed)::int, (batch_rows / multiplier)::int);
         ELSE
-            PERFORM pg_sleep(greatest(sqrt(query_time_elapsed * time_max) - time_max, 0)); --try to save DB from overload
+            delay := round(greatest(sqrt(query_time_elapsed * time_max) - time_max, 0), 2);
+            RAISE WARNING 'Try to save DB from overload, next replay after % s', delay;
+            PERFORM pg_sleep(delay);
         END IF;
 
     END LOOP;
@@ -317,15 +369,17 @@ comment on procedure loop_execute(
     query       text,
     --необязательные параметры:
     is_disable_user_triggers boolean,
-    batch_rows  int,
+    batch_rows  integer,
     time_max    numeric,
     is_rollback boolean,
     cycles_max  integer,
+    total_table_rows integer,
     --возвращаемые из процедуры параметры:
     inout result record
 ) is $$
 Процедура для обработки строк в больших таблицах (тысячи и миллионы строк) с контролируемым временем блокировки строк на запись.
-Принцип работы -- выполняет CTE DML запрос в цикле. В завершении каждого цикла изменения фиксируются (либо откатываются для целей тестирования, это настраивается).
+Принцип работы -- выполняет в цикле CTE DML запрос, который добавляет, обновляет или удаляет записи в таблице.
+В завершении каждого цикла изменения фиксируются (либо откатываются для целей тестирования, это настраивается).
 Автоматически адаптируется под нагрузку на БД. На реплику данные передаются постепенно небольшими порциями, а не одним огромным куском.
 В процессе обработки показывает в psql консоли:
    * количество модифицированных и обработанных записей в таблице
