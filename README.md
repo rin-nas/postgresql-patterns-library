@@ -132,7 +132,7 @@ $$;
 
 do $$
     BEGIN
-        assert 'e@m.__'::email is not null ; --raise exception [23514] ERROR: value for domain email violates check constraint "email_check"
+        assert 'e@m.'::email is not null ; --raise exception [23514] ERROR: value for domain email violates check constraint "email_check"
     EXCEPTION WHEN SQLSTATE '23514' THEN
     END;
 $$;
