@@ -238,7 +238,9 @@ CREATE OR REPLACE FUNCTION person_email_check() RETURNS TRIGGER
     LANGUAGE plpgsql AS
 $$
 BEGIN
-    PERFORM NEW.email::email;
+    IF NOT is_email(NEW.email) THEN
+        RAISE EXCEPTION 'Email % is not valid', NEW.email;
+    END IF;
     RETURN NEW;
 END;
 $$;
