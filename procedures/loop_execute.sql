@@ -4,7 +4,7 @@ create or replace procedure loop_execute(
                           -- из которой данные порциями в цикле будут читаться и модифицироваться
     query       text, -- CTE запрос с SELECT, INSERT/UPDATE/DELETE и SELECT запросами для модификации записей
     --необязательные параметры:
-    is_disable_user_triggers boolean default false, --выключать срабатывание пользовательских триггеров в таблице
+    is_disable_triggers boolean default false, --выключать срабатывание триггеров в таблице
     batch_rows  integer default 1, -- стартовое значение, сколько записей будем модифицировать за 1 цикл (рекомендуется 1)
                                    -- значение автоматически подстраивается под time_max
     time_max    numeric default 1, -- пороговое максимальное время выполнения 1-го запроса, в секундах, рекомендуется 1
@@ -71,6 +71,7 @@ DECLARE
     time_start timestamp;
     time_elapsed numeric not null default 0;
     delay numeric; --задержка в секундах при возникновении блокировок
+    is_superuser boolean not null default false;
 BEGIN
 
     -- 1) проверка входящих параметров
@@ -161,8 +162,8 @@ BEGIN
     RAISE NOTICE 'Done. % total rows found for % sec', total_table_rows, query_time_elapsed;
     RAISE NOTICE ' '; -- just new line
 
-    -- 5) нет необходимости явно отключать пользовательские триггеры, если их нет (их отключение -- это блокировка таблицы)
-    IF is_disable_user_triggers THEN
+    -- 5) нет необходимости явно отключать пользовательские триггеры, если их нет (их отключение -- это блокировка таблицы для не суперпользователя)
+    IF is_disable_triggers THEN
         select count(*)
         into triggers_count
         from pg_trigger as t
@@ -177,7 +178,10 @@ BEGIN
 
         RAISE NOTICE 'Table % has % triggers for event %', table_name, triggers_count, query_type;
         RAISE NOTICE ' '; -- just new line
-        is_disable_user_triggers := triggers_count > 0;
+        is_disable_triggers := triggers_count > 0;
+        IF is_disable_triggers THEN
+            SELECT rolsuper INTO is_superuser FROM pg_roles where rolname = CURRENT_USER;
+        END IF;
     END IF;
 
     LOOP
@@ -186,11 +190,15 @@ BEGIN
 
         PERFORM set_config('lock_timeout', (time_max * 1000)::text, true);
 
-        IF is_disable_user_triggers THEN
+        IF is_disable_triggers THEN
             time_start := clock_timestamp();
             FOR cur_attempt IN 1..max_attempts LOOP
                 BEGIN
-                    EXECUTE format('ALTER TABLE %s DISABLE TRIGGER USER', table_name);
+                    IF is_superuser THEN
+                        set local session_replication_role = 'replica';
+                    ELSE
+                        EXECUTE format('ALTER TABLE %s DISABLE TRIGGER USER', table_name);
+                    END IF;
                     EXIT; --запрос выполнился успешно, выходим из цикла FOR ... LOOP
                 EXCEPTION WHEN lock_not_available THEN
                     IF cur_attempt < max_attempts THEN
@@ -268,11 +276,15 @@ BEGIN
         END LOOP; --FOR
         query_time_elapsed := round(extract('epoch' from clock_timestamp() - query_time_start)::numeric, 2);
 
-        IF is_disable_user_triggers THEN
+        IF is_disable_triggers THEN
             time_start := clock_timestamp();
             FOR cur_attempt IN 1..max_attempts LOOP
                 BEGIN
-                    EXECUTE format('ALTER TABLE %s ENABLE TRIGGER USER', table_name);
+                    IF is_superuser THEN
+                        set local session_replication_role = 'origin';
+                    ELSE
+                        EXECUTE format('ALTER TABLE %s ENABLE TRIGGER USER', table_name);
+                    END IF;
                     EXIT; --запрос выполнился успешно, выходим из цикла FOR ... LOOP
                 EXCEPTION WHEN lock_not_available THEN
                     IF cur_attempt < max_attempts THEN
@@ -368,7 +380,7 @@ comment on procedure loop_execute(
     table_name  regclass,
     query       text,
     --необязательные параметры:
-    is_disable_user_triggers boolean,
+    is_disable_triggers boolean,
     batch_rows  integer,
     time_max    numeric,
     is_rollback boolean,
