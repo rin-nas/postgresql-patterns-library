@@ -57,6 +57,7 @@
    1. https://tapoueh.org/blog/2013/08/understanding-window-functions/ — Understanding Window Functions
    1. https://blog.jooq.org/2014/04/29/nosql-no-sql-how-to-calculate-running-totals/ — How to Calculate Running Totals
    1. https://hashrocket.com/blog/posts/faster-json-generation-with-postgresql — генерация JSON 
+   1. https://shusson.info/post/building-nested-json-objects-with-postgres — генерация JSON
    1. https://tapoueh.org/blog/2018/05/postgresql-data-types-point/ (см. запрос с итоговыми суммами и диаграммами внизу)
    1. [задача параллельной многопроцессной обработки очереди](http://dklab.ru/chicken/nablas/53.html), обсуждение на [форуме](https://www.sql.ru/forum/681777/obsuzhdaem-blokirovki-pg-try-advisory-lock)
    1. https://pgday.ru/files/pgmaster14/max.boguk.query.optimization.pdf (оптимизация запросов)
@@ -83,5 +84,5 @@
       1. https://ru.wikipedia.org/wiki/Дерево_Штерна_—_Броко
       1. https://www.youtube.com/watch?v=qPeD87HJ0UA&ab_channel=InsightsintoMathematics
       1. https://wiki.postgresql.org/wiki/User-specified_ordering_with_fractions
-      2. https://github.com/begriffs/pg_rational
-      3. https://begriffs.com/pdf/dec2frac.pdf
+      1. https://github.com/begriffs/pg_rational
+      1. https://begriffs.com/pdf/dec2frac.pdf
