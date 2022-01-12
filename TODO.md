@@ -313,3 +313,7 @@ DO $$
     END;
 $$;
 ```
+
+# gender_by_name
+
+http://ceur-ws.org/Vol-2754/paper3.pdf
