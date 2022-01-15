@@ -261,10 +261,7 @@ id|kladr_id|name
 
 #### Как определить пол по ФИО (фамилии, имени, отчеству) на русском языке?
 
-* [`gender_by_name.sql`](functions/gender_by_name/gender_by_name.sql)
-* [`tables.sql`](functions/gender_by_name/tables.sql)
-* [`gender_by_ending.csv`](functions/gender_by_name/gender_by_ending.csv)
-* [`person_name_dictionary.csv`](functions/gender_by_name/person_name_dictionary.csv)
+* [`gender_by_name`](functions/gender_by_name/)
 
 #### Как заквотировать строку для использования в регулярном выражении?
 
