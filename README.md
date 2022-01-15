@@ -1850,7 +1850,6 @@ FROM pg_stat_bgwriter
 */
  
 BEGIN;
-    -- ВНИМАНИЕ! Замечено в PostgreSQL 10.5, что lock_timeout работает не надёжно и DML запросы могут встать в очередь!
     DO $$
     DECLARE
         exception_message text;
