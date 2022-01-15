@@ -7,7 +7,7 @@ call loop_execute(
                    hash_email_username(email, id)
             FROM person_email
             WHERE id > $1
-              AND use_parallel(id, 1, 1)
+              AND use_parallel(id, 0, 0)
               AND email IS NOT NULL AND TRIM(email) != ''
               AND NOT is_email_ignore(email)
             ORDER BY id
@@ -42,7 +42,7 @@ call loop_execute(
             SELECT id
             FROM person_email
             WHERE id > $1
-              AND use_parallel(id, 1, 1)
+              AND use_parallel(id, 0, 0)
               AND email IS NOT NULL -- skip NULL
               AND email !~ '^\s*$'  --skip empty (similar NULL)
               AND NOT(
