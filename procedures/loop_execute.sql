@@ -1,5 +1,6 @@
 drop table if exists loop_execute_error;
 
+-- необязательная таблица для записи исключений
 create unlogged table loop_execute_error (
     table_name regclass not null,
     uniq_column_name text not null,
