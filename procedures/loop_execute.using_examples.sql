@@ -11,7 +11,7 @@ call loop_execute(
               AND email IS NOT NULL AND TRIM(email) != ''
               AND NOT is_email_ignore(email)
             ORDER BY id
-            LIMIT $2
+            LIMIT $2 OFFSET $3
         ),
         m (id) AS (
             UPDATE person_email AS u
@@ -48,7 +48,7 @@ call loop_execute(
                     AND is_email(email)                       -- accurate, but slow check email syntax
                   )
             ORDER BY id
-            LIMIT $2
+            LIMIT $2 OFFSET $3
         ),
         m AS (
             DELETE FROM person_email AS d
