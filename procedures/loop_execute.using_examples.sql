@@ -23,11 +23,14 @@ call loop_execute(
         SELECT MAX(id)  AS next_start_id,
                COUNT(*) AS affected_rows
         FROM m;
-    $$,
+    $$, --query
+    true, --is_disable_user_triggers
     100,  --batch_rows
     1,    --time_max
     true, --is_rollback (for test)
-    10    --cycles_max (for test)
+    10, --cycles_max (for test)
+    null, --total_table_rows
+    null --error_table_name
 );
 
 ------------------------------------------------------------------------------------------------------------------------
