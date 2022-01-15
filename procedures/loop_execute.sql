@@ -1,10 +1,46 @@
+drop table if exists loop_execute_error;
+
+create unlogged table loop_execute_error (
+    table_name regclass not null,
+    uniq_column_name text not null,
+    uniq_column_value_text text,
+    uniq_column_value_bigint bigint,
+    repeat_error_count bigint not null default 1,
+
+    exception_sqlstate text not null check (octet_length(exception_sqlstate) = 5),
+    exception_constraint_name text not null,
+    exception_datatype_name text not null,
+
+    exception_schema_name text not null,
+    exception_table_name text not null,
+    exception_column_name text not null,
+
+    exception_message_text text not null,
+
+    exception_detail text not null,
+    exception_hint text not null,
+    exception_context text not null,
+
+    created_at timestamp(0) with time zone default now() not null check(created_at <= now() + interval '10m'),
+    check (
+           (uniq_column_value_text is not null and uniq_column_value_bigint is null)
+        or (uniq_column_value_text is null and uniq_column_value_bigint is not null)
+    ),
+    constraint loop_execute_error_uniq unique (table_name,
+                                               exception_schema_name, exception_table_name, exception_column_name,
+                                               exception_sqlstate, exception_constraint_name, exception_datatype_name,
+                                               exception_message_text)
+);
+
+------------------------------------------------------------------------------------------------------------------------
+
 create or replace procedure loop_execute(
     --обязательные параметры:
     table_name  regclass, -- название основной таблицы (дополненное схемой через точку, при необходимости),
                           -- из которой данные порциями в цикле будут читаться и модифицироваться
     query       text, -- CTE запрос с SELECT, INSERT/UPDATE/DELETE и SELECT запросами для модификации записей
     --необязательные параметры:
-    is_disable_triggers boolean default false, --выключать срабатывание триггеров в таблице
+    is_disable_triggers boolean default false, -- выключать срабатывание триггеров в таблице
     batch_rows  integer default 1, -- стартовое значение, сколько записей будем модифицировать за 1 цикл (рекомендуется 1)
                                    -- значение автоматически подстраивается под time_max
     time_max    numeric default 1, -- пороговое максимальное время выполнения 1-го запроса, в секундах, рекомендуется 1
@@ -12,7 +48,9 @@ create or replace procedure loop_execute(
     cycles_max  integer default null, -- максимальное количество циклов (для целей тестирования)
     total_table_rows integer default null, -- сколько всего записей в таблице (для вычисления прогресса выполнения)
                                            -- если null, то автоматически вычисляется приблизительное значение, но быстро
-                                           -- если < 0, то автоматически вычисляется точное значение, но медленно
+                                           -- если <= 0, то автоматически вычисляется точное значение, но медленно
+    error_table_name regclass default null, -- если указано, то процедура не прерывает работу на первой ошибке,
+                                            -- а сохраняет все ошибки в указанную таблицу
     --возвращаемые из процедуры параметры:
     inout result record default null
     /*
@@ -36,7 +74,7 @@ DECLARE
     old_lock_timeout constant text not null default current_setting('lock_timeout');
     max_attempts constant smallint not null default 200;
     app_name constant text not null default regexp_replace(current_setting('application_name'), '\s*/\d+(?:\.\d+)?%', '');
-    multiplier constant int not null default 2;
+    multiplier constant numeric not null default 2; --not integer!
 
     --статистика
     total_time_start timestamp not null default clock_timestamp();
@@ -57,11 +95,12 @@ DECLARE
     uniq_column_name text; -- название primary/unique колонки
     uniq_column_type text; -- тип primary/unique колонки
 
-    -- для пользовательского запроса query, выполняемого в цикле:
+    -- для пользовательского CTE запроса query, выполняемого в цикле:
     start_id_bigint bigint not null default 0;
     start_id_text text not null default '';
-    stop_id_bigint bigint default 0;
-    stop_id_text text default '';
+    stop_id_bigint bigint;
+    stop_id_text text;
+    offset_rows int not null default 0;
     affected_rows bigint not null default 0; --сколько записей модифицировал пользовательский запрос
     processed_rows bigint not null default 0; --сколько записей просмотрел пользовательский запрос
     query_time_start timestamp;
@@ -72,6 +111,18 @@ DECLARE
     time_elapsed numeric not null default 0;
     delay numeric; --задержка в секундах при возникновении блокировок
     is_superuser boolean not null default false;
+
+    -- для исключений
+    exception_sqlstate        text; -- код исключения, возвращаемый SQLSTATE
+    exception_column_name     text; -- имя столбца, относящегося к исключению
+    exception_constraint_name text; -- имя ограничения целостности, относящегося к исключению
+    exception_datatype_name   text; -- имя типа данных, относящегося к исключению
+    exception_message_text    text; -- текст основного сообщения исключения
+    exception_table_name      text; -- имя таблицы, относящейся к исключению
+    exception_schema_name     text; -- имя схемы, относящейся к исключению
+    exception_detail          text; -- текст детального сообщения исключения (если есть)
+    exception_hint            text; -- текст подсказки к исключению (если есть)
+    exception_context         text; -- строки текста, описывающие стек вызовов в момент исключения (см. Подраздел 42.6.9)
 BEGIN
 
     -- 1) проверка входящих параметров
@@ -92,7 +143,8 @@ BEGIN
     SELECT null::int as table_rows,
            null::int as affected_rows,
            null::int as processed_rows,
-           null::numeric as time_elapsed INTO result;
+           null::numeric as time_elapsed
+      INTO result;
 
     -- 2) проверка наличия not null уникального ключа
     SELECT pg_attribute.attname,
@@ -145,10 +197,12 @@ BEGIN
     query_time_start := clock_timestamp();
     IF total_table_rows IS NULL THEN
         RAISE NOTICE 'Calculating estimate total rows for table % ...', table_name;
-        select reltuples::bigint into total_table_rows
-        from pg_class
-        where oid = loop_execute.table_name;
-    ELSIF total_table_rows < 0 THEN
+        select t.reltuples::bigint into total_table_rows
+        from pg_class as t
+        where t.oid = loop_execute.table_name;
+    END IF;
+
+    IF total_table_rows <= 0 THEN
         RAISE NOTICE 'Calculating exact total rows for table % ...', table_name;
         EXECUTE format('SELECT COUNT(*) FROM %1$s', table_name) INTO total_table_rows;
     END IF;
@@ -162,6 +216,10 @@ BEGIN
     RAISE NOTICE 'Done. % total rows found for % sec', total_table_rows, query_time_elapsed;
     RAISE NOTICE ' '; -- just new line
 
+    IF total_table_rows = 0 THEN
+        RETURN;
+    END IF;
+
     -- 5) нет необходимости явно отключать пользовательские триггеры, если их нет (их отключение -- это блокировка таблицы для не суперпользователя)
     IF is_disable_triggers THEN
         select count(*)
@@ -169,7 +227,7 @@ BEGIN
         from pg_trigger as t
         cross join lateral (
             select array_agg(types.name)
-            from (values (4, 'INSERT'), (8, 'DELETE'), (16, 'UPDATE')) types(num, name)
+            from (values (4, 'INSERT'), (8, 'DELETE'), (16, 'UPDATE')) as types(num, name)
             where types.num & t.tgtype != 0
         ) as type(names)
         where tgrelid = loop_execute.table_name
@@ -223,8 +281,8 @@ BEGIN
             BEGIN
 
                 IF uniq_column_type IN ('integer', 'bigint') THEN
-                    start_id_bigint := stop_id_bigint;
-                    EXECUTE query USING start_id_bigint, batch_rows INTO STRICT stop_id_bigint, affected_rows;
+                    start_id_bigint := coalesce(stop_id_bigint, start_id_bigint);
+                    EXECUTE query USING start_id_bigint, batch_rows, offset_rows INTO STRICT stop_id_bigint, affected_rows;
                     IF start_id_bigint >= stop_id_bigint THEN
                         ROLLBACK AND CHAIN;
                         RAISE EXCEPTION 'Infinity cycle has been found (start_id=% >= stop_id=%)! There are mistake in your CTE query.',
@@ -233,8 +291,8 @@ BEGIN
                     END IF;
                     EXECUTE format(count_query, table_name, uniq_column_name) USING start_id_bigint, stop_id_bigint INTO processed_rows;
                 ELSIF uniq_column_type ~* '\m(varying|character|text|char|varchar)\M' THEN
-                    start_id_text := stop_id_text;
-                    EXECUTE query USING start_id_text, batch_rows INTO STRICT stop_id_text, affected_rows;
+                    start_id_text := coalesce(stop_id_text, start_id_text);
+                    EXECUTE query USING start_id_text, batch_rows, offset_rows INTO STRICT stop_id_text, affected_rows;
                     IF start_id_text >= stop_id_text THEN
                         ROLLBACK AND CHAIN;
                         RAISE EXCEPTION 'Infinity cycle has been found (start_id=% >= stop_id=%)! There are mistake in your CTE query.',
@@ -247,12 +305,13 @@ BEGIN
                         USING HINT = 'You can add support by modify procedure :-)';
                 END IF;
 
+                offset_rows := 0;
                 EXIT; --запрос выполнился успешно, выходим из цикла FOR ... LOOP
 
             EXCEPTION
                 WHEN lock_not_available THEN
                     IF cur_attempt < max_attempts THEN
-                        batch_rows := greatest((batch_rows / multiplier)::int, 1);
+                        batch_rows := ceil(batch_rows / multiplier);
                         time_elapsed := round(extract('epoch' from clock_timestamp() - time_start)::numeric, 2);
                         delay := round(greatest(sqrt(time_elapsed * time_max), time_max), 2);
                         delay := round(((random() * (delay - time_max)) + time_max)::numeric, 2);
@@ -265,15 +324,76 @@ BEGIN
                         RAISE; -- raise the original exception
                     END IF;
                 WHEN others THEN
-                    IF uniq_column_type IN ('integer', 'bigint') THEN
-                        RAISE WARNING 'EXECUTE SQL statement using: $1 := %, $2 := %', start_id_bigint, batch_rows;
-                    ELSIF uniq_column_type ~* '\m(varying|character|text|char|varchar)\M' THEN
-                        RAISE WARNING 'EXECUTE SQL statement using: $1 := %, $2 := %', quote_literal(start_id_text), batch_rows;
-                    END IF;
-                    RAISE; -- raise the original exception
-            END;
+                    GET STACKED DIAGNOSTICS
+                        exception_sqlstate        := RETURNED_SQLSTATE,	-- text	код исключения, возвращаемый SQLSTATE
+                        exception_column_name     := COLUMN_NAME,       -- text имя столбца, относящегося к исключению
+                        exception_constraint_name := CONSTRAINT_NAME,   -- text имя ограничения целостности, относящегося к исключению
+                        exception_datatype_name   := PG_DATATYPE_NAME,  -- text имя типа данных, относящегося к исключению
+                        exception_message_text    := MESSAGE_TEXT,      -- text текст основного сообщения исключения
+                        exception_table_name      := TABLE_NAME,        -- text имя таблицы, относящейся к исключению
+                        exception_schema_name     := SCHEMA_NAME,       -- text имя схемы, относящейся к исключению
+                        exception_detail          := PG_EXCEPTION_DETAIL,  -- text текст детального сообщения исключения (если есть)
+                        exception_hint            := PG_EXCEPTION_HINT,    -- text текст подсказки к исключению (если есть)
+                        exception_context         := PG_EXCEPTION_CONTEXT; -- text строки текста, описывающие стек вызовов в момент исключения (см. Подраздел 42.6.9)
 
-        END LOOP; --FOR
+                    affected_rows := 0;
+                    processed_rows := 0;
+
+                    IF uniq_column_type IN ('integer', 'bigint') THEN
+                        RAISE WARNING 'ERROR of EXECUTE SQL statement using: $1 := %, $2 := %', start_id_bigint, batch_rows;
+                    ELSIF uniq_column_type ~* '\m(varying|character|text|char|varchar)\M' THEN
+                        RAISE WARNING 'ERROR of EXECUTE SQL statement using: $1 := %, $2 := %', quote_literal(start_id_text), batch_rows;
+                    END IF;
+
+                    IF cur_attempt = max_attempts THEN
+                        RAISE WARNING 'Attempt % of % reached!', cur_attempt, max_attempts;
+                        RAISE; -- raise the original exception
+                    ELSIF batch_rows > 1 THEN
+                        --позиционируемся на проблемную запись
+                        batch_rows := ceil(batch_rows / multiplier);
+                    ELSIF error_table_name IS NULL THEN
+                        EXIT; --выходим из цикла FOR ... LOOP
+                    ELSE
+                        EXECUTE replace($$
+                            INSERT INTO :error_table_name as t (
+                                table_name, uniq_column_name, uniq_column_value_text, uniq_column_value_bigint,
+                                exception_sqlstate,
+                                exception_column_name,
+                                exception_constraint_name,
+                                exception_datatype_name,
+                                exception_message_text,
+                                exception_table_name,
+                                exception_schema_name,
+                                exception_detail,
+                                exception_hint,
+                                exception_context
+                            ) SELECT $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
+                            ON CONFLICT ON CONSTRAINT loop_execute_error_uniq
+                            DO UPDATE SET repeat_error_count = t.repeat_error_count + 1
+                            $$, ':error_table_name', error_table_name::text)
+                            USING table_name::text,
+                                uniq_column_name,
+                                case when uniq_column_type ~* '\m(varying|character|text|char|varchar)\M' then stop_id_text end,
+                                case when uniq_column_type IN ('integer', 'bigint') then stop_id_bigint end,
+                                exception_sqlstate,
+                                exception_column_name,
+                                exception_constraint_name,
+                                exception_datatype_name,
+                                exception_message_text,
+                                exception_table_name,
+                                exception_schema_name,
+                                exception_detail,
+                                exception_hint,
+                                exception_context;
+
+                        COMMIT AND CHAIN;
+
+                        offset_rows := offset_rows + 1;
+                    END IF;
+
+            END; --BEGIN/EXCEPTION
+
+        END LOOP; --FOR LOOP
         query_time_elapsed := round(extract('epoch' from clock_timestamp() - query_time_start)::numeric, 2);
 
         IF is_disable_triggers THEN
@@ -327,7 +447,7 @@ BEGIN
 
         is_calc_estimated_time := not is_calc_estimated_time and (cycles > 10 or (query_time_elapsed > time_max and cycles > 4));
         IF is_calc_estimated_time THEN
-            estimated_time := ((total_table_rows * total_time_elapsed / total_processed_rows - total_time_elapsed)::int::text || 's')::interval;
+            estimated_time := (ceil(total_table_rows * total_time_elapsed / total_processed_rows - total_time_elapsed)::text || 's')::interval;
         END IF;
         progress := round(total_processed_rows * 100.0 / total_table_rows, 2);
 
@@ -349,14 +469,16 @@ BEGIN
             PERFORM set_config('application_name', app_name_new, true);
         end if;
 
-        EXIT WHEN affected_rows < batch_rows OR stop_id_bigint IS NULL OR stop_id_text IS NULL;
+        EXIT WHEN affected_rows < batch_rows OR (stop_id_bigint IS NULL AND stop_id_text IS NULL);
 
-        IF query_time_elapsed <= time_max THEN
+        IF affected_rows = 0 THEN
+            NULL;
+        ELSIF query_time_elapsed <= time_max THEN
             batch_rows := case when query_time_elapsed = 0 then batch_rows * multiplier
-                               else least((batch_rows * time_max / query_time_elapsed)::int, batch_rows * multiplier)
+                               else least(ceil(batch_rows * time_max / query_time_elapsed), batch_rows * multiplier)
                           end;
         ELSIF batch_rows > 1 THEN
-            batch_rows := greatest((batch_rows * time_max / query_time_elapsed)::int, (batch_rows / multiplier)::int);
+            batch_rows := greatest(ceil(batch_rows * time_max / query_time_elapsed), ceil(batch_rows / multiplier));
         ELSE
             delay := round(greatest(sqrt(query_time_elapsed * time_max) - time_max, 0), 2);
             RAISE WARNING 'Try to save DB from overload, next replay after % s', delay;
@@ -366,7 +488,7 @@ BEGIN
     END LOOP;
 
     IF total_time_elapsed > 0 THEN
-        rows_per_second    := (total_processed_rows / total_time_elapsed)::int;
+        rows_per_second    := ceil(total_processed_rows / total_time_elapsed);
         queries_per_second := round(cycles / total_time_elapsed, 2);
     END IF;
 
@@ -386,6 +508,7 @@ comment on procedure loop_execute(
     is_rollback boolean,
     cycles_max  integer,
     total_table_rows integer,
+    exception_table_name regclass,
     --возвращаемые из процедуры параметры:
     inout result record
 ) is $$
