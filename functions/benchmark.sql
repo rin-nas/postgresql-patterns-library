@@ -1,3 +1,5 @@
+-- TODO Works incorrect! Do not use!
+
 -- PostgreSQL equivalent of MySQL's BENCHMARK() function
 
 CREATE OR REPLACE FUNCTION benchmark(loop_count int,
