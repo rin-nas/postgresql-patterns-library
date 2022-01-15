@@ -133,7 +133,7 @@ WHERE email IS NOT NULL    -- skip NULL
 Если в таблице миллионы строк, то процесс может занятуться надолго.
 При этом записи в таблице так же заблокируются надолго, а конкурентные запросы на модификацию записей, которые связаны с этой таблицей, выстроятся в очередь.
 Решение — удалять нужно не всё сразу, а по частям.
-Пример см. [`loop_execute.using_examples.sql`](procedures/loop_execute.using_examples.sql)
+Пример см. [`loop_execute/using_examples.sql`](procedures/loop_execute/using_examples.sql)
 
 #### Как проверить CSS цвет на валидность?
 
@@ -261,10 +261,10 @@ id|kladr_id|name
 
 #### Как определить пол по ФИО (фамилии, имени, отчеству) на русском языке?
 
-* [`gender_by_name.sql`](gender_by_name/gender_by_name.sql)
-* [`tables.sql`](gender_by_name/tables.sql)
-* [`gender_by_ending.csv`](gender_by_name/gender_by_ending.csv)
-* [`person_name_dictionary.csv`](gender_by_name/person_name_dictionary.csv)
+* [`gender_by_name.sql`](functions/gender_by_name/gender_by_name.sql)
+* [`tables.sql`](functions/gender_by_name/tables.sql)
+* [`gender_by_ending.csv`](functions/gender_by_name/gender_by_ending.csv)
+* [`person_name_dictionary.csv`](functions/gender_by_name/person_name_dictionary.csv)
 
 #### Как заквотировать строку для использования в регулярном выражении?
 
