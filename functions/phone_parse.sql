@@ -1,6 +1,15 @@
 -- TODO add support for https://datatracker.ietf.org/doc/html/rfc3966  (see https://habr.com/ru/post/278345/)
 
 create or replace function phone_parse(
+    /*
+    Номер телефона в формате, допускающим разделение групп цифр пробелами, скобками и дефисами
+    Номер телефона должен:
+        * начинаться со знака "+" и цифры (E.164 с возможными разделителями групп цифр)
+        * или начинаться с national prefix и не цифры
+        * или содержать только цифры (E.164 без знака "+")
+    Номер телефона НЕ должен иметь какие-либо преписки в начале ("моб. тел.") и дописки в конце ("с 9 до 18")
+    Номер телефона в любом формате умеет обрабатывать функция phone_normalize()
+    */
     phone text,
     allow_calling_codes       bool default true,  --разрешить номера телефонов с используемыми кодами стран
     allow_national_prefixes   bool default true,  --разрешить номера телефонов с национальными префиксами
@@ -10,8 +19,8 @@ create or replace function phone_parse(
                                                   --Используется в обезличивании персональных данных для уникальных
                                                   --номеров телефонов в качестве временного номера телефона.
     country_code out int,
-    area_code out text,
-    local_number out text
+    area_code out text,   --только цифры или пусто
+    local_number out text --только цифры
 )
     returns record
     immutable
@@ -101,7 +110,7 @@ comment on function phone_parse(
     area_code    out text,
     local_number out text
 ) is $$
-    Парсит номер телефона в международном формате E.164 или в локальном формате.
+    Разбирает номер телефона в международном формате E.164 или в локальном формате.
     Для маленьких стран area_code может отсутствовать.
     Возвращает null, если строка не является номером телефона (минимальная проверка синтаксиса).
 $$;
