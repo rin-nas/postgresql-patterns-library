@@ -1,3 +1,5 @@
+--PostgreSQL 12+
+
 drop table if exists loop_execute_error;
 
 -- необязательная таблица для записи исключений
@@ -41,10 +43,17 @@ create or replace procedure loop_execute(
                           -- из которой данные порциями в цикле будут читаться и модифицироваться
     query       text, -- CTE запрос с SELECT, INSERT/UPDATE/DELETE и SELECT запросами для модификации записей
     --необязательные параметры:
-    is_disable_triggers boolean default false, -- выключать срабатывание триггеров в таблице
+    is_disable_triggers boolean default false, -- That disables all triggers, include foreign keys. For the current database session only.
+                                               -- Improves speed, saves from side effect. But superuser role required.
+                                               -- Be careful to keep your database consistent!
     batch_rows  integer default 1, -- стартовое значение, сколько записей будем модифицировать за 1 цикл (рекомендуется 1)
                                    -- значение автоматически подстраивается под time_max
-    time_max    numeric default 1, -- пороговое максимальное время выполнения 1-го запроса, в секундах, рекомендуется 1
+    time_max    numeric default 1, -- средняя длительность выполнения CTE запроса на каждой итерации цикла, в секундах, рекомендуется 1
+                                   -- примерно столько времени CTE запрос может блокировать другие запросы на запись тех же ресурсов
+                                   -- от значения этого параметра устанавливаются следующие ограничения:
+                                   -- lock_timeout = time_max * 1000 / 10
+                                   -- statement_timeout = time_max * 1000 * 3
+                                   -- если происходит ошибка, связанная с этими ограничениями, batch_rows уменьшается и CTE запрос через некоторое время повторяется
     is_rollback boolean default false, -- откатывать запрос после каждого выполнения в цикле (для целей тестирования)
     cycles_max  integer default null, -- максимальное количество циклов (для целей тестирования)
     total_table_rows integer default null, -- сколько всего записей в таблице (для вычисления прогресса выполнения)
@@ -73,6 +82,8 @@ DECLARE
     count_query constant text not null default 'SELECT COUNT(*) FROM %1$s WHERE %2$I > $1 AND %2$I <= $2'; -- SQL запрос для получения processed_rows
     last_subquery_exception_hint constant text not null default e'Last subquery must be:\nSELECT MAX(%I) AS stop_id, COUNT(*) AS affected_rows FROM m';
     old_lock_timeout constant text not null default current_setting('lock_timeout');
+    old_statement_timeout constant text not null default current_setting('statement_timeout');
+    old_session_replication_role constant text not null default current_setting('session_replication_role');
     max_attempts constant smallint not null default 200;
     app_name constant text not null default regexp_replace(current_setting('application_name'), '\s*/\d+(?:\.\d+)?%', '');
     multiplier constant numeric not null default 2; --not integer!
@@ -107,11 +118,11 @@ DECLARE
     query_time_start timestamp;
     query_time_elapsed numeric not null default 0; -- длительность выполнения одного запроса, в секундах
     query_type text; --тип запроса: INSERT/UPDATE/DELETE
-    triggers_count int; --количество пользовательских триггеров для типа запроса query_type
     time_start timestamp;
     time_elapsed numeric not null default 0;
     delay numeric; --задержка в секундах при возникновении блокировок
     is_superuser boolean not null default false;
+    lock_type text;
 
     -- для исключений
     exception_sqlstate        text; -- код исключения, возвращаемый SQLSTATE
@@ -127,11 +138,13 @@ DECLARE
 BEGIN
 
     -- 1) проверка входящих параметров
-    IF table_name IS NULL OR
-       query IS NULL OR
-       batch_rows IS NULL OR
-       time_max IS NULL OR
-       is_rollback IS NULL THEN
+    IF current_setting('server_version_num') < '120000' THEN
+        RAISE EXCEPTION 'PostgreSQL 12+ required!';
+    ELSIF table_name IS NULL OR
+        query IS NULL OR
+        batch_rows IS NULL OR
+        time_max IS NULL OR
+        is_rollback IS NULL THEN
         RAISE EXCEPTION 'Procedure arguments must not have NULL values (except cycles_max)!';
     ELSIF batch_rows not between 1 AND 1024 THEN
         RAISE EXCEPTION 'Argument batch_rows must between 1 and 1024, but % given', batch_rows;
@@ -221,25 +234,11 @@ BEGIN
         RETURN;
     END IF;
 
-    -- 5) нет необходимости явно отключать пользовательские триггеры, если их нет (их отключение -- это блокировка таблицы для не суперпользователя)
+    -- 5) отключение триггеров и FK
     IF is_disable_triggers THEN
-        select count(*)
-        into triggers_count
-        from pg_trigger as t
-        cross join lateral (
-            select array_agg(types.name)
-            from (values (4, 'INSERT'), (8, 'DELETE'), (16, 'UPDATE')) as types(num, name)
-            where types.num & t.tgtype != 0
-        ) as type(names)
-        where tgrelid = loop_execute.table_name
-          and not tgisinternal
-          and query_type = ANY(names);
-
-        RAISE NOTICE 'Table % has % triggers for event %', table_name, triggers_count, query_type;
-        RAISE NOTICE ' '; -- just new line
-        is_disable_triggers := triggers_count > 0;
-        IF is_disable_triggers THEN
-            SELECT rolsuper INTO is_superuser FROM pg_roles where rolname = CURRENT_USER;
+        SELECT r.rolsuper INTO is_superuser FROM pg_roles AS r WHERE r.rolname = CURRENT_USER;
+        IF NOT is_superuser THEN
+            RAISE EXCEPTION 'To disable triggers and foreign keys superuser role required!';
         END IF;
     END IF;
 
@@ -247,33 +246,11 @@ BEGIN
         EXIT WHEN cycles >= cycles_max;
         cycles := cycles + 1;
 
-        PERFORM set_config('lock_timeout', (time_max * 1000)::text, true);
+        PERFORM set_config('lock_timeout', (time_max * 10^3 / 10)::text, true);
+        PERFORM set_config('statement_timeout', (time_max * 10^3 * 3)::text, true);
 
         IF is_disable_triggers THEN
-            time_start := clock_timestamp();
-            FOR cur_attempt IN 1..max_attempts LOOP
-                BEGIN
-                    IF is_superuser THEN
-                        set local session_replication_role = 'replica';
-                    ELSE
-                        EXECUTE format('ALTER TABLE %s DISABLE TRIGGER USER', table_name);
-                    END IF;
-                    EXIT; --запрос выполнился успешно, выходим из цикла FOR ... LOOP
-                EXCEPTION WHEN lock_not_available THEN
-                    IF cur_attempt < max_attempts THEN
-                        time_elapsed := round(extract('epoch' from clock_timestamp() - time_start)::numeric, 2);
-                        delay := round(greatest(sqrt(time_elapsed * time_max), time_max), 2);
-                        delay := round(((random() * (delay - time_max)) + time_max)::numeric, 2);
-                        RAISE WARNING 'Attempt % of % to execute query (disable user triggers) failed due lock timeout % s, next replay after % s',
-                            cur_attempt, max_attempts, time_max, delay;
-                        PERFORM pg_sleep(delay);
-                    ELSE
-                        RAISE WARNING 'Attempt % of % to execute query (disable user triggers) failed due lock timeout % s',
-                            cur_attempt, max_attempts, time_max;
-                        RAISE; -- raise the original exception
-                    END IF;
-                END;
-            END LOOP; --FOR
+            set local session_replication_role = 'replica';
         END IF;
 
         query_time_start := clock_timestamp();
@@ -310,18 +287,19 @@ BEGIN
                 EXIT; --запрос выполнился успешно, выходим из цикла FOR ... LOOP
 
             EXCEPTION
-                WHEN lock_not_available THEN
+                WHEN lock_not_available OR query_canceled THEN
+                    lock_type := case SQLSTATE when '55P03' then 'lock_timeout' else 'statement_timeout' end;
                     IF cur_attempt < max_attempts THEN
                         batch_rows := ceil(batch_rows / multiplier);
                         time_elapsed := round(extract('epoch' from clock_timestamp() - time_start)::numeric, 2);
                         delay := round(greatest(sqrt(time_elapsed * time_max), time_max), 2);
                         delay := round(((random() * (delay - time_max)) + time_max)::numeric, 2);
-                        RAISE WARNING 'Attempt % of % to execute CTE query failed due lock timeout % s, next replay after % s',
-                            cur_attempt, max_attempts, time_max, delay;
+                        RAISE WARNING 'Attempt % of % to execute CTE query failed due % = %, next replay after % s',
+                            cur_attempt, max_attempts, lock_type, current_setting(lock_type), delay;
                         PERFORM pg_sleep(delay);
                     ELSE
-                        RAISE WARNING 'Attempt % of % to execute CTE query failed due lock timeout % s',
-                            cur_attempt, max_attempts, time_max;
+                        RAISE WARNING 'Attempt % of % to execute CTE query failed due % = %',
+                            cur_attempt, max_attempts, lock_type, current_setting(lock_type);
                         RAISE; -- raise the original exception
                     END IF;
                 WHEN others THEN
@@ -397,35 +375,6 @@ BEGIN
         END LOOP; --FOR LOOP
         query_time_elapsed := round(extract('epoch' from clock_timestamp() - query_time_start)::numeric, 2);
 
-        IF is_disable_triggers THEN
-            time_start := clock_timestamp();
-            FOR cur_attempt IN 1..max_attempts LOOP
-                BEGIN
-                    IF is_superuser THEN
-                        set local session_replication_role = 'origin';
-                    ELSE
-                        EXECUTE format('ALTER TABLE %s ENABLE TRIGGER USER', table_name);
-                    END IF;
-                    EXIT; --запрос выполнился успешно, выходим из цикла FOR ... LOOP
-                EXCEPTION WHEN lock_not_available THEN
-                    IF cur_attempt < max_attempts THEN
-                        time_elapsed := round(extract('epoch' from clock_timestamp() - time_start)::numeric, 2);
-                        delay := round(greatest(sqrt(time_elapsed * time_max), time_max), 2);
-                        delay := round(((random() * (delay - time_max)) + time_max)::numeric, 2);
-                        RAISE WARNING 'Attempt % of % to execute query (enable user triggers) failed due lock timeout % s, next replay after % s',
-                            cur_attempt, max_attempts, time_max, delay;
-                        PERFORM pg_sleep(delay);
-                    ELSE
-                        RAISE WARNING 'Attempt % of % to execute query (enable user triggers) failed due lock timeout % s',
-                            cur_attempt, max_attempts, time_max;
-                        RAISE; -- raise the original exception
-                    END IF;
-                END;
-            END LOOP; --FOR
-        END IF;
-
-        PERFORM set_config('lock_timeout', old_lock_timeout, true);
-
         IF is_rollback THEN
             ROLLBACK AND CHAIN;
         ELSE
@@ -437,7 +386,7 @@ BEGIN
         total_affected_rows  := total_affected_rows  + affected_rows;
         total_processed_rows := total_processed_rows + processed_rows;
         IF total_processed_rows > total_table_rows THEN
-            --в случае приблизительного вычисления кол-ва строк в таблице
+            --в случае приблизительного вычисления кол-ва строк в таблице корректируем значения
             total_table_rows := total_processed_rows;
             result.table_rows := total_table_rows;
         END IF;
@@ -495,6 +444,13 @@ BEGIN
 
     RAISE NOTICE 'Done. % rows per second, % queries per second', rows_per_second, queries_per_second;
 
+    IF is_disable_triggers THEN
+        PERFORM set_config('session_replication_role', old_session_replication_role, true);
+    END IF;
+
+    PERFORM set_config('lock_timeout', old_lock_timeout, true);
+    PERFORM set_config('statement_timeout', old_statement_timeout, true);
+
 END
 $procedure$;
 
@@ -520,6 +476,6 @@ comment on procedure loop_execute(
 В процессе обработки показывает в psql консоли:
    * количество модифицированных и обработанных записей в таблице
    * сколько времени прошло, сколько примерно времени осталось до завершения, прогресс выполнения в процентах
-Прогресс выполнения в процентах отображается ещё колонке pg_stat_activity.application_name для процесса!
+Прогресс выполнения в процентах для работающего процесса отображается ещё в колонке pg_stat_activity.application_name!
 Процедура не предназначена для выполнения в транзакции.
 $$;
