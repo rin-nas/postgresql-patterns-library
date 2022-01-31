@@ -51,9 +51,11 @@ create or replace procedure loop_execute(
     time_max    numeric default 1, -- средняя длительность выполнения CTE запроса на каждой итерации цикла, в секундах, рекомендуется 1
                                    -- примерно столько времени CTE запрос может блокировать другие запросы на запись тех же ресурсов
                                    -- от значения этого параметра устанавливаются следующие ограничения:
-                                   -- lock_timeout = time_max * 1000 / 10
+                                   -- lock_timeout = time_max * 1000 / 3
                                    -- statement_timeout = time_max * 1000 * 3
                                    -- если происходит ошибка, связанная с этими ограничениями, batch_rows уменьшается и CTE запрос через некоторое время повторяется
+                                   -- Without lock_timeout CTE migration could block other writes WHILE TRYING to grab a lock on the resource (table/record/index/etc.)
+                                   -- Without statement_timeout CTE migration could block other writes AFTER grab a lock on the resource (table/record/index/etc.)
     is_rollback boolean default false, -- откатывать запрос после каждого выполнения в цикле (для целей тестирования)
     cycles_max  integer default null, -- максимальное количество циклов (для целей тестирования)
     total_table_rows integer default null, -- сколько всего записей в таблице (для вычисления прогресса выполнения)
@@ -246,8 +248,8 @@ BEGIN
         EXIT WHEN cycles >= cycles_max;
         cycles := cycles + 1;
 
-        PERFORM set_config('lock_timeout', (time_max * 10^3 / 10)::text, true);
-        PERFORM set_config('statement_timeout', (time_max * 10^3 * 3)::text, true);
+        PERFORM set_config('lock_timeout', ceil(time_max * 10^3 / 3)::text, true);
+        PERFORM set_config('statement_timeout', ceil(time_max * 10^3 * 3)::text, true);
 
         IF is_disable_triggers THEN
             set local session_replication_role = 'replica';
