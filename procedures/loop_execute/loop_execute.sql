@@ -51,11 +51,9 @@ create or replace procedure loop_execute(
     time_max    numeric default 1, -- средняя длительность выполнения CTE запроса на каждой итерации цикла, в секундах, рекомендуется 1
                                    -- примерно столько времени CTE запрос может блокировать другие запросы на запись тех же ресурсов
                                    -- от значения этого параметра устанавливаются следующие ограничения:
-                                   -- lock_timeout = time_max * 1000 / 3
-                                   -- statement_timeout = time_max * 1000 * 3
+                                   -- lock_timeout = time_max * 1000 / 10
                                    -- если происходит ошибка, связанная с этими ограничениями, batch_rows уменьшается и CTE запрос через некоторое время повторяется
                                    -- Without lock_timeout CTE migration could block other writes WHILE TRYING to grab a lock on the resource (table/record/index/etc.)
-                                   -- Without statement_timeout CTE migration could block other writes AFTER grab a lock on the resource (table/record/index/etc.)
     is_rollback boolean default false, -- откатывать запрос после каждого выполнения в цикле (для целей тестирования)
     cycles_max  integer default null, -- максимальное количество циклов (для целей тестирования)
     total_table_rows integer default null, -- сколько всего записей в таблице (для вычисления прогресса выполнения)
@@ -84,7 +82,6 @@ DECLARE
     count_query constant text not null default 'SELECT COUNT(*) FROM %1$s WHERE %2$I > $1 AND %2$I <= $2'; -- SQL запрос для получения processed_rows
     last_subquery_exception_hint constant text not null default e'Last subquery must be:\nSELECT MAX(%I) AS stop_id, COUNT(*) AS affected_rows FROM m';
     old_lock_timeout constant text not null default current_setting('lock_timeout');
-    old_statement_timeout constant text not null default current_setting('statement_timeout');
     old_session_replication_role constant text not null default current_setting('session_replication_role');
     max_attempts constant smallint not null default 200;
     app_name constant text not null default regexp_replace(current_setting('application_name'), '\s*/\d+(?:\.\d+)?%', '');
@@ -124,7 +121,6 @@ DECLARE
     time_elapsed numeric not null default 0;
     delay numeric; --задержка в секундах при возникновении блокировок
     is_superuser boolean not null default false;
-    lock_type text;
 
     -- для исключений
     exception_sqlstate        text; -- код исключения, возвращаемый SQLSTATE
@@ -248,8 +244,14 @@ BEGIN
         EXIT WHEN cycles >= cycles_max;
         cycles := cycles + 1;
 
-        PERFORM set_config('lock_timeout', ceil(time_max * 10^3 / 3)::text, true);
-        PERFORM set_config('statement_timeout', ceil(time_max * 10^3 * 3)::text, true);
+        PERFORM set_config('lock_timeout', ceil(time_max * 1000 / 10)::text, true);
+        /*
+        --statement_timeout does not work inside PLpgSQL:
+        do $$ begin set local statement_timeout to '1s'; perform pg_sleep(2); end;$$;
+        --statement_timeout works inside SQL:
+        begin; set local statement_timeout to '1s'; select pg_sleep(2); commit;
+        --TODO use dblink to workаround?
+        */
 
         IF is_disable_triggers THEN
             set local session_replication_role = 'replica';
@@ -258,7 +260,7 @@ BEGIN
         query_time_start := clock_timestamp();
         time_start := clock_timestamp();
         FOR cur_attempt IN 1..max_attempts LOOP
-            BEGIN
+            BEGIN -- subtransaction SAVEPOINT
 
                 IF uniq_column_type IN ('integer', 'bigint') THEN
                     start_id_bigint := coalesce(stop_id_bigint, start_id_bigint);
@@ -288,20 +290,19 @@ BEGIN
                 offset_rows := 0;
                 EXIT; --запрос выполнился успешно, выходим из цикла FOR ... LOOP
 
-            EXCEPTION
-                WHEN lock_not_available OR query_canceled THEN
-                    lock_type := case SQLSTATE when '55P03' then 'lock_timeout' else 'statement_timeout' end;
+            EXCEPTION -- subtransaction ROLLBACK TO SAVEPOINT
+                WHEN lock_not_available THEN
                     IF cur_attempt < max_attempts THEN
                         batch_rows := ceil(batch_rows / multiplier);
                         time_elapsed := round(extract('epoch' from clock_timestamp() - time_start)::numeric, 2);
                         delay := round(greatest(sqrt(time_elapsed * time_max), time_max), 2);
                         delay := round(((random() * (delay - time_max)) + time_max)::numeric, 2);
-                        RAISE WARNING 'Attempt % of % to execute CTE query failed due % = %, next replay after % s',
-                            cur_attempt, max_attempts, lock_type, current_setting(lock_type), delay;
+                        RAISE WARNING 'Attempt % of % to execute CTE query failed due lock_timeout = %, next replay after % s',
+                            cur_attempt, max_attempts, current_setting('lock_timeout'), delay;
                         PERFORM pg_sleep(delay);
                     ELSE
-                        RAISE WARNING 'Attempt % of % to execute CTE query failed due % = %',
-                            cur_attempt, max_attempts, lock_type, current_setting(lock_type);
+                        RAISE WARNING 'Attempt % of % to execute CTE query failed due lock_timeout = %',
+                            cur_attempt, max_attempts, current_setting('lock_timeout');
                         RAISE; -- raise the original exception
                     END IF;
                 WHEN others THEN
@@ -372,7 +373,7 @@ BEGIN
                         offset_rows := offset_rows + 1;
                     END IF;
 
-            END; --BEGIN/EXCEPTION
+            END; --subtransaction BEGIN/EXCEPTION/END
 
         END LOOP; --FOR LOOP
         query_time_elapsed := round(extract('epoch' from clock_timestamp() - query_time_start)::numeric, 2);
@@ -451,7 +452,6 @@ BEGIN
     END IF;
 
     PERFORM set_config('lock_timeout', old_lock_timeout, true);
-    PERFORM set_config('statement_timeout', old_statement_timeout, true);
 
 END
 $procedure$;
