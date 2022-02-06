@@ -1365,7 +1365,29 @@ DROP TYPE status_enum_old;
 ```sql
 select indexrelid::regclass index_name, indrelid::regclass table_name from pg_index where not indisvalid
 ```
-В момент работы `create index concurrently` в списке будут присутствовать "нерабочие/битые" индексы.
+В момент работы `create index concurrently` в списке будут присутствовать "нерабочие/битые" индексы!
+
+Удалить все "нерабочие/битые" индексы в БД:
+```sql
+do $$
+declare
+    rec record;
+begin
+
+    for rec in
+        select indrelid::regclass table_name,
+               indexrelid::regclass index_name
+        from pg_index
+        where not indisvalid
+        order by 1, 2
+    loop
+        raise notice 'Table "%", drop index "%"', rec.table_name, rec.index_name;
+        execute format('drop index %I', rec.index_name);
+    end loop;
+
+end;
+$$;
+```
 
 Если БД в SQL запросе упорно не хочет использовать индекс, хотя должна, то нужно проверить, что индекс небитый.
 
