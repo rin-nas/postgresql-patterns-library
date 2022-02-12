@@ -41,26 +41,30 @@ create or replace procedure loop_execute(
     --обязательные параметры:
     table_name  regclass, -- название основной таблицы (дополненное схемой через точку, при необходимости),
                           -- из которой данные порциями в цикле будут читаться и модифицироваться
-    query       text, -- CTE запрос с SELECT, INSERT/UPDATE/DELETE и SELECT запросами для модификации записей
+    query text, -- CTE запрос с SELECT, INSERT/UPDATE/DELETE и SELECT запросами для модификации записей
     --необязательные параметры:
-    is_disable_triggers boolean default false, -- That disables all triggers, include foreign keys. For the current database session only.
-                                               -- Improves speed, saves from side effect. But superuser role required.
-                                               -- Be careful to keep your database consistent!
-    batch_rows  integer default 1, -- стартовое значение, сколько записей будем модифицировать за 1 цикл (рекомендуется 1)
-                                   -- значение автоматически подстраивается под time_max
-    time_max    numeric default 1, -- средняя длительность выполнения CTE запроса на каждой итерации цикла, в секундах, рекомендуется 1
-                                   -- примерно столько времени CTE запрос может блокировать другие запросы на запись тех же ресурсов
-                                   -- от значения этого параметра устанавливаются следующие ограничения:
-                                   -- lock_timeout = time_max * 1000 / 10
-                                   -- если происходит ошибка, связанная с этими ограничениями, batch_rows уменьшается и CTE запрос через некоторое время повторяется
-                                   -- Without lock_timeout CTE migration could block other writes WHILE TRYING to grab a lock on the resource (table/record/index/etc.)
+    disable_triggers boolean default false, -- That disables all triggers, include foreign keys. For the current database session only.
+                                            -- Improves speed, saves from side effect. But superuser role required.
+                                            -- Be careful to keep your database consistent!
+    batch_rows integer default 1, -- стартовое значение, сколько записей будем модифицировать за 1 цикл (рекомендуется 1)
+                                  -- значение автоматически подстраивается под max_duration
+    max_duration numeric default 1, -- средняя длительность выполнения CTE запроса на каждой итерации цикла, в секундах, рекомендуется 1
+                                    -- примерно столько времени CTE запрос может блокировать другие запросы на запись тех же ресурсов
+                                    -- от значения этого параметра устанавливаются следующие ограничения:
+                                    -- lock_timeout = max_duration * 1000 / 10
+                                    -- если происходит ошибка, связанная с этими ограничениями, batch_rows уменьшается и CTE запрос через некоторое время повторяется
+                                    -- Without lock_timeout CTE migration could block other writes WHILE TRYING to grab a lock on the resource (table/record/index/etc.)
     is_rollback boolean default false, -- откатывать запрос после каждого выполнения в цикле (для целей тестирования)
-    cycles_max  integer default null, -- максимальное количество циклов (для целей тестирования)
+    max_cycles  integer default null, -- максимальное количество циклов (для целей тестирования при обработке больших таблиц)
+                                      -- если null, то без ограничений
     total_table_rows integer default null, -- сколько всего записей в таблице (для вычисления прогресса выполнения)
                                            -- если null, то автоматически вычисляется приблизительное значение, но быстро
                                            -- если <= 0, то автоматически вычисляется точное значение, но медленно
-    error_table_name regclass default null, -- если указано, то процедура не прерывает работу на первой ошибке,
-                                            -- а сохраняет все ошибки в указанную таблицу
+    error_table_name regclass default null, -- если указано, то процедура при выполнении CTE запроса в цикле
+                                            -- не прерывает работу на первой ошибке, а сохраняет все ошибки в указанную таблицу
+    check_query_plan_rows integer default 1e5, -- если total_table_rows > check_query_plan_rows,
+                                               -- то проверять, чтобы план выполнения CTE запроса использовал PK или UK индекс
+                                               -- нельзя допустить, чтобы CTE запрос выполнялся очень долго
     --возвращаемые из процедуры параметры:
     inout result record default null
     /*
@@ -78,7 +82,7 @@ DECLARE
     quote_regexp constant text not null default '([[\](){}.+*^$|\\?-])';  -- регулярное выражение для квотирования данных в регулярном выражении
     ident_regexp constant text not null default '([a-zA-Z_]+[a-zA-Z_\d]*|"([^"]|"")+")'; -- регулярное выражение для захвата названия SQL идентификатора (таблицы, колонки и др.)
     alias_regexp constant text not null default format('(\s+(AS\s+)?%s)?', ident_regexp); -- регулярное выражение для захвата названия SQL необязательного псевдонима (таблицы, колонки и др.)
-    query_type_regexp constant text not null default '\m(?:(INSERT)\s+INTO|(UPDATE)(?:\s+ONLY)?|(DELETE)\s+FROM(?:\s+ONLY)?)\s+%s\M';
+    query_type_regexp constant text not null default '\m(?:(INSERT)\s+INTO(?:\s+ONLY)?|(UPDATE)(?:\s+ONLY)?|(DELETE)\s+FROM(?:\s+ONLY)?)\s+%s\M';
     count_query constant text not null default 'SELECT COUNT(*) FROM %1$s WHERE %2$I > $1 AND %2$I <= $2'; -- SQL запрос для получения processed_rows
     last_subquery_exception_hint constant text not null default e'Last subquery must be:\nSELECT MAX(%I) AS stop_id, COUNT(*) AS affected_rows FROM m';
     old_lock_timeout constant text not null default current_setting('lock_timeout');
@@ -105,6 +109,7 @@ DECLARE
     uniq_column_name_quoted text; -- название primary/unique колонки (квотированнное) для использования в рег. выражении
     uniq_column_name text; -- название primary/unique колонки
     uniq_column_type text; -- тип primary/unique колонки
+    uniq_index_name text;  -- название индекса primary/unique колонки
 
     -- для пользовательского CTE запроса query, выполняемого в цикле:
     start_id_bigint bigint not null default 0;
@@ -117,6 +122,10 @@ DECLARE
     query_time_start timestamp;
     query_time_elapsed numeric not null default 0; -- длительность выполнения одного запроса, в секундах
     query_type text; --тип запроса: INSERT/UPDATE/DELETE
+    query_explain_nodes jsonb;
+    query_explain_path jsonpath;
+    has_bad_query_plan boolean not null default false;
+    max_batch_rows integer not null default 0;
     time_start timestamp;
     time_elapsed numeric not null default 0;
     delay numeric; --задержка в секундах при возникновении блокировок
@@ -141,15 +150,19 @@ BEGIN
     ELSIF table_name IS NULL OR
         query IS NULL OR
         batch_rows IS NULL OR
-        time_max IS NULL OR
-        is_rollback IS NULL THEN
-        RAISE EXCEPTION 'Procedure arguments must not have NULL values (except cycles_max)!';
+        max_duration IS NULL OR
+        is_rollback IS NULL OR
+        check_query_plan_rows IS NULL
+    THEN
+        RAISE EXCEPTION 'Procedure arguments must not have NULL values (except max_cycles)!';
     ELSIF batch_rows not between 1 AND 1024 THEN
         RAISE EXCEPTION 'Argument batch_rows must between 1 and 1024, but % given', batch_rows;
-    ELSIF time_max not between 1 AND 10 THEN
-        RAISE EXCEPTION 'Argument time_max must between 1 and 10, but % given', time_max;
-    ELSIF cycles_max < 0 THEN
-        RAISE EXCEPTION 'Argument cycles_max must be >= 0, but % given', cycles_max;
+    ELSIF max_duration not between 1 AND 10 THEN
+        RAISE EXCEPTION 'Argument max_duration must between 1 and 10, but % given', max_duration;
+    ELSIF max_cycles < 0 THEN
+        RAISE EXCEPTION 'Argument max_cycles must be >= 0, but % given', max_cycles;
+    ELSIF check_query_plan_rows < 1000 THEN
+        RAISE EXCEPTION 'Argument check_query_plan_rows must be >= 1000, but % given', check_query_plan_rows;
     END IF;
 
     SELECT null::int as table_rows,
@@ -159,22 +172,33 @@ BEGIN
       INTO result;
 
     -- 2) проверка наличия not null уникального ключа
-    SELECT pg_attribute.attname,
-           format_type(pg_attribute.atttypid, pg_attribute.atttypmod)
-    INTO uniq_column_name, uniq_column_type
-    FROM pg_index, pg_class, pg_attribute, pg_namespace
-    WHERE pg_class.oid = loop_execute.table_name
-      AND pg_index.indrelid = pg_class.oid
-      AND pg_class.relnamespace = pg_namespace.oid
-      AND pg_attribute.attrelid = pg_class.oid
-      AND pg_attribute.attnum = any(pg_index.indkey)
-      AND pg_attribute.attnotnull
-      AND pg_index.indisunique
-    ORDER BY pg_index.indisprimary DESC -- primary key in priority
+    SELECT a.attname,
+           format_type(a.atttypid, a.atttypmod),
+           cc.relname
+    INTO uniq_column_name, uniq_column_type, uniq_index_name
+    FROM pg_index AS i,
+         pg_class AS c,
+         pg_class AS cc,
+         pg_attribute AS a,
+         pg_namespace AS n
+    WHERE i.indisunique
+      AND c.oid = loop_execute.table_name
+      AND i.indrelid = c.oid
+      AND i.indexrelid = cc.oid
+      AND c.relnamespace = n.oid
+      AND a.attrelid = c.oid
+      AND a.attnum = any(i.indkey)
+      AND a.attnotnull
+    ORDER BY i.indisprimary DESC -- primary key in priority
     LIMIT 1;
 
-    IF uniq_column_name IS NULL THEN
+    IF uniq_index_name IS NULL THEN
         RAISE EXCEPTION 'Table % must has a column with primary/unique not null index!', table_name;
+    END IF;
+
+    IF uniq_column_type !~* '\m(integer|bigint|varying|character|text|char|varchar)\M' THEN
+        RAISE EXCEPTION 'Column %.% has unsupported type %', table_name, uniq_column_name, uniq_column_type
+             USING HINT = 'You can add support by modify procedure :-)';
     END IF;
 
     -- 3) проверка необходимых частей в пользовательском запросе (в т.ч. защита от дурака)
@@ -233,7 +257,7 @@ BEGIN
     END IF;
 
     -- 5) отключение триггеров и FK
-    IF is_disable_triggers THEN
+    IF disable_triggers THEN
         SELECT r.rolsuper INTO is_superuser FROM pg_roles AS r WHERE r.rolname = CURRENT_USER;
         IF NOT is_superuser THEN
             RAISE EXCEPTION 'To disable triggers and foreign keys superuser role required!';
@@ -241,10 +265,10 @@ BEGIN
     END IF;
 
     LOOP
-        EXIT WHEN cycles >= cycles_max;
+        EXIT WHEN cycles >= max_cycles;
         cycles := cycles + 1;
 
-        PERFORM set_config('lock_timeout', ceil(time_max * 1000 / 10)::text, true);
+        PERFORM set_config('lock_timeout', ceil(max_duration * 1000 / 10)::text, true);
         /*
         --statement_timeout does not work inside PLpgSQL:
         do $$ begin set local statement_timeout to '1s'; perform pg_sleep(2); end;$$;
@@ -253,12 +277,58 @@ BEGIN
         --TODO use dblink to workаround?
         */
 
-        IF is_disable_triggers THEN
+        IF disable_triggers THEN
             set local session_replication_role = 'replica';
         END IF;
 
+        -- проверяем, чтобы план выполнения CTE запроса использовал PK или UK индекс
+        -- нельзя допустить, чтобы CTE запрос выполнялся очень долго
+        LOOP
+            EXIT WHEN total_table_rows <= check_query_plan_rows OR max_batch_rows >= batch_rows;
+
+            IF uniq_column_type IN ('integer', 'bigint') THEN
+                RAISE NOTICE 'Check CTE query execution plan using: $1 := %, $2 := %, $3 := %', start_id_bigint, batch_rows, offset_rows;
+                EXECUTE concat('EXPLAIN (FORMAT JSON) ', query) USING start_id_bigint, batch_rows, offset_rows INTO query_explain_nodes;
+            ELSE
+                RAISE NOTICE 'Check CTE query execution plan using: $1 := %, $2 := %, $3 := %', quote_literal(start_id_text), batch_rows, offset_rows;
+                EXECUTE concat('EXPLAIN (FORMAT JSON) ', query) USING start_id_text, batch_rows, offset_rows INTO query_explain_nodes;
+            END IF;
+
+            IF query_explain_path IS NULL THEN
+                -- JSONPath syntax https://habr.com/ru/company/postgrespro/blog/448612/
+                query_explain_path := format($$  $.** ? (@."Relation Name" == "%s")
+                                                      ? (@."Node Type" == "Index Scan")
+                                                      ? (@."Index Name" == "%s")
+                                             $$, to_json(string_to_array(table_name::text, '.'))->>-1, uniq_index_name)::jsonpath;
+            END IF;
+
+            IF query_explain_nodes @? query_explain_path THEN
+                RAISE NOTICE 'CTE query execution plan is OK';
+                max_batch_rows := batch_rows;
+                EXIT;
+            END IF;
+
+            has_bad_query_plan := true;
+            batch_rows := ceil(batch_rows / multiplier);
+
+            IF batch_rows = 1 THEN
+                RAISE WARNING 'CTE query explain nodes:';
+                RAISE WARNING '%', query_explain_nodes;
+
+                RAISE WARNING 'Target node is not found in explain for jsonpath:';
+                RAISE WARNING '%', query_explain_path;
+
+                RAISE EXCEPTION 'Bad CTE query execution plan detected!'
+                     USING HINT = format('Try to run VACUUM ANALYZE %s', quote_ident(table_name::text));
+            ELSE
+                RAISE WARNING 'Bad CTE query execution plan detected!'
+                   USING HINT = format('Try to run VACUUM ANALYZE %s', quote_ident(table_name::text));
+            END IF;
+        END LOOP;
+
         query_time_start := clock_timestamp();
         time_start := clock_timestamp();
+
         FOR cur_attempt IN 1..max_attempts LOOP
             BEGIN -- subtransaction SAVEPOINT
 
@@ -272,7 +342,7 @@ BEGIN
                             USING HINT = format(last_subquery_exception_hint, uniq_column_name);
                     END IF;
                     EXECUTE format(count_query, table_name, uniq_column_name) USING start_id_bigint, stop_id_bigint INTO processed_rows;
-                ELSIF uniq_column_type ~* '\m(varying|character|text|char|varchar)\M' THEN
+                ELSE
                     start_id_text := coalesce(stop_id_text, start_id_text);
                     EXECUTE query USING start_id_text, batch_rows, offset_rows INTO STRICT stop_id_text, affected_rows;
                     IF start_id_text >= stop_id_text THEN
@@ -282,9 +352,6 @@ BEGIN
                             USING HINT = format(last_subquery_exception_hint, uniq_column_name);
                     END IF;
                     EXECUTE format(count_query, table_name, uniq_column_name) USING start_id_text, stop_id_text INTO processed_rows;
-                ELSE
-                    RAISE EXCEPTION 'Column %.% has unsupported type % ', table_name, uniq_column_name, uniq_column_type
-                        USING HINT = 'You can add support by modify procedure :-)';
                 END IF;
 
                 offset_rows := 0;
@@ -295,8 +362,8 @@ BEGIN
                     IF cur_attempt < max_attempts THEN
                         batch_rows := ceil(batch_rows / multiplier);
                         time_elapsed := round(extract('epoch' from clock_timestamp() - time_start)::numeric, 2);
-                        delay := round(greatest(sqrt(time_elapsed * time_max), time_max), 2);
-                        delay := round(((random() * (delay - time_max)) + time_max)::numeric, 2);
+                        delay := round(greatest(sqrt(time_elapsed * max_duration), max_duration), 2);
+                        delay := round(((random() * (delay - max_duration)) + max_duration)::numeric, 2);
                         RAISE WARNING 'Attempt % of % to execute CTE query failed due lock_timeout = %, next replay after % s',
                             cur_attempt, max_attempts, current_setting('lock_timeout'), delay;
                         PERFORM pg_sleep(delay);
@@ -322,9 +389,9 @@ BEGIN
                     processed_rows := 0;
 
                     IF uniq_column_type IN ('integer', 'bigint') THEN
-                        RAISE WARNING 'ERROR of EXECUTE SQL statement using: $1 := %, $2 := %', start_id_bigint, batch_rows;
-                    ELSIF uniq_column_type ~* '\m(varying|character|text|char|varchar)\M' THEN
-                        RAISE WARNING 'ERROR of EXECUTE SQL statement using: $1 := %, $2 := %', quote_literal(start_id_text), batch_rows;
+                        RAISE WARNING 'ERROR of execute CTE query using: $1 := %, $2 := %, $3 := %', start_id_bigint, batch_rows, offset_rows;
+                    ELSE
+                        RAISE WARNING 'ERROR of execute CTE query using: $1 := %, $2 := %, $3 := %', quote_literal(start_id_text), batch_rows, offset_rows;
                     END IF;
 
                     IF cur_attempt = max_attempts THEN
@@ -398,7 +465,7 @@ BEGIN
         result.affected_rows  := total_affected_rows;
         result.processed_rows := total_processed_rows;
 
-        is_calc_estimated_time := not is_calc_estimated_time and (cycles > 10 or (query_time_elapsed > time_max and cycles > 4));
+        is_calc_estimated_time := not is_calc_estimated_time and (cycles > 10 or (query_time_elapsed > max_duration and cycles > 4));
         IF is_calc_estimated_time THEN
             estimated_time := (ceil(total_table_rows * total_time_elapsed / total_processed_rows - total_time_elapsed)::text || 's')::interval;
         END IF;
@@ -426,14 +493,19 @@ BEGIN
 
         IF affected_rows = 0 THEN
             NULL;
-        ELSIF query_time_elapsed <= time_max THEN
+        ELSIF query_time_elapsed <= max_duration THEN
+            -- увеличиваем значение
             batch_rows := case when query_time_elapsed = 0 then batch_rows * multiplier
-                               else least(ceil(batch_rows * time_max / query_time_elapsed), batch_rows * multiplier)
+                               else least(ceil(batch_rows * max_duration / query_time_elapsed), batch_rows * multiplier)
                           end;
+            if has_bad_query_plan then
+                batch_rows := max_batch_rows;
+            end if;
         ELSIF batch_rows > 1 THEN
-            batch_rows := greatest(ceil(batch_rows * time_max / query_time_elapsed), ceil(batch_rows / multiplier));
+            --уменьшаем значение
+            batch_rows := greatest(ceil(batch_rows * max_duration / query_time_elapsed), ceil(batch_rows / multiplier));
         ELSE
-            delay := round(greatest(sqrt(query_time_elapsed * time_max) - time_max, 0), 2);
+            delay := round(greatest(sqrt(query_time_elapsed * max_duration) - max_duration, 0), 2);
             RAISE WARNING 'Try to save DB from overload, next replay after % s', delay;
             PERFORM pg_sleep(delay);
         END IF;
@@ -447,7 +519,7 @@ BEGIN
 
     RAISE NOTICE 'Done. % rows per second, % queries per second', rows_per_second, queries_per_second;
 
-    IF is_disable_triggers THEN
+    IF disable_triggers THEN
         PERFORM set_config('session_replication_role', old_session_replication_role, true);
     END IF;
 
@@ -461,13 +533,14 @@ comment on procedure loop_execute(
     table_name  regclass,
     query       text,
     --необязательные параметры:
-    is_disable_triggers boolean,
+    disable_triggers boolean,
     batch_rows  integer,
-    time_max    numeric,
+    max_duration    numeric,
     is_rollback boolean,
-    cycles_max  integer,
+    max_cycles  integer,
     total_table_rows integer,
     exception_table_name regclass,
+    check_query_plan_rows integer,
     --возвращаемые из процедуры параметры:
     inout result record
 ) is $$
