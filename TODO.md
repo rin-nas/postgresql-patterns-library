@@ -298,7 +298,7 @@ Of course, you can make function from this query to hide implementation and get 
 
 # Как очень быстро избавиться от bloat в маленьких таблицах, но очень интенсивных по записи
 
-В таблицах, где записей < 1000, есть очень быстрый способ "огнетушителя" избавиться от bloat. Проверил на прод БД. Всё работает отлично.
+В таблицах, где записей < 10000, есть очень быстрый способ "огнетушителя" избавиться от bloat. Проверил на прод БД. Всё работает отлично.
 
 ```sql
 DO $$
@@ -317,3 +317,18 @@ $$;
 # gender_by_name
 
 http://ceur-ws.org/Vol-2754/paper3.pdf
+
+# Тонкости сравнения NULL и record
+
+Нужно об этом знать, чтобы на напороться на ошибки в своём коде.
+Testing a ROW expression with IS NULL only reports TRUE if every single column is NULL
+```sql
+SELECT 
+      (NULL, NULL) IS NULL as "(NULL, NULL) IS NULL", --true
+      (NULL, NULL) IS NOT NULL as "(NULL, NULL) IS NOT NULL", --false
+      NOT (NULL, NULL) IS NULL as "NOT (NULL, NULL) IS NULL", --false
+
+      (1, NULL) IS NULL as "(1, NULL) IS NULL", --false
+      (1, NULL) IS NOT NULL as "(1, NULL) IS NOT NULL", --false --!!!
+      NOT (1, NULL) IS NULL as "NOT (1, NULL) IS NULL" --true --!!!
+```
