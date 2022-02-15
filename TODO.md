@@ -151,18 +151,6 @@ ORDER BY calls_date ASC
 limit 100;
 ```
 
-# MySQL's [`make_set()`](https://dev.mysql.com/doc/refman/8.0/en/string-functions.html#function_make-set) function equivalent
-
-```sql
-select to_json(array_agg(name))
-from unnest(array['a','b','c', 'd']::text[]) with ordinality as s(name, num)
-where 10 & (1 << (num::int-1)) > 0;
-
-select array_agg(name)
-from unnest(string_to_array('a,b,c,d', ',')) with ordinality as s(name, num)
-where 10 & (1 << (num::int-1)) > 0;
-```
-
 # Как защитить БД от внезапных нагрузок, создаваемых приложениями? Например в периодически запускаемых фоновых (background) задачах.
 
 Предполагаемое решение — измерять скорость выполнения каждого запроса (SELECT или DML) в приложении. Если оно превышает N секунд, значит ресурсов БД нехватает и после выполнения запроса приложение нужно замедлить, т.е. "поспать" некоторое время. Это даст "продохнуть" БД и адаптироваться под её нагрузку. Длительность сна можно высчитывать по формуле, отталкиваясь от длительности выполнения запроса. См. распределение значений запросом
