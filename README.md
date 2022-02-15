@@ -219,7 +219,7 @@ CREATE TABLE my_table (
 ```
 Дополнительно смотри [`array_unique.sql`](functions/array_unique.sql)
 
-### Как сделать аналог функции `make_set()` из MySQL?
+#### Как сделать аналог функции `make_set()` из MySQL?
 
 ```sql
 select to_json(array_agg(name))
