@@ -323,18 +323,3 @@ $$;
 # gender_by_name
 
 http://ceur-ws.org/Vol-2754/paper3.pdf
-
-# Тонкости сравнения NULL и record
-
-Нужно об этом знать, чтобы на напороться на ошибки в своём коде.
-Testing a ROW expression with IS NULL only reports TRUE if every single column is NULL
-```sql
-SELECT 
-      (NULL, NULL) IS NULL as "(NULL, NULL) IS NULL", --true
-      (NULL, NULL) IS NOT NULL as "(NULL, NULL) IS NOT NULL", --false
-      NOT (NULL, NULL) IS NULL as "NOT (NULL, NULL) IS NULL", --false
-
-      (1, NULL) IS NULL as "(1, NULL) IS NULL", --false
-      (1, NULL) IS NOT NULL as "(1, NULL) IS NOT NULL", --false --!!!
-      NOT (1, NULL) IS NULL as "NOT (1, NULL) IS NULL" --true --!!!
-```
