@@ -56,6 +56,7 @@
    1. [Как найти ближайшие населённые пункты относительно заданных координат?](#Как-найти-ближайшие-населённые-пункты-относительно-заданных-координат)
    1. [Как вычислить приблизительный объём данных для результата SELECT запроса?](#Как-вычислить-приблизительный-объём-данных-для-результата-SELECT-запроса)
    1. [Почему запрос с подзапросом в NOT IN() возвращает 0 записей?](#Почему-запрос-с-подзапросом-в-NOT-IN-возвращает-0-записей)
+   1. [Особенности сравнения record и NULL](#Особенности-сравнения-record-и-NULL)
    1. [Как очень быстро получить количество записей в большой таблице?](#Как-очень-быстро-получить-количество-записей-в-большой-таблице)
 
   
@@ -993,6 +994,22 @@ SELECT COUNT(*) FROM unnest(ARRAY[1,2,3,4,5,6]) as x(id) WHERE id NOT IN (
 SELECT COUNT(*) FROM unnest(ARRAY[1,2,3,4,5,6]) as x(id) WHERE NOT EXISTS(
     SELECT FROM unnest(ARRAY[1,2,NULL]) as y(id) WHERE x.id = y.id
 ); --4
+```
+
+### Особенности сравнения record и NULL
+
+Testing a ROW expression with IS NULL only reports TRUE if every single column is NULL.
+Нужно об этом знать, чтобы на напороться на ошибки в своём коде.
+
+```sql
+SELECT 
+      (NULL, NULL) IS NULL as "(NULL, NULL) IS NULL", --true
+      (NULL, NULL) IS NOT NULL as "(NULL, NULL) IS NOT NULL", --false
+      NOT (NULL, NULL) IS NULL as "NOT (NULL, NULL) IS NULL", --false
+
+      (1, NULL) IS NULL as "(1, NULL) IS NULL", --false
+      (1, NULL) IS NOT NULL as "(1, NULL) IS NOT NULL", --false --!!!
+      NOT (1, NULL) IS NULL as "NOT (1, NULL) IS NULL" --true --!!!
 ```
 
 ### Как очень быстро получить количество записей в большой таблице?
