@@ -42,6 +42,11 @@ create or replace procedure loop_execute(
     table_name  regclass, -- название основной таблицы (дополненное схемой через точку, при необходимости),
                           -- из которой данные порциями в цикле будут читаться и модифицироваться
     query text, -- CTE запрос с SELECT, INSERT/UPDATE/DELETE и SELECT запросами для модификации записей
+                -- на каждой итерации цикла в следующие метки-заменители подставляются значения:
+                -- в $1 значение колонки с PK или UK индексом
+                -- в $2 ограничение LIMIT
+                -- в $3 ограничение OFFSET
+                -- в $4 текущая дата-время с временной зоной (необязательная метка-заменитель)
     --необязательные параметры:
     disable_triggers boolean default false, -- That disables all triggers, include foreign keys. For the current database session only.
                                             -- Improves speed, saves from side effect. But superuser role required.
@@ -52,8 +57,9 @@ create or replace procedure loop_execute(
                                     -- примерно столько времени CTE запрос может блокировать другие запросы на запись тех же ресурсов
                                     -- от значения этого параметра устанавливаются следующие ограничения:
                                     -- lock_timeout = max_duration * 1000 / 10
-                                    -- если происходит ошибка, связанная с этими ограничениями, batch_rows уменьшается и CTE запрос через некоторое время повторяется
-                                    -- Without lock_timeout CTE migration could block other writes WHILE TRYING to grab a lock on the resource (table/record/index/etc.)
+                                    -- lock_timeout -- это сколько времени CTE запрос будет ждать захвата блокировки строк на запись, возможно, блокируя другие запросы, образуя очередь запросов
+                                    -- если происходит ошибка lock_timeout, batch_rows уменьшается и CTE запрос через некоторое время повторяется
+                                    -- without lock_timeout CTE migration could block other writes WHILE TRYING to grab a lock on the resource (table/record/index/etc.)
     is_rollback boolean default false, -- откатывать запрос после каждого выполнения в цикле (для целей тестирования)
     max_cycles  integer default null, -- максимальное количество циклов (для целей тестирования при обработке больших таблиц)
                                       -- если null, то без ограничений
@@ -83,11 +89,12 @@ DECLARE
     ident_regexp constant text not null default '([a-zA-Z_]+[a-zA-Z_\d]*|"([^"]|"")+")'; -- регулярное выражение для захвата названия SQL идентификатора (таблицы, колонки и др.)
     alias_regexp constant text not null default format('(\s+(AS\s+)?%s)?', ident_regexp); -- регулярное выражение для захвата названия SQL необязательного псевдонима (таблицы, колонки и др.)
     query_type_regexp constant text not null default '\m(?:(INSERT)\s+INTO(?:\s+ONLY)?|(UPDATE)(?:\s+ONLY)?|(DELETE)\s+FROM(?:\s+ONLY)?)\s+%s\M';
-    count_query constant text not null default 'SELECT COUNT(*) FROM %1$s WHERE %2$I > $1 AND %2$I <= $2'; -- SQL запрос для получения processed_rows
-    last_subquery_exception_hint constant text not null default e'Last subquery must be:\nSELECT MAX(%I) AS stop_id, COUNT(*) AS affected_rows FROM m';
+    count_query      constant text not null default 'SELECT COUNT(*)            FROM %1$s WHERE %2$I > $1 AND %2$I <= $2'; -- SQL запрос для получения processed_rows
+    count_query_spec constant text not null default 'SELECT COUNT(*), MAX(%2$I) FROM %1$s WHERE %2$I > $1 AND %2$I < $2'; -- SQL запрос для получения processed_rows (для query_canceled)
+    last_subquery_exception_hint constant text not null default e'Last subquery must be:\nSELECT MAX(%I) AS stop_id, COUNT(*) AS affected_rows FROM ...';
     old_lock_timeout constant text not null default current_setting('lock_timeout');
     old_session_replication_role constant text not null default current_setting('session_replication_role');
-    max_attempts constant smallint not null default 200;
+    max_attempts constant smallint not null default 100;
     app_name constant text not null default regexp_replace(current_setting('application_name'), '\s*/\d+(?:\.\d+)?%', '');
     multiplier constant numeric not null default 2; --not integer!
 
@@ -126,7 +133,7 @@ DECLARE
     query_explain_path jsonpath;
     has_bad_query_plan boolean not null default false;
     max_batch_rows integer not null default 0;
-    time_start timestamp;
+    attempts_time_start timestamp;
     time_elapsed numeric not null default 0;
     delay numeric; --задержка в секундах при возникновении блокировок
     is_superuser boolean not null default false;
@@ -201,7 +208,7 @@ BEGIN
              USING HINT = 'You can add support by modify procedure :-)';
     END IF;
 
-    -- 3) проверка необходимых частей в пользовательском запросе (в т.ч. защита от дурака)
+    -- 3) проверка необходимых частей в CTE запросе, в т.ч. защита от дурака
     table_name_quoted       := regexp_replace(table_name::text, quote_regexp, '\\\1', 'g');
     uniq_column_name_quoted := regexp_replace(quote_ident(uniq_column_name), quote_regexp, '\\\1', 'g');
     query_type              := (array_remove(regexp_match(query, format(query_type_regexp, table_name_quoted)), null))[1];
@@ -218,6 +225,9 @@ BEGIN
     ELSIF query !~* '\mlimit\s+\$2\M' THEN
         RAISE EXCEPTION 'Entry "LIMIT $2" is not found in your CTE query!'
             USING HINT = 'Add "LIMIT $2" to end of SELECT subquery.';
+    ELSIF query !~* '\moffset\s+\$3\M' THEN
+        RAISE EXCEPTION 'Entry "OFFSET $3" is not found in your CTE query!'
+            USING HINT = 'Add "OFFSET $3" to end of SELECT subquery.';
     ELSIF regexp_match(query,
                        format($regexp$
                                   \mSELECT \s+
@@ -288,10 +298,12 @@ BEGIN
 
             IF uniq_column_type IN ('integer', 'bigint') THEN
                 RAISE NOTICE 'Check CTE query execution plan using: $1 := %, $2 := %, $3 := %', start_id_bigint, batch_rows, offset_rows;
-                EXECUTE concat('EXPLAIN (FORMAT JSON) ', query) USING start_id_bigint, batch_rows, offset_rows INTO query_explain_nodes;
+                EXECUTE concat('EXPLAIN (FORMAT JSON) ', query)
+                    USING start_id_bigint, batch_rows, offset_rows, clock_timestamp() INTO query_explain_nodes;
             ELSE
                 RAISE NOTICE 'Check CTE query execution plan using: $1 := %, $2 := %, $3 := %', quote_literal(start_id_text), batch_rows, offset_rows;
-                EXECUTE concat('EXPLAIN (FORMAT JSON) ', query) USING start_id_text, batch_rows, offset_rows INTO query_explain_nodes;
+                EXECUTE concat('EXPLAIN (FORMAT JSON) ', query)
+                    USING start_id_text, batch_rows, offset_rows, clock_timestamp() INTO query_explain_nodes;
             END IF;
 
             IF query_explain_path IS NULL THEN
@@ -305,7 +317,7 @@ BEGIN
             IF query_explain_nodes @? query_explain_path THEN
                 RAISE NOTICE 'CTE query execution plan is OK';
                 max_batch_rows := batch_rows;
-                EXIT;
+                EXIT; --выходим из LOOP
             END IF;
 
             has_bad_query_plan := true;
@@ -326,32 +338,34 @@ BEGIN
             END IF;
         END LOOP;
 
-        query_time_start := clock_timestamp();
-        time_start := clock_timestamp();
-
+        attempts_time_start := clock_timestamp();
         FOR cur_attempt IN 1..max_attempts LOOP
             BEGIN -- subtransaction SAVEPOINT
 
+                query_time_start := clock_timestamp();
+                affected_rows  := 0;
+                processed_rows := 0;
+
                 IF uniq_column_type IN ('integer', 'bigint') THEN
                     start_id_bigint := coalesce(stop_id_bigint, start_id_bigint);
-                    EXECUTE query USING start_id_bigint, batch_rows, offset_rows INTO STRICT stop_id_bigint, affected_rows;
+                    EXECUTE query USING start_id_bigint, batch_rows, offset_rows, clock_timestamp() INTO STRICT stop_id_bigint, affected_rows;
                     IF start_id_bigint >= stop_id_bigint THEN
-                        ROLLBACK AND CHAIN;
                         RAISE EXCEPTION 'Infinity cycle has been found (start_id=% >= stop_id=%)! There are mistake in your CTE query.',
-                                        start_id_bigint, stop_id_bigint
+                            start_id_bigint, stop_id_bigint
                             USING HINT = format(last_subquery_exception_hint, uniq_column_name);
+                    ELSIF stop_id_bigint IS NOT NULL THEN
+                        EXECUTE format(count_query, table_name, uniq_column_name) USING start_id_bigint, stop_id_bigint INTO processed_rows;
                     END IF;
-                    EXECUTE format(count_query, table_name, uniq_column_name) USING start_id_bigint, stop_id_bigint INTO processed_rows;
                 ELSE
                     start_id_text := coalesce(stop_id_text, start_id_text);
-                    EXECUTE query USING start_id_text, batch_rows, offset_rows INTO STRICT stop_id_text, affected_rows;
+                    EXECUTE query USING start_id_text, batch_rows, offset_rows, clock_timestamp() INTO STRICT stop_id_text, affected_rows;
                     IF start_id_text >= stop_id_text THEN
-                        ROLLBACK AND CHAIN;
                         RAISE EXCEPTION 'Infinity cycle has been found (start_id=% >= stop_id=%)! There are mistake in your CTE query.',
-                                        quote_literal(start_id_text), quote_literal(stop_id_text)
+                            quote_literal(start_id_text), quote_literal(stop_id_text)
                             USING HINT = format(last_subquery_exception_hint, uniq_column_name);
+                    ELSIF stop_id_text IS NOT NULL THEN
+                        EXECUTE format(count_query, table_name, uniq_column_name) USING start_id_text, stop_id_text INTO processed_rows;
                     END IF;
-                    EXECUTE format(count_query, table_name, uniq_column_name) USING start_id_text, stop_id_text INTO processed_rows;
                 END IF;
 
                 offset_rows := 0;
@@ -361,7 +375,7 @@ BEGIN
                 WHEN lock_not_available THEN
                     IF cur_attempt < max_attempts THEN
                         batch_rows := ceil(batch_rows / multiplier);
-                        time_elapsed := round(extract('epoch' from clock_timestamp() - time_start)::numeric, 2);
+                        time_elapsed := round(extract('epoch' from clock_timestamp() - attempts_time_start)::numeric, 2);
                         delay := round(greatest(sqrt(time_elapsed * max_duration), max_duration), 2);
                         delay := round(((random() * (delay - max_duration)) + max_duration)::numeric, 2);
                         RAISE WARNING 'Attempt % of % to execute CTE query failed due lock_timeout = %, next replay after % s',
@@ -372,6 +386,46 @@ BEGIN
                             cur_attempt, max_attempts, current_setting('lock_timeout');
                         RAISE; -- raise the original exception
                     END IF;
+                WHEN query_canceled THEN
+                    GET STACKED DIAGNOSTICS
+                        exception_detail := PG_EXCEPTION_DETAIL,  -- text текст детального сообщения исключения (если есть)
+                        exception_hint   := PG_EXCEPTION_HINT;    -- text текст подсказки к исключению (если есть)
+
+                    IF exception_hint !~ '\mscan_timeout()' THEN
+                        RAISE; -- raise the original exception
+                    END IF;
+
+                    RAISE WARNING 'ERROR % of execute CTE query using: $1 := %, $2 := %, $3 := %', SQLSTATE, start_id_bigint, batch_rows, offset_rows;
+
+                    IF batch_rows > 1 THEN
+                        batch_rows := ceil(batch_rows / multiplier);
+                        CONTINUE;
+                    ELSIF uniq_column_type IN ('integer', 'bigint') THEN
+                        --на этом id в scan_timeout() было брошено исключение 'query_canceled'
+                        stop_id_bigint := ((exception_detail::jsonb)->>'id')::bigint;
+                        --поэтому последний stop_id_bigint будет перед ним
+                        EXECUTE format(count_query_spec, table_name, uniq_column_name)
+                            USING start_id_bigint, stop_id_bigint INTO processed_rows, stop_id_bigint;
+                        IF start_id_bigint >= stop_id_bigint THEN
+                            RAISE EXCEPTION 'Infinity cycle has been found (start_id=% >= stop_id=%)!',
+                                start_id_bigint, stop_id_bigint
+                                USING HINT = format(last_subquery_exception_hint, uniq_column_name);
+                        END IF;
+                    ELSE
+                        stop_id_text := ((exception_detail::jsonb)->>'id')::text;
+                        EXECUTE format(count_query_spec, table_name, uniq_column_name)
+                            USING start_id_text, stop_id_text INTO processed_rows, stop_id_text;
+                        IF start_id_text >= stop_id_text THEN
+                            RAISE EXCEPTION 'Infinity cycle has been found (start_id=% >= stop_id=%)!',
+                                quote_literal(start_id_text), quote_literal(stop_id_text)
+                                USING HINT = format(last_subquery_exception_hint, uniq_column_name);
+                        END IF;
+                    END IF;
+
+                    affected_rows := 0;
+                    EXIT; --считаем, что часть запроса выполнилась успешно, выходим из цикла FOR ... LOOP
+
+                -- ошибки ограничения уникальности, максимальной длины полей и другие
                 WHEN others THEN
                     GET STACKED DIAGNOSTICS
                         exception_sqlstate        := RETURNED_SQLSTATE,	-- text	код исключения, возвращаемый SQLSTATE
@@ -385,13 +439,10 @@ BEGIN
                         exception_hint            := PG_EXCEPTION_HINT,    -- text текст подсказки к исключению (если есть)
                         exception_context         := PG_EXCEPTION_CONTEXT; -- text строки текста, описывающие стек вызовов в момент исключения (см. Подраздел 42.6.9)
 
-                    affected_rows := 0;
-                    processed_rows := 0;
-
                     IF uniq_column_type IN ('integer', 'bigint') THEN
-                        RAISE WARNING 'ERROR of execute CTE query using: $1 := %, $2 := %, $3 := %', start_id_bigint, batch_rows, offset_rows;
+                        RAISE WARNING 'ERROR % of execute CTE query using: $1 := %, $2 := %, $3 := %', SQLSTATE, start_id_bigint, batch_rows, offset_rows;
                     ELSE
-                        RAISE WARNING 'ERROR of execute CTE query using: $1 := %, $2 := %, $3 := %', quote_literal(start_id_text), batch_rows, offset_rows;
+                        RAISE WARNING 'ERROR % of execute CTE query using: $1 := %, $2 := %, $3 := %', SQLSTATE, quote_literal(start_id_text), batch_rows, offset_rows;
                     END IF;
 
                     IF cur_attempt = max_attempts THEN
@@ -443,7 +494,6 @@ BEGIN
             END; --subtransaction BEGIN/EXCEPTION/END
 
         END LOOP; --FOR LOOP
-        query_time_elapsed := round(extract('epoch' from clock_timestamp() - query_time_start)::numeric, 2);
 
         IF is_rollback THEN
             ROLLBACK AND CHAIN;
@@ -451,13 +501,15 @@ BEGIN
             COMMIT AND CHAIN; -- https://www.postgresql.org/docs/12/plpgsql-transactions.html
         END IF;
 
+        query_time_elapsed := round(extract('epoch' from clock_timestamp() - query_time_start)::numeric, 2);
         total_time_elapsed := round(extract('epoch' from clock_timestamp() - total_time_start)::numeric, 2);
 
         total_affected_rows  := total_affected_rows  + affected_rows;
         total_processed_rows := total_processed_rows + processed_rows;
+
         IF total_processed_rows > total_table_rows THEN
-            --в случае приблизительного вычисления кол-ва строк в таблице корректируем значения
-            total_table_rows := total_processed_rows;
+            --корректируем значения в случае приблизительного вычисления кол-ва строк в таблице
+            total_table_rows  := total_processed_rows;
             result.table_rows := total_table_rows;
         END IF;
 
@@ -489,22 +541,20 @@ BEGIN
             PERFORM set_config('application_name', app_name_new, true);
         end if;
 
-        EXIT WHEN affected_rows < batch_rows OR (stop_id_bigint IS NULL AND stop_id_text IS NULL);
+        EXIT WHEN processed_rows = 0;
 
-        IF affected_rows = 0 THEN
-            NULL;
-        ELSIF query_time_elapsed <= max_duration THEN
+        IF query_time_elapsed <= max_duration THEN
             -- увеличиваем значение
-            batch_rows := case when query_time_elapsed = 0 then batch_rows * multiplier
+            batch_rows := case when query_time_elapsed = 0 then batch_rows * multiplier --protect division by zero below
                                else least(ceil(batch_rows * max_duration / query_time_elapsed), batch_rows * multiplier)
                           end;
-            if has_bad_query_plan then
+            if has_bad_query_plan and batch_rows > max_batch_rows then
                 batch_rows := max_batch_rows;
             end if;
         ELSIF batch_rows > 1 THEN
             --уменьшаем значение
             batch_rows := greatest(ceil(batch_rows * max_duration / query_time_elapsed), ceil(batch_rows / multiplier));
-        ELSE
+        ELSIF affected_rows > 0 THEN
             delay := round(greatest(sqrt(query_time_elapsed * max_duration) - max_duration, 0), 2);
             RAISE WARNING 'Try to save DB from overload, next replay after % s', delay;
             PERFORM pg_sleep(delay);
