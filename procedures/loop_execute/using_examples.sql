@@ -13,22 +13,21 @@ call loop_execute(
             ORDER BY id
             LIMIT $2 OFFSET $3
         ),
-        m (id) AS (
+        m AS (
             UPDATE person_email AS u
             SET email = s.value
             FROM s
             WHERE s.id = u.id
-            RETURNING u.id
         )
-        SELECT MAX(id)  AS next_start_id,
+        SELECT MAX(id)  AS stop_id,
                COUNT(*) AS affected_rows
-        FROM m;
+        FROM s;
     $$, --query
-    true, --is_disable_user_triggers
+    true, --disable_triggers
     100,  --batch_rows
-    1,    --time_max
+    1,    --max_duration
     true, --is_rollback (for test)
-    10, --cycles_max (for test)
+    10, --max_cycles (for test)
     null, --total_table_rows
     null --error_table_name
 );
@@ -56,10 +55,9 @@ call loop_execute(
         m AS (
             DELETE FROM person_email AS d
             WHERE id IN (SELECT id FROM s)
-            RETURNING d.id
         )
-        SELECT MAX(id)  AS next_start_id,
+        SELECT MAX(id)  AS stop_id,
                COUNT(*) AS affected_rows
-        FROM m;
+        FROM s;
     $$
 );
