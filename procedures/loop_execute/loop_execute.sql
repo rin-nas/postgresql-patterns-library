@@ -53,7 +53,7 @@ create or replace procedure loop_execute(
                                             -- Improves speed, saves from side effect. But superuser role required.
                                             -- Be careful to keep your database consistent!
     batch_rows integer default 1, -- стартовое значение, сколько записей будем модифицировать за 1 цикл (рекомендуется 1)
-                                  -- значение автоматически подстраивается под max_duration
+                                  -- на каждой итерации цикла значение автоматически подстраивается под max_duration
     max_duration numeric default 1, -- средняя длительность выполнения CTE запроса на каждой итерации цикла, в секундах, рекомендуется 1
                                     -- примерно столько времени CTE запрос может блокировать другие запросы на запись тех же ресурсов
                                     -- от значения этого параметра устанавливаются следующие ограничения:
