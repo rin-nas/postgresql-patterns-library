@@ -2,7 +2,11 @@
 call loop_execute(
     'person_email',
     $$
-        WITH s (id, value) AS (
+        /*
+        MATERIALIZED позволяет сначала вычислить все тяжёлые вычисления, а потом модифицировать строки.
+        В этом случае длительность блокирования строк будет меньше, это видно в плане запроса.
+        */
+        WITH s (id, value) AS MATERIALIZED (
             SELECT id,
                    hash_email_username(email, id)
             FROM person_email
@@ -37,7 +41,11 @@ call loop_execute(
 call loop_execute(
     'person_email',
     $$
-        WITH s AS (
+        /*
+        MATERIALIZED позволяет сначала вычислить все тяжёлые вычисления, а потом модифицировать строки.
+        В этом случае длительность блокирования строк будет меньше, это видно в плане запроса.
+        */
+        WITH s AS MATERIALIZED (
             SELECT id
             FROM person_email
             WHERE id > $1
