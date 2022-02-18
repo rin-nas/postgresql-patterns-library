@@ -62,7 +62,7 @@ comment on function scan_timeout(
 ) is $$
 Функция, которая позволяет остановить SELECT или DML запрос по таймауту.
 В случае остановки запроса кидает исключение 'query_canceled'.
-В плане выполнения запроса "EXPLAIN (FORMAT JSON) ..." узел "Node Type" должен быть равен "Index Scan" или "Seq Scan".
+Чтобы это работало, в плане выполнения запроса "EXPLAIN (FORMAT JSON) ..." узел "Node Type" должен быть равен "Index Scan" или "Seq Scan".
 Пример использования:
     SELECT t.*
     FROM t
