@@ -275,6 +275,7 @@ BEGIN
         END IF;
     END IF;
 
+    -- 6) выполняем CTE запрос в цикле
     LOOP
         EXIT WHEN cycles >= max_cycles;
         cycles := cycles + 1;
@@ -396,7 +397,7 @@ BEGIN
                         RAISE; -- raise the original exception
                     END IF;
 
-                    RAISE WARNING 'ERROR % of execute CTE query using: $1 := %, $2 := %, $3 := %', SQLSTATE, start_id_bigint, batch_rows, offset_rows;
+                    RAISE WARNING 'Catched ERROR % of execute CTE query using: $1 := %, $2 := %, $3 := %', SQLSTATE, start_id_bigint, batch_rows, offset_rows;
 
                     IF batch_rows > 1 THEN
                         batch_rows := ceil(batch_rows / multiplier);
@@ -441,9 +442,9 @@ BEGIN
                         exception_context         := PG_EXCEPTION_CONTEXT; -- text строки текста, описывающие стек вызовов в момент исключения (см. Подраздел 42.6.9)
 
                     IF uniq_column_type IN ('integer', 'bigint') THEN
-                        RAISE WARNING 'ERROR % of execute CTE query using: $1 := %, $2 := %, $3 := %', SQLSTATE, start_id_bigint, batch_rows, offset_rows;
+                        RAISE WARNING 'Catched ERROR % of execute CTE query using: $1 := %, $2 := %, $3 := %', SQLSTATE, start_id_bigint, batch_rows, offset_rows;
                     ELSE
-                        RAISE WARNING 'ERROR % of execute CTE query using: $1 := %, $2 := %, $3 := %', SQLSTATE, quote_literal(start_id_text), batch_rows, offset_rows;
+                        RAISE WARNING 'Catched ERROR % of execute CTE query using: $1 := %, $2 := %, $3 := %', SQLSTATE, quote_literal(start_id_text), batch_rows, offset_rows;
                     END IF;
 
                     IF cur_attempt = max_attempts THEN
@@ -474,8 +475,8 @@ BEGIN
                             $$, ':error_table_name', error_table_name::text)
                             USING table_name::text,
                                 uniq_column_name,
-                                case when uniq_column_type ~* '\m(varying|character|text|char|varchar)\M' then stop_id_text end,
-                                case when uniq_column_type IN ('integer', 'bigint') then stop_id_bigint end,
+                                case when uniq_column_type ~* '\m(varying|character|text|char|varchar)\M' then start_id_text end,
+                                case when uniq_column_type IN ('integer', 'bigint') then start_id_bigint end,
                                 exception_sqlstate,
                                 exception_column_name,
                                 exception_constraint_name,
