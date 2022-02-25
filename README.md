@@ -1529,10 +1529,11 @@ update pg_index set indisvalid = false where indexrelid = 'test_pkey'::regclass
 Способ 2 (в отдельной транзакции, но с блокировкой)
 ```sql
 begin;
-drop index foo_ndx;
-explain analyze select * from foo;
+  drop index foo_ndx;
+  explain analyze select * from foo;
 rollback;
 ```
+CAUTION: Dropping an index inside a transaction will lock out concurrent selects, inserts, updates, and deletes on the table while the transaction is active. Use with caution in test environments, and avoid on production databases.
 
 ### Как сделать компактный уникальный индекс на текстовое поле?
 ```sql
