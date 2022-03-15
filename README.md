@@ -1473,7 +1473,7 @@ skill AS (
    SELECT min(id) AS id_original,
           (array_agg(id order by id))[2:] AS id_doubles
    FROM skill
-   GROUP BY lower(name)
+   GROUP BY lower(concat(name)) --используем concat, чтобы не использовался уникальный индекс по lower(name)
    HAVING count(*) > 1
 ),
 
