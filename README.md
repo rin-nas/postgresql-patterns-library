@@ -1473,7 +1473,7 @@ skill AS (
    SELECT min(id) AS id_original,
           (array_agg(id order by id))[2:] AS id_doubles
    FROM skill
-   GROUP BY lower(concat(name)) --используем concat, чтобы не использовался уникальный индекс по lower(name)
+   GROUP BY lower(concat(name)) --используем concat, чтобы не использовался "битый" уникальный индекс по lower(name)
    HAVING count(*) > 1
 ),
 
@@ -1513,9 +1513,10 @@ UNION ALL SELECT 'resume_work_skill' AS table_name, 'inserted' AS action, COUNT(
 UNION ALL SELECT 'skill' AS table_name, 'deleted' AS action, COUNT(*) FROM deleted_skill
 ;
 
--- удаляем битый индекс и создаём новый уникальный индекс
+-- создаём новый уникальный индекс
+CREATE UNIQUE INDEX uniq_skill_name2 ON skill (lower(name));
+-- удаляем старый битый индекс
 DROP INDEX IF EXISTS skill.uniq_skill_name;
-CREATE UNIQUE INDEX uniq_skill_name ON skill (lower(name));
 ```
 
 ### Как временно отключить индекс?
