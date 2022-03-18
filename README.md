@@ -214,7 +214,8 @@ SELECT ARRAY_TO_STRING(ARRAY_AGG(DISTINCT s ORDER BY s), ', ') AS field_alias FR
 CREATE TYPE finger_type AS ENUM ('one', 'two', 'three', 'four', 'five');
 CREATE TABLE my_table (
     fingers finger_type[] CHECK(/*cardinality(fingers) > 0 and*/
-                                cardinality(array_unique(fingers)) = cardinality(fingers))
+                                cardinality(array_unique(fingers)) = cardinality(fingers) --проверка на уникальность
+                               )
 );
 ```
 Дополнительно смотри [`array_unique.sql`](functions/array_unique.sql)
