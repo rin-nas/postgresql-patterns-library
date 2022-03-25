@@ -7,3 +7,5 @@ $json_diff$
 LANGUAGE sql;
 
 SELECT jsonb_diff('{"a":1,"b":2}'::JSONB, '{"a":1,"b":null}'::JSONB);
+
+--https://github.com/glynastill/pg_jsonb_delete_op/blob/master/pg_jsonb_delete_op.sql
