@@ -87,9 +87,9 @@ $procedure$
 DECLARE
     --константы
     quote_regexp constant text not null default '([[\](){}.+*^$|\\?-])';  -- регулярное выражение для квотирования данных в регулярном выражении
-    ident_regexp constant text not null default '([a-zA-Z_]+[a-zA-Z_\d]*|"([^"]|"")+")'; -- регулярное выражение для захвата названия SQL идентификатора (таблицы, колонки и др.)
-    alias_regexp constant text not null default format('(\s+(AS\s+)?%s)?', ident_regexp); -- регулярное выражение для захвата названия SQL необязательного псевдонима (таблицы, колонки и др.)
-    query_type_regexp constant text not null default '\m(?:(INSERT)\s+INTO(?:\s+ONLY)?|(UPDATE)(?:\s+ONLY)?|(DELETE)\s+FROM(?:\s+ONLY)?)\s+%s\M';
+    ident_regexp constant text not null default '(\m[a-zA-Z_]+[a-zA-Z_\d]*\M|"([^"]|"")+")'; -- регулярное выражение для захвата названия SQL идентификатора (таблицы, колонки и др.)
+    alias_regexp constant text not null default format('(\s*(\m[Aa][Ss]\M\s*)?%s)?', ident_regexp); -- регулярное выражение для захвата названия SQL необязательного псевдонима (таблицы, колонки и др.)
+    query_type_regexp constant text not null default '\m(?:(INSERT)\s+INTO(?:\s+ONLY)?|(UPDATE)(?:\s+ONLY)?|(DELETE)\s+FROM(?:\s+ONLY)?)\M';
     count_query      constant text not null default 'SELECT COUNT(*)            FROM %1$s WHERE %2$I > $1 AND %2$I <= $2'; -- SQL запрос для получения processed_rows
     count_query_spec constant text not null default 'SELECT COUNT(*), MAX(%2$I) FROM %1$s WHERE %2$I > $1 AND %2$I < $2'; -- SQL запрос для получения processed_rows (для query_canceled)
     last_subquery_exception_hint constant text not null default e'Last subquery must be:\nSELECT MAX(%I) AS stop_id, COUNT(*) AS affected_rows FROM ...';
@@ -210,17 +210,21 @@ BEGIN
     END IF;
 
     -- 3) проверка необходимых частей в CTE запросе, в т.ч. защита от дурака
-    table_name_quoted       := regexp_replace(table_name::text, quote_regexp, '\\\1', 'g');
-    uniq_column_name_quoted := regexp_replace(quote_ident(uniq_column_name), quote_regexp, '\\\1', 'g');
-    query_type              := (array_remove(regexp_match(query, format(query_type_regexp, table_name_quoted)), null))[1];
+    -- при преобразовании типа из regclass в text, функция quote_ident() вызывается автоматически
+    table_name_quoted       := '(?:\m|(?="))' || regexp_replace(table_name::text, quote_regexp, '\\\1', 'g') || '(?:\M|(?<="))';
+    uniq_column_name_quoted := '(?:\m|(?="))' || regexp_replace(quote_ident(uniq_column_name), quote_regexp, '\\\1', 'g') || '(?:\M|(?<="))';
+    query_type              := lower((array_remove(
+                                    regexp_match(query, concat(query_type_regexp, '\s*', table_name_quoted), 'i'),
+                                    null
+                               ))[1]);
 
     IF query_type IS NULL THEN
         RAISE EXCEPTION 'Unknown CTE query type, expected INSERT/UPDATE/DELETE!'
              USING HINT = 'Does CTE query has an INSERT/UPDATE/DELETE subquery?';
-    ELSIF query !~* format('\m%s\M\s*>\s*\$1\M', uniq_column_name_quoted) THEN
+    ELSIF query !~* format('%s\s*>\s*\$1\M', uniq_column_name_quoted) THEN
         RAISE EXCEPTION 'Entry "% > $1" is not found in your CTE query!', quote_ident(uniq_column_name)
             USING HINT = format('Add "%I > $1" to WHERE clause of SELECT subquery.', uniq_column_name);
-    ELSIF query !~* format('\morder\s+by\s+(%s\.)?%s\M(?!\s+desc\M)', ident_regexp, uniq_column_name_quoted) THEN
+    ELSIF query !~* format('\morder\s+by\s*(%s\.)?%s(?!\s*\mdesc\M)', ident_regexp, uniq_column_name_quoted) THEN
         RAISE EXCEPTION 'Entry "ORDER BY %" is not found in your CTE query!', quote_ident(uniq_column_name)
             USING HINT = format('Add "ORDER BY %I ASC" to end of SELECT subquery.', uniq_column_name);
     ELSIF query !~* '\mlimit\s+\$2\M' THEN
@@ -232,9 +236,9 @@ BEGIN
     ELSIF regexp_match(query,
                        format($regexp$
                                   \mSELECT \s+
-                                      MAX\(%s\)    %2$s  \s*,\s*
-                                      COUNT\(\*\)  %2$s  \s+
-                                  FROM \s+ %1$s %2$s \s* (;\s*)? $
+                                      MAX   \s* \( \s* %1$s \s* \)  %2$s  \s*,\s*
+                                      COUNT \s* \( \s* \*   \s* \)  %2$s  \s*
+                                  \mFROM\M \s* %1$s %2$s \s* (;\s*)? $
                               $regexp$, ident_regexp, alias_regexp), 'ix') is null THEN
         RAISE EXCEPTION 'Incorrect last subquery in your CTE query!'
             USING HINT = format(last_subquery_exception_hint, uniq_column_name);
