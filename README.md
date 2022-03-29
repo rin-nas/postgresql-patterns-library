@@ -1287,6 +1287,8 @@ create or replace trigger only5 before insert or update on order for each row ex
 
 ### Как сделать журналирование изменений таблицы?
 
+Сохранение истории изменения записей в таблице-журнале.
+
 ```sql
 drop table if exists test;
 create table test (
