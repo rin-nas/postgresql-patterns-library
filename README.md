@@ -74,6 +74,7 @@
    1. [Как обновить или удалить миллионы записей в таблице не блокируя все записи и не нагружая БД?](#Как-обновить-или-удалить-миллионы-записей-в-таблице-не-блокируя-все-записи-и-не-нагружая-БД)
    1. [Как удалить десятки тысяч записей в таблице не блокируя все записи и не нагружая БД?](#Как-удалить-десятки-тысяч-записей-в-таблице-не-блокируя-все-записи-и-не-нагружая-БД)
    1. [Как для одной сущности сделать ограничение на количество вставляемых зависимых сущностей?](#Как-для-одной-сущности-сделать-ограничение-на-количество-вставляемых-зависимых-сущностей)
+   1. [Как сделать журналирование изменений таблицы?](#Как-сделать-журналирование-изменений-таблицы?)
 
 **[Модификация схемы данных (DDL)](#Модификация-схемы-данных-DDL)**
    1. [Как добавить колонку в существующую таблицу без её блокирования?](#Как-добавить-колонку-в-существующую-таблицу-без-её-блокирования)
@@ -1283,6 +1284,96 @@ language plpgsql;
 
 create or replace trigger only5 before insert or update on order for each row execute procedure trg_only_5();
 ```
+
+### Как сделать журналирование изменений таблицы?
+
+```sql
+drop table if exists test;
+create table test (
+    id integer generated always as identity primary key,
+    t text,
+    i integer
+);
+
+drop table if exists test_history;
+create table test_history
+(
+    id           integer generated always as identity primary key,
+    reference_id integer, -- идентификатор связанной сущности, FK быть не должно, т.к. запись м.б. удалена
+    triggered_at timestamp(0) with time zone not null default now() check (triggered_at <= now() + interval '10m'),
+    old_data     jsonb,
+    new_data     jsonb,
+    check (not (old_data is null and new_data is null))
+);
+
+create index on test_history (reference_id);
+create index on test_history using brin (triggered_at);
+
+comment on column test_history.id is 'ID';
+comment on column test_history.reference_id is 'ID в таблице test (существующий или удалённый)';
+comment on column test_history.triggered_at is 'Дата-время действия';
+comment on column test_history.old_data is 'Старые данные (для INSERT всегда NULL)';
+comment on column test_history.new_data is 'Новые данные (для DELETE всегда NULL)';
+
+drop function if exists test_history_save();
+CREATE OR REPLACE FUNCTION test_history_save() RETURNS TRIGGER
+    LANGUAGE plpgsql
+AS
+$$
+BEGIN
+    IF TG_OP = 'INSERT' THEN
+        INSERT INTO test_history (reference_id, new_data) VALUES (NEW.id, to_jsonb(NEW));
+    ELSIF TG_OP = 'DELETE' THEN
+        INSERT INTO test_history (reference_id, old_data) VALUES (OLD.id, to_jsonb(OLD));
+    ELSIF TG_OP = 'UPDATE' AND OLD IS DISTINCT FROM NEW THEN
+        INSERT INTO test_history (reference_id, old_data, new_data)
+        select OLD.id,
+               jsonb_object_agg(o.key, o.value) as old_data,
+               jsonb_object_agg(n.key, n.value) as new_data
+        from jsonb_each(to_jsonb(OLD)) as o,
+             jsonb_each(to_jsonb(NEW)) as n
+        where o.key = n.key and o.value is distinct from n.value;
+    END IF;
+
+    RETURN NULL;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS test_history_save ON test;
+CREATE TRIGGER test_history_save
+    AFTER INSERT OR UPDATE OR DELETE ON test
+    FOR EACH ROW
+EXECUTE FUNCTION test_history_save();
+
+insert into test (t, i) values ('one', 1), ('two', 2);
+update test set t = 'three', i = null where t = 'one';
+delete from test where t = 'two';
+
+select * from test;
+select * from test_history;
+```
+
+Данные в таблицах после выполнения SQL кода:
+
+**`test`**
+| id | t | i |
+| :--- | :--- | :--- |
+| 1 | three | NULL |
+
+
+**`test_history`**
+| id | reference\_id | triggered\_at | old\_data | new\_data |
+| :--- | :--- | :--- | :--- | :--- |
+| 1 | 1 | 2022-03-29 17:29:58 +03:00 | NULL | {"i": 1, "t": "one", "id": 1} |
+| 2 | 2 | 2022-03-29 17:29:58 +03:00 | NULL | {"i": 2, "t": "two", "id": 2} |
+| 3 | 1 | 2022-03-29 17:29:58 +03:00 | {"i": 1, "t": "one"} | {"i": null, "t": "three"} |
+| 4 | 2 | 2022-03-29 17:29:58 +03:00 | {"i": 2, "t": "two", "id": 2} | NULL |
+
+Преимущества этого подхода:
+* Данные в таблице-журнале хранятся в наглядном формате "было-стало"
+* Простая схема таблицы-журнала, простой код триггерной функции, только один триггер
+* При обновлении данных в основной таблице в таблицу-журнал записываются только отличия
+* Схему основной таблицы можно менять в любой момент, журналирование не сломается
 
 ## Модификация схемы данных (DDL)
 
