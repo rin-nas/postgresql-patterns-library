@@ -4,6 +4,7 @@ create or replace function has_html_entity(str text)
     returns null on null input
     parallel safe -- Postgres 10 or later
     language sql
+    cost 5
 as
 $$
 select position('&' in str) > 0 --speed improves
@@ -31,8 +32,22 @@ comment on function has_html_entity(text) is 'Проверяет, что пер�
 DO $$
 BEGIN
     --positive
-    --assert has_html_entity('');
+    assert has_html_entity(' &quot ');
+    assert has_html_entity(' &amp ');
+    assert has_html_entity(' &hellip; ');
+    assert has_html_entity(' &gt; ');
+    assert has_html_entity(' &Ouml; ');
+    assert has_html_entity(' &#34; ');
+    assert has_html_entity(' &#x02DC; ');
 
     --negative
-    --assert not has_html_entity('');
+    assert not has_html_entity(' &qot ');
+    assert not has_html_entity(' &amper ');
+    assert not has_html_entity(' &ampER ');
+    assert not has_html_entity(' &amp1 ');
+    assert not has_html_entity(' &amp_1 ');
+    assert not has_html_entity(' &hellip ');
+    assert not has_html_entity(' &Gt ');
+    assert not has_html_entity(' &#oDC; ');
+    assert not has_html_entity(' &#xDG; ');
 END $$;
