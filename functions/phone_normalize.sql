@@ -1,19 +1,21 @@
 -- TODO add support for https://datatracker.ietf.org/doc/html/rfc3966  (see https://habr.com/ru/post/278345/)
 
 create or replace function phone_normalize(
-    country_code int,
-    area_code text,
-    local_number text
+    country_code int, --код страны в любом формате или NULL
+    area_code text,   --код зоны в любом формате или NULL
+    local_number text --локальный номер телефона в любом формате или NULL
 )
     returns text
     immutable
     --returns null on null input
     parallel safe
     language plpgsql
+    cost 10
 as
 $$
 declare
     phone text;
+    is_starts_with_plus boolean;
 begin
     -- not valid speed improves
     if country_code not between 0 and 999
@@ -22,6 +24,8 @@ begin
     then
         return null;
     end if;
+
+    is_starts_with_plus := country_code is null and concat_ws('', area_code, local_number) ~ '^\D*?\+';
 
     area_code    := trim(regexp_replace(area_code,    '(?:^\D+|\D+$|[ ()\-.]+|&(?:ndash|minus);)', ' ', 'g'));
     local_number := trim(regexp_replace(local_number, '(?:^\D+|\D+$|[ ()\-.]+|&(?:ndash|minus);)', ' ', 'g'));
@@ -52,12 +56,14 @@ begin
     phone := replace(phone, '/', '');
     --raise notice 'stage 2: %', phone;
 
+    /* --DEPRECATED
     if phone ~ '(\d)\1{8}' --все цифры одинаковые
     then
         return null;
     end if;
+    */
 
-    if country_code is null and octet_length(phone) = 10
+    if country_code is null and octet_length(phone) = 10 and not is_starts_with_plus
     then
         phone = '7' || phone;
     end if;
@@ -94,7 +100,7 @@ create or replace function phone_normalize(
     local_number text
 )
     returns text
-    stable
+    immutable
     --returns null on null input
     parallel safe
     language sql
@@ -111,13 +117,21 @@ create or replace function phone_normalize(
     phone text
 )
     returns text
-    stable
+    immutable
     returns null on null input
     parallel safe
     language sql
 as
 $$
-    select phone_normalize(null, null, phone);
+    select
+        case when --speed improves: номер телефона в международном формате E.164 ?
+                  left(phone, 1) = '+'
+                  and octet_length(phone)
+                      between 1/*+*/ + 8 --https://stackoverflow.com/questions/14894899/what-is-the-minimum-length-of-a-valid-international-phone-number
+                      and 1/*+*/ + 15  --https://en.wikipedia.org/wiki/E.164 and https://en.wikipedia.org/wiki/Telephone_numbering_plan)
+                  and phone ~ '^\+\d+$' then phone
+             else phone_normalize(null, null, phone)
+        end;
 $$;
 
 
@@ -151,7 +165,12 @@ do $$
         assert phone_normalize(8,'7 977','123 45 67') = '+79771234567';
         assert phone_normalize(7,'977','1234567') = '+79771234567';
         assert phone_normalize(8,null,'8 9771234567') = '+79771234567';
+
         assert phone_normalize('8 977 1234567') = '+79771234567';
+        assert phone_normalize('+79771234567') = '+79771234567';
+        assert phone_normalize('677 1234567') = '+76771234567';
+        assert phone_normalize('+677 1234567') = '+6771234567';
+        assert phone_normalize('210(-.-)7905(-.-)1234567') = '+21079051234567';
 
         --negative
         assert phone_normalize(-1,'977','1234567') is null;
