@@ -1,9 +1,11 @@
--- inspired by https://postgres.ai/blog/20210923-zero-downtime-postgres-schema-migrations-lock-timeout-and-retries
+-- Inspired by https://postgres.ai/blog/20210923-zero-downtime-postgres-schema-migrations-lock-timeout-and-retries
+
+-- See detail documentation below!
 
 create or replace procedure execute_attempt(
-    --обязательные параметры:
+    --required params:
     query text,
-    --необязательные параметры:
+    --optional params:
     lock_timeout text default '100ms',
     max_attempts int default 50
 )
@@ -46,20 +48,22 @@ end
 $procedure$;
 
 comment on procedure execute_attempt(
-    --обязательные параметры:
-    query text,
-    --необязательные параметры:
-    lock_timeout text,
-    max_attempts int
+    --required params:
+    query text, --один или несколько запросов через точку с запятой, которые выполняются в подтранзакции
+    --optional params:
+    lock_timeout text, -- Сколько времени ждать получения блокировки объекта БД (например, таблицы).
+                       -- После получения блокировки SQL команда её держит и не отпускает до завершения работы!
+    max_attempts int --Максимальное количество попыток выполнения
 ) is $$
-    Процедура предназначена для безопасного выполнения DDL запросов в БД. Например, миграций БД.
-    Пытается выполнить запрос с учётом ограничения lock_timeout.
-    В случае неудачи делает задержку выполнения и повторяет попытку N раз.
+    Процедура предназначена для безопасного выполнения одного или нескольких DDL запросов в БД. Например, миграций БД.
+    Пытается выполнить запросы в query с учётом ограничения lock_timeout и максимальным количествоим попыток max_attempts раз.
+    В случае неудачи все выполненные запросы в query откатывает и повторяет попытку выполнения всех запросов из query.
+    Перед каждой попыткой выполнения есть задержка, которая постепенно увеличивается.
 $$;
 
 /*
-TODO
-Наблюдал следующую ситуацию. Выполнил для большой таблицы call execute_attempt('alter table tbl alter column id type bigint using id::bigint');
-После этого INSERT запросы в эту таблицу выстроились в очередь. Пришлось alter table отменить, по таймауту он не отвалился (и не должен был).
+Пример неправильного использования процедуры.
+Выполнил для большой таблицы call execute_attempt('alter table tbl alter column id type bigint using id::bigint');
+После этого INSERT запросы в эту таблицу выстроились в очередь. Пришлось alter table отменить.
 Изменение типа колонки нужно делать через добавление новой колонки, её заполнения значениями через UPDATE и INSERT триггерами, удаления старой колонки и переименования новой в старую.
 */
