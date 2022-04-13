@@ -29,11 +29,12 @@ create unlogged table loop_execute_error (
     check (
            (uniq_column_value_text is not null and uniq_column_value_bigint is null)
         or (uniq_column_value_text is null and uniq_column_value_bigint is not null)
-    ),
-    constraint loop_execute_error_uniq unique (table_name,
-                                               exception_schema_name, exception_table_name, exception_column_name,
-                                               exception_sqlstate, exception_constraint_name, exception_datatype_name,
-                                               exception_message_text)
+    )
+);
+
+create unique index loop_execute_error_uniq on loop_execute_error(
+    table_name, exception_schema_name, exception_table_name, exception_column_name, exception_sqlstate,
+    exception_constraint_name, exception_datatype_name, cast(md5(exception_message_text) as uuid), cast(md5(exception_context) as uuid)
 );
 
 ------------------------------------------------------------------------------------------------------------------------
@@ -93,6 +94,7 @@ DECLARE
     count_query      constant text not null default 'SELECT COUNT(*)            FROM %1$s WHERE %2$I > $1 AND %2$I <= $2'; -- SQL запрос для получения processed_rows
     count_query_spec constant text not null default 'SELECT COUNT(*), MAX(%2$I) FROM %1$s WHERE %2$I > $1 AND %2$I < $2'; -- SQL запрос для получения processed_rows (для query_canceled)
     last_subquery_exception_hint constant text not null default e'Last subquery must be:\nSELECT MAX(%I) AS stop_id, COUNT(*) AS affected_rows FROM ...';
+    lock_timeout text not null default ceil(max_duration * 1000 / 10)::text;
     old_lock_timeout constant text not null default current_setting('lock_timeout');
     old_session_replication_role constant text not null default current_setting('session_replication_role');
     max_attempts constant smallint not null default 100;
@@ -284,7 +286,7 @@ BEGIN
         EXIT WHEN cycles >= max_cycles;
         cycles := cycles + 1;
 
-        PERFORM set_config('lock_timeout', ceil(max_duration * 1000 / 10)::text, true);
+        PERFORM set_config('lock_timeout', lock_timeout, true);
         /*
         --statement_timeout does not work inside PLpgSQL:
         do $$ begin set local statement_timeout to '1s'; perform pg_sleep(2); end;$$;
@@ -474,7 +476,11 @@ BEGIN
                                 exception_hint,
                                 exception_context
                             ) SELECT $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
-                            ON CONFLICT ON CONSTRAINT loop_execute_error_uniq
+                            ON CONFLICT (
+                                -- see unique index "loop_execute_error_uniq"
+                                table_name, exception_schema_name, exception_table_name, exception_column_name, exception_sqlstate,
+                                exception_constraint_name, exception_datatype_name, cast(md5(exception_message_text) as uuid), cast(md5(exception_context) as uuid)
+                            )
                             DO UPDATE SET repeat_error_count = t.repeat_error_count + 1
                             $$, ':error_table_name', error_table_name::text)
                             USING table_name::text,
