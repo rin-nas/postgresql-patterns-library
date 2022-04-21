@@ -2134,7 +2134,7 @@ BEGIN
     raise exception using errcode = 'query_canceled';
 
 EXCEPTION WHEN query_canceled THEN
-    --don't do anything, everything is fine
+    --don't do anything
 END
 $TEST$;
 ```
