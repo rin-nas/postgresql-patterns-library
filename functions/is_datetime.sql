@@ -4,6 +4,8 @@ create or replace function is_datetime(str text, is_notice boolean default false
     --parallel safe
     stable
     language plpgsql
+    set datestyle = 'ISO, DMY'
+    cost 5
 as
 $$
 DECLARE
@@ -14,25 +16,26 @@ DECLARE
     min_len constant int not null default octet_length('YYYYMMDD HHMM');
     max_len constant int not null default octet_length('YYYY-MM-DD HH:MM:SS.NNNNNN');
 BEGIN
-    BEGIN
-        --speed improves
-        if octet_length(str) not between min_len and max_len
-        then
-            return false;
-        end if;
+    --speed improves
+    if octet_length(str) not between min_len and max_len
+    then
+        return false;
+    end if;
 
-        -- https://postgrespro.ru/docs/postgresql/12/datetime-input-rules
-        str := regexp_replace(str, '
-            ^
-                (\d{8})               #YYYYMMDD
-                (\d{6}(?:\.\d{1,6})?) #HHMMSS[.NNNNNN]
-            $', '\1 \2', 'x');
-        -- проверяем формат ввода
-        if str ~ '^\d+(?:([\-.])\d+\1\d+)?$' --не число, не дата
-            or str !~ '^[\d\- :.+]+$' --проверка на допустимые символы
-        then
-            return false;
-        end if;
+    -- https://postgrespro.ru/docs/postgresql/12/datetime-input-rules
+    str := regexp_replace(str, '
+        ^
+            (\d{8})               #YYYYMMDD
+            (\d{6}(?:\.\d{1,6})?) #HHMMSS[.NNNNNN]
+        $', '\1 \2', 'x');
+    -- проверяем формат ввода
+    if str ~ '^\d+(?:([\-.])\d+\1\d+)?$' --не число, не дата
+        or str !~ '^[\d\- :.+]+$' --проверка на допустимые символы
+    then
+        return false;
+    end if;
+
+    BEGIN
         RETURN (str::timestamptz is not null);
     EXCEPTION WHEN others THEN
         GET STACKED DIAGNOSTICS
