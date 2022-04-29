@@ -4,7 +4,7 @@ CREATE DOMAIN email AS text CHECK(
     --AND is_email(VALUE)                 -- accurate, but very slow check email syntax, so don't use it in domain!
 );
 
-COMMENT ON DOMAIN email IS 'Валидация адреса электронной почты';
+COMMENT ON DOMAIN email IS 'Aдрес электронной почты с минимальной, но быстрой валидацией';
 
 --TEST
 
