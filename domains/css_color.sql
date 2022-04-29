@@ -6,6 +6,8 @@ CREATE DOMAIN css_color AS text CHECK(
     AND VALUE ~ '^#[a-fA-F\d]{3}(?:[a-fA-F\d]{3})?$|^#[a-fA-F\d]{4}(?:[a-fA-F\d]{4})?$'
 );
 
+COMMENT ON DOMAIN css_color IS 'CSS color';
+
 --TEST
 select '#777'::css_color; --ok
 select '$777'::css_color; --error
