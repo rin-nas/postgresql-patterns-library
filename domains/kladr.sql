@@ -9,5 +9,3 @@ select '78000000000172700'::kladr; --ok
 select '1234567890123456789'::kladr; --ok
 
 select '1234567890'::kladr; --error
-
-    
