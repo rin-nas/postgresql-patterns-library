@@ -56,7 +56,7 @@ select db_validate_v2()
 </tr>
 <tr>
     <td class="numberingColumn">3</td>
-    <td colspan="1">v1</td>
+    <td colspan="1">v2</td>
     <td colspan="1"><code>has_index_for_fk</code></td>
     <td colspan="1">
     <p>Наличие индексов для ограничений внешних ключей в таблице</p></td>
