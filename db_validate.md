@@ -12,7 +12,15 @@
 Запуск:
 
 ```sql
-select db_validate_v2()
+select db_validate_v2(
+    '{has_pk_uk,has_not_redundant_index,has_index_for_fk}', --checks
+
+    null, --schemas_ignore_regexp
+    '{unused,migration,test}', --schemas_ignore
+
+    '(?<![a-z\d])(te?mp|test|unused|backups?|deleted)(?![a-z\d])', --tables_ignore_regexp
+    null --tables_ignore
+);
 ```
 
 В процессе работы функция проверяет текущую БД на наличие проблем. Если проблемы не найдены, функция успешно завершает работу, никаких данных не возвращается. В случае проблем возвращается ошибка (исключение в терминах PL/PgSQL): текст ошибки и рекомендации по исправлению.
