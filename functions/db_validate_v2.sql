@@ -252,6 +252,7 @@ BEGIN
 END
 $$;
 
+-- TEST
 -- запускаем валидатор БД
 select db_validate_v2(
     '{has_pk_uk,has_not_redundant_index,has_index_for_fk}', --checks
