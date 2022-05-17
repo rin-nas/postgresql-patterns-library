@@ -82,6 +82,7 @@
    1. [Как изменить ограничение внешнего ключа без блокирования таблицы?](#Как-изменить-ограничение-внешнего-ключа-без-блокирования-таблицы)
    1. [Как проверить, что при добавлении или обновлении записи заполнены N полей из M возможных?](#Как-проверить-что-при-добавлении-или-обновлении-записи-заполнены-N-полей-из-M-возможных)
    1. [Как из enum типа удалить значение?](#Как-из-enum-типа-удалить-значение)
+   1. [Как найти все упоминания названия объекта БД по всей БД](Как-найти-все-упоминания-названия-объекта-БД-по-всей-БД)
   
 **[Индексы](#Индексы)**
    1. [Как создать или пересоздать индекс в существующей таблице без её блокирования?](#Как-создать-или-пересоздать-индекс-в-существующей-таблице-без-её-блокирования)
@@ -1477,6 +1478,18 @@ DROP TYPE status_enum_old;
 
 * `invalid input value for enum {enum name}: "{some value}"` - One or more rows have a value ("{some value}") that is not in your new type. You must handle these rows before you can update the column type.
 * `default for column "{column_name}" cannot be cast automatically to type {enum_name}` - The default value for the column is not in your new type. You must change or remove the default value for the column before you can update the column type.
+
+### Как найти все упоминания названия объекта БД по всей БД
+
+Используется в задаче удаления неиспользуемых объектов БД (таблиц, колонок, функций и т.д.), чтобы найти зависимые объекты БД. Т.о. минимизируются риски сломать что-либо в БД после накатывания миграции.
+
+Выгружаем схему БД в файл:
+
+`$ pg_dump --user=postgres --dbname=v3_rabota_test --schema-only > schema.sql`
+
+Ищем упоминания в файле:
+
+`$ reset && cat schema.sql | sed -E 's/^\-\-[^\r\n]*//g' | grep -P -A1 '\btable_name\b'`
 
 ## Индексы
 
