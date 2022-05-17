@@ -14,7 +14,8 @@
 
 ```sql
 select db_validate_v2(
-    '{has_pk_uk,has_not_redundant_index,has_index_for_fk}', --checks
+    --'{has_pk_uk,has_not_redundant_index,has_index_for_fk}', --some checks
+    null, --all checks
 
     null, --schemas_ignore_regexp
     '{unused,migration,test}', --schemas_ignore
