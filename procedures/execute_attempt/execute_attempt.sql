@@ -73,4 +73,20 @@ $$;
 Выполнил для большой таблицы call execute_attempt('alter table tbl alter column id type bigint using id::bigint');
 После этого INSERT запросы в эту таблицу выстроились в очередь. Пришлось alter table отменить.
 Изменение типа колонки нужно делать через добавление новой колонки, её заполнения значениями через UPDATE и INSERT триггерами, удаления старой колонки и переименования новой в старую.
+
+Пример безопасного использования:
+
+BEGIN;
+    SET LOCAL statement_timeout TO '3s'; --перестраховка, если запросы внутри транзакции будут долго выполняться и заблокируют другие запросы!
+
+    call execute_attempt($$
+        ALTER TABLE public.vacancy_address
+            ADD COLUMN street_kladr_id text,
+            ADD CONSTRAINT v3_vacancy_address_street_kladr_id_check CHECK(octet_length(street_kladr_id) IN (13, 17, 19) AND street_kladr_id ~ '^\d+$') NOT VALID;
+    $$);
+
+    COMMENT ON COLUMN public.vacancy_address.street_kladr_id IS 'КЛАДР адреса до улицы';
+
+--ROLLBACK;
+COMMIT;
 */
