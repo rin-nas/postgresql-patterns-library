@@ -77,7 +77,7 @@ $$;
 Пример безопасного использования:
 
 BEGIN;
-    SET LOCAL statement_timeout TO '3s'; --перестраховка, если запросы внутри транзакции будут долго выполняться и заблокируют другие запросы!
+    SET LOCAL statement_timeout TO '10s'; --перестраховка, если запросы внутри транзакции будут долго выполняться и заблокируют другие запросы!
 
     call execute_attempt($$
         ALTER TABLE public.vacancy_address
