@@ -39,7 +39,7 @@ select db_validate_v2(
     <th colspan="1">В какой версии сделано</th>
     <th colspan="1">Код проверки</th>
     <th>Название проверки</th>
-    <th>Назначение проверки</th>
+    <th>Назначение (обоснование) проверки</th>
 </tr>
 <tr>
     <td class="numberingColumn">1</td>
