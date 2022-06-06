@@ -73,7 +73,7 @@ select db_validate_v2(
     <td colspan="1"><code>has_index_for_fk</code></td>
     <td colspan="1">
     <p>Наличие индексов для ограничений внешних ключей в таблице</p></td>
-    <td colspan="1">Без индексов на огнаничения внешних ключей (FK) могут работать медленно элементарные запросы типа <strong><code>DELETE FROM {table} WHERE id=&lt;id&gt;</code></strong> из-за ссылающихся на <code>{table}</code> таблиц по FK без индекса.</td>
+    <td colspan="1">Без индексов на ограничения внешних ключей (FK) могут работать медленно элементарные запросы типа <strong><code>DELETE FROM {table} WHERE id=&lt;id&gt;</code></strong> из-за ссылающихся на <code>{table}</code> таблиц по FK без индекса.</td>
 </tr>
 <tr>
     <td class="numberingColumn">4</td>
