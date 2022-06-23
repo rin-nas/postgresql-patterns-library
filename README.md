@@ -2158,22 +2158,22 @@ $TEST$;
 Цель — защита тестовой БД или производственной реплики БД от ошибок в коде приложений.
 Чтобы реплике забрать изменения с мастера, она по таймауту (например, в 60 минут) принудительно терминирует все запросы или транзакции, которые выполняются на реплике. Среди этих запросов могут быть "невиновные" запросы. В таком случае можно настроить крон, который будет терминировать только проблемные запросы и транзакции по меньшему таймауту (например, в 50 минут).
 
-Создайте файл `pg_terminate_backend.sql` со таким запросом:
+Создайте файл `pg_terminate_backend.sql`:
 ```sql
-SELECT --* --для отладки
-       pg_terminate_backend(pid)
+SELECT --pg_terminate_backend(pid)
+       * --для отладки
 FROM pg_stat_activity
 cross join lateral (
-    select NOW() - query_start AS query_elapsed, --длительность выполнения запроса
+    select NOW() - state_change AS state_change_elapsed, --длительность выполнения запроса после изменения состояния (поля state)
            NOW() - xact_start AS xact_elapsed --длительность выполнения транзакции
-) AS e
+    ) AS e
 WHERE true
   AND state in ('idle', 'idle in transaction')
-  AND wait_event = 'ClientRead'
-  AND (query_elapsed > interval 'XX minutes' OR xact_elapsed > interval 'YY minutes')
-ORDER BY greatest(query_elapsed, xact_elapsed) DESC
+  AND wait_event = 'ClientRead' --https://postgrespro.ru/docs/postgresql/12/monitoring-stats#WAIT-EVENT-TABLE
+  AND (state_change_elapsed > interval '15 minutes' OR xact_elapsed > interval '55 minutes')
+ORDER BY greatest(state_change_elapsed, xact_elapsed) DESC
 ```
-Замените `XX` и `YY` на числа, которые вам подходят. Значение в минутах д.б. меньше, чем указано на реплике в параметрах конфигурации `max_standby_archive_delay` или `max_standby_streaming_delay`.
+Значение таймаутов в минутах д.б. меньше, чем указано на реплике в параметрах конфигурации `max_standby_archive_delay` или `max_standby_streaming_delay`.
 
 Запускайте 1 раз в минуту следующую команду:
 
