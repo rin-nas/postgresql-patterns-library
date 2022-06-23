@@ -2160,19 +2160,19 @@ $TEST$;
 
 Создайте файл `pg_terminate_backend.sql`:
 ```sql
-SELECT pg_terminate_backend(pid)
+select pg_terminate_backend(pid)
        -- * --для отладки
-FROM pg_stat_activity
+from pg_stat_activity
 cross join lateral (
-    select NOW() - state_change AS state_change_elapsed, --длительность выполнения запроса после изменения состояния (поля state)
-           NOW() - xact_start AS xact_elapsed --длительность выполнения транзакции
-    ) AS e
-WHERE true
-  AND state in ('idle', 'idle in transaction')
-  AND wait_event = 'ClientRead' --https://postgrespro.ru/docs/postgresql/12/monitoring-stats#WAIT-EVENT-TABLE
+    select NOW() - state_change as state_change_elapsed, --длительность выполнения запроса после изменения состояния (поля state)
+           NOW() - xact_start as xact_elapsed --длительность выполнения транзакции
+) as e
+where true
+  and state in ('idle', 'idle in transaction')
+  and wait_event = 'ClientRead' --https://postgrespro.ru/docs/postgresql/12/monitoring-stats#WAIT-EVENT-TABLE
   --значение таймаутов в минутах д.б. меньше, чем указано на реплике в параметрах конфигурации max_standby_archive_delay или max_standby_streaming_delay
-  AND (state_change_elapsed > interval '20 minutes' OR xact_elapsed > interval '50 minutes')
-ORDER BY greatest(state_change_elapsed, xact_elapsed) DESC
+  and (state_change_elapsed > interval '20 minutes' or xact_elapsed > interval '50 minutes')
+order by greatest(state_change_elapsed, xact_elapsed) desc
 ```
 
 Запускайте 1 раз в минуту следующую команду:
