@@ -2170,7 +2170,7 @@ cross join lateral (
 WHERE true
   AND state in ('idle', 'idle in transaction')
   AND wait_event = 'ClientRead' --https://postgrespro.ru/docs/postgresql/12/monitoring-stats#WAIT-EVENT-TABLE
-  AND (state_change_elapsed > interval '20 minutes' OR xact_elapsed > interval '55 minutes')
+  AND (state_change_elapsed > interval '20 minutes' OR xact_elapsed > interval '50 minutes')
 ORDER BY greatest(state_change_elapsed, xact_elapsed) DESC
 ```
 Значение таймаутов в минутах д.б. меньше, чем указано на реплике в параметрах конфигурации `max_standby_archive_delay` или `max_standby_streaming_delay`.
