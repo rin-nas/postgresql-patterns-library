@@ -2173,7 +2173,7 @@ WHERE true
   AND greatest(query_elapsed, xact_elapsed) > interval 'XX minutes'
 ORDER BY greatest(query_elapsed, xact_elapsed) DESC
 ```
-Замените `XX` на число, которое вам подходит.
+Замените `XX` на число, которое вам подходит. Значение в минутах д.б. меньше, чем указано на реплике в параметрах конфигурации `max_standby_archive_delay` или `max_standby_streaming_delay`.
 
 Запускайте 1 раз в минуту следующую команду:
 
