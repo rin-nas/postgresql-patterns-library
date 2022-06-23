@@ -2160,8 +2160,8 @@ $TEST$;
 
 Создайте файл `pg_terminate_backend.sql`:
 ```sql
-SELECT --pg_terminate_backend(pid)
-       * --для отладки
+SELECT pg_terminate_backend(pid)
+       -- * --для отладки
 FROM pg_stat_activity
 cross join lateral (
     select NOW() - state_change AS state_change_elapsed, --длительность выполнения запроса после изменения состояния (поля state)
