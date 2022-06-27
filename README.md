@@ -2165,7 +2165,7 @@ select pg_terminate_backend(pid)
 from pg_stat_activity
 cross join lateral (
     select NOW() - state_change as state_change_elapsed, --длительность выполнения запроса после изменения состояния (поля state)
-           NOW() - xact_start as xact_elapsed --длительность выполнения транзакции
+           NOW() - xact_start as xact_elapsed --длительность выполнения транзакции или NULL, если транзакции нет
 ) as e
 where true
   and state in ('idle', 'idle in transaction')
