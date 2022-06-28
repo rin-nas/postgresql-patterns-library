@@ -17,7 +17,7 @@ create or replace function db_validate_v2(
     --returns null on null input
     parallel safe
     language plpgsql
-AS $$
+AS $func$
 DECLARE
     rec record;
 BEGIN
@@ -50,10 +50,10 @@ BEGIN
                           )
 
           -- исключаем таблицы, которые имеют секционирование (partitions)
-          AND NOT EXISTS (SELECT --i.inhrelid::regclass AS child -- optionally cast to text
+          /*AND NOT EXISTS (SELECT --i.inhrelid::regclass AS child -- optionally cast to text
                           FROM   pg_catalog.pg_inherits AS i
                           WHERE  i.inhparent = (t.table_schema || '.' || t.table_name)::regclass
-                         )
+            )*/
           --ORDER BY c.table_schema, c.table_name
         LIMIT 1;
 
@@ -108,11 +108,11 @@ BEGIN
          )
          SELECT DISTINCT ON (redundant_index) t.* INTO rec FROM t LIMIT 1;
 
-    end if;
+        IF FOUND THEN
+            RAISE EXCEPTION E'Таблица % уже имеет индекс %\nУдалите избыточный индекс %', rec.table_name, rec.main_index, rec.redundant_index;
+        END IF;
 
-    IF FOUND THEN
-        RAISE EXCEPTION E'Таблица % уже имеет индекс %\nУдалите избыточный индекс %', rec.table_name, rec.main_index, rec.redundant_index;
-    END IF;
+    end if;
 
     -- Наличие индексов для ограничений внешних ключей в таблице
     if checks is null or 'has_index_for_fk' = any(checks) then
@@ -241,26 +241,91 @@ BEGIN
             order by issue_sort, table_mb asc, table_name, fk_name
             limit 1
         )
-        select * INTO rec from result;
+        select * into rec from result;
+
+        IF FOUND THEN
+            RAISE EXCEPTION E'Отсутствует индекс для внешнего ключа\nДобавьте индекс: %', rec.indexdef;
+        END IF;
 
     end if;
 
-    IF FOUND THEN
-        RAISE EXCEPTION E'Отсутствует индекс для внешнего ключа\nДобавьте индекс %', rec.indexdef;
-    END IF;
+    if checks is null or 'has_table_comment' = any(checks) then
+        raise notice 'check has_table_comment';
+
+        select --obj_description((t.table_schema || '.' || t.table_name)::regclass::oid),
+               format($$comment on table %I.%I is '...';$$, t.table_schema, t.table_name) as sql
+               --*,
+               --t.table_schema, t.table_name
+        into rec
+        from information_schema.tables as t
+        cross join lateral (select concat_ws('.', quote_ident(t.table_schema), quote_ident(t.table_name))) as p(table_full_name)
+        where t.table_type = 'BASE TABLE'
+          and not t.table_schema = any ('{information_schema,pg_catalog,migration}')
+          and t.table_name !~ '\d{4}[_\-]\d\d?$'
+          and coalesce(trim(obj_description((t.table_schema || '.' || t.table_name)::regclass::oid)), '') in ('', t.table_name)
+
+          -- исключаем схемы
+          AND (schemas_ignore_regexp is null OR t.table_schema !~ schemas_ignore_regexp)
+          AND NOT t.table_schema = ANY (schemas_ignore::text[])
+
+          -- исключаем таблицы
+          AND (tables_ignore_regexp is null OR p.table_full_name !~ tables_ignore_regexp)
+          AND (tables_ignore is null OR NOT p.table_full_name = ANY (tables_ignore::text[]))
+
+        order by 1
+        limit 1;
+
+        IF FOUND THEN
+            RAISE EXCEPTION E'Для таблицы отсутствует описание или совпадает с названием\nДобавьте его: %', rec.sql;
+        END IF;
+
+    end if;
+
+    if checks is null or 'has_column_comment' = any(checks) then
+        raise notice 'check has_column_comment';
+
+        select --col_description((c.table_schema || '.' || t.table_name)::regclass::oid, c.ordinal_position) as column_comment,
+               format($$comment on column %I.%I.%I is '...';$$, t.table_schema, t.table_name, c.column_name) as sql
+        into rec
+        from information_schema.columns as c
+        inner join information_schema.tables as t on t.table_schema = c.table_schema and t.table_name = c.table_name
+            and t.table_type = 'BASE TABLE'
+            and t.table_schema not in ('pg_catalog', 'information_schema', 'migration')
+            and t.table_name !~ '\d{4}[_\-]\d\d?$'
+        cross join lateral (select concat_ws('.', quote_ident(t.table_schema), quote_ident(t.table_name))) as p(table_full_name)
+        where c.column_name != 'id'
+          and coalesce(trim(col_description((c.table_schema || '.' || t.table_name)::regclass::oid, c.ordinal_position)), '') in ('', c.column_name)
+
+          -- исключаем схемы
+          AND (schemas_ignore_regexp is null OR t.table_schema !~ schemas_ignore_regexp)
+          AND NOT t.table_schema = ANY (schemas_ignore::text[])
+
+          -- исключаем таблицы
+          AND (tables_ignore_regexp is null OR p.table_full_name !~ tables_ignore_regexp)
+          AND (tables_ignore is null OR NOT p.table_full_name = ANY (tables_ignore::text[]))
+
+        order by 1
+        limit 1;
+
+        IF FOUND THEN
+            RAISE EXCEPTION E'Для колонки таблицы отсутствует описание или совпадает с названием\nДобавьте его: %', rec.sql;
+        END IF;
+
+    end if;
 
 END
-$$;
+$func$;
 
 -- TEST
 -- запускаем валидатор БД
 select db_validate_v2(
-    '{has_pk_uk,has_not_redundant_index,has_index_for_fk}', --checks
+    --'{has_pk_uk,has_not_redundant_index,has_index_for_fk}', --some checks
+    null, --all checks
 
     null, --schemas_ignore_regexp
     '{unused,migration,test}', --schemas_ignore
 
-    '(?<![a-z\d])(te?mp|test|unused|backups?|deleted)(?![a-z\d])', --tables_ignore_regexp
+    '(?<![a-z])(te?mp|test|unused|backups?|deleted)(?![a-z])|_\d{4}[_\-]\d\d?$', --tables_ignore_regexp
     null --tables_ignore
 );
 
