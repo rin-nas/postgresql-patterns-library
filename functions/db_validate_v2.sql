@@ -278,6 +278,12 @@ BEGIN
           AND (tables_ignore_regexp is null OR p.table_full_name !~ tables_ignore_regexp)
           AND (tables_ignore is null OR p.table_full_name::regclass != ALL (tables_ignore))
 
+          -- исключаем таблицы-секции
+          AND NOT EXISTS (SELECT
+                          FROM   pg_catalog.pg_inherits AS i
+                          WHERE  i.inhrelid = (t.table_schema || '.' || t.table_name)::regclass
+          )
+
         order by 1
         limit 1;
 
@@ -308,6 +314,12 @@ BEGIN
           -- исключаем таблицы
           AND (tables_ignore_regexp is null OR p.table_full_name !~ tables_ignore_regexp)
           AND (tables_ignore is null OR p.table_full_name::regclass != ALL (tables_ignore))
+
+          -- исключаем таблицы-секции
+          AND NOT EXISTS (SELECT
+                          FROM   pg_catalog.pg_inherits AS i
+                          WHERE  i.inhrelid = (t.table_schema || '.' || t.table_name)::regclass
+          )
 
         order by 1
         limit 1;
