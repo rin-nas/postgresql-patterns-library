@@ -22,39 +22,35 @@ DECLARE
     rec record;
 BEGIN
 
-    schemas_ignore := coalesce(schemas_ignore, '{}') || '{information_schema,pg_catalog}';
+    schemas_ignore := coalesce(schemas_ignore, '{}') || '{information_schema,pg_catalog,pg_toast}';
 
     -- Наличие первичного или уникального индекса в таблице
     if checks is null or 'has_pk_uk' = any(checks) then
         raise notice 'check has_pk_uk';
 
-        SELECT t.*
+        WITH t AS (
+            SELECT t.*
+            FROM information_schema.tables AS t
+            WHERE t.table_type = 'BASE TABLE'
+            AND NOT EXISTS(SELECT
+                             FROM information_schema.key_column_usage AS kcu
+                            WHERE kcu.table_schema = t.table_schema
+                              AND kcu.table_name = t.table_name
+            )
+        )
+        SELECT *
         INTO rec
-        FROM information_schema.tables AS t
+        FROM t
         cross join lateral (select concat_ws('.', quote_ident(t.table_schema), quote_ident(t.table_name))) as p(table_full_name)
+        WHERE true
+              -- исключаем схемы
+              AND (schemas_ignore_regexp is null OR t.table_schema !~ schemas_ignore_regexp)
+              AND t.table_schema::regnamespace != ALL (schemas_ignore)
 
-        WHERE t.table_type = 'BASE TABLE'
-
-          -- исключаем схемы
-          AND (schemas_ignore_regexp is null OR t.table_schema !~ schemas_ignore_regexp)
-          AND NOT t.table_schema = ANY (schemas_ignore::text[])
-
-          -- исключаем таблицы
-          AND (tables_ignore_regexp is null OR p.table_full_name !~ tables_ignore_regexp)
-          AND (tables_ignore is null OR NOT p.table_full_name = ANY (tables_ignore::text[]))
-
-          AND NOT EXISTS(SELECT
-                           FROM information_schema.key_column_usage AS kcu
-                          WHERE kcu.table_schema = t.table_schema AND
-                                kcu.table_name = t.table_name
-                          )
-
-          -- исключаем таблицы, которые имеют секционирование (partitions)
-          /*AND NOT EXISTS (SELECT --i.inhrelid::regclass AS child -- optionally cast to text
-                          FROM   pg_catalog.pg_inherits AS i
-                          WHERE  i.inhparent = (t.table_schema || '.' || t.table_name)::regclass
-            )*/
-          --ORDER BY c.table_schema, c.table_name
+              -- исключаем таблицы
+              AND (tables_ignore_regexp is null OR p.table_full_name !~ tables_ignore_regexp)
+              AND (tables_ignore is null OR p.table_full_name::regclass != ALL (tables_ignore))
+        ORDER BY t.table_schema, t.table_name
         LIMIT 1;
 
         IF FOUND THEN
@@ -68,17 +64,31 @@ BEGIN
         raise notice 'check has_not_redundant_index';
 
         WITH index_data AS (
-            SELECT idx.*,
-                   string_to_array(idx.indkey::text, ' ')                  as key_array,
-                   array_length(string_to_array(idx.indkey::text, ' '), 1) as nkeys,
-                   am.amname
-            FROM pg_index AS idx
-            JOIN pg_class AS cls ON cls.oid = idx.indexrelid
-                 -- исключаем схемы
-                 AND (schemas_ignore_regexp is null OR cls.relnamespace::regnamespace::text !~ schemas_ignore_regexp)
-                 AND NOT cls.relnamespace::regnamespace = ANY (schemas_ignore)
+            SELECT x.*,
+                   string_to_array(x.indkey::text, ' ')                  as key_array,
+                   array_length(string_to_array(x.indkey::text, ' '), 1) as nkeys,
+                   am.amname,
+                   n.nspname AS table_schema,
+                   c.relname AS table_name
+            FROM pg_index AS x
+            JOIN pg_class AS i ON i.oid = x.indexrelid
+            JOIN pg_class c ON c.oid = x.indrelid
+            JOIN pg_am am ON am.oid = i.relam
+            LEFT JOIN pg_namespace n ON n.oid = c.relnamespace
+        ),
+        index_data2 AS (
+            SELECT *
+            FROM index_data AS t
+            cross join lateral (select concat_ws('.', quote_ident(t.table_schema), quote_ident(t.table_name))) as p(table_full_name)
+            WHERE true
 
-            JOIN pg_am am ON am.oid = cls.relam
+            -- исключаем схемы
+            AND (schemas_ignore_regexp is null OR t.table_schema !~ schemas_ignore_regexp)
+            AND t.table_schema::regnamespace != ALL (schemas_ignore)
+
+            -- исключаем таблицы
+            AND (tables_ignore_regexp is null OR p.table_full_name !~ tables_ignore_regexp)
+            AND (tables_ignore is null OR p.table_full_name::regclass != ALL (tables_ignore))
         ),
         t AS (
              SELECT
@@ -86,8 +96,8 @@ BEGIN
                  pg_get_indexdef(i1.indexrelid)                  main_index,
                  pg_get_indexdef(i2.indexrelid)                  redundant_index,
                  pg_size_pretty(pg_relation_size(i2.indexrelid)) redundant_index_size
-             FROM index_data as i1
-             JOIN index_data as i2 ON i1.indrelid = i2.indrelid
+             FROM index_data2 as i1
+             JOIN index_data2 as i2 ON i1.indrelid = i2.indrelid
                   AND i1.indexrelid <> i2.indexrelid
                   AND i1.amname = i2.amname
              WHERE (regexp_replace(i1.indpred, 'location \d+', 'location', 'g') IS NOT DISTINCT FROM
@@ -159,7 +169,7 @@ BEGIN
                 indpred is not null as has_predicate,
                 pg_get_indexdef(indexrelid) as indexdef
             from pg_index
-                     join pg_class on indexrelid = pg_class.oid
+            join pg_class on indexrelid = pg_class.oid
             where indisvalid
         ), fk_index_match as (
             select
@@ -174,16 +184,14 @@ BEGIN
                 round(pg_relation_size(conrelid)/(1024^2)::numeric) as table_mb,
                 cols_list
             from fk_list
-                     join fk_cols_list using (fkoid)
-                     left join index_list on
-                        conrelid = indrelid
-                    and (indkey::int2[])[0:(array_length(key_cols,1) -1)] operator(pg_catalog.@>) key_cols
+            join fk_cols_list using (fkoid)
+            left join index_list on conrelid = indrelid
+                                and (indkey::int2[])[0:(array_length(key_cols,1) -1)] operator(pg_catalog.@>) key_cols
 
         ), fk_perfect_match as (
             select fkoid
             from fk_index_match
-            where
-                    (index_colcount - 1) <= fk_colcount
+            where (index_colcount - 1) <= fk_colcount
               and not has_predicate
               and indexdef like '%USING btree%'
         ), fk_index_check as (
@@ -260,17 +268,15 @@ BEGIN
         from information_schema.tables as t
         cross join lateral (select concat_ws('.', quote_ident(t.table_schema), quote_ident(t.table_name))) as p(table_full_name)
         where t.table_type = 'BASE TABLE'
-          and not t.table_schema = any ('{information_schema,pg_catalog,migration}')
-          and t.table_name !~ '\d{4}[_\-]\d\d?$'
           and coalesce(trim(obj_description((t.table_schema || '.' || t.table_name)::regclass::oid)), '') in ('', t.table_name)
 
           -- исключаем схемы
           AND (schemas_ignore_regexp is null OR t.table_schema !~ schemas_ignore_regexp)
-          AND NOT t.table_schema = ANY (schemas_ignore::text[])
+          AND t.table_schema::regnamespace != ALL (schemas_ignore)
 
           -- исключаем таблицы
           AND (tables_ignore_regexp is null OR p.table_full_name !~ tables_ignore_regexp)
-          AND (tables_ignore is null OR NOT p.table_full_name = ANY (tables_ignore::text[]))
+          AND (tables_ignore is null OR p.table_full_name::regclass != ALL (tables_ignore))
 
         order by 1
         limit 1;
@@ -288,21 +294,20 @@ BEGIN
                format($$comment on column %I.%I.%I is '...';$$, t.table_schema, t.table_name, c.column_name) as sql
         into rec
         from information_schema.columns as c
-        inner join information_schema.tables as t on t.table_schema = c.table_schema and t.table_name = c.table_name
-            and t.table_type = 'BASE TABLE'
-            and t.table_schema not in ('pg_catalog', 'information_schema', 'migration')
-            and t.table_name !~ '\d{4}[_\-]\d\d?$'
+        inner join information_schema.tables as t on t.table_schema = c.table_schema
+                                                 and t.table_name = c.table_name
+                                                 and t.table_type = 'BASE TABLE'
         cross join lateral (select concat_ws('.', quote_ident(t.table_schema), quote_ident(t.table_name))) as p(table_full_name)
         where c.column_name != 'id'
           and coalesce(trim(col_description((c.table_schema || '.' || t.table_name)::regclass::oid, c.ordinal_position)), '') in ('', c.column_name)
 
           -- исключаем схемы
           AND (schemas_ignore_regexp is null OR t.table_schema !~ schemas_ignore_regexp)
-          AND NOT t.table_schema = ANY (schemas_ignore::text[])
+          AND t.table_schema::regnamespace != ALL (schemas_ignore)
 
           -- исключаем таблицы
           AND (tables_ignore_regexp is null OR p.table_full_name !~ tables_ignore_regexp)
-          AND (tables_ignore is null OR NOT p.table_full_name = ANY (tables_ignore::text[]))
+          AND (tables_ignore is null OR p.table_full_name::regclass != ALL (tables_ignore))
 
         order by 1
         limit 1;
