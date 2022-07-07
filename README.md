@@ -2157,7 +2157,7 @@ cross join lateral (
            NOW() - xact_start as xact_elapsed --длительность выполнения транзакции или NULL, если транзакции нет
 ) as e
 where true
-  and state in ('idle', 'idle in transaction')
+  and state in ('idle', 'idle in transaction', 'idle in transaction (aborted)')
   and wait_event = 'ClientRead' --https://postgrespro.ru/docs/postgresql/12/monitoring-stats#WAIT-EVENT-TABLE
   --значение таймаутов в минутах д.б. меньше, чем указано на реплике в параметрах конфигурации max_standby_archive_delay или max_standby_streaming_delay
   and (state_change_elapsed > interval '20 minutes' or xact_elapsed > interval '50 minutes')
