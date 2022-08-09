@@ -2157,6 +2157,7 @@ cross join lateral (
            NOW() - state_change as state_change_elapsed --длительность выполнения запроса после изменения состояния (поля state)
 ) as e
 where true
+  and a.pid != pg_backend_pid()
   and state in ('idle', 'idle in transaction', 'idle in transaction (aborted)')
   and wait_event = 'ClientRead' --https://postgrespro.ru/docs/postgresql/12/monitoring-stats#WAIT-EVENT-TABLE
   --значение таймаутов в минутах д.б. меньше, чем указано на реплике в параметрах конфигурации max_standby_archive_delay или max_standby_streaming_delay
