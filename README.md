@@ -1482,7 +1482,7 @@ DROP TYPE status_enum_old;
 
 Выгружаем схему БД в файл:
 
-`$ pg_dump --user=postgres --dbname=v3_rabota_test --schema-only > schema.sql`
+`$ pg_dump --user=postgres --dbname=my_database --schema-only > schema.sql`
 
 Ищем упоминания в файле:
 
