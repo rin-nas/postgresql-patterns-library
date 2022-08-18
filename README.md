@@ -1208,11 +1208,12 @@ END $$;
 ```
 
 ### Как обновить запись так, чтобы не затереть чужие изменения, уже сделанные кем-то?
+
 ```sql
 WITH u AS (
     UPDATE t 
-    SET description = 'new text' 
-    WHERE id=123 
+    SET col1 = 'val1',  col2 = 'val2'
+    WHERE id = 123
     AND updated_at = '2019-11-08 00:58:33'
     --AND md5(t::text) = '1BC29B36F623BA82AAF6724FD3B16718' -- если нет колонки updated_at, вычисляем хеш от данных всей записи
     RETURNING *
