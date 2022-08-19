@@ -2237,7 +2237,8 @@ cross join lateral (
     select NOW() - a.xact_start as xact_elapsed,          --длительность выполнения транзакции или NULL, если транзакции нет
            NOW() - a.query_start as query_elapsed,        --длительность выполнения запроса всего
            NOW() - a.state_change as state_change_elapsed --длительность выполнения запроса после изменения состояния (поля state)
-    ) as e
+) as e
+cross join pg_size_bytes(regexp_replace(trim(current_setting('track_activity_query_size')), '(?<![a-zA-Z])B$', '')) as s(track_activity_query_size_bytes)
 where true
   and exists(
       select
@@ -2248,11 +2249,11 @@ where true
         and b.usesysid = a.usesysid --OID пользователя, подключённого к серверному процессу
         and b.pid = any(pg_blocking_pids(a.pid)) --Серверный процесс заблокировал другие
         and b.query = a.query --SQL запрос
-        and octet_length(b.query) < pg_size_bytes(current_setting('track_activity_query_size'))
+        and octet_length(b.query) < s.track_activity_query_size_bytes
   )
   --по умолчанию текст запроса обрезается до 1024 байт; это число определяется параметром track_activity_query_size
   --обрезанные запросы игнорируем
-  and octet_length(a.query) < pg_size_bytes(current_setting('track_activity_query_size'))
+  and octet_length(a.query) < s.track_activity_query_size_bytes
   and a.pid != pg_backend_pid()
   and a.state = 'active' --серверный процесс выполняет запрос
   and a.wait_event_type = 'Lock' --Lock: процесс ожидает тяжёлую блокировку
