@@ -75,6 +75,7 @@ BEGIN
             JOIN pg_class c ON c.oid = x.indrelid
             JOIN pg_am am ON am.oid = i.relam
             LEFT JOIN pg_namespace n ON n.oid = c.relnamespace
+            WHERE x.indisvalid -- в момент работы create/reindex index concurrently будут присутствовать "нерабочие" индексы
         ),
         index_data2 AS (
             SELECT *
@@ -170,7 +171,7 @@ BEGIN
                 pg_get_indexdef(indexrelid) as indexdef
             from pg_index
             join pg_class on indexrelid = pg_class.oid
-            where indisvalid
+            where indisvalid -- в момент работы create/reindex index concurrently будут присутствовать "нерабочие" индексы
         ), fk_index_match as (
             select
                 fk_list.*,
