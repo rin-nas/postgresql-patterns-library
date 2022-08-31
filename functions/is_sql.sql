@@ -14,12 +14,12 @@ BEGIN
     BEGIN
 
         --Speed improves. Shortest commands are "abort" or "do ''"
-        IF octet_length(sql) < 5 THEN
+        IF octet_length(sql) < 5 OR sql ~ '^[\s\-]*$' THEN
             return false;
         END IF;
 
         EXECUTE E'DO $IS_SQL$ BEGIN\nRETURN;\n' || trim(trailing E'; \r\n\t' from sql) || E';\nEND; $IS_SQL$;';
-    EXCEPTION WHEN syntax_error THEN
+    EXCEPTION WHEN others THEN
         GET STACKED DIAGNOSTICS
             exception_sqlstate = RETURNED_SQLSTATE,
             exception_message = MESSAGE_TEXT,
@@ -44,8 +44,11 @@ begin
     assert is_sql('SELECT x');
     assert is_sql('ABORT');
     assert is_sql($$do ''$$);
+    
     --negative
     assert not is_sql('SELECTx');
+    assert not is_sql('-------');
+    assert not is_sql('return unknown');
 end;
 $do$;
 
