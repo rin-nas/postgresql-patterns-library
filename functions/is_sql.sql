@@ -1,9 +1,9 @@
--- check SQL syntax exactly in your PostgreSQL version
 CREATE OR REPLACE FUNCTION is_sql(sql text, is_notice boolean default false)
     returns boolean
     returns null on null input
     parallel unsafe --(ERROR:  cannot start subtransactions during a parallel operation)
     language plpgsql
+    cost 5
 AS
 $$
 DECLARE
@@ -12,6 +12,12 @@ DECLARE
     exception_context text;
 BEGIN
     BEGIN
+
+        --Speed improves. Shortest commands are "abort" or "do ''"
+        IF octet_length(sql) < 5 THEN
+            return false;
+        END IF;
+
         EXECUTE E'DO $IS_SQL$ BEGIN\nRETURN;\n' || trim(trailing E'; \r\n\t' from sql) || E';\nEND; $IS_SQL$;';
     EXCEPTION WHEN syntax_error THEN
         GET STACKED DIAGNOSTICS
@@ -29,12 +35,17 @@ BEGIN
 END
 $$;
 
+COMMENT ON FUNCTION is_sql(sql text, is_notice boolean) IS 'Check SQL syntax exactly in your PostgreSQL version';
+
 -- TEST
 do $$
-    begin
-        --positive
-        assert is_sql('SELECT x');
-        --negative
-        assert not is_sql('SELECTx', true);
-    end;
+begin
+    --positive
+    assert is_sql('SELECT x');
+    assert is_sql('ABORT');
+    assert is_sql($$do ''$$);
+    --negative
+    assert not is_sql('SELECTx');
+end;
 $$;
+
