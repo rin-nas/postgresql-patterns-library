@@ -38,7 +38,7 @@ $$;
 COMMENT ON FUNCTION is_sql(sql text, is_notice boolean) IS 'Check SQL syntax exactly in your PostgreSQL version';
 
 -- TEST
-do $$
+do $do$
 begin
     --positive
     assert is_sql('SELECT x');
@@ -47,5 +47,5 @@ begin
     --negative
     assert not is_sql('SELECTx');
 end;
-$$;
+$do$;
 
