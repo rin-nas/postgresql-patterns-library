@@ -20,11 +20,11 @@ BEGIN
 
         EXECUTE E'DO $IS_SQL$ BEGIN\nRETURN;\n' || trim(trailing E'; \r\n\t' from sql) || E';\nEND; $IS_SQL$;';
     EXCEPTION WHEN others THEN
-        GET STACKED DIAGNOSTICS
-            exception_sqlstate = RETURNED_SQLSTATE,
-            exception_message = MESSAGE_TEXT,
-            exception_context = PG_EXCEPTION_CONTEXT;
         IF is_notice THEN
+            GET STACKED DIAGNOSTICS
+                exception_sqlstate := RETURNED_SQLSTATE,
+                exception_message  := MESSAGE_TEXT,
+                exception_context  := PG_EXCEPTION_CONTEXT;
             RAISE NOTICE 'exception_sqlstate = %', exception_sqlstate;
             RAISE NOTICE 'exception_context = %', exception_context;
             RAISE NOTICE 'exception_message = %', exception_message;
