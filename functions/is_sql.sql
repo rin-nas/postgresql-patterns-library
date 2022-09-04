@@ -14,7 +14,7 @@ BEGIN
     BEGIN
 
         --Speed improves. Shortest commands are "abort" or "do ''"
-        IF octet_length(sql) < 5 OR sql ~ '^[\s\-]*$' THEN
+        IF octet_length(sql) < 5 OR sql !~ '[A-Za-z]{2}' THEN
             return false;
         END IF;
 
@@ -44,11 +44,12 @@ begin
     assert is_sql('SELECT x');
     assert is_sql('ABORT');
     assert is_sql($$do ''$$);
-    
+
     --negative
-    assert not is_sql('SELECTx');
+    assert not is_sql('do');
+    assert not is_sql('123');
+    assert not is_sql('SELECT !');
     assert not is_sql('-------');
     assert not is_sql('return unknown');
 end;
 $do$;
-
