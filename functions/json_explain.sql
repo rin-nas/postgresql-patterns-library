@@ -11,4 +11,5 @@ BEGIN
 END
 $$ LANGUAGE plpgsql;
 
+--TEST
 SELECT json_explain('SELECT * FROM pg_class', ARRAY['ANALYSE'])->0;
