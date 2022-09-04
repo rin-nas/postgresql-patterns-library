@@ -18,7 +18,7 @@ BEGIN
             return false;
         END IF;
 
-        EXECUTE E'DO $IS_SQL$ BEGIN\nRETURN;\n' || trim(trailing E'; \r\n\t' from sql) || E';\nEND; $IS_SQL$;';
+        EXECUTE E'DO $IS_SQL$ BEGIN\nRETURN;\n' || trim(trailing E'; \r\n\t' from sql) || E'\n;\nEND; $IS_SQL$;';
     EXCEPTION WHEN others THEN
         IF is_notice THEN
             GET STACKED DIAGNOSTICS
@@ -42,6 +42,7 @@ do $do$
 begin
     --positive
     assert is_sql('SELECT x');
+    assert is_sql('SELECT --');
     assert is_sql('ABORT');
     assert is_sql($$do ''$$);
 
