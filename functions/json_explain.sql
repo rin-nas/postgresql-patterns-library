@@ -12,4 +12,7 @@ END
 $$ LANGUAGE plpgsql;
 
 --TEST
-SELECT json_explain('SELECT * FROM pg_class', ARRAY['ANALYSE'])->0;
+SELECT (json_explain('SELECT * FROM pg_class', ARRAY['ANALYSE'])->0->'Plan'->>'Total Cost')::numeric as cost
+
+--TODO добавить 3-й параметр в функцию: returns_null_on_error
+--select json_explain('select unknown_col from pg_class');
