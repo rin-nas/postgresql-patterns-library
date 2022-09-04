@@ -27,11 +27,11 @@ BEGIN
         -- make_date() для невалидной даты тоже кидает исключение, например: [22008] ERROR: date field value out of range: 2021-02-29
         RETURN (str::date is not null);
     EXCEPTION WHEN others THEN
-        GET STACKED DIAGNOSTICS
-            exception_sqlstate = RETURNED_SQLSTATE,
-            exception_message = MESSAGE_TEXT,
-            exception_context = PG_EXCEPTION_CONTEXT;
         IF is_notice THEN
+            GET STACKED DIAGNOSTICS
+                exception_sqlstate := RETURNED_SQLSTATE,
+                exception_message  := MESSAGE_TEXT,
+                exception_context  := PG_EXCEPTION_CONTEXT;
             RAISE NOTICE 'exception_sqlstate = %', exception_sqlstate;
             RAISE NOTICE 'exception_context = %', exception_context;
             RAISE NOTICE 'exception_message = %', exception_message;
