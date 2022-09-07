@@ -10,6 +10,7 @@ DECLARE
     exception_sqlstate text;
     exception_message text;
     exception_context text;
+    id text;
 BEGIN
     BEGIN
 
@@ -18,7 +19,44 @@ BEGIN
             return false;
         END IF;
 
-        EXECUTE E'DO $IS_SQL$ BEGIN\nRETURN;\n' || trim(trailing E'; \r\n\t' from sql) || E'\n;\nEND; $IS_SQL$;';
+        -- add ";" in end of string, if ";" does not exist
+        sql := regexp_replace(sql, $regexp$
+            ;?
+            ((?: #1
+                 --[^\r\n]*                     #singe-line comment
+              |  /\*                            #multi-line comment (can be nested)
+                   [^*/]* #speed improves
+                   (?: [^*/]+
+                     | \*[^/] #not end comment
+                     | /[^*]  #not begin comment
+                     |   #recursive:
+                         /\*                            #multi-line comment (can be nested)
+                           [^*/]* #speed improves
+                           (?: [^*/]+
+                             | \*[^/] #not end comment
+                             | /[^*]  #not begin comment
+                             |   #recursive:
+                                 /\*                            #multi-line comment (can be nested)
+                                   [^*/]* #speed improves
+                                   (?: [^*/]+
+                                     | \*[^/] #not end comment
+                                     | /[^*]  #not begin comment
+                                     #| #recursive
+                                   )*
+                                 \*/
+                           )*
+                         \*/
+                   )*
+                 \*/
+              |  \s+
+            )*)
+            $
+        $regexp$, ';\1', 'x');
+
+        id  := to_char(now(), 'YYYYMMDDHH24MISSMS');
+        sql := E'DO $IS_SQL' || id || E'$ BEGIN\nRETURN;\n' || sql || E'\nEND; $IS_SQL' || id || E'$;';
+
+        EXECUTE sql;
     EXCEPTION WHEN others THEN
         IF is_notice THEN
             GET STACKED DIAGNOSTICS
@@ -41,16 +79,23 @@ COMMENT ON FUNCTION is_sql(sql text, is_notice boolean) IS 'Check SQL syntax exa
 do $do$
 begin
     --positive
-    assert is_sql('SELECT x');
-    assert is_sql('SELECT --');
+    assert is_sql('SELECT x/*--;*/ ; ');
+    assert is_sql('SELECT x ; --');
+    assert is_sql('SELECT -- ; ');
+    assert is_sql('SELECT ; /*select ;*/ --');
     assert is_sql('ABORT');
     assert is_sql($$do ''$$);
+    assert is_sql(pg_catalog.pg_get_functiondef('public.is_sql'::regproc::oid)); --self test
 
     --negative
+    assert not is_sql('');
     assert not is_sql('do');
     assert not is_sql('123');
     assert not is_sql('SELECT !');
-    assert not is_sql('-------');
+    assert not is_sql('SELECT ;;');
+    assert not is_sql('SELECT ; ; /*select ;*/ --');
+    assert not is_sql('  --select 1  ');
+    assert not is_sql('  /*select 1*/  ');
     assert not is_sql('return unknown');
 end;
 $do$;
