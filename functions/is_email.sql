@@ -1,4 +1,5 @@
-create function is_email(email text) returns boolean
+create function is_email(email text)
+    returns boolean
     parallel safe
     language sql
     immutable
