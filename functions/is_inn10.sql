@@ -12,7 +12,7 @@ DECLARE
     digits integer[];
 BEGIN
 
-    IF octet_length(inn) != 10 or inn !~ '^\d+$' THEN
+    IF octet_length(inn) != 10 or inn ~ '\D' THEN
         return FALSE;
     END IF;
 
