@@ -21,7 +21,7 @@ select
         $regexp$, 'x') is not null
 $$;
 
-comment on function is_bik(text) is 'Проверяет, что переданная строка является БИК (Банковскый Идентификационный Код)';
+comment on function is_bik(text) is 'Проверяет, что переданная строка является БИК (Банковский Идентификационный Код)';
 
 --TEST
 
