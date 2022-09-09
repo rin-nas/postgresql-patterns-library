@@ -76,6 +76,7 @@ TEST comments_remove() end
     $sql$;
 
 BEGIN
-    raise notice '%', comments_remove(sql);
+    --raise notice '%', comments_remove(sql);
+    perform comments_remove(sql);
 END;
 $do$;
