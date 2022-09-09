@@ -17,7 +17,7 @@ BEGIN
         return FALSE;
     END IF;
 
-    digits = regexp_split_to_array(inn, '')::integer[];
+    digits = string_to_array(inn, null)::integer[];
 
     -- Проверка контрольных цифр для 12-значного ИНН
     controlSum1 :=
