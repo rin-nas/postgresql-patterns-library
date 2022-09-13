@@ -117,7 +117,7 @@
 
 #### Как проверить email на валидность?
 
-Домен [`email.sql`](domains/email.sql) и функция [`is_email.sql`](functions/is_email.sql)
+Домен [`email.sql`](domains/email.sql) (базовая минимальная, но быстрая валидация) и функция [`is_email.sql`](functions/is_email.sql) (валидация почти по спецификации, но медленная)
 
 #### Как найти все невалидные email в таблице?
 
