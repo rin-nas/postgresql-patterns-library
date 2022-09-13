@@ -185,7 +185,7 @@ END;
 $$;
 
 -- добавление
-DROP TRIGGER IF EXISTS person_email_check_insert ON v3_person_email;
+DROP TRIGGER IF EXISTS person_email_check_insert ON person_email;
 CREATE TRIGGER person_email_check_insert
     BEFORE INSERT ON person
     FOR EACH ROW
@@ -193,7 +193,7 @@ CREATE TRIGGER person_email_check_insert
     EXECUTE PROCEDURE person_email_check();
 
 --обновление
-DROP TRIGGER IF EXISTS person_email_check_update ON v3_person_email;
+DROP TRIGGER IF EXISTS person_email_check_update ON person_email;
 CREATE TRIGGER person_email_check_update
     BEFORE UPDATE OF email ON person -- поле явно указано в UPDATE запросе!
     FOR EACH ROW
