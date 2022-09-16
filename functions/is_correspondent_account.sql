@@ -18,6 +18,7 @@ declare
 begin
 
     --https://ru.wikipedia.org/wiki/Корреспондентский_счёт
+    --https://cbr.ru/na/385-p/ Положение Банка России «О правилах ведения бухгалтерского учета в кредитных организациях, расположенных на территории Российской Федерации» № 385-П от 16.07.2012
     if octet_length(ks) != 20 or ks !~ '^301\d+$' then
         return false;
     elsif bik is null then
