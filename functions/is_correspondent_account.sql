@@ -18,7 +18,7 @@ declare
 begin
 
     --https://ru.wikipedia.org/wiki/Корреспондентский_счёт
-    if octet_length(ks) != 20 or ks ~ '\D' then
+    if octet_length(ks) != 20 or ks !~ '^301\d+$' then
         return false;
     elsif bik is null then
         return true;
@@ -46,22 +46,16 @@ comment on function is_correspondent_account(ks text, bik text) is 'Провер
 DO $$
 BEGIN
     --positive
-    assert is_correspondent_account('12345678901234567890');
-    assert is_correspondent_account('40817810099910004312');
-    assert is_correspondent_account('00000000000000000000', '000000000');
     assert is_correspondent_account('30101810200000000827', '044030827');
+    assert is_correspondent_account('30101810400000000225', '044525225');
 
     --negative
-    assert not is_correspondent_account('*2345678901234567890');
-    assert not is_correspondent_account('1234567890123456789');
-    assert not is_correspondent_account('123456789012345678901');
-    assert not is_correspondent_account('00101810200000000827', '044030827');
-    assert not is_correspondent_account('10101810200000000827', '044030827');
-    assert not is_correspondent_account('20101810200000000827', '044030827');
-    assert not is_correspondent_account('40101810200000000827', '044030827');
-    assert not is_correspondent_account('50101810200000000827', '044030827');
-    assert not is_correspondent_account('60101810200000000827', '044030827');
-    assert not is_correspondent_account('70101810200000000827', '044030827');
-    assert not is_correspondent_account('80101810200000000827', '044030827');
-    assert not is_correspondent_account('90101810200000000827', '044030827');
+    assert not is_correspondent_account('3010181020000000082');
+    assert not is_correspondent_account('301018102000000008270');
+    assert not is_correspondent_account('3014567890123456789*');
+    assert not is_correspondent_account('12345678901234567890');
+    assert not is_correspondent_account('40817810099910004312');
+    assert not is_correspondent_account('30101810300000000827', '044030827');
+    assert not is_correspondent_account('30101810500000000225', '044525225');
+
 END $$;
