@@ -396,14 +396,15 @@ BEGIN
                     END IF;
                 WHEN query_canceled THEN
                     GET STACKED DIAGNOSTICS
-                        exception_detail := PG_EXCEPTION_DETAIL,  -- text текст детального сообщения исключения (если есть)
-                        exception_hint   := PG_EXCEPTION_HINT;    -- text текст подсказки к исключению (если есть)
+                        exception_sqlstate  := RETURNED_SQLSTATE,	-- text	код исключения, возвращаемый SQLSTATE
+                        exception_detail    := PG_EXCEPTION_DETAIL, -- text текст детального сообщения исключения (если есть)
+                        exception_hint      := PG_EXCEPTION_HINT;   -- text текст подсказки к исключению (если есть)
 
                     IF exception_hint !~ '\mscan_timeout()' THEN
                         RAISE; -- raise the original exception
                     END IF;
 
-                    RAISE WARNING 'Catched ERROR % of execute CTE query using: $1 := %, $2 := %, $3 := %', SQLSTATE, start_id_bigint, batch_rows, offset_rows;
+                    RAISE WARNING 'Catched ERROR % of execute CTE query using: $1 := %, $2 := %, $3 := %', exception_sqlstate, start_id_bigint, batch_rows, offset_rows;
 
                     IF batch_rows > 1 THEN
                         batch_rows := ceil(batch_rows / multiplier);
@@ -448,9 +449,9 @@ BEGIN
                         exception_context         := PG_EXCEPTION_CONTEXT; -- text строки текста, описывающие стек вызовов в момент исключения (см. Подраздел 42.6.9)
 
                     IF uniq_column_type IN ('integer', 'bigint') THEN
-                        RAISE WARNING 'Catched ERROR % of execute CTE query using: $1 := %, $2 := %, $3 := %', SQLSTATE, start_id_bigint, batch_rows, offset_rows;
+                        RAISE WARNING 'Catched ERROR % of execute CTE query using: $1 := %, $2 := %, $3 := %', exception_sqlstate, start_id_bigint, batch_rows, offset_rows;
                     ELSE
-                        RAISE WARNING 'Catched ERROR % of execute CTE query using: $1 := %, $2 := %, $3 := %', SQLSTATE, quote_literal(start_id_text), batch_rows, offset_rows;
+                        RAISE WARNING 'Catched ERROR % of execute CTE query using: $1 := %, $2 := %, $3 := %', exception_sqlstate, quote_literal(start_id_text), batch_rows, offset_rows;
                     END IF;
 
                     IF cur_attempt = max_attempts THEN
@@ -500,6 +501,13 @@ BEGIN
 
                         COMMIT AND CHAIN;
 
+                        /*
+                           1) Уникальные индексы могут стать неуникальными из-за ошибок а самой БД
+                           2) Если уникальные индексы вычисляются как хеш (например md5), то в хешах возможны коллизии.
+                           3) Могут сработать ограничения таблицах, колонках или в функциях, которые использует SQL запрос.
+                           Поэтому пытаемся пропустить проблемные записи и перейти к следующим.
+                           Если параметр error_table_name передан, то ошибки будут записаны в служебную таблицу
+                        */
                         offset_rows := offset_rows + 1;
                     END IF;
 
@@ -607,7 +615,7 @@ comment on procedure loop_execute(
     inout result record
 ) is $$
 Процедура для обработки строк в больших таблицах (тысячи и миллионы строк) с контролируемым временем блокировки строк на запись.
-Принцип работы — выполняет в цикле CTE DML запрос, который добавляет, обновляет или удаляет записи в таблице.
+Принцип работы -- выполняет в цикле CTE DML запрос, который добавляет, обновляет или удаляет записи в таблице.
 В завершении каждого цикла изменения фиксируются (либо откатываются для целей тестирования, это настраивается).
 Автоматически адаптируется под нагрузку на БД. На реплику данные передаются постепенно небольшими порциями, а не одним огромным куском.
 В процессе обработки показывает в psql консоли:
