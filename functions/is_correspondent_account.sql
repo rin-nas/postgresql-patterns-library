@@ -19,7 +19,10 @@ begin
 
     --https://ru.wikipedia.org/wiki/Корреспондентский_счёт
     --https://cbr.ru/na/385-p/ Положение Банка России «О правилах ведения бухгалтерского учета в кредитных организациях, расположенных на территории Российской Федерации» № 385-П от 16.07.2012
-    if octet_length(ks) != 20 or ks !~ '^301\d+$' then
+    if octet_length(ks) != 20
+        or ks !~ '^[034]\d+$'
+        or ks ~ '^([1-9])\1+$'
+    then
         return false;
     elsif bik is null then
         return true;
@@ -47,6 +50,7 @@ comment on function is_correspondent_account(ks text, bik text) is 'Провер
 DO $$
 BEGIN
     --positive
+    assert is_correspondent_account('40817810099910004312');
     assert is_correspondent_account('30101810200000000827', '044030827');
     assert is_correspondent_account('30101810400000000225', '044525225');
 
@@ -55,7 +59,6 @@ BEGIN
     assert not is_correspondent_account('301018102000000008270');
     assert not is_correspondent_account('3014567890123456789*');
     assert not is_correspondent_account('12345678901234567890');
-    assert not is_correspondent_account('40817810099910004312');
     assert not is_correspondent_account('30101810300000000827', '044030827');
     assert not is_correspondent_account('30101810500000000225', '044525225');
 
