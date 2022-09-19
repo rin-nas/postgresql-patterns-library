@@ -37,5 +37,6 @@ BEGIN
     --negative
     assert not is_kpp('12345');
     assert not is_kpp('1234567890');
+    assert not is_kpp('111111111');
 
 END $$;
