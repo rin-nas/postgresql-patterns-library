@@ -19,7 +19,10 @@ begin
 
     --https://ru.wikipedia.org/wiki/Расчётный_счёт
     --https://cbr.ru/na/385-p/ Положение Банка России «О правилах ведения бухгалтерского учета в кредитных организациях, расположенных на территории Российской Федерации» № 385-П от 16.07.2012
-    if octet_length(rs) != 20 or rs !~ '^4\d+$' then
+    if octet_length(rs) != 20
+        or rs ~ '\D'
+        or rs ~ '^([1-9])\1+$'
+    then
         return false;
     elsif bik is null then
         return true;
