@@ -19,7 +19,9 @@ begin
 
     --https://ru.wikipedia.org/wiki/Корреспондентский_счёт
     --https://cbr.ru/na/385-p/ Положение Банка России «О правилах ведения бухгалтерского учета в кредитных организациях, расположенных на территории Российской Федерации» № 385-П от 16.07.2012
-    if octet_length(ks) != 20
+    if ks is null then
+        return null;
+    elsif octet_length(ks) != 20
         or ks !~ '^[034]\d+$'
         or ks ~ '^([1-9])\1+$'
     then
