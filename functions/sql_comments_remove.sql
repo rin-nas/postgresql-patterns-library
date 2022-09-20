@@ -1,4 +1,4 @@
-create or replace function comments_remove(
+create or replace function sql_comments_remove(
     sql text  --SQL запрос
 )
     returns text
@@ -51,7 +51,7 @@ $function$
 
 $function$;
 
-comment on function comments_remove(
+comment on function sql_comments_remove(
     sql text
 ) is 'Удаляет из SQL запроса однострочные и многострочные комментарии (заменяет их на пробел)';
 
@@ -60,7 +60,7 @@ comment on function comments_remove(
 DO $do$
 DECLARE
     sql text default $sql$
-TEST comments_remove() start
+TEST sql_comments_remove() start
   ,qq   --/*7/*8*/9*/!
   ,'st--\''ri$$ng/*--*/'!
   ,e' \' --/*1''2 */'!
@@ -72,11 +72,11 @@ TEST comments_remove() start
   ,*/!
   ,$$dol--lar$$!
   ,$b$dol--lar$b$!
-TEST comments_remove() end
+TEST sql_comments_remove() end
     $sql$;
 
 BEGIN
-    --raise notice '%', comments_remove(sql);
-    perform comments_remove(sql);
+    --raise notice '%', sql_comments_remove(sql);
+    perform sql_comments_remove(sql);
 END;
 $do$;
