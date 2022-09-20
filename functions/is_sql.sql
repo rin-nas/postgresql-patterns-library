@@ -104,5 +104,9 @@ $do$;
 /*
 alter table db_migration
     add constraint db_migration_sql_up_check check (is_sql(sql_up)) not valid,
-    add constraint db_migration_sql_down_check check (sql_down !~ '^\s*$' and is_sql(sql_down)) not valid;
+    add constraint db_migration_sql_down_check check (
+        sql_down ~ '^\s*$' OR
+        sql_comments_remove(sql_down) ~ '^\s*$' OR
+        is_sql(sql_down)
+    ) not valid;
 */
