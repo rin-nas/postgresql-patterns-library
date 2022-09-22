@@ -109,3 +109,26 @@ select db_validate_v2(
 
 * Добавить проверку наличия описаний (`comment on ...`) для представлений (view), типов, функций, процедур. В миграциях БД забывают это делать.
 * Добавить проверку именования последовательностей по шаблону `{table}_id_seq`. Некоторые фреймворки закладываются на эти названия.
+* Добавить проверку наличия дубликатов ограничений таблицы:
+```sql
+with s as (
+   SELECT con.conrelid::regclass                                                   as table_name,
+          array_length(array_agg(pg_get_constraintdef(con.oid, true)), 1)          as def_count,
+          array_length(array_agg(distinct pg_get_constraintdef(con.oid, true)), 1) as def_uniq_count,
+          array_agg(pg_get_constraintdef(con.oid, true)) as def
+   FROM pg_constraint as con
+   WHERE connamespace::regnamespace not in ('pg_catalog', 'information_schema')
+     and con.conrelid != 0
+   GROUP BY con.conrelid::regclass
+)
+select s.table_name, t.*
+from s
+cross join lateral (
+    select u.value,
+           count(*) as duplicate_count
+    from unnest(s.def) as u(value)
+    group by u.value
+    having count(*) > 1
+) as t
+where def_count != def_uniq_count;
+```
