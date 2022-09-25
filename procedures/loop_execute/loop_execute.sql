@@ -5,6 +5,7 @@ drop table if exists loop_execute_error;
 
 -- необязательная таблица для записи исключений
 create unlogged table loop_execute_error (
+    id integer generated always as identity primary key,
     table_name regclass not null,
     uniq_column_name text not null,
     uniq_column_value_text text,
