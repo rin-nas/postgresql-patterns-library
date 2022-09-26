@@ -1,3 +1,4 @@
+--TODO доделать, добавить карту МИР в рег. выражение
 --https://en.wikipedia.org/wiki/Payment_card_number
 --Most credit cards use the Luhn algorithm to validate their numbers. It is a simple checksum that helps detect single digit typos and adjacent digit transposition errors. 
 
