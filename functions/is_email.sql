@@ -61,6 +61,11 @@ $regexp$, 'sx') is not null;
 
 $$;
 
+comment on function is_email(email text) is $$
+Проверяет email по спецификации https://en.wikipedia.org/wiki/Email_address с небольшими отклонениями.
+В email допускаются английские и русские слова.
+$$;       
+       
 --TEST
 
 --positive
