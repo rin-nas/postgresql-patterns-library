@@ -9,7 +9,9 @@ as
 $$
     --https://ru.wikipedia.org/wiki/Основной_государственный_регистрационный_номер
     --http://www.consultant.ru/cons/cgi/online.cgi?req=doc;base=LAW;n=179683
-    select octet_length(str) = 13 and left((left(str, 12)::bigint % 11)::text, 1) = right(str, 1)
+    select  octet_length(str) = 13
+            and str !~ '\D'
+            and left((left(str, 12)::bigint % 11)::text, 1) = right(str, 1)
 $$;
 
 comment on function is_ogrn(text) is 'Проверяет, что переданная строка является ОГРН (основной государственный регистрационный номер)';
@@ -26,6 +28,7 @@ BEGIN
     --negative
     assert not is_ogrn('123456789012');
     assert not is_ogrn('12345678901234');
+    assert not is_ogrn('102781240086a');
     assert not is_ogrn('0000000000001');
     assert not is_ogrn('1000000000000');
     assert not is_ogrn('1000000000002');
