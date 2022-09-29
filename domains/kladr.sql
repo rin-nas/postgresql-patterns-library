@@ -14,7 +14,6 @@
     АА – признак актуальности адресного объекта
 */
 
-
 CREATE DOMAIN kladr AS text CHECK(octet_length(VALUE) IN (13, 17, 19) AND VALUE ~ '^\d+$');
 
 COMMENT ON DOMAIN kladr IS 'Идентификатор КЛАДР';
