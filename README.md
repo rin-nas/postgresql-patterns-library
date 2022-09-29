@@ -1227,7 +1227,7 @@ WHERE u.id = 123
 
 Получаем запись для последующего редактирования в GUI:
 ```sql
-SELECT *
+SELECT col1, col2, updated_at
 --, md5(t::text) AS record_md5 -- если нет колонки updated_at, вычисляем хеш от данных всей записи
 FROM t 
 WHERE id = 123
@@ -1236,21 +1236,16 @@ WHERE id = 123
 После редактирования в GUI обновляем запись в БД:
 
 ```sql
-WITH u AS (
-    UPDATE t 
-    SET col1 = 'val1',  col2 = 'val2', ...
-    WHERE id = 123
-    AND updated_at = '2019-11-08 00:58:33' -- сравниваем со значением из предыдущего SELECT запроса
-    --AND md5(t::text) = '1BC29B36F623BA82AAF6724FD3B16718' -- если нет колонки updated_at, вычисляем хеш от данных всей записи и сравниваем со значением из предыдущего SELECT запроса
-    RETURNING *
-)
-SELECT true AS is_updated, updated_at
-FROM u
-UNION ALL
-SELECT false AS is_updated, updated_at
-FROM t
-WHERE id = 123 AND NOT EXISTS (SELECT * FROM u)
+UPDATE t 
+SET col1 = 'val1',  col2 = 'val2', ...
+WHERE id = 123
+AND updated_at = '2019-11-08 00:58:33' -- сравниваем со значением из предыдущего SELECT запроса
+--AND md5(t::text) = '1BC29B36F623BA82AAF6724FD3B16718' -- если нет колонки updated_at, вычисляем хеш от данных всей записи и сравниваем со значением из предыдущего SELECT запроса
+RETURNING *
 ```
+
+Если запрос вернул результат (одну строку), значит обновление было.
+Иначе обновления не было, значит кто-то обновил запись в БД раньше.
 
 ### Как обновить несколько записей разными данными в одном запросе?
 
