@@ -8,7 +8,9 @@
       1. [Как найти все невалидные email в таблице?](#Как-найти-все-невалидные-email-в-таблице)
       1. [Как удалить все невалидные email из большой таблицы?](#Как-удалить-все-невалидные-email-из-большой-таблицы)
       1. [Как проверить CSS цвет на валидность?](#Как-проверить-CSS-цвет-на-валидность)
-      1. [Как проверить ИНН на валидность?](#Как-проверить-ИНН-на-валидность)
+      1. [Как проверить реквизиты компании (ИНН, КПП, ОГРН, ОГРНИП) на валидность?](#Как-проверить-реквизиты-компании-ИНН-КПП-ОГРН-ОГРНИП-на-валидность)
+      1. [Как проверить банковские реквизиты (расчётный счёт, корреспонденткий счёт) на валидность?](#Как-проверить-банковские-реквизиты-расчётный-счёт- корреспонденткий-счёт-на-валидность)
+      1. [Как проверить СНИЛС на валидность?](#Как-проверить-СНИЛС-на-валидность)
       1. [Как проверить номер телефона на валидность?](#Как-проверить-номер-телефона-на-валидность)
       1. [Как провалидировать значение поля, только если оно явно указано в UPDATE запросе?](#Как-провалидировать-значение-поля-только-если-оно-явно-указано-в-UPDATE-запросе)
    1. [Переезд из MySQL в PostgreSQL](#Переезд-из-MySQL-в-PostgreSQL)
@@ -145,15 +147,41 @@ WHERE email IS NOT NULL    -- skip NULL
 
 #### Как проверить CSS цвет на валидность?
 
-Домен [`css_color.sql`](domains/css_color.sql)
+Домен: [`css_color.sql`](domains/css_color.sql)
 
-#### Как проверить ИНН на валидность?
+#### Как проверить реквизиты компании (ИНН, КПП, ОГРН, ОГРНИП) на валидность?
 
-https://ru.wikipedia.org/wiki/Идентификационный_номер_налогоплательщика
+##### ИНН
+Домены: [`inn.sql`](domains/inn.sql), [`inn10.sql`](domains/inn10.sql), [`inn12.sql`](domains/inn12.sql).
+Функции: [`is_inn.sql`](functions/is_inn.sql), [`is_inn10.sql`](functions/is_inn10.sql), [`is_inn12.sql`](functions/is_inn12.sql).
 
-Домены [`inn.sql`](domains/inn.sql), [`inn10.sql`](domains/inn10.sql), [`inn12.sql`](domains/inn12.sql).
+##### КПП
+Домен: [`kpp.sql`](domains/kpp.sql).
+Функция: [`is_kpp.sql`](functions/is_kpp.sql).
 
-Функции [`is_inn.sql`](functions/is_inn.sql), [`is_inn10.sql`](functions/is_inn10.sql), [`is_inn12.sql`](functions/is_inn12.sql).
+##### ОГРН
+Домен: [`ogrn.sql`](domains/ogrn.sql).
+Функция: [`is_ogrn.sql`](functions/is_ogrn.sql).
+
+##### ОГРНИП
+Домен: [`ogrnip.sql`](domains/ogrnip.sql).
+Функция: [`is_ogrnip.sql`](functions/is_ogrnip.sql).
+
+#### Как проверить банковские реквизиты (расчётный счёт, корреспонденткий счёт) на валидность?
+
+##### Банковский расчётный (клиентский) счёт (р/с)
+Домен: [`client_account.sql`](domains/client_account.sql).
+Функция: [`is_client_account.sql`](functions/is_client_account.sql).
+
+##### Банковский корреспонденткий счёт (к/с)
+Домен: [`correspondent_account.sql`](domains/correspondent_account.sql).
+Функция: [`is_correspondent_account.sql`](functions/is_correspondent_account.sql).
+
+#### Как проверить СНИЛС на валидность?
+
+Домен: [`snils.sql`](domains/snils.sql).
+Функция: [`is_snils.sql`](functions/is_snils.sql).
+
 
 #### Как проверить номер телефона на валидность?
 
