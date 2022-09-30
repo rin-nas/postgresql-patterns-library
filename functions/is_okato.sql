@@ -1,0 +1,2 @@
+--https://ru.wikipedia.org/wiki/Общероссийский_классификатор_объектов_административно-территориального_деления
+--TODO алгоритм проверум на JS https://express.xakplant.ru/2020/03/21/validate-entity-rus-yup-typescript-react-formik
