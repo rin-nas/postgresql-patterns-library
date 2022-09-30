@@ -1,1 +1,3 @@
+--https://ru.wikipedia.org/wiki/Общероссийский_классификатор_предприятий_и_организаций
 --TODO https://ru.wikipedia.org/wiki/Контрольное_число#Номер_ОКПО
+--TODO алгоритм валидации на JS https://express.xakplant.ru/2020/03/21/validate-entity-rus-yup-typescript-react-formik
