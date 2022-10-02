@@ -22,5 +22,6 @@ CREATE FUNCTION array_unique(
 AS $$
       SELECT array_agg(DISTINCT x) --using DISTINCT implicitly sorts the array
       FROM unnest($1) t(x) 
-      WHERE CASE WHEN $2 THEN x IS NOT NULL ELSE true END;
+      --WHERE CASE WHEN $2 THEN x IS NOT NULL ELSE true END;
+      WHERE NOT $2 OR x IS NOT NULL;
 $$;
