@@ -33,6 +33,31 @@ create unlogged table loop_execute_error (
     )
 );
 
+comment on table loop_execute_error is 'Журнал исключений (ошибок) процедуры loop_execute()';
+
+comment on column loop_execute_error.id is 'ID строки';
+comment on column loop_execute_error.table_name is 'Название таблицы';
+comment on column loop_execute_error.uniq_column_name is 'Название primary/unique колонки';
+comment on column loop_execute_error.uniq_column_value_text is 'Значение текстовой колонки';
+comment on column loop_execute_error.uniq_column_value_bigint is 'Значение числовой колонки';
+comment on column loop_execute_error.repeat_error_count is 'Количество одинаковых ошибок';
+
+comment on column loop_execute_error.exception_sqlstate is 'Код исключения, возвращаемый SQLSTATE';
+comment on column loop_execute_error.exception_constraint_name is 'Имя ограничения целостности, относящегося к исключению';
+comment on column loop_execute_error.exception_datatype_name is 'Имя типа данных, относящегося к исключению';
+
+comment on column loop_execute_error.exception_schema_name is 'Имя схемы, относящейся к исключению';
+comment on column loop_execute_error.exception_table_name is 'Имя таблицы, относящейся к исключению';
+comment on column loop_execute_error.exception_column_name is 'Имя столбца, относящегося к исключению';
+
+comment on column loop_execute_error.exception_message_text is 'Текст основного сообщения исключения';
+
+comment on column loop_execute_error.exception_detail is 'Текст детального сообщения исключения (если есть)';
+comment on column loop_execute_error.exception_hint is 'Текст подсказки к исключению (если есть)';
+comment on column loop_execute_error.exception_context is 'Строки текста, описывающие стек вызовов в момент исключения';
+
+comment on column loop_execute_error.created_at is 'Дата и время создания';
+
 create unique index loop_execute_error_uniq on loop_execute_error(
     table_name, exception_schema_name, exception_table_name, exception_column_name, exception_sqlstate,
     exception_constraint_name, exception_datatype_name, cast(md5(exception_message_text) as uuid), cast(md5(exception_context) as uuid)
