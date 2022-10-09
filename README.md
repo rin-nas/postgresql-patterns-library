@@ -1901,47 +1901,19 @@ select * from pg_available_extensions where installed_version is not null;
 
 ### Как получить список таблиц с размером занимаемого места и примерным количеством строк?
 
-```sql
-WITH t AS (
-    SELECT n.nspname || '.' || c.relname AS relation,
-           pg_relation_size(c.oid) AS table_size,
-           pg_total_relation_size(c.oid) - pg_relation_size(c.oid) - pg_indexes_size(c.oid) AS toast_size,
-           pg_indexes_size(c.oid) AS indexes_size,
-           pg_total_relation_size(c.oid) AS total_size,
-           (select reltuples::bigint
-            from pg_class
-            where  oid = (n.nspname || '.' || c.relname)::regclass
-           ) as rows_estimate_count
-    FROM pg_class AS c
-    JOIN pg_namespace AS n ON n.oid = c.relnamespace
-    WHERE nspname NOT IN ('pg_catalog', 'information_schema')
-      AND c.relkind not in ('i', 'S') -- without indexes and sequences
-      AND nspname !~ '^pg_toast'
-      --AND relname LIKE 'messenger__message_banners%'
-)
-    (SELECT relation,
-            pg_size_pretty(table_size) as table_size_pretty,
-            pg_size_pretty(total_size - table_size - indexes_size) as toast_size_pretty,
-            pg_size_pretty(indexes_size) as indexes_size_pretty,
-            pg_size_pretty(total_size) as total_size_pretty,
-            coalesce(round(total_size * 100 / nullif(sum(total_size) over(), 0), 2), 0) as total_size_percent,
-            regexp_replace(rows_estimate_count::text, '(?<=\d)(?<!\.[^.]*)(?=(\d\d\d)+(?!\d))', ',', 'g') as rows_estimate_count_pretty,
-            coalesce(round(rows_estimate_count * 100 / nullif(sum(rows_estimate_count) over(), 0), 2), 0) as rows_estimate_count_percent
-     FROM t
-     ORDER BY total_size DESC
-     --ORDER BY rows_estimate_count DESC
-    )
-UNION ALL
-(SELECT 'TOTAL',
-        pg_size_pretty(SUM(table_size)),
-        pg_size_pretty(SUM(toast_size)),
-        pg_size_pretty(SUM(indexes_size)),
-        pg_size_pretty(SUM(total_size)),
-        100,
-        regexp_replace(SUM(rows_estimate_count)::text, '(?<=\d)(?<!\.[^.]*)(?=(\d\d\d)+(?!\d))', ',', 'g'),
-        100
- FROM t);
-```
+Выполните запрос [`pg_table_size_count.sql`](dba/pg_table_size_count.sql)
+
+В результате вы получите примерно такую таблицу:
+
+| relation | table\_size\_pretty | toast\_size\_pretty | indexes\_size\_pretty | total\_size\_pretty | total\_size\_percent | rows\_estimate\_count\_pretty | rows\_estimate\_count\_percent |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| public.table_a | 25 GB | 2455 MB | 24 GB | 51 GB | 7.6 | 21,213,390 | 0.72 |
+| public.table_b | 26 GB | 7568 kB | 21 GB | 48 GB | 7.06 | 330,934,528 | 11.27 |
+| public.table_c | 21 GB | 12 GB | 14 GB | 47 GB | 6.97 | 9,149,683 | 0.31 |
+| public.table_d | 35 GB | 324 MB | 3648 MB | 39 GB | 5.76 | 10,418,124 | 0.35 |
+| public.table_e | 28 GB | 5317 MB | 3035 MB | 36 GB | 5.31 | 33,890,060 | 1.15 |
+| … | … | … | … | … | … | … | … |
+
 
 ### Как получить список самых ресурсоёмких SQL запросов?
 
