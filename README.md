@@ -2219,24 +2219,7 @@ $TEST$;
 которые выполняются на реплике. Среди этих запросов могут быть "невиновные" запросы.
 Но можно терминировать только проблемные запросы и транзакции.
 
-Создайте файл `pg_terminate_backend_idle.sql`:
-```sql
-select pg_terminate_backend(pid)
-       -- e.*, a.* --для отладки
-from pg_stat_activity as a
-cross join lateral (
-    select NOW() - xact_start as xact_elapsed,          --длительность выполнения транзакции или NULL, если транзакции нет
-           NOW() - query_start as query_elapsed,        --длительность выполнения запроса всего
-           NOW() - state_change as state_change_elapsed --длительность выполнения запроса после изменения состояния (поля state)
-) as e
-where true
-  and a.pid != pg_backend_pid()
-  and state in ('idle', 'idle in transaction', 'idle in transaction (aborted)')
-  and wait_event = 'ClientRead' --https://postgrespro.ru/docs/postgresql/12/monitoring-stats#WAIT-EVENT-TABLE
-  --значение таймаутов в минутах д.б. меньше, чем указано на реплике в параметрах конфигурации max_standby_archive_delay или max_standby_streaming_delay
-  and (state_change_elapsed > interval '20 minutes' or xact_elapsed > interval '50 minutes')
-order by greatest(state_change_elapsed, query_elapsed, xact_elapsed) desc;
-```
+Создайте файл [`pg_terminate_backend_idle.sql`](dba/pg_terminate_backend_idle.sql):
 
 Запрос необходимо выполнять 1 раз в минуту (например, из крона).
 
@@ -2255,38 +2238,7 @@ $ crontab -l
 Среди этих запросов могут быть "невиновные" запросы.
 Но можно терминировать только проблемные запросы и транзакции.
 
-Создайте файл `pg_terminate_backend_lock.sql`:
-```sql
-select pg_terminate_backend(a.pid)
-       -- e.*, a.* --для отладки
-from pg_stat_activity as a
-cross join lateral (
-    select NOW() - a.xact_start as xact_elapsed,          --длительность выполнения транзакции или NULL, если транзакции нет
-           NOW() - a.query_start as query_elapsed,        --длительность выполнения запроса всего
-           NOW() - a.state_change as state_change_elapsed --длительность выполнения запроса после изменения состояния (поля state)
-) as e
-cross join pg_size_bytes(regexp_replace(trim(current_setting('track_activity_query_size')), '(?<![a-zA-Z])B$', '')) as s(track_activity_query_size_bytes)
-where true
-  and exists(
-      select
-      from pg_stat_activity as b
-      where true
-        and b.pid != a.pid --Идентификатор процесса
-        and b.datid = a.datid --OID базы данных, к которой подключён серверный процесс
-        and b.usesysid = a.usesysid --OID пользователя, подключённого к серверному процессу
-        and b.pid = any(pg_blocking_pids(a.pid)) --Серверный процесс заблокировал другие
-        and b.query = a.query --SQL запрос
-        and octet_length(b.query) < s.track_activity_query_size_bytes
-  )
-  --по умолчанию текст запроса обрезается до 1024 байт; это число определяется параметром track_activity_query_size
-  --обрезанные запросы игнорируем
-  and octet_length(a.query) < s.track_activity_query_size_bytes
-  and a.pid != pg_backend_pid()
-  and a.state = 'active' --серверный процесс выполняет запрос
-  and a.wait_event_type = 'Lock' --Lock: процесс ожидает тяжёлую блокировку
-  and e.state_change_elapsed > '15 second'::interval
-order by greatest(e.state_change_elapsed, e.query_elapsed, e.xact_elapsed) desc;
-```
+Создайте файл [`pg_terminate_backend_lock.sql`](dba/pg_terminate_backend_lock.sql):
 
 Запрос необходимо выполнять 1 раз в 15 секунд (например, из крона).
 
