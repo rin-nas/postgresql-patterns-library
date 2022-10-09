@@ -1,3 +1,5 @@
+--список таблиц с размером занимаемого места и примерным количеством строк
+
 WITH t AS (
     SELECT n.nspname || '.' || c.relname AS relation,
            pg_relation_size(c.oid) AS table_size,
