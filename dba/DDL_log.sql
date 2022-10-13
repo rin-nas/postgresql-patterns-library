@@ -85,6 +85,7 @@ $do$;
 
 create index ddl_log_transaction_id_index on db_audit.ddl_log (transaction_id);
 create index ddl_log_created_at_index on db_audit.ddl_log using brin (created_at);
+create index ddl_log_object_identity on db_audit.ddl_log(object_identity);
 
 ------------------------------------------------------------------------------------------------------------------------
 
@@ -224,3 +225,27 @@ cross join lateral (
 ) as t --on true
 where event = 'ddl_command_start' --and top_queries !~ '^DROP TABLE IF EXISTS'
 order by s.id desc;
+
+------------------------------------------------------------------------------------------------------------------------
+
+-- список последних созданных таблиц с датой создания
+
+create view db_audit.created_tables as
+select distinct on (object_identity) schema_name, table_name, created_at
+from db_audit.ddl_log as c
+cross join lateral to_regclass(object_identity) as oi(table_name)
+where tag = 'CREATE TABLE'
+      and object_type = 'table'
+      and schema_name != 'pg_temp'
+      and cardinality(string_to_array(object_identity, '.')) = 2
+and not exists(
+    select
+    from db_audit.ddl_log as d
+    where d.tag = 'DROP TABLE'
+      and d.object_type = 'table'
+      and d.object_identity = c.object_identity
+      and d.created_at > c.created_at
+)
+order by object_identity, created_at desc;
+
+table db_audit.created_tables order by created_at desc;
