@@ -1,4 +1,4 @@
---Назначение наиболее активных по чтению и записи таблиц (колонка usage)
+--Как узнать, какие самые частые действия в таблице совершаются?
 with s1 as (
     select
        --pg_stat_all_tables.schemaname || '.' || pg_stat_all_tables.relname as table_name,
