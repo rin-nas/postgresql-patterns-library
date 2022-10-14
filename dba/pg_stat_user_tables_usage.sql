@@ -27,15 +27,19 @@ with s1 as (
         round(modified::numeric * 100 / nullif(readed + modified, 0), 2) as modified_percent
     from s1
 )
-select
-    *,
-    concat_ws('+',
-      case when modified_percent < 20 then 'S' when modified_percent < 50 then 's' end, --select
-      case when inserted_percent > 90 then 'I' when inserted_percent > 30 then 'i' end, --insert
-      case when updated_percent  > 90 then 'U' when updated_percent  > 30 then 'u' end, --update
-      case when deleted_percent  > 90 then 'D' when deleted_percent  > 30 then 'd' end  --delete
-   ) as usage
-from s2
+, s3 as (
+    select
+        *,
+        concat_ws('+',
+          case when modified_percent < 20 then 'S' when modified_percent < 50 then 's' end, --select
+          case when inserted_percent > 90 then 'I' when inserted_percent > 30 then 'i' end, --insert
+          case when updated_percent  > 90 then 'U' when updated_percent  > 30 then 'u' end, --update
+          case when deleted_percent  > 90 then 'D' when deleted_percent  > 30 then 'd' end  --delete
+       ) as usage
+    from s2
+)
+select *
+from s3
 where readed > 1e6 --пропускаем таблицы, у которых мало чтений
 and modified > 1e6 --пропускаем таблицы, у которых мало модификаций
 order by modified_percent desc nulls last
