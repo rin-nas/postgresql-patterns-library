@@ -2242,7 +2242,7 @@ DDL команды обычно логируются в общем файлов�
 
 ### Как узнать, какие самые частые действия в таблице совершаются?
 
-Одна из целей — установить значение [`fillfactor`](https://www.cybertec-postgresql.com/en/what-is-fillfactor-and-how-does-it-affect-postgresql-performance/) для таблиц с частыми UPDATE, чтобы задействовать [Heap-Only Tuple update](https://www.cybertec-postgresql.com/en/hot-updates-in-postgresql-for-better-performance/).
+Одна из целей — установить значение [`fillfactor`](https://www.cybertec-postgresql.com/en/what-is-fillfactor-and-how-does-it-affect-postgresql-performance/) для таблиц с частыми UPDATE, чтобы задействовать [Heap-Only Tuple update](https://www.cybertec-postgresql.com/en/hot-updates-in-postgresql-for-better-performance/) для увеличения скорости работы.
 
 Готовое решение: [`pg_stat_user_tables_usage.sql`](dba/pg_stat_user_tables_usage.sql)
 
