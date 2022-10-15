@@ -325,3 +325,26 @@ FROM (
 GROUP BY KEY HAVING count(*)>1
 ORDER BY sum(pg_relation_size(idx)) DESC;
 ```
+
+# Создание индекса для uuid[]
+
+```sql
+CREATE TABLE someitems (
+    items uuid[]
+);
+
+CREATE INDEX someitems_items_index ON someitems USING GIN (items); --ERROR:  data type uuid[] has no default operator class for access method "gin"
+
+CREATE OPERATOR CLASS _uuid_ops DEFAULT FOR TYPE _uuid USING gin AS
+    OPERATOR 1 &&(anyarray, anyarray),
+    OPERATOR 2 @>(anyarray, anyarray),
+    OPERATOR 3 <@(anyarray, anyarray),
+    OPERATOR 4 =(anyarray, anyarray),
+    FUNCTION 1 uuid_cmp(uuid, uuid),
+    FUNCTION 2 ginarrayextract(anyarray, internal, internal),
+    FUNCTION 3 ginqueryarrayextract(anyarray, internal, smallint, internal, internal, internal, internal),
+    FUNCTION 4 ginarrayconsistent(internal, smallint, anyarray, integer, internal, internal, internal, internal),
+    STORAGE uuid;
+    
+SELECT * FROM someitems WHERE items @> ARRAY['171e9457-5242-406d-ab5e-523419794d18']::uuid[];
+```
