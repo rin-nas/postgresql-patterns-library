@@ -40,7 +40,7 @@ with s1 as (
 )
 select *
 from s3
-where readed > 1e6 --пропускаем таблицы, у которых мало чтений
-and modified > 1e6 --пропускаем таблицы, у которых мало модификаций
+--where readed > 1e6 --пропускаем таблицы, у которых мало чтений
+--and modified > 1e6 --пропускаем таблицы, у которых мало модификаций
 order by modified_percent desc nulls last
 limit 1000;
