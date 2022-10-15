@@ -1,7 +1,8 @@
 --Как узнать, какие самые частые действия в таблице совершаются?
 with s1 as (
     select
-       --pg_stat_all_tables.schemaname || '.' || pg_stat_all_tables.relname as table_name,
+       t.schemaname,
+       t.relname,
        relid::regclass as table_name,
        --pg_size_pretty(pg_relation_size(relid)),
        --(select spcname from pg_tablespace where oid=(select dattablespace from pg_database where datname=current_database())) as table_space,
