@@ -4,7 +4,7 @@ drop function if exists test.constraint_check(s text);
 
 create or replace function test.constraint_check(s text) returns bool as $$
 begin
-    perform pg_sleep(1); --emulate heavy check process, for example is_email() function
+    perform pg_sleep(1); --emulate heavy check process, for example is_email() function with big regexp
     raise notice 'constraint check: %', s;
     return true;
 end;
@@ -20,7 +20,7 @@ CREATE OR REPLACE FUNCTION test.trigger_check() RETURNS TRIGGER
     LANGUAGE plpgsql AS
 $$
 BEGIN
-    perform pg_sleep(1); --emulate heavy check process, for example is_email() function
+    perform pg_sleep(1); --emulate heavy check process, for example is_email() function with big regexp
     raise notice 'trigger check: %', NEW.s;
     RETURN NEW;
 END;
