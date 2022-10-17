@@ -249,3 +249,10 @@ and not exists(
 order by object_identity, created_at desc;
 
 table db_audit.created_tables order by created_at desc;
+
+/*
+-- разрешаем пользователю migration читать таблицы и схемы (но не изменять)
+GRANT USAGE ON SCHEMA db_audit TO migration;
+GRANT SELECT ON db_audit.ddl_log TO migration;
+GRANT SELECT ON db_audit.created_tables TO migration;
+*/
