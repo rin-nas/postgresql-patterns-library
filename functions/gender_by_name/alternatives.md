@@ -1,4 +1,4 @@
-Проблемы PHP [morpher_get_gender()](https://morpher.ru/php/extension/#rod)
+# Проблемы PHP [morpher_get_gender()](https://morpher.ru/php/extension/#rod)
 
 1. Умеет работать с ФИО только на кириллице, для других алфавитов выдаёт ошибку. Например, не умеет работать с именами в транслите типа Elena.
 1. Некорректно возвращает пол для неоднозначных уменьшительных русских имён типа Валя - female; Женя, Саша - male
@@ -8,3 +8,7 @@
    1. Сергеева Олег Николаевна - female
    1. Сергеев Ольга - female
    1. Сергеев Ольга Николаевич - male
+
+
+# gender_by_name
+http://ceur-ws.org/Vol-2754/paper3.pdf
