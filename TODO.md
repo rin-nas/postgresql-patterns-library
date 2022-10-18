@@ -76,6 +76,7 @@ ORDER BY raw_waste DESC, bloat DESC
 # MySQL to PostgreSQL
 
 1. https://stackoverflow.com/questions/1309624/simulating-mysqls-order-by-field-in-postgresql
+1. https://postgres.cz/wiki/PostgreSQL_SQL_Tricks_III#MySQL_function_group_concat_in_PostgreSQL
 
 # UPDATE/DELETE million rows ideas
 
