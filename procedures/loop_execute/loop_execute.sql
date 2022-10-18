@@ -640,6 +640,10 @@ comment on procedure loop_execute(
     --возвращаемые из процедуры параметры:
     inout result record
 ) is $$
+Update or delete rows incrementally in batches with multiple separate transactions.
+This maximizes your table availability since you only need to keep locks for a short period of time. Also allows dead rows to be reused.
+There is a progress of execution in percent and a prediction of the end work time!
+
 Процедура для обработки строк в больших таблицах (тысячи и миллионы строк) с контролируемым временем блокировки строк на запись.
 Принцип работы -- выполняет в цикле CTE DML запрос, который добавляет, обновляет или удаляет записи в таблице.
 В завершении каждого цикла изменения фиксируются (либо откатываются для целей тестирования, это настраивается).
