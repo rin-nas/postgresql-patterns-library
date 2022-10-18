@@ -47,7 +47,7 @@ declare
     rec record;
 begin
     for rec in
-        select * from json_each_text(input)
+        select * from json_each_text(input) order by length(key) desc
     loop
         str := replace(str, rec.key, rec.value);
     end loop;
