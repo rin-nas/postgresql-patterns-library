@@ -73,6 +73,10 @@ ORDER BY raw_waste DESC, bloat DESC
 1. /rdw/x/-/blob/develop/src/Rdw/X/NameSurnameSecondNameExtractor.php переделать на SQL
 1. Дать возможность в триггере для определения пола указывать пол явно - см. папку /TODO
 
+# MySQL to PostgreSQL
+
+1. https://stackoverflow.com/questions/1309624/simulating-mysqls-order-by-field-in-postgresql
+
 # UPDATE/DELETE million rows ideas
 
 ```sql
