@@ -41,8 +41,8 @@ begin
     create schema if not exists test;
     create table test.d();
 
-    assert table_description('test.d'::regclass) is null;
-    assert table_description('test.d'::regclass, 'table''d') = 'table''d';
+    assert table_description('test.d'::regclass) is null; --GET
+    assert table_description('test.d'::regclass, 'table''d') = 'table''d'; --SET
 
     drop table test.d;
 end
