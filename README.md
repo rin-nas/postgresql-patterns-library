@@ -1375,7 +1375,7 @@ drop table if exists test_history;
 create table test_history
 (
     id           integer generated always as identity primary key,
-    reference_id integer, -- идентификатор связанной сущности, FK быть не должно, т.к. запись м.б. удалена
+    reference_id integer not null, -- идентификатор связанной сущности, FK быть не должно, т.к. запись м.б. удалена
     triggered_at timestamp(0) with time zone not null default now() check (triggered_at <= now() + interval '10m'),
     old_data     jsonb,
     new_data     jsonb,
