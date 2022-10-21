@@ -9,7 +9,7 @@ as $$
         select v
         from unnest($1) with ordinality as t(v, pos)
         where array_position($2, v) is null
-        order by t.pos
+        order by pos
     );
 $$;
 
