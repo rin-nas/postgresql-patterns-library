@@ -13,7 +13,9 @@ declare
     rec record;
 begin
     for rec in
-        select * from jsonb_each_text(input) order by length(key) desc
+        select *
+        from jsonb_each_text(input)
+        order by length(key) desc --SORT, because JSONB type reorder pairs positions!
     loop
         str := replace(str, rec.key, rec.value);
     end loop;
@@ -28,6 +30,10 @@ begin
     assert replace_pairs('aaabaaba', jsonb_build_object(
         'aa', 2,
         'a', 1
+    )) = '21b2b1';
+    assert replace_pairs('aaabaaba', jsonb_build_object(
+        'a', 1,
+        'aa', 2
     )) = '21b2b1';
 end
 $$;
@@ -47,7 +53,9 @@ declare
     rec record;
 begin
     for rec in
-        select * from json_each_text(input) order by length(key) desc
+        select *
+        from json_each_text(input)
+        --order by length(key) desc --DO NOT SORT, because JSON type don't reorder pairs positions and we need preserve its!
     loop
         str := replace(str, rec.key, rec.value);
     end loop;
@@ -63,5 +71,9 @@ begin
         'aa', 2,
         'a', 1
     )) = '21b2b1';
+    assert replace_pairs('aaabaaba', json_build_object(
+        'a', 1,
+        'aa', 2
+    )) = '111b11b1';
 end
 $$;
