@@ -406,7 +406,7 @@ BEGIN
                 EXIT; --запрос выполнился успешно, выходим из цикла FOR ... LOOP
 
             EXCEPTION -- subtransaction ROLLBACK TO SAVEPOINT
-                WHEN lock_not_available THEN
+                WHEN lock_not_available /*55P03*/ THEN
                     IF cur_attempt < max_attempts THEN
                         batch_rows := ceil(batch_rows / multiplier);
                         time_elapsed := round(extract('epoch' from clock_timestamp() - attempts_time_start)::numeric, 2);
@@ -420,7 +420,7 @@ BEGIN
                             cur_attempt, max_attempts, current_setting('lock_timeout');
                         RAISE; -- raise the original exception
                     END IF;
-                WHEN query_canceled THEN
+                WHEN query_canceled /*57014*/ THEN
                     GET STACKED DIAGNOSTICS
                         exception_sqlstate  := RETURNED_SQLSTATE,	-- text	код исключения, возвращаемый SQLSTATE
                         exception_detail    := PG_EXCEPTION_DETAIL, -- text текст детального сообщения исключения (если есть)
@@ -430,7 +430,11 @@ BEGIN
                         RAISE; -- raise the original exception
                     END IF;
 
-                    RAISE WARNING 'Catched ERROR % of execute CTE query using: $1 := %, $2 := %, $3 := %', exception_sqlstate, start_id_bigint, batch_rows, offset_rows;
+                    IF uniq_column_type IN ('integer', 'bigint') THEN
+                        RAISE WARNING 'Catched ERROR % of execute CTE query using: $1 := %, $2 := %, $3 := %', exception_sqlstate, start_id_bigint, batch_rows, offset_rows;
+                    ELSE
+                        RAISE WARNING 'Catched ERROR % of execute CTE query using: $1 := %, $2 := %, $3 := %', exception_sqlstate, quote_literal(start_id_text), batch_rows, offset_rows;
+                    END IF;
 
                     IF batch_rows > 1 THEN
                         batch_rows := ceil(batch_rows / multiplier);
@@ -461,7 +465,7 @@ BEGIN
                     EXIT; --считаем, что часть запроса выполнилась успешно, выходим из цикла FOR ... LOOP
 
                 -- ошибки ограничения уникальности, максимальной длины полей и другие
-                WHEN others THEN
+                WHEN others /*все типы ошибок, кроме QUERY_CANCELED и ASSERT_FAILURE*/ THEN
                     GET STACKED DIAGNOSTICS
                         exception_sqlstate        := RETURNED_SQLSTATE,	-- text	код исключения, возвращаемый SQLSTATE
                         exception_column_name     := COLUMN_NAME,       -- text имя столбца, относящегося к исключению
@@ -478,6 +482,10 @@ BEGIN
                         RAISE WARNING 'Catched ERROR % of execute CTE query using: $1 := %, $2 := %, $3 := %', exception_sqlstate, start_id_bigint, batch_rows, offset_rows;
                     ELSE
                         RAISE WARNING 'Catched ERROR % of execute CTE query using: $1 := %, $2 := %, $3 := %', exception_sqlstate, quote_literal(start_id_text), batch_rows, offset_rows;
+                    END IF;
+
+                    IF exception_sqlstate ~ '^42' /*Класс 42 — Ошибка синтаксиса или нарушение правила доступа*/ THEN
+                        RAISE; -- raise the original exception
                     END IF;
 
                     IF cur_attempt = max_attempts THEN
