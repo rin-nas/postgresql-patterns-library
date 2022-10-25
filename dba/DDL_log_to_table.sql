@@ -1,4 +1,4 @@
---Журналирование DDL команды в таблицу БД
+--Журналирование (логирование) DDL команд в таблицу БД
 
 --Выполнять под суперпользователем postgres!
 
@@ -85,7 +85,7 @@ $do$;
 
 create index ddl_log_transaction_id_index on db_audit.ddl_log (transaction_id);
 create index ddl_log_created_at_index on db_audit.ddl_log using brin (created_at);
-create index ddl_log_object_identity on db_audit.ddl_log(object_identity);
+create index ddl_log_object_identity on db_audit.ddl_log(object_identity, object_type, created_at) where object_identity is not null;
 
 ------------------------------------------------------------------------------------------------------------------------
 
@@ -209,9 +209,7 @@ drop table if exists test.a, test.b;
 
 ------------------------------------------------------------------------------------------------------------------------
 
---запрос для аудита DDL запросов в общем виде
-
---explain
+create view db_audit.ddl_start_log as
 select s.*,
        t.events_total,
        t.max_created_at - s.transaction_start_at as transaction_duration
@@ -226,33 +224,77 @@ cross join lateral (
 where event = 'ddl_command_start' --and top_queries !~ '^DROP TABLE IF EXISTS'
 order by s.id desc;
 
+comment on view db_audit.ddl_start_log is 'История выполненных DDL команд с длительностью выполнения транзакции';
+
+--TEST
+table db_audit.ddl_start_log limit 100;
+
 ------------------------------------------------------------------------------------------------------------------------
 
--- список последних созданных таблиц с датой создания
-
-create view db_audit.created_tables as
-select distinct on (object_identity) schema_name, table_name, created_at
-from db_audit.ddl_log as c
-cross join lateral to_regclass(object_identity) as oi(table_name)
-where tag = 'CREATE TABLE'
-      and object_type = 'table'
-      and schema_name != 'pg_temp'
-      and cardinality(string_to_array(object_identity, '.')) = 2
-and not exists(
-    select
-    from db_audit.ddl_log as d
-    where d.tag = 'DROP TABLE'
-      and d.object_type = 'table'
-      and d.object_identity = c.object_identity
-      and d.created_at > c.created_at
+create view db_audit.objects as
+with t as (
+    select t.object_identity, t.object_type
+    from db_audit.ddl_log as t
+    where t.object_identity is not null
+      and t.object_type is not null
+      and (schema_name is null or schema_name not in ('pg_toast', 'pg_temp')) --служебные таблицы и индексы PG нас не интересуют, они удаляются автоматически вместе с таблицами
+      and object_type not in ('table column', 'index', 'sequence', 'table constraint', 'domain constraint', 'trigger') --всё это удаляется автоматически вместе с таблицами
+    group by t.object_identity, t.object_type
 )
-order by object_identity, created_at desc;
+select t.*,
+       c.created_at, c.tag as created_tag, c.top_queries as created_top_queries, c.context_stack as created_context_stack,
+       u.created_at as updated_at, u.tag as updated_tag, u.top_queries as updated_top_queries, u.context_stack as updated_context_stack
+from t
+left join db_audit.ddl_log as c --вычисляем дату-время создания
+    on c.object_identity = t.object_identity
+    and c.object_type = t.object_type
+    and c.tag ~ '^CREATE\M' --CREATE OR REPLACE
+    and not exists(
+            select
+            from db_audit.ddl_log as e
+            where e.tag ~ '^(DROP|CREATE)\M'
+              and e.object_identity = c.object_identity
+              and e.object_type = c.object_type
+              and e.created_at > c.created_at
+        )
+left join db_audit.ddl_log as u --вычисляем дату-время обновления
+    on u.object_identity = t.object_identity
+    and u.object_type = t.object_type
+    and u.tag ~ '^(CREATE|ALTER|COMMENT)\M' --CREATE OR REPLACE
+    and u.created_at is distinct from c.created_at
+    and not exists(
+            select
+            from db_audit.ddl_log as e
+            where e.tag ~ '^(DROP|CREATE|ALTER|COMMENT)\M'
+              and e.object_identity = u.object_identity
+              and e.object_type = u.object_type
+              and e.created_at > u.created_at
+       )
+where not (c.created_at is null and u.created_at is null) --исключаем уже удалённые объекты
+  and case t.object_type --исключаем уже удалённые объекты
+          when 'table' then to_regclass(t.object_identity) is not null
+          when 'view' then to_regclass(t.object_identity) is not null
+          when 'function' then to_regprocedure(t.object_identity) is not null
+          when 'procedure' then to_regprocedure(t.object_identity) is not null
+          when 'type' then to_regtype(t.object_identity) is not null
+          else true
+      end
+ --and t.object_identity !~ '^depers\M'
+order by coalesce(u.created_at, c.created_at) desc;
 
-table db_audit.created_tables order by created_at desc;
+comment on view db_audit.objects is $$
+    Список существующих объектов БД (схем, таблиц, представлений, типов, функций, процедур)
+    с датой-временем создания и обновления (если такие есть в истории выполненных DDL команд)
+$$;
 
+--TEST
+table db_audit.objects limit 100;
+
+------------------------------------------------------------------------------------------------------------------------
 /*
 -- разрешаем пользователю migration читать таблицы и схемы (но не изменять)
 GRANT USAGE ON SCHEMA db_audit TO migration;
 GRANT SELECT ON db_audit.ddl_log TO migration;
-GRANT SELECT ON db_audit.created_tables TO migration;
+GRANT SELECT ON db_audit.ddl_start_log TO migration;
+GRANT SELECT ON db_audit.objects TO migration;
 */
