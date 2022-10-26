@@ -164,7 +164,7 @@ BEGIN
             )
             --select * from s; --для отладки
             delete from db_audit.ddl_log as d
-            where d.id in (select s.id from s) -- наиболее эффективно удаление по первичному ключу
+            where d.id in (select s.id from s); -- наиболее эффективно удаление по первичному ключу
             --returning id --для отладки
 
         end if;
