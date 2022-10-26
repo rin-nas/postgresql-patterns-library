@@ -77,6 +77,7 @@
    1. [Как удалить десятки тысяч записей в таблице не блокируя все записи и не нагружая БД?](#Как-удалить-десятки-тысяч-записей-в-таблице-не-блокируя-все-записи-и-не-нагружая-БД)
    1. [Как для одной сущности сделать ограничение на количество вставляемых зависимых сущностей?](#Как-для-одной-сущности-сделать-ограничение-на-количество-вставляемых-зависимых-сущностей)
    1. [Как сделать журналирование изменений таблицы?](#Как-сделать-журналирование-изменений-таблицы)
+   1. [Как сделать автоматически обновляемое поле `updated_at`?](#Как-сделать-автоматически-обновляемое-поле-updated_at)
 
 **[Модификация схемы данных (DDL)](#Модификация-схемы-данных-DDL)**
    1. [Как добавить колонку в существующую таблицу без её блокирования?](#Как-добавить-колонку-в-существующую-таблицу-без-её-блокирования)
@@ -1448,6 +1449,30 @@ select * from test_history;
 | 2 | 2 | 2022-03-29 17:29:58 +03:00 | NULL | {"i": 2, "t": "two", "id": 2} |
 | 3 | 1 | 2022-03-29 17:29:58 +03:00 | {"i": 1, "t": "one"} | {"i": null, "t": "three"} |
 | 4 | 2 | 2022-03-29 17:29:58 +03:00 | {"i": 2, "t": "two", "id": 2} | NULL |
+
+### Как сделать автоматически обновляемое поле `updated_at`?
+
+Чтобы в поле `updated_at` хранилась дата-время последнего обновления строки:
+
+```sql
+CREATE OR REPLACE FUNCTION updated_at_set_now() RETURNS TRIGGER LANGUAGE plpgsql AS
+$$
+BEGIN
+    -- обновляем только в случае настоящих изменений в данных
+    IF (TG_OP = 'INSERT' OR NEW IS DISTINCT FROM OLD) THEN
+        NEW.updated_at = NOW();
+    END IF;
+    RETURN NEW;
+END;
+$$;
+ 
+-- 1 единый триггер
+CREATE TRIGGER {table}_updated_at_set_now BEFORE INSERT OR UPDATE ON {table} FOR EACH ROW EXECUTE PROCEDURE updated_at_set_now();
+ 
+-- или 2 отдельных триггера
+CREATE TRIGGER {table}_bi_updated_at_set_now BEFORE INSERT ON {table} FOR EACH ROW EXECUTE PROCEDURE updated_at_set_now(); --чтобы не подсунули updated_at = null
+CREATE TRIGGER {table}_bu_updated_at_set_now BEFORE UPDATE ON {table} FOR EACH ROW EXECUTE PROCEDURE updated_at_set_now();
+```
 
 ## Модификация схемы данных (DDL)
 
