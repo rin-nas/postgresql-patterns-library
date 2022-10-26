@@ -142,8 +142,8 @@ BEGIN
                current_schemas(true), pg_trigger_depth(), current_query(), stack,
                rec.object_type, rec.schema_name, rec.object_identity, rec.in_extension;
 
-        -- в истории создания и удаления временных таблиц храним только 100 последних строк,
-        -- остальное удаляем в момент создания временной таблицы
+        -- в истории создания и удаления временных таблиц храним только 1000 последних строк,
+        -- остальные удаляем в момент создания временной таблицы
         if rec.schema_name = 'pg_temp' and not is_deleted then
 
             is_deleted := true;
@@ -153,12 +153,12 @@ BEGIN
                 from db_audit.ddl_log as t
                 where t.schema_name = 'pg_temp'
                 order by t.created_at desc
-                offset 100
-            )
-            , s as (
+                offset 1000
+            ),
+            s as (
                 select m.id
-                from t
-                join db_audit.ddl_log as m on m.transaction_id = t.transaction_id
+                from db_audit.ddl_log as m
+                where m.transaction_id in (select t.transaction_id from t)
                 for update of m -- пытаемся заблокировать строки таблицы от изменения в параллельных транзакциях
                 skip locked -- если строки заблокировать не удалось, пропускаем их (они уже заблокированы в параллельных транзакциях)
             )
