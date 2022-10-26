@@ -84,8 +84,8 @@ end
 $do$;
 
 create index ddl_log_transaction_id_index on db_audit.ddl_log (transaction_id);
-create index ddl_log_created_at_index on db_audit.ddl_log using brin (created_at);
-create index ddl_log_object_identity on db_audit.ddl_log(object_identity, object_type, created_at) where object_identity is not null;
+create index ddl_log_multicolumn on db_audit.ddl_log (object_identity, object_type, created_at) where object_identity is not null;
+create index ddl_log_created_at_pg_temp on db_audit.ddl_log (created_at) where schema_name = 'pg_temp';
 
 ------------------------------------------------------------------------------------------------------------------------
 
@@ -123,6 +123,7 @@ AS $$
 DECLARE
     rec record;
     stack text;
+    is_deleted boolean not null default false;
 BEGIN
     GET DIAGNOSTICS stack := PG_CONTEXT;
     stack := nullif(regexp_replace(stack, '^[^\r\n]*\s*', ''), ''); --удаляем первую строку
@@ -140,6 +141,34 @@ BEGIN
                pg_conf_load_time(), pg_postmaster_start_time(), current_setting('server_version_num')::int,
                current_schemas(true), pg_trigger_depth(), current_query(), stack,
                rec.object_type, rec.schema_name, rec.object_identity, rec.in_extension;
+
+        -- в истории создания и удаления временных таблиц храним только 100 последних строк,
+        -- остальное удаляем в момент создания временной таблицы
+        if rec.schema_name = 'pg_temp' and not is_deleted then
+
+            is_deleted := true;
+
+            with t as (
+                select t.transaction_id
+                from db_audit.ddl_log as t
+                where t.schema_name = 'pg_temp'
+                order by t.created_at desc
+                offset 100
+            )
+            , s as (
+                select m.id
+                from t
+                join db_audit.ddl_log as m on m.transaction_id = t.transaction_id
+                for update of m -- пытаемся заблокировать строки таблицы от изменения в параллельных транзакциях
+                skip locked -- если строки заблокировать не удалось, пропускаем их (они уже заблокированы в параллельных транзакциях)
+            )
+            --select * from s; --для отладки
+            delete from db_audit.ddl_log as d
+            where d.id in (select s.id from s) -- наиболее эффективно удаление по первичному ключу
+            --returning id --для отладки
+
+        end if;
+
     END LOOP;
 
 END;
