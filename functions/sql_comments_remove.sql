@@ -51,10 +51,10 @@ $function$
 
 $function$;
 
-comment on function sql_comments_remove(
-    sql text
-) is 'Удаляет из SQL запроса однострочные и многострочные комментарии (заменяет их на пробел)';
-
+comment on function depers.sql_comments_remove(sql text) is $$
+    Удаляет из SQL запроса однострочные и многострочные комментарии (заменяет их на пробел)
+    For example, it's useful to clean up the query field returned by the pg_stat_statements extension and remove all comments.
+$$;
 
 --TEST
 DO $do$
