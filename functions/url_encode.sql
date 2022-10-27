@@ -1,4 +1,6 @@
-create or replace function urlencode(text)
+--see also extension https://github.com/okbob/url_encode with C implementation
+
+create or replace function url_encode(text)
     returns text
     language sql
     immutable
