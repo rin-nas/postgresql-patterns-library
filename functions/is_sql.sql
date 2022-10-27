@@ -110,3 +110,5 @@ alter table db_migration
         is_sql(sql_down)
     ) not valid;
 */
+
+--see also https://github.com/okbob/plpgsql_check/
