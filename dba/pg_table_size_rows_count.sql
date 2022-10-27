@@ -1,4 +1,5 @@
 --список таблиц с размером занимаемого места и примерным количеством строк
+--see also https://github.com/NikolayS/postgres_dba/blob/master/sql/2_table_sizes.sql
 
 WITH t AS (
     SELECT n.nspname || '.' || c.relname AS relation,
