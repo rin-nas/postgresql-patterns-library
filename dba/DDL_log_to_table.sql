@@ -69,7 +69,7 @@ begin
 
     comment on column db_audit.ddl_log.current_schemas is 'current_schemas(true) - имена схем в пути поиска, возможно включая схемы, добавляемые в него неявно';
     comment on column db_audit.ddl_log.trigger_depth is 'pg_trigger_depth() - текущий уровень вложенности в триггерах PostgreSQL (0, если эта функция вызывается (прямо или косвенно) не из тела триггера)';
-    comment on column db_audit.ddl_log.top_queries is 'current_query() - текст запроса, выполняемого в данный момент, в том виде, в каком его передал клиент (может состоять из нескольких операторов)';
+    comment on column db_audit.ddl_log.top_queries is 'trim(current_query()) - текст запроса, выполняемого в данный момент, в том виде, в каком его передал клиент (может состоять из нескольких операторов)';
     comment on column db_audit.ddl_log.context_stack is $$Стёк вызова, позволяет определить текущее место выполнения кода.
 В первой строке отмечается текущая функция и выполняемая в данный момент команда GET DIAGNOSTICS (она вырезается за ненадобностью).
 Во второй и последующих строках отмечаются функции выше по стеку вызовов$$;
@@ -109,7 +109,7 @@ BEGIN
     select TG_EVENT::db_audit.tg_event_type, TG_TAG, inet_client_addr(), inet_client_port(),
            pg_backend_pid(), nullif(trim(current_setting('application_name')), ''), session_user, current_user, txid_current(),
            pg_conf_load_time(), pg_postmaster_start_time(), current_setting('server_version_num')::int,
-           current_schemas(true), pg_trigger_depth(), current_query(), stack;
+           current_schemas(true), pg_trigger_depth(), trim(current_query()), stack;
 
 END;
 $$;
@@ -139,7 +139,7 @@ BEGIN
         select TG_EVENT::db_audit.tg_event_type, TG_TAG, inet_client_addr(), inet_client_port(),
                pg_backend_pid(), nullif(trim(current_setting('application_name')), ''), session_user, current_user, txid_current(),
                pg_conf_load_time(), pg_postmaster_start_time(), current_setting('server_version_num')::int,
-               current_schemas(true), pg_trigger_depth(), current_query(), stack,
+               current_schemas(true), pg_trigger_depth(), trim(current_query()), stack,
                rec.object_type, rec.schema_name, rec.object_identity, rec.in_extension;
 
         -- в истории создания и удаления временных таблиц храним только 1000 последних строк,
@@ -198,7 +198,7 @@ BEGIN
         select TG_EVENT::db_audit.tg_event_type, TG_TAG, inet_client_addr(), inet_client_port(),
                pg_backend_pid(), nullif(trim(current_setting('application_name')), ''), session_user, current_user, txid_current(),
                pg_conf_load_time(), pg_postmaster_start_time(), current_setting('server_version_num')::int,
-               current_schemas(true), pg_trigger_depth(), current_query(), stack,
+               current_schemas(true), pg_trigger_depth(), trim(current_query()), stack,
                rec.object_type, rec.schema_name, rec.object_identity;
     END LOOP;
 
