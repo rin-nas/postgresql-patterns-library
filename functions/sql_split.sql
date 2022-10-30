@@ -1,6 +1,6 @@
 create or replace function sql_split(
     sql text,
-    is_remove_empty_query boolean default true, --удалять пустые запросы, даже если там есть комментарии
+    is_remove_empty_query boolean default true, --удалять пустые запросы (даже если там есть только комментарии)
     is_remove_comments boolean default false --удалять комментарии (однострочные и многострочные)
 )
     returns text[]
