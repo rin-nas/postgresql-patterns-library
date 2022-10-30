@@ -1,17 +1,14 @@
--- TODO
--- Разбивает SQL скрипт на отдельные команды по разделителю ';'. На входе text, на выходе text[]. Опция bool is_comments_remove - удалять комментарии или нет.
-
 create or replace function sql_split(
     sql text,
-    is_remove_empty_query boolean default true,
-    is_remove_comments boolean default false
+    is_remove_empty_query boolean default true, --удалять пустые запросы, даже если там есть комментарии
+    is_remove_comments boolean default false --удалять комментарии (однострочные и многострочные)
 )
     returns text[]
     immutable
     returns null on null input
     parallel safe -- postgres 10 or later
     language plpgsql
-    cost 3
+    cost 5
 as
 $func$
 declare
@@ -20,7 +17,7 @@ declare
     query_alt text not null default ''; --query с удалёнными комментариями
     queries text[] not null default array[]::text[];
     pattern constant text not null default $regexp$
-        (  #1 any
+        (  #1 all
              (--[^\r\n]*)                    #2 singe-line comment
           |  (/\*                            #3 multi-line comment (can be nested)
                [^*/]* #speed improves
@@ -86,12 +83,31 @@ begin
 end
 $func$;
 
+comment on function sql_split(sql text, is_remove_empty_query boolean, is_remove_comments boolean) is $$
+    Разбивает SQL скрипт на отдельные команды по разделителю ';'
+$$;
+
 --TEST
-select sql
-from unnest(sql_split($sql$
-    --comm;ent1
-    select -11.22 as "1;1", 's''tr', E'e\'f' from t;
-    /*comm;ent2 */
-    select $$test;$$ from t;--la;st1
-    /*la;st2*/
-$sql$, true, true)) as t(sql);
+do $do$
+    declare
+        sql constant text not null default $sql$
+                       --comm;ent1
+                       select -11.22 as "1;1", 's'';tr', E'e\';f' from t;
+                       /*comm;ent2 */
+                       select $$test;$$ from t;--la;st1
+                       /*la;st2*/
+                   $sql$;
+    begin
+
+        assert (select queries = array[$sql$select -11.22 as "1;1", 's'';tr', E'e\';f' from t$sql$,
+                                       $sql$select $$test;$$ from t$sql$]
+                 from sql_split(sql, true, true) as t(queries));
+
+        assert (select queries = array[$sql$--comm;ent1
+                       select -11.22 as "1;1", 's'';tr', E'e\';f' from t$sql$,
+                       $sql$/*comm;ent2 */
+                       select $$test;$$ from t$sql$]
+                   from sql_split(sql, true, false) as t(queries));
+
+    end;
+$do$;
