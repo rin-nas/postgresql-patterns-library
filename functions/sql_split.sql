@@ -90,8 +90,8 @@ end
 $func$;
 
 comment on function sql_split(sql text, is_remove_empty_query boolean, is_remove_comments boolean) is $$
-    Разбивает SQL скрипт на отдельные команды по разделителю ';'.
-    Split multiple SQL statements into individual SQL statements by simicolon delimiter.
+    SQL парсер, разбивает SQL скрипт на отдельные команды по разделителю ';'.
+    SQL parser, splits multiple SQL statements into individual SQL statements by simicolon delimiter.
 $$;
 
 --TEST
