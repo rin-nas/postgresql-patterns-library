@@ -8,7 +8,7 @@ create or replace function sql_split(
     returns null on null input
     parallel safe -- postgres 10 or later
     language plpgsql
-    cost 5
+    cost 10
 as
 $func$
 declare
@@ -60,6 +60,12 @@ declare
         )
     $regexp$;
 begin
+
+    --speed improvements
+    if position(';' in sql) = 0 then
+        return array[trim(sql, E' \r\n\t')];
+    end if;
+
     for rec in
         select m[1] as "all", m[2] as "comment1", m[3] as "comment2", m[4] as identifier,
                m[5] as string1, m[6] as string2, m[7] as string3, m[9] as semicolon
