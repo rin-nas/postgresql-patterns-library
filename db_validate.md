@@ -147,4 +147,4 @@ cross join lateral (
 where def_count != def_uniq_count;
 ```
 
-![visitors](https://visitor-badge.glitch.me/badge?page_id=github.com/rin-nas/postgresql-patterns-library)
+![visitors](https://visitor-badge.glitch.me/badge?page_id=github.com/rin-nas/postgresql-patterns-library/db_validate.md)
