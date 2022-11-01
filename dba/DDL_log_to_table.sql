@@ -1,4 +1,4 @@
---Журналирование (логирование) DDL команд в таблицу БД и аудит
+--Журналирование (логирование) DDL команд в таблицу БД
 
 --Выполнять под суперпользователем postgres!
 
@@ -99,7 +99,7 @@ DECLARE
     stack text;
 BEGIN
     GET DIAGNOSTICS stack := PG_CONTEXT;
-    stack := nullif(regexp_replace(stack, '^[^\r\n]*\s*', ''), ''); --удаляем первую строку
+    stack := nullif(regexp_replace(stack, '^[^\r\n]*\s*', ''), ''); --удаляем первую строку, она всегда одинаковая
 
     insert into db_audit.ddl_log (
         event, tag, client_addr, client_port,
@@ -126,7 +126,7 @@ DECLARE
     is_deleted boolean not null default false;
 BEGIN
     GET DIAGNOSTICS stack := PG_CONTEXT;
-    stack := nullif(regexp_replace(stack, '^[^\r\n]*\s*', ''), ''); --удаляем первую строку
+    stack := nullif(regexp_replace(stack, '^[^\r\n]*\s*', ''), ''); --удаляем первую строку, она всегда одинаковая
 
     FOR rec IN SELECT * FROM pg_event_trigger_ddl_commands()
     LOOP
@@ -185,7 +185,7 @@ DECLARE
     stack text;
 BEGIN
     GET DIAGNOSTICS stack := PG_CONTEXT;
-    stack := nullif(regexp_replace(stack, '^[^\r\n]*\s*', ''), ''); --удаляем первую строку
+    stack := nullif(regexp_replace(stack, '^[^\r\n]*\s*', ''), ''); --удаляем первую строку, она всегда одинаковая
 
     FOR rec IN SELECT * FROM pg_event_trigger_dropped_objects()
     LOOP
@@ -266,8 +266,6 @@ with t as (
     from db_audit.ddl_log as t
     where t.object_identity is not null
       and t.object_type is not null
-      and (schema_name is null or schema_name not in ('pg_toast', 'pg_temp')) --служебные таблицы и индексы PG нас не интересуют, они удаляются автоматически вместе с таблицами
-      and object_type not in ('table column', 'index', 'sequence', 'table constraint', 'domain constraint', 'trigger') --всё это удаляется автоматически вместе с таблицами
     group by t.object_identity, t.object_type
 )
 select t.*,
@@ -290,7 +288,7 @@ left join db_audit.ddl_log as u --вычисляем дату-время обн�
     on u.object_identity = t.object_identity
     and u.object_type = t.object_type
     and u.tag ~ '^(CREATE|ALTER|COMMENT)\M' --CREATE OR REPLACE
-    and u.created_at is distinct from c.created_at
+    and (c.created_at is null or u.created_at > c.created_at)
     and not exists(
             select
             from db_audit.ddl_log as e
@@ -308,7 +306,6 @@ where not (c.created_at is null and u.created_at is null) --исключаем �
           when 'type' then to_regtype(t.object_identity) is not null
           else true
       end
- --and t.object_identity !~ '^depers\M'
 order by coalesce(u.created_at, c.created_at) desc;
 
 comment on view db_audit.objects is $$
