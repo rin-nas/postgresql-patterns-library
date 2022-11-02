@@ -1,4 +1,5 @@
 -- TODO https://wiki.postgresql.org/wiki/Multi_Replace_plpgsql
+-- TODO добавить альтернативную функцию со вторым параметром text[], чтобы передавать array['search1', 'replace1', 'search2', 'replace2', ...]
 
 create or replace function replace_pairs(
     str text,
