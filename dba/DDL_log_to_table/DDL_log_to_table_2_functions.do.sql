@@ -2,7 +2,7 @@
 
 --Выполнять под суперпользователем postgres!
 
-create or replace function db_audit.grep_inet(str text)
+create or replace function db_audit.grep_ip(str text)
     returns table (order_num int, "all" text, addr inet, port int, mask int)
     stable
     returns null on null input
@@ -18,7 +18,7 @@ as $func$
                         $$
                           ( #1 all
                               (?<![\d.:/]) #boundary
-                              (\d{1,3}) \. (\d{1,3}) \. (\d{1,3}) \. (\d{1,3}) #2-5 addr 1..255
+                              (\d{1,3}) \. (\d{1,3}) \. (\d{1,3}) \. (\d{1,3}) #2-5 addr 0..255
                               (?:
                                   : (\d{1,5}) #6 port 1..65535
                                 | / (\d{1,2}) #7 mask 0..32
@@ -28,12 +28,12 @@ as $func$
                         $$, 'xg') as t(m)
     where not exists(select
                      from unnest(m[2:5]) u(e)
-                     where e::int not between 0 and 255)
+                     where e::int > 255)
       and (m[6] is null or m[6]::int between 1 and 65535)
-      and (m[7] is null or m[7]::int between 0 and 32);
+      and (m[7] is null or m[7]::int < 33);
 $func$;
 
-comment on function db_audit.grep_inet(str text) is $$
+comment on function db_audit.grep_ip(str text) is $$
     Захватывает из строки все существующие IP адреса.
     IP адрес может иметь необязательный порт или маску.
 $$;
@@ -102,7 +102,7 @@ declare
 begin
     --positive and negative both
     assert (select json_agg(to_json(t))::text = str_out
-            from db_audit.grep_inet(str_in) as t);
+            from db_audit.grep_ip(str_in) as t);
 end;
 $do$;
 
@@ -134,7 +134,7 @@ BEGIN
 
         select t.addr, t.port, true, nullif(rtrim(replace(app_name, t."all", ''), E'-, \r\n\t'), '')
         into addr, port, via_proxy, app_name
-        from db_audit.grep_inet(app_name) as t
+        from db_audit.grep_ip(app_name) as t
         where t.port is not null
         order by t.order_num desc
         limit 1;
@@ -181,7 +181,7 @@ BEGIN
 
         select t.addr, t.port, true, nullif(rtrim(replace(app_name, t."all", ''), E'-, \r\n\t'), '')
         into addr, port, via_proxy, app_name
-        from db_audit.grep_inet(app_name) as t
+        from db_audit.grep_ip(app_name) as t
         where t.port is not null
         order by t.order_num desc
         limit 1;
@@ -260,7 +260,7 @@ BEGIN
 
         select t.addr, t.port, true, nullif(rtrim(replace(app_name, t."all", ''), E'-, \r\n\t'), '')
         into addr, port, via_proxy, app_name
-        from db_audit.grep_inet(app_name) as t
+        from db_audit.grep_ip(app_name) as t
         where t.port is not null
         order by t.order_num desc
         limit 1;
