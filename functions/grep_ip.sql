@@ -1,4 +1,4 @@
-create or replace function grep_inet(str text)
+create or replace function grep_ip(str text)
     returns table (order_num int, "all" text, addr inet, port int, mask int)
     stable
     returns null on null input
@@ -24,12 +24,12 @@ as $func$
                         $$, 'xg') as t(m)
     where not exists(select
                      from unnest(m[2:5]) u(e)
-                     where e::int not between 0 and 255)
+                     where e::int > 255)
       and (m[6] is null or m[6]::int between 1 and 65535)
-      and (m[7] is null or m[7]::int between 0 and 32);
+      and (m[7] is null or m[7]::int < 33);
 $func$;
 
-comment on function grep_inet(str text) is $$
+comment on function grep_ip(str text) is $$
     Захватывает из строки все существующие IP адреса.
     IP адрес может иметь необязательный порт или маску.
 $$;
@@ -98,6 +98,6 @@ declare
 begin
     --positive and negative both
     assert (select json_agg(to_json(t))::text = str_out
-            from grep_inet(str_in) as t);
+            from grep_ip(str_in) as t);
 end;
 $do$;
