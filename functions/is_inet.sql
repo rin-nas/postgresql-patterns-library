@@ -85,6 +85,7 @@ do $do$
         assert public.is_inet('1::');
         assert public.is_inet('::1');
         assert public.is_inet('1:2:3:4:5:6:7:8');
+        assert public.is_inet('fe80::71d0:1c39:21c7:e566');
         assert public.is_inet('::255.255.255.255');
         assert public.is_inet('::ffff:0:255.255.255.255');
         assert public.is_inet('0000:0000:0000:0000:0000:ffff:255.255.255.255');
@@ -105,5 +106,6 @@ do $do$
         assert not public.is_inet('1:2:3:4:5:6:7:8:');
         assert not public.is_inet('1:2:3:4:5:6:7:8/-1');
         assert not public.is_inet('1:2:3:4:5:6:7:8/129');
+        assert not public.is_inet('98:fa:9b:52:59:f3');
     end
 $do$;
