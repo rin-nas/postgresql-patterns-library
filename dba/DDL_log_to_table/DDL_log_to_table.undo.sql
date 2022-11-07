@@ -10,7 +10,7 @@ DROP FUNCTION db_audit.ddl_command_start_log();
 DROP FUNCTION db_audit.ddl_command_end_log();
 DROP FUNCTION db_audit.sql_drop_log();
 
-DROP FUNCTION db_audit.grep_inet(str text);
+DROP FUNCTION db_audit.grep_ip(str text);
 
 drop view db_audit.objects, db_audit.ddl_start_log;
 drop table db_audit.ddl_log;
