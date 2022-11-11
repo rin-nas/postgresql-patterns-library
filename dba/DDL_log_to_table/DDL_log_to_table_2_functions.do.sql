@@ -119,6 +119,7 @@ DECLARE
     app_name text default nullif(trim(current_setting('application_name'), E' \r\n\t'), '');
     addr inet default inet_client_addr();
     port int default inet_client_port();
+    addr_port text;
     via_proxy boolean;
 
 BEGIN
@@ -132,12 +133,16 @@ BEGIN
     */
     if addr is null and port is null and app_name is not null then
 
-        select t.addr, t.port, true, nullif(rtrim(replace(app_name, t."all", ''), E'-, \r\n\t'), '')
-        into addr, port, via_proxy, app_name
+        select t."all", t.addr, t.port, true
+        into addr_port, addr, port, via_proxy
         from db_audit.grep_ip(app_name) as t
         where t.port is not null
         order by t.order_num desc
         limit 1;
+
+        if via_proxy is true then
+            app_name := nullif(rtrim(replace(app_name, addr_port, ''), E'-, \r\n\t'), '');
+        end if;
 
     end if;
 
@@ -166,6 +171,7 @@ DECLARE
     app_name text default nullif(trim(current_setting('application_name'), E' \r\n\t'), '');
     addr inet default inet_client_addr();
     port int default inet_client_port();
+    addr_port text;
     via_proxy boolean;
     is_deleted boolean not null default false;
 BEGIN
@@ -179,12 +185,16 @@ BEGIN
     */
     if addr is null and port is null and app_name is not null then
 
-        select t.addr, t.port, true, nullif(rtrim(replace(app_name, t."all", ''), E'-, \r\n\t'), '')
-        into addr, port, via_proxy, app_name
+        select t."all", t.addr, t.port, true
+        into addr_port, addr, port, via_proxy
         from db_audit.grep_ip(app_name) as t
         where t.port is not null
         order by t.order_num desc
         limit 1;
+
+        if via_proxy is true then
+            app_name := nullif(rtrim(replace(app_name, addr_port, ''), E'-, \r\n\t'), '');
+        end if;
 
     end if;
 
@@ -246,6 +256,7 @@ DECLARE
     app_name text default nullif(trim(current_setting('application_name'), E' \r\n\t'), '');
     addr inet default inet_client_addr();
     port int default inet_client_port();
+    addr_port text;
     via_proxy boolean;
 BEGIN
     GET DIAGNOSTICS stack := PG_CONTEXT;
@@ -258,12 +269,16 @@ BEGIN
     */
     if addr is null and port is null and app_name is not null then
 
-        select t.addr, t.port, true, nullif(rtrim(replace(app_name, t."all", ''), E'-, \r\n\t'), '')
-        into addr, port, via_proxy, app_name
+        select t."all", t.addr, t.port, true
+        into addr_port, addr, port, via_proxy
         from db_audit.grep_ip(app_name) as t
         where t.port is not null
         order by t.order_num desc
         limit 1;
+
+        if via_proxy is true then
+            app_name := nullif(rtrim(replace(app_name, addr_port, ''), E'-, \r\n\t'), '');
+        end if;
 
     end if;
 
