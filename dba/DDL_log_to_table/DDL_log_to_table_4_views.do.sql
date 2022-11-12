@@ -26,6 +26,8 @@ table db_audit.ddl_start_log limit 100;
 
 ------------------------------------------------------------------------------------------------------------------------
 
+--drop view db_audit.objects;
+
 create view db_audit.objects as
 with t as (
     select t.object_identity, t.object_type
@@ -36,11 +38,29 @@ with t as (
 )
 select t.*,
        --created:
-       c.created_at, c.tag as created_tag, c.top_queries as created_top_queries, c.context_stack as created_context_stack,
-       cd.events_total as created_events_total, cd.max_created_at - c.transaction_start_at as created_transaction_duration,
+       c.created_at,
+       c.tag as created_tag,
+       c.top_queries as created_top_queries,
+       c.context_stack as created_context_stack,
+       c.trigger_depth as created_trigger_depth,
+       c.application_name as created_application_name,
+       c.client_addr as created_client_addr,
+       c.client_port as created_client_port,
+       c.via_pooler as created_via_pooler,
+       cd.events_total as created_events_total,
+       cd.max_created_at - c.transaction_start_at as created_transaction_duration,
        --updated:
-       u.created_at as updated_at, u.tag as updated_tag, u.top_queries as updated_top_queries, u.context_stack as updated_context_stack,
-       ud.events_total as updated_events_total, ud.max_created_at - u.transaction_start_at as updated_transaction_duration
+       u.created_at as updated_at,
+       u.tag as updated_tag,
+       u.top_queries as updated_top_queries,
+       u.context_stack as updated_context_stack,
+       u.trigger_depth as updated_trigger_depth,
+       u.application_name as updated_application_name,
+       u.client_addr as updated_client_addr,
+       u.client_port as updated_client_port,
+       u.via_pooler as updated_via_pooler,
+       ud.events_total as updated_events_total,
+       ud.max_created_at - u.transaction_start_at as updated_transaction_duration
 from t
 left join db_audit.ddl_log as c --вычисляем дату-время создания
     on c.object_identity = t.object_identity
@@ -57,12 +77,17 @@ left join db_audit.ddl_log as c --вычисляем дату-время соз�
 left join db_audit.ddl_log as u --вычисляем дату-время обновления
     on u.object_identity = t.object_identity
     and u.object_type = t.object_type
-    and u.tag ~ '^(CREATE|ALTER|COMMENT)\M' --CREATE OR REPLACE
+    /*
+    GRANT and REVOKE does not work as expected, because
+    "object_type" is 'TABLE' instead 'view', "schema_name" is null, "object_identity" is null.
+    It's need to report PostgreSQL developers team.
+    */
+    and u.tag ~ '^(CREATE|ALTER|COMMENT|GRANT|REVOKE)\M'
     and (c.created_at is null or u.created_at > c.created_at)
     and not exists(
             select
             from db_audit.ddl_log as e
-            where e.tag ~ '^(DROP|CREATE|ALTER|COMMENT)\M'
+            where e.tag ~ '^(DROP|CREATE|ALTER|COMMENT|GRANT|REVOKE)\M'
               and e.object_identity = u.object_identity
               and e.object_type = u.object_type
               and e.created_at > u.created_at
@@ -101,4 +126,3 @@ GRANT SELECT ON db_audit.objects TO alexan;
 
 --TEST
 table db_audit.objects limit 100;
-
