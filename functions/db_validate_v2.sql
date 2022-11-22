@@ -348,7 +348,7 @@ select db_validate_v2(
     null, --schemas_ignore_regexp
     '{unused,migration,test}', --schemas_ignore
 
-    '(?<![a-z])(te?mp|test|unused|backups?|deleted)(?![a-z])', --tables_ignore_regexp
+    '(?<![a-z])(te?mp|test|unused|backups?|deleted)(?![a-z])|_\d{4}[_\-]\d\d?$', --tables_ignore_regexp
     '{_migration_versions}' --tables_ignore
 );
 
