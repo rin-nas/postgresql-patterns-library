@@ -28,7 +28,7 @@ BEGIN
     if checks is null or 'has_pk_uk' = any(checks) then
         raise notice 'check has_pk_uk';
 
-        WITH t AS (
+        WITH t AS materialized (
             SELECT t.*
             FROM information_schema.tables AS t
             WHERE t.table_type = 'BASE TABLE'
@@ -46,6 +46,7 @@ BEGIN
               -- исключаем схемы
               AND (schemas_ignore_regexp is null OR t.table_schema !~ schemas_ignore_regexp)
               AND t.table_schema::regnamespace != ALL (schemas_ignore)
+              AND pg_catalog.has_schema_privilege(t.table_schema, 'USAGE') --fix [42501] ERROR: permission denied for schema ...
 
               -- исключаем таблицы
               AND (tables_ignore_regexp is null OR p.table_full_name !~ tables_ignore_regexp)
@@ -75,7 +76,6 @@ BEGIN
             JOIN pg_class c ON c.oid = x.indrelid
             JOIN pg_am am ON am.oid = i.relam
             LEFT JOIN pg_namespace n ON n.oid = c.relnamespace
-            WHERE x.indisvalid -- в момент работы create/reindex index concurrently будут присутствовать "нерабочие" индексы
         ),
         index_data2 AS (
             SELECT *
@@ -86,6 +86,7 @@ BEGIN
             -- исключаем схемы
             AND (schemas_ignore_regexp is null OR t.table_schema !~ schemas_ignore_regexp)
             AND t.table_schema::regnamespace != ALL (schemas_ignore)
+            AND pg_catalog.has_schema_privilege(t.table_schema, 'USAGE') --fix [42501] ERROR: permission denied for schema ...
 
             -- исключаем таблицы
             AND (tables_ignore_regexp is null OR p.table_full_name !~ tables_ignore_regexp)
@@ -171,7 +172,7 @@ BEGIN
                 pg_get_indexdef(indexrelid) as indexdef
             from pg_index
             join pg_class on indexrelid = pg_class.oid
-            where indisvalid -- в момент работы create/reindex index concurrently будут присутствовать "нерабочие" индексы
+            where indisvalid
         ), fk_index_match as (
             select
                 fk_list.*,
@@ -274,6 +275,7 @@ BEGIN
           -- исключаем схемы
           AND (schemas_ignore_regexp is null OR t.table_schema !~ schemas_ignore_regexp)
           AND t.table_schema::regnamespace != ALL (schemas_ignore)
+          AND pg_catalog.has_schema_privilege(t.table_schema, 'USAGE') --fix [42501] ERROR: permission denied for schema ...
 
           -- исключаем таблицы
           AND (tables_ignore_regexp is null OR p.table_full_name !~ tables_ignore_regexp)
@@ -311,6 +313,7 @@ BEGIN
           -- исключаем схемы
           AND (schemas_ignore_regexp is null OR t.table_schema !~ schemas_ignore_regexp)
           AND t.table_schema::regnamespace != ALL (schemas_ignore)
+          AND pg_catalog.has_schema_privilege(t.table_schema, 'USAGE') --fix [42501] ERROR: permission denied for schema ...
 
           -- исключаем таблицы
           AND (tables_ignore_regexp is null OR p.table_full_name !~ tables_ignore_regexp)
@@ -334,6 +337,8 @@ BEGIN
 END
 $func$;
 
+--alter function db_validate_v2(text[], text, regnamespace[], text, regclass[]) owner to alexan;
+
 -- TEST
 -- запускаем валидатор БД
 select db_validate_v2(
@@ -343,8 +348,9 @@ select db_validate_v2(
     null, --schemas_ignore_regexp
     '{unused,migration,test}', --schemas_ignore
 
-    '(?<![a-z])(te?mp|test|unused|backups?|deleted)(?![a-z])|_\d{4}[_\-]\d\d?$', --tables_ignore_regexp
-    null --tables_ignore
+    '(?<![a-z])(te?mp|test|unused|backups?|deleted)(?![a-z])', --tables_ignore_regexp
+    '{_migration_versions}' --tables_ignore
 );
+
 
 --SELECT EXISTS(SELECT * FROM pg_proc WHERE proname = 'db_validate_v2'); -- проверяем наличие валидатора
