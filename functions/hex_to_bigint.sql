@@ -1,3 +1,5 @@
+-- TODO переделать и упростить, см. https://stackoverflow.com/questions/8316164/convert-hex-in-text-representation-to-decimal-number/8335376#8335376
+
 -- Adapted by Rinat from https://stackoverflow.com/questions/8316164/convert-hex-in-text-representation-to-decimal-number/8316731
 
 -- maximum length(hexval) is 32!
