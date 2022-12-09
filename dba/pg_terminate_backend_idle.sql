@@ -13,8 +13,10 @@
 
 */
 
+--inspired by https://stackoverflow.com/questions/12391174/how-to-close-idle-connections-in-postgresql-automatically/69528572
+
 select pg_terminate_backend(a.pid)
-       -- e.*, a.* --для отладки
+       --e.*, a.* --для отладки
 from pg_stat_activity as a
 cross join lateral (
     select NOW() - a.xact_start as xact_elapsed,          --длительность выполнения транзакции или NULL, если транзакции нет
@@ -24,7 +26,9 @@ cross join lateral (
 where true
   and a.pid != pg_backend_pid()
   and a.state in ('idle', 'idle in transaction', 'idle in transaction (aborted)')
-  and a.wait_event = 'ClientRead' --https://postgrespro.ru/docs/postgresql/12/monitoring-stats#WAIT-EVENT-TABLE
+  and a.wait_event_type = 'Client'
   --значение таймаутов в минутах д.б. меньше, чем указано на реплике в параметрах конфигурации max_standby_archive_delay или max_standby_streaming_delay
   and (e.state_change_elapsed > interval '20 minutes' or e.xact_elapsed > interval '50 minutes')
+  and a.application_name not in ('psql', 'pg_dump', 'pg_restore')
+  and a.usename != 'postgres'
 order by greatest(e.state_change_elapsed, e.query_elapsed, e.xact_elapsed) desc;
