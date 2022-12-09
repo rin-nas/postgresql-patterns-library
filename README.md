@@ -2214,16 +2214,16 @@ $TEST$;
 
 Чтобы реплике забрать изменения с мастера, она принудительно терминирует по таймауту все очень долгие запросы и транзакции, которые выполняются на реплике.
 
-Пример команд, которые нужно выполнить на мастере под суперпользователем:
+Пример команд, которые нужно выполнить на мастере (под суперпользователем):
 ```sql
 alter system set idle_session_timeout = '20m'; --PostgreSQL v14+
-alter system set idle_in_transaction_session_timeout='50m'; --PostgreSQL v9.6+
+alter system set idle_in_transaction_session_timeout = '50m'; --PostgreSQL v9.6+
 ```
 
-Пример команд, которые нужно выполнить на реплике:
+Пример команд, которые нужно выполнить на реплике (под суперпользователем):
 ```sql
 alter system set max_standby_archive_delay = '1h';
-show max_standby_streaming_delay = '1h';
+alter system set max_standby_streaming_delay = '1h';
 ```
 
 Не забудьте внести изменения в файл конфигурации `postgresql.conf` (узнать, где он находится можно командой `show config_file`).
