@@ -27,6 +27,6 @@ where true
   and a.wait_event_type = 'Client'
   --значение таймаутов в минутах д.б. меньше, чем указано на реплике в параметрах конфигурации max_standby_archive_delay или max_standby_streaming_delay
   and (e.state_change_elapsed > interval '20 minutes' or e.xact_elapsed > interval '50 minutes')
-  and a.application_name not in ('pg_dump', 'pg_restore')
+  and a.application_name not in ('pg_dump', 'pg_restore', 'walreceiver')
   and a.usename != 'postgres'
 order by greatest(e.state_change_elapsed, e.query_elapsed, e.xact_elapsed) desc;
