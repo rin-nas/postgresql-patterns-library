@@ -26,9 +26,9 @@ table db_audit.ddl_start_log limit 100;
 
 ------------------------------------------------------------------------------------------------------------------------
 
---drop view db_audit.objects;
+--drop view db_audit.ddl_objects;
 
-create view db_audit.objects as
+create view db_audit.ddl_objects as
 with t as (
     select t.object_identity, t.object_type
     from db_audit.ddl_log as t
@@ -118,12 +118,12 @@ where not (c.created_at is null and u.created_at is null) --исключаем �
       end
 order by coalesce(u.created_at, c.created_at) desc;
 
-comment on view db_audit.objects is $$
+comment on view db_audit.ddl_objects is $$
     Список существующих объектов БД (схем, таблиц, представлений, типов, функций, процедур)
     с датой-временем создания и обновления (если такие есть в истории выполненных DDL команд)
 $$;
 
-GRANT SELECT ON db_audit.objects TO alexan;
+GRANT SELECT ON db_audit.ddl_objects TO alexan;
 
 --TEST
-table db_audit.objects limit 100;
+table db_audit.ddl_objects limit 100;
