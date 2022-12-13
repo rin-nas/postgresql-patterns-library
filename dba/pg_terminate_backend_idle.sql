@@ -23,6 +23,7 @@ cross join lateral (
 ) as e
 where true
   and a.pid != pg_backend_pid()
+  and a.backend_type = 'client backend'
   and a.state in ('idle', 'idle in transaction', 'idle in transaction (aborted)')
   and a.wait_event_type = 'Client'
   --значение таймаутов в минутах д.б. меньше, чем указано на реплике в параметрах конфигурации max_standby_archive_delay или max_standby_streaming_delay
