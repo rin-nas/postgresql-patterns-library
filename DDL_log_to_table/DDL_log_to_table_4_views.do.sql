@@ -34,7 +34,7 @@ with t as (
     from db_audit.ddl_log as t
     where t.object_identity is not null
       and t.object_type is not null
-      and t.schema_name not in ('pg_temp', 'pg_toast') --speed improves and fix error caused function to_regclass(t.object_identity): [42501] ERROR: permission denied for schema pg_toast
+      and coalesce(t.schema_name, '') not in ('pg_temp', 'pg_toast') --speed improves and fix error caused function to_regclass(t.object_identity): [42501] ERROR: permission denied for schema pg_toast
     group by t.object_identity, t.object_type
 )
 select t.*,
