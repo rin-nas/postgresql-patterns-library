@@ -7,6 +7,7 @@ create or replace function scan_timeout(
     called on null input --returns null on null input
     parallel restricted
     language plpgsql
+    set search_path = ''
     cost 2
 as
 $$
@@ -18,9 +19,9 @@ BEGIN
         return true;
     end if;
 
-    raise exception
-          using errcode = 'query_canceled',
-          message = concat('Query cancelled by scan_timeout() function, timeout = ', timeout::text);
+    raise exception using
+        errcode = 'query_canceled',
+        message = concat('Query cancelled by scan_timeout() function, timeout = ', timeout::text);
 END
 $$;
 
@@ -36,6 +37,7 @@ create or replace function scan_timeout(
     called on null input --returns null on null input
     parallel restricted
     language plpgsql
+    set search_path = ''
     cost 2
 as
 $$
@@ -47,11 +49,11 @@ BEGIN
         return true;
     end if;
 
-    raise exception
-          using errcode = 'query_canceled',
-          message = concat('Query cancelled by scan_timeout() function, timeout = ', timeout::text),
-          hint = 'Detail error message has a JSON with id value, passed to scan_timeout() function',
-          detail = jsonb_build_object('id', id);
+    raise exception using
+        errcode = 'query_canceled',
+        message = concat('Query cancelled by scan_timeout() function, timeout = ', timeout::text),
+        hint = 'Detail error message has a JSON with id value, passed to scan_timeout() function',
+        detail = jsonb_build_object('id', id);
 END
 $$;
 
@@ -85,6 +87,7 @@ create or replace function scan_timeout(
     called on null input --returns null on null input
     parallel restricted
     language plpgsql
+    set search_path = ''
     cost 2
 as
 $$
@@ -96,11 +99,11 @@ BEGIN
         return true;
     end if;
 
-    raise exception
-          using errcode = 'query_canceled',
-          message = concat('Query cancelled by scan_timeout() function, timeout = ', timeout::text),
-          hint = 'Detail error message has a JSON with id value, passed to scan_timeout() function',
-          detail = jsonb_build_object('id', id);
+    raise exception using
+        errcode = 'query_canceled',
+        message = concat('Query cancelled by scan_timeout() function, timeout = ', timeout::text),
+        hint = 'Detail error message has a JSON with id value, passed to scan_timeout() function',
+        detail = jsonb_build_object('id', id);
 END
 $$;
 
@@ -116,6 +119,7 @@ create or replace function scan_timeout(
     called on null input --returns null on null input
     parallel restricted
     language plpgsql
+    set search_path = ''
     cost 2
 as
 $$
@@ -127,11 +131,11 @@ BEGIN
         return true;
     end if;
 
-    raise exception
-          using errcode = 'query_canceled',
-          message = concat('Query cancelled by scan_timeout() function, timeout = ', timeout::text),
-          hint = 'Detail error message has a JSON with id value, passed to scan_timeout() function',
-          detail = jsonb_build_object('id', id);
+    raise exception using
+        errcode = 'query_canceled',
+        message = concat('Query cancelled by scan_timeout() function, timeout = ', timeout::text),
+        hint = 'Detail error message has a JSON with id value, passed to scan_timeout() function',
+        detail = jsonb_build_object('id', id);
 END
 $$;
 
@@ -147,6 +151,7 @@ create or replace function scan_timeout(
     called on null input --returns null on null input
     parallel restricted
     language plpgsql
+    set search_path = ''
     cost 2
 as
 $$
@@ -158,11 +163,11 @@ BEGIN
         return true;
     end if;
 
-    raise exception
-          using errcode = 'query_canceled',
-          message = concat('Query cancelled by scan_timeout() function, timeout = ', timeout::text),
-          hint = 'Detail error message has a JSON with payload value, passed to scan_timeout() function',
-          detail = payload::text;
+    raise exception using
+        errcode = 'query_canceled',
+        message = concat('Query cancelled by scan_timeout() function, timeout = ', timeout::text),
+        hint = 'Detail error message has a JSON with payload value, passed to scan_timeout() function',
+        detail = payload::text;
 END
 $$;
 
@@ -178,6 +183,7 @@ create or replace function scan_timeout(
     called on null input --returns null on null input
     parallel restricted
     language plpgsql
+    set search_path = ''
     cost 2
 as
 $$
@@ -189,11 +195,11 @@ BEGIN
         return true;
     end if;
 
-    raise exception
-          using errcode = 'query_canceled',
-          message = concat('Query cancelled by scan_timeout() function, timeout = ', timeout::text),
-          hint = 'Detail error message has a JSON with payload value, passed to scan_timeout() function',
-          detail = payload::text;
+    raise exception using
+        errcode = 'query_canceled',
+        message = concat('Query cancelled by scan_timeout() function, timeout = ', timeout::text),
+        hint = 'Detail error message has a JSON with payload value, passed to scan_timeout() function',
+        detail = payload::text;
 END
 $$;
 
