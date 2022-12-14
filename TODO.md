@@ -116,7 +116,6 @@ END LOOP;
 
   1. https://postgrespro.ru/docs/postgresql/11/logical-replication
   1. https://blog.codacy.com/how-to-update-large-tables-in-postgresql/
-  1. https://dba.stackexchange.com/questions/41059/optimizing-bulk-update-performance-in-postgresql
   1. https://m.habr.com/en/company/lanit/blog/351160/ - PostgreSQL. Ускоряем деплой в семь раз с помощью «многопоточки»
   1. https://habr.com/ru/post/481610/ - PostgreSQL Antipatterns: обновляем большую таблицу под нагрузкой
 
