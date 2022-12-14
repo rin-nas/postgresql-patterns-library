@@ -241,7 +241,7 @@ BEGIN
     -- при преобразовании типа из regclass в text, функция quote_ident() вызывается автоматически
     table_name_quoted       := '(?:\m|(?="))' || regexp_replace(table_name::text, quote_regexp, '\\\1', 'g') || '(?:\M|(?<="))';
     uniq_column_name_quoted := '(?:\m|(?="))' || regexp_replace(quote_ident(uniq_column_name), quote_regexp, '\\\1', 'g') || '(?:\M|(?<="))';
-    query_type              := lower((array_remove(
+    query_type              := upper((array_remove(
                                     regexp_match(query, concat(query_type_regexp, '\s*', table_name_quoted), 'i'),
                                     null
                                ))[1]);
@@ -400,6 +400,10 @@ BEGIN
                     ELSIF stop_id_text IS NOT NULL THEN
                         EXECUTE format(count_query, table_name, uniq_column_name) USING start_id_text, stop_id_text INTO processed_rows;
                     END IF;
+                END IF;
+
+                IF query_type = 'DELETE' THEN
+                    processed_rows := affected_rows + processed_rows;
                 END IF;
 
                 offset_rows := 0;
