@@ -248,7 +248,7 @@ BEGIN
 
     IF query_type IS NULL THEN
         RAISE EXCEPTION 'Unknown CTE query type, expected INSERT/UPDATE/DELETE!'
-             USING HINT = 'Does CTE query has an INSERT/UPDATE/DELETE subquery?';
+             USING HINT = format('Does CTE query has an INSERT/UPDATE/DELETE subquery with table name %I ?', table_name::text);
     ELSIF query !~* format('%s\s*>\s*\$1\M', uniq_column_name_quoted) THEN
         RAISE EXCEPTION 'Entry "% > $1" is not found in your CTE query!', quote_ident(uniq_column_name)
             USING HINT = format('Add "%I > $1" to WHERE clause of SELECT subquery.', uniq_column_name);
