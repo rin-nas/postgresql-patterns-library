@@ -1,0 +1,2 @@
+--https://wiki.postgresql.org/wiki/First/last_(aggregate)
+--https://gitlab.com/depesz/first_last
