@@ -5,7 +5,7 @@
 DO $$
 DECLARE
     rec record;
-    result gender;
+    result depers.gender;
 BEGIN
     for rec in select * from (values
 
@@ -157,10 +157,10 @@ BEGIN
         ('Лошадь Пржевальского', 'unknown')
     ) as t(name, gender)
     loop
-        result = gender_by_name(rec.name);
+        result = depers.gender_by_name(rec.name);
         ASSERT
             -- результат сравнения должен вернуть boolean
-            result is not distinct from rec.gender::gender,
+            result is not distinct from rec.gender::depers.gender,
             -- если результат сравнения не true, то вернётся сообщение с ошибкой
             format('%L expected %L, returned %L', replace(rec.name, e'\n', '\n'), rec.gender, result);
     end loop;
