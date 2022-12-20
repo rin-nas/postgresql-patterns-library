@@ -10,6 +10,7 @@ create or replace function email_parse(
     returns null on null input
     parallel safe
     language sql
+    set search_path = ''
 as
 $$
     -- https://en.wikipedia.org/wiki/Email_address

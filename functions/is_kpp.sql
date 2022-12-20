@@ -4,6 +4,7 @@ create or replace function is_kpp(str text)
     returns null on null input
     parallel safe
     language sql
+    set search_path = ''
     cost 5
 as
 $$

@@ -1,6 +1,7 @@
 create or replace function slugify(str text)
     returns text
     language plpgsql
+    set search_path = ''
 as $$
 declare
 _out text;

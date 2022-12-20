@@ -11,6 +11,7 @@ create or replace function use_parallel(
     returns null on null input
     parallel safe
     language plpgsql
+    set search_path = ''
 as
 $$
 BEGIN

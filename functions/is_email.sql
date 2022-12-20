@@ -1,9 +1,10 @@
 create function is_email(email text)
     returns boolean
     parallel safe
-    language sql
     immutable
     returns null on null input
+    language sql
+    set search_path = ''
 as
 $$
 -- https://regex101.com/r/Q4dsL5/14

@@ -7,6 +7,7 @@ create or replace function table_description(
     --returns null on null input
     parallel safe -- Postgres 10 or later
     language plpgsql
+    set search_path = ''
 as
 $$
 declare

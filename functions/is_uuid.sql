@@ -4,6 +4,7 @@ create or replace function is_uuid(str text)
     returns null on null input
     parallel safe -- Postgres 10 or later
     language plpgsql
+    set search_path = ''
     cost 5
 as
 $$

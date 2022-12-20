@@ -9,6 +9,7 @@ create or replace function hex_to_bigint(hexval text)
     stable
     parallel safe
     language sql
+    set search_path = ''
 as
 $$
 select bit_or(get_byte(

@@ -27,6 +27,7 @@ create or replace function phone_parse(
     returns null on null input
     parallel safe
     language sql
+    set search_path = ''
 as
 $$
 with t as (

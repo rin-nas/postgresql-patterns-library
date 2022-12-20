@@ -10,6 +10,7 @@ create or replace function phone_serialize(
     --returns null on null input
     parallel safe
     language plpgsql
+    set search_path = ''
     cost 2
 as
 $$

@@ -6,6 +6,7 @@ CREATE OR REPLACE FUNCTION bit_set(num bigint, pos int, val boolean)
     SECURITY INVOKER
     PARALLEL SAFE
     LANGUAGE plpgsql
+    set search_path = ''
 AS $$
 DECLARE
     mask bigint default 1 << (pos - 1);

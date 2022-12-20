@@ -4,6 +4,7 @@ create or replace function is_ogrnip(str text)
     returns null on null input
     parallel safe
     language sql
+    set search_path = ''
     cost 2
 as
 $$

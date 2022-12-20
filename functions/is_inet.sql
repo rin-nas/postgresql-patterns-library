@@ -4,6 +4,7 @@ create or replace function public.is_inet(str text, is_notice boolean default fa
     parallel unsafe --(ERROR:  cannot start subtransactions during a parallel operation)
     stable
     language plpgsql
+    set search_path = ''
     cost 5
 as
 $func$

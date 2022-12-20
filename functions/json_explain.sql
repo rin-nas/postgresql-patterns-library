@@ -1,7 +1,10 @@
 CREATE OR REPLACE FUNCTION json_explain(
     query TEXT,
     params TEXT[] DEFAULT ARRAY[]::text[]
-) RETURNS SETOF JSON AS $$
+) RETURNS SETOF JSON
+    LANGUAGE plpgsql
+    set search_path = ''
+AS $$
 BEGIN
     RETURN QUERY
     EXECUTE 'EXPLAIN ('
@@ -9,7 +12,7 @@ BEGIN
          || ')'
          || query;
 END
-$$ LANGUAGE plpgsql;
+$$;
 
 --TEST
 SELECT (json_explain('SELECT * FROM pg_class', ARRAY['ANALYSE'])->0->'Plan'->>'Total Cost')::numeric as cost

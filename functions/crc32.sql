@@ -7,6 +7,7 @@ create or replace function crc32(t text)
     returns null on null input
     parallel safe
     language plpgsql
+    set search_path = ''
 as $$
 declare
     crc bigint default 0;

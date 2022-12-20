@@ -10,6 +10,7 @@ create or replace function replace_pairs(
     returns null on null input
     parallel safe -- postgres 10 or later
     language plpgsql
+    set search_path = ''
     cost 3
 as
 $func$

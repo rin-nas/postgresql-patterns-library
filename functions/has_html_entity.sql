@@ -4,6 +4,7 @@ create or replace function has_html_entity(str text)
     returns null on null input
     parallel safe -- Postgres 10 or later
     language sql
+    set search_path = ''
     cost 5
 as
 $$

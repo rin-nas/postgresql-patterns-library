@@ -9,6 +9,7 @@ CREATE OR REPLACE FUNCTION benchmark(loop_count int,
     strict
     parallel safe -- Postgres 10 or later
     language plpgsql
+    set search_path = ''
 AS
 $$
 BEGIN

@@ -6,6 +6,7 @@ create or replace function sql_comments_remove(
     returns null on null input
     parallel safe
     language sql
+    set search_path = ''
     cost 2
 as
 $function$

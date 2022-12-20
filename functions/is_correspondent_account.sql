@@ -7,6 +7,7 @@ create or replace function is_correspondent_account(
     --returns null on null input
     parallel safe
     language plpgsql
+    set search_path = ''
     cost 7
 as
 $func$

@@ -5,6 +5,7 @@ create or replace function is_json(str text, is_notice boolean default false)
     parallel unsafe --(ERROR:  cannot start subtransactions during a parallel operation)
     stable
     language plpgsql
+    set search_path = ''
 as
 $$ --
 DECLARE

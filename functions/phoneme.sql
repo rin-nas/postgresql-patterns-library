@@ -1,9 +1,10 @@
 -- Метафон на plpgsql, источник: https://habr.com/ru/post/341142/
 
 create or replace function phoneme (in_lexeme text)
-returns text
-language plpgsql
-immutable
+    returns text
+    immutable
+    language plpgsql
+    set search_path = ''
 as $$
 declare
   res varchar(100) DEFAULT '';
@@ -30,9 +31,10 @@ $$;
 
 
 create or replace function mquery(in_fullname text)
-returns text
-language plpgsql
-immutable
+    returns text
+    immutable
+    language plpgsql
+    set search_path = ''
 as $$
 declare
   res text;

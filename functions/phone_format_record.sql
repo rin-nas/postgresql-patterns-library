@@ -16,6 +16,7 @@ create or replace function phone_format_record(
     --returns null on null input
     parallel safe
     language sql
+    set search_path = ''
 as
 $$;
 select

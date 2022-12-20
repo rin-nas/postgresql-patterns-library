@@ -8,6 +8,7 @@ create or replace function sql_split(
     returns null on null input
     parallel safe -- postgres 10 or later
     language plpgsql
+    set search_path = ''
     cost 10
 as
 $func$

@@ -4,6 +4,7 @@ create or replace function array_diff(anyarray, anyarray)
     returns null on null input
     parallel safe -- Postgres 10 or later
     language sql
+    set search_path = ''
 as $$
     select array(
         select v

@@ -4,6 +4,7 @@ create or replace function is_datetime(str text, is_notice boolean default false
     --parallel safe
     stable
     language plpgsql
+    set search_path = ''
     set datestyle = 'ISO, DMY'
     cost 5
 as

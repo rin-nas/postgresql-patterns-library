@@ -16,6 +16,7 @@ create or replace function phone_unserialize(
     --returns null on null input
     parallel safe
     language plpgsql
+    set search_path = ''
     cost 3
 as
 $$

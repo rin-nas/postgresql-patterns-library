@@ -10,6 +10,7 @@ create or replace function phone_normalize(
     --returns null on null input
     parallel safe
     language plpgsql
+    set search_path = ''
     cost 10
 as
 $$
@@ -104,6 +105,7 @@ create or replace function phone_normalize(
     --returns null on null input
     parallel safe
     language sql
+    set search_path = ''
 as
 $$
     select phone_normalize(
@@ -121,6 +123,7 @@ create or replace function phone_normalize(
     returns null on null input
     parallel safe
     language sql
+    set search_path = ''
 as
 $$
     select

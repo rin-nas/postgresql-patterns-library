@@ -13,19 +13,20 @@ CREATE OR REPLACE FUNCTION typos_correct(
     timeout  interval,
     is_debug bool default false
 )
-RETURNS TABLE(
-    word_num      bigint,
-    word_from     text,
-    is_mistake    bool,
-    can_correct   bool,
-    words_to      jsonb,
-    words_details json
-)
-PARALLEL SAFE
-ROWS 10
-LANGUAGE SQL
-STABLE
-RETURNS NULL ON NULL INPUT
+    RETURNS TABLE(
+        word_num      bigint,
+        word_from     text,
+        is_mistake    bool,
+        can_correct   bool,
+        words_to      jsonb,
+        words_details json
+    )
+    PARALLEL SAFE
+    ROWS 10
+    STABLE
+    RETURNS NULL ON NULL INPUT
+    LANGUAGE SQL
+    set search_path = ''
 AS $BODY$
 /*
 Описание параметров на входе:

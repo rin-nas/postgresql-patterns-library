@@ -9,6 +9,7 @@ create or replace function csv_parse(
     strict
     parallel safe -- Postgres 10 or later
     language plpgsql
+    set search_path = ''
 as
 $func$
 -- https://en.wikipedia.org/wiki/comma-separated_values

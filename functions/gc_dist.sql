@@ -3,6 +3,7 @@ create or replace function gc_dist(
     lat2 double precision, lon2 double precision
 ) returns double precision
     language plpgsql
+    set search_path = ''
 AS $$
     -- https://en.wikipedia.org/wiki/Haversine_formula
     -- http://www.movable-type.co.uk/scripts/latlong.html

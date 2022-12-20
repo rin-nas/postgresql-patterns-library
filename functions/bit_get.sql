@@ -6,6 +6,7 @@ CREATE OR REPLACE FUNCTION bit_get(num bigint, pos int)
     SECURITY INVOKER
     PARALLEL SAFE
     LANGUAGE plpgsql
+    set search_path = ''
 AS $$
 begin
     if num < 0 then

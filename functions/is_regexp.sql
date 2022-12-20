@@ -4,6 +4,8 @@ CREATE OR REPLACE FUNCTION is_regexp(regexp text, is_notice boolean default fals
     returns null on null input
     parallel unsafe --(ERROR:  cannot start subtransactions during a parallel operation)
     language plpgsql
+    set search_path = ''
+    cost 5
 AS
 $$
 DECLARE

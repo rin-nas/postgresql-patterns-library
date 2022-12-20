@@ -17,6 +17,7 @@ create or replace function db_validate_v2(
     --returns null on null input
     parallel safe
     language plpgsql
+    set search_path = ''
 AS $func$
 DECLARE
     rec record;

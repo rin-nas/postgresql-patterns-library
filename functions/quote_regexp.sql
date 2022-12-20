@@ -4,6 +4,7 @@ create function quote_regexp(text) returns text
     returns null on null input
     parallel safe
     language plpgsql
+    set search_path = ''
 as
 $$
 BEGIN

@@ -1,7 +1,11 @@
 --see also extension https://github.com/okbob/url_encode with C implementation
 
 CREATE OR REPLACE FUNCTION url_decode(input text) RETURNS text
-LANGUAGE plpgsql IMMUTABLE STRICT AS $$
+    IMMUTABLE
+    STRICT
+    LANGUAGE plpgsql
+    set search_path = ''
+AS $$
 DECLARE
  bin bytea = '';
  byte text;

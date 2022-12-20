@@ -2,9 +2,10 @@
 
 create or replace function url_encode(text)
     returns text
-    language sql
     immutable
     strict
+    language sql
+    set search_path = ''
 as $$
 select
     string_agg(

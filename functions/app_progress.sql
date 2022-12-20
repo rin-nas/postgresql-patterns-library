@@ -8,6 +8,7 @@ create or replace function app_progress(
     parallel unsafe --NOT safe!
     volatile --NOT stable!
     language plpgsql
+    set search_path = ''
 as
 $$
 declare

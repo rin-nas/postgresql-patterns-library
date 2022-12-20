@@ -8,6 +8,7 @@ create or replace function phone_format(
     returns null on null input
     parallel safe
     language plpgsql
+    set search_path = ''
 as
 $$
 declare

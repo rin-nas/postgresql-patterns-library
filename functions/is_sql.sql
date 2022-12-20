@@ -3,6 +3,7 @@ CREATE OR REPLACE FUNCTION is_sql(sql text, is_notice boolean default false)
     returns null on null input
     parallel unsafe --(ERROR:  cannot start subtransactions during a parallel operation)
     language plpgsql
+    set search_path = ''
     cost 5
 AS
 $$

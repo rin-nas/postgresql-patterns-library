@@ -21,6 +21,7 @@ create or replace function path_parse(
     returns null on null input
     parallel safe
     language sql
+    set search_path = ''
 as
 $$
 select coalesce(case when left(m[1], 1) = '/' then '/' else '' end, '') as root,

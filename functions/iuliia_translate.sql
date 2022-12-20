@@ -1,7 +1,8 @@
 -- Функция транслитерации по правилам библиотеки "Юлия", https://github.com/nalgeon/iuliia
 create or replace function iuliia_translate(str text, rules jsonb) returns text
-    language plpgsql
     RETURNS NULL ON NULL INPUT
+    language plpgsql
+    set search_path = ''
 as
 $$
 DECLARE

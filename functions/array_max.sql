@@ -4,6 +4,7 @@ CREATE FUNCTION array_max(anyarray)
     returns null on null input
     parallel safe
     language sql
+    set search_path = ''
 AS $$
     SELECT max(x) FROM unnest($1) t(x);
 $$;

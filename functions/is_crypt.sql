@@ -7,6 +7,7 @@ create or replace function is_crypt(str text)
     returns null on null input
     parallel safe -- Postgres 10 or later
     language sql
+    set search_path = ''
 as
 $$
 select

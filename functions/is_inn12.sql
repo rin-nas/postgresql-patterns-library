@@ -5,6 +5,7 @@ create or replace function is_inn12(inn text) returns boolean
     strict
     parallel safe -- Postgres 10 or later
     language plpgsql
+    set search_path = ''
 as
 $$
 DECLARE
