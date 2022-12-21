@@ -1,7 +1,5 @@
 # TODO
 
-1. (done) Исправить ошибку: `db_audit.objects` не отображает триггеры
-1. (done) Переименовать `db_audit.objects` на `db_audit.ddl_objects`. У всех таблиц и представлений д.б. префикс `ddl_`.
 1. Доработать `db_audit.ddl_objects`, чтобы корректно показывал дату создания и обновления для `CREATE VIEW` и `CREATE OR REPLACE VIEW`.
    С `CREATE [OR REPLACE] FUNCTION/PROCEDURE` уже сложнее, т.к. нужно ещё учитывать параметры функции. Добавить колонку `transaction_id`.
 1. Команды с опцией `IF [NOT] EXISTS`, которые создают только 1 событие `ddl_command_start` не выполняются, т.к. объект уже [не] существует. 
