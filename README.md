@@ -2000,7 +2000,7 @@ SELECT (SELECT datname FROM pg_database as d WHERE d.oid = s.dbid) AS dbname,
        pg_size_pretty(temp_blks_written * current_setting('block_size')::int) AS temp_written_total,
        pg_size_pretty(temp_blks_written * current_setting('block_size')::int / calls) AS temp_written_avg,
        query
-FROM pg_stat_statements
+FROM pg_stat_statements AS s
 WHERE temp_blks_written > 0
 ORDER BY temp_blks_written / calls DESC
 LIMIT 20;
