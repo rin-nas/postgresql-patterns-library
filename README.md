@@ -1954,20 +1954,26 @@ select * from pg_available_extensions where installed_version is not null;
 create extension if not exists pg_stat_statements;
 
 SELECT
-    (s.total_time / 1000 / 60) as total_time_minutes,
-    round((s.total_time * 100 / sum(s.total_time) over())::numeric, 2) as percent,
-    d.datname, s.query, s.calls, s.mean_time, s.stddev_time, s.rows,
+    t.total_time / 1000 / 60 as total_time_minutes,
+    round((t.total_time * 100 / sum(t.total_time) over())::numeric, 2) as percent,
+    d.datname, s.query, s.calls, t.mean_time, t.stddev_time, s.rows,
     s.shared_blks_hit, s.shared_blks_read
 FROM pg_stat_statements as s
 INNER JOIN pg_database as d ON d.oid = s.dbid
+--Add CROSS JOIN LATERAL for PG14+
+CROSS JOIN LATERAL (
+    SELECT s.total_plan_time + s.total_exec_time AS total_time,
+           s.mean_plan_time + s.mean_exec_time AS mean_time,
+           s.stddev_plan_time + s.stddev_exec_time AS stddev_time
+) AS t
 --WHERE query ~* '(^|\n)\s*\m(insert\s+into|update|delete|truncate)\M' --только DML запросы
 WHERE s.query !~* '(^|\n)\s*\m(insert\s+into|update|delete|truncate)\M' --исключая DML запросы
-ORDER BY s.total_time DESC -- самые долгие запросы по общему времени выполнения
+ORDER BY t.total_time DESC -- самые долгие запросы по общему времени выполнения
 --ORDER BY calls DESC      -- самые популярные по кол-ву
 --ORDER BY mean_time DESC  -- самые медленные в среднем (total_time / calls)
 --ORDER BY max_time DESC   -- самые медленные в пике
 --ORDER BY rows DESC       -- больше всего возвращают строк
-LIMIT 100
+LIMIT 100;
 ```
 
 Очистить статистику:
@@ -2001,6 +2007,12 @@ SELECT (SELECT datname FROM pg_database as d WHERE d.oid = s.dbid) AS dbname,
        pg_size_pretty(temp_blks_written * current_setting('block_size')::int / calls) AS temp_written_avg,
        query
 FROM pg_stat_statements AS s
+--Add CROSS JOIN LATERAL for PG14+
+CROSS JOIN LATERAL (
+    SELECT s.total_plan_time + s.total_exec_time AS total_time,
+           s.mean_plan_time + s.mean_exec_time AS mean_time,
+           s.stddev_plan_time + s.stddev_exec_time AS stddev_time
+) AS t
 WHERE temp_blks_written > 0
 ORDER BY temp_blks_written / calls DESC
 LIMIT 20;
