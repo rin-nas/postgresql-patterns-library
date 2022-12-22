@@ -1950,9 +1950,9 @@ select * from pg_available_extensions where installed_version is not null;
 * кол-во запросов за единицу времени
 * объём передаваемых и возвращаемых данных, их структуру и наличие дублирующих значений
 
-Необходимо установить расширение [pgstatstatements](https://postgrespro.ru/docs/postgresql/10/pgstatstatements).
-
 ```sql
+create extension if not exists pg_stat_statements;
+
 SELECT
     (s.total_time / 1000 / 60) as total_time_minutes,
     round((s.total_time * 100 / sum(s.total_time) over())::numeric, 2) as percent,
@@ -1988,10 +1988,14 @@ WHERE temp_files > 0
 ORDER BY temp_bytes DESC;
 ```
 
-Теперь подключимся к БД и посмотрим на SQL запросы
+Теперь посмотрим на SQL запросы
 ```sql
-SELECT interval '1 ms' * total_time AS exec_time_total,
+create extension if not exists pg_stat_statements;
+
+SELECT (SELECT datname FROM pg_database as d WHERE d.oid = s.dbid) AS dbname,
+       interval '1 ms' * total_time AS exec_time_total,
        interval '1 ms' * (total_time / calls) AS exec_time_avg,
+       rows,
        calls,
        pg_size_pretty(temp_blks_written * current_setting('block_size')::int) AS temp_written_total,
        pg_size_pretty(temp_blks_written * current_setting('block_size')::int / calls) AS temp_written_avg,
