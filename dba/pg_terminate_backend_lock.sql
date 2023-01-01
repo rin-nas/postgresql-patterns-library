@@ -47,4 +47,6 @@ where true
   and a.state = 'active' --серверный процесс выполняет запрос
   and a.wait_event_type = 'Lock' --Lock: процесс ожидает тяжёлую блокировку
   and e.state_change_elapsed > '15 second'::interval
+  and a.application_name not in ('pg_dump', 'pg_restore')
+  and a.usename != 'postgres'
 order by greatest(e.state_change_elapsed, e.query_elapsed, e.xact_elapsed) desc;
