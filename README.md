@@ -2206,8 +2206,8 @@ order by ti.table_page_read desc, ii.idx_page_read desc
 
 Одной командой, несколько таблиц с целостностью данных. Только схема `public`, без таблиц, которые начинаются со знака подчёркивания.
 ```bash
-pg_dump -U postgres -h 127.0.0.1 --exclude-table=_* --dbname={database_src} --schema=public --verbose \
-    | psql -U postgres -h 127.0.0.1 --dbname={database_dst} --single-transaction --set ON_ERROR_ROLLBACK=on 2> errors.txt
+pg_dump -U postgres -h 127.0.0.1 --exclude-table=_* --dbname=my_database_src --schema=public --verbose \
+    | psql -U postgres -h 127.0.0.1 --dbname=my_database_dst --single-transaction --set=ON_ERROR_ROLLBACK=on 2> errors.txt
 ```
 
 Двумя командами, только одну таблицу, через промежуточный сжатый файл.
