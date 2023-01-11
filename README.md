@@ -2213,12 +2213,12 @@ pg_dump -U postgres -h 127.0.0.1 --exclude-table=_* --dbname={database_src} --sc
 Двумя командами, только одну таблицу, через промежуточный сжатый файл.
 ```bash
 #на сервере A:
-pg_dump -U postgres -h 127.0.0.1 -t my_table --clean --if-exists my_database_src | pv | pzstd -19 > my_table.sql.zst
+pg_dump -U postgres -h 127.0.0.1 --table=my_table --clean --if-exists my_database_src | pv | pzstd -19 > my_table.sql.zst
 
 #копируем my_table.sql.zst с сервера A на сервер B
 
 #на сервере B:
-pv my_table.sql.zst | zstd -dcq | psql --username=postgres --host 127.0.0.1 --dbname=my_database_dst --set=ON_ERROR_STOP=1 --echo-errors
+pv my_table.sql.zst | zstd -dcq | psql --username=postgres --host=127.0.0.1 --dbname=my_database_dst --set=ON_ERROR_STOP=1 --echo-errors
 ```
 
 ### Как проверить синтаксис SQL кода без его выполнения?
