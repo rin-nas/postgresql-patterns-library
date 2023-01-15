@@ -368,3 +368,12 @@ time (pg_restore --username=postgres --dbname=company_review_tmp --clean --if-ex
       > /dev/null)
 ```
 See also [https://www.google.com/search?q=pg_restore+pg_dump+pv] 
+
+# pg_basebackup progress bar
+
+```sql
+select NOW() - query_start as duration,
+       backup_streamed * 100 / backup_total as progress_percent
+from pg_stat_progress_basebackup as b
+inner join pg_stat_activity as a on a.pid = b.pid
+```
