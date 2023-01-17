@@ -390,6 +390,6 @@ cross join lateral (
 ) as e
 cross join lateral (
     select
-        EXTRACT(epoch FROM e.duration) * 100 / e.progress_percent as estimated_duration
+        EXTRACT(epoch FROM e.duration) * 100 / e.progress_percent as estimated duration
 ) as e2;
 ```
