@@ -369,11 +369,27 @@ time (pg_restore --username=postgres --dbname=company_review_tmp --clean --if-ex
 ```
 See also [https://www.google.com/search?q=pg_restore+pg_dump+pv] 
 
-# pg_basebackup progress bar
+# pg_basebackup progress bar, estimated duration and query_end
+
 
 ```sql
-select NOW() - query_start as duration,
-       backup_streamed * 100 / backup_total as progress_percent
+SET TIME ZONE '+3'; --MSK
+
+select a.query_start,
+       e.duration,
+       e.progress_percent,
+       (e2.estimated_duration || 'sec')::interval as estimated_duration,
+       a.query_start + (e2.estimated_duration || 'sec')::interval as estimated_query_end
 from pg_stat_progress_basebackup as b
 inner join pg_stat_activity as a on a.pid = b.pid
+cross join lateral (
+    select
+        NOW() - query_start as duration,
+        backup_streamed * 100.0 / backup_total as progress_percent,
+        EXTRACT(epoch FROM NOW() - query_start) * 100 / (backup_streamed * 100 / backup_total) as estimated_duration
+) as e
+cross join lateral (
+    select
+        EXTRACT(epoch FROM e.duration) * 100 / e.progress_percent as estimated_duration
+) as e2;
 ```
