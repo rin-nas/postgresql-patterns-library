@@ -385,8 +385,7 @@ inner join pg_stat_activity as a on a.pid = b.pid
 cross join lateral (
     select
         NOW() - query_start as duration,
-        backup_streamed * 100.0 / backup_total as progress_percent,
-        EXTRACT(epoch FROM NOW() - query_start) * 100 / (backup_streamed * 100 / backup_total) as estimated_duration
+        backup_streamed * 100.0 / backup_total as progress_percent
 ) as e
 cross join lateral (
     select
