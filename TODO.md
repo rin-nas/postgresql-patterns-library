@@ -392,3 +392,21 @@ cross join lateral (
         EXTRACT(epoch FROM e.duration) * 100 / e.progress_percent as estimated_duration
 ) as e2;
 ```
+
+# copy progress bar with speed
+
+```sql
+select query_start,
+       e.duration,
+       pg_size_pretty(bytes_processed) as processed_size,
+       pg_size_pretty(bytes_processed / EXTRACT(epoch FROM e.duration)) || '/sec' as speed, --40 MB/sec
+       p.datname as db_name,
+       a.query,
+       a.application_name
+from pg_stat_progress_copy as p
+inner join pg_stat_activity as a on p.pid = a.pid
+cross join lateral (
+    select
+        NOW() - query_start as duration
+) as e
+```
