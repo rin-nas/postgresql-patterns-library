@@ -369,7 +369,7 @@ time (pg_restore --username=postgres --dbname=company_review_tmp --clean --if-ex
 ```
 See also [https://www.google.com/search?q=pg_restore+pg_dump+pv] 
 
-# pg_basebackup progress bar, estimated duration and query_end
+# pg_basebackup progress bar, estimated duration and query end
 
 
 ```sql
@@ -390,6 +390,6 @@ cross join lateral (
 ) as e
 cross join lateral (
     select
-        EXTRACT(epoch FROM e.duration) * 100 / e.progress_percent as estimated duration
+        EXTRACT(epoch FROM e.duration) * 100 / e.progress_percent as estimated_duration
 ) as e2;
 ```
