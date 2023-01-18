@@ -393,7 +393,7 @@ cross join lateral (
 ) as e2;
 ```
 
-# copy progress bar with speed
+# COPY progress bar with speed (MB/sec)
 
 ```sql
 select query_start,
