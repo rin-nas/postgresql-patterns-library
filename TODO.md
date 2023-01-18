@@ -399,7 +399,7 @@ cross join lateral (
 select query_start,
        e.duration,
        pg_size_pretty(bytes_processed) as processed_size,
-       pg_size_pretty(bytes_processed / EXTRACT(epoch FROM e.duration)) || '/sec' as speed, --40 MB/sec
+       pg_size_pretty(bytes_processed / EXTRACT(epoch FROM e.duration)) || '/sec' as speed,
        p.datname as db_name,
        a.query,
        a.application_name
