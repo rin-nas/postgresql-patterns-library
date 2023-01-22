@@ -1,4 +1,4 @@
---DEPRECATED, вызов этой функции при обработке миллионов строк занимает драгоценное время, используйте raise_exception(), пример смотри там же
+--DEPRECATED, вызов этой функции при вызове миллионов раз занимает драгоценное время, используйте raise_exception(), пример смотри там же
 
 create or replace function scan_timeout(
     timeout interval,
