@@ -31,6 +31,8 @@ $$;
 
 --select raise_exception(1234567890);
 --select raise_exception('ABCDE'::text);
+--select raise_exception(json_build_object('id', 123));
+--select raise_exception('1d2h3m4s'::interval);
 
 /*
 --explain
