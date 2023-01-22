@@ -1,3 +1,5 @@
+--DEPRECATED, вызов этой функции занимает драгоценное время, используйте raise_exception(), пример смотри там же
+
 create or replace function scan_timeout(
     timeout interval,
     start_at timestamptz default statement_timestamp()
