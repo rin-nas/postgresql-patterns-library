@@ -5,7 +5,7 @@ create or replace function raise_exception(
     message text default 'Unhandled value',
     detail text default '',
     hint text default 'See value in detail as JSON',
-    errcode text default  'raise_exception'
+    errcode text default 'raise_exception'
 )
     returns anyelement
     immutable
