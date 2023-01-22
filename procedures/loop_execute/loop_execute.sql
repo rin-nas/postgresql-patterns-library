@@ -445,7 +445,7 @@ BEGIN
                         batch_rows := ceil(batch_rows / multiplier);
                         CONTINUE;
                     ELSIF uniq_column_type IN ('integer', 'bigint') THEN
-                        --на этом id в scan_timeout() было брошено исключение 'query_canceled'
+                        --на этом id в raise_exception() было брошено исключение 'query_canceled'
                         stop_id_bigint := ((exception_detail::jsonb)->>'id')::bigint;
                         --поэтому последний stop_id_bigint будет перед ним
                         EXECUTE format(count_query_spec, table_name, uniq_column_name)
