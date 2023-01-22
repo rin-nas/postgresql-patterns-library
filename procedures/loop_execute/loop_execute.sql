@@ -426,11 +426,12 @@ BEGIN
                     END IF;
                 WHEN query_canceled /*57014*/ THEN
                     GET STACKED DIAGNOSTICS
-                        exception_sqlstate  := RETURNED_SQLSTATE,	-- text	код исключения, возвращаемый SQLSTATE
-                        exception_detail    := PG_EXCEPTION_DETAIL, -- text текст детального сообщения исключения (если есть)
-                        exception_hint      := PG_EXCEPTION_HINT;   -- text текст подсказки к исключению (если есть)
+                        exception_sqlstate     := RETURNED_SQLSTATE,   -- text код исключения, возвращаемый SQLSTATE
+                        exception_message_text := MESSAGE_TEXT,        -- text текст основного сообщения исключения
+                        exception_detail       := PG_EXCEPTION_DETAIL, -- text текст детального сообщения исключения (если есть)
+                        exception_hint         := PG_EXCEPTION_HINT;   -- text текст подсказки к исключению (если есть)
 
-                    IF exception_hint !~ '\mscan_timeout()' THEN
+                    IF exception_message_text !~* '\mQuery cancelled by timeout\M' THEN
                         RAISE; -- raise the original exception
                     END IF;
 
