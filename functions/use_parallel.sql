@@ -1,3 +1,7 @@
+--DEPRECATED
+--вызов этой функции при вызове миллионов раз занимает драгоценное время, 
+--используйте выражение `abs(id) % core_max = core_num - 1` в коде SQL запроса
+
 create or replace function use_parallel(
     id bigint,
     core_num integer,
