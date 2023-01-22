@@ -28,5 +28,17 @@ end;
 $$;
 
 --TEST
+
 --select raise_exception(1234567890);
 --select raise_exception('ABCDE'::text);
+
+/*
+--explain
+select i
+from generate_series(1, 3000000) as x(i)
+where case when (clock_timestamp() - statement_timestamp() < '1s')
+           then true
+           else raise_exception(i)::bool
+      end
+order by i;
+*/
