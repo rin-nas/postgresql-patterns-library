@@ -36,7 +36,7 @@ $$;
 --explain
 select i
 from generate_series(1, 3000000) as x(i)
-where case when (clock_timestamp() - statement_timestamp() < '1s')
+where case when clock_timestamp() - statement_timestamp() < '1s'
            then true
            else raise_exception(i)::bool
       end
