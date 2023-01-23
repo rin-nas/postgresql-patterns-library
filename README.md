@@ -1333,7 +1333,7 @@ WHERE v.id = u.id;
 
 Например, как ограничить клиента максимум N заказами?
 
-Взято из доклада Ивана Фролкова ([презентация](https://pgconf.ru/2021/288643), [видео](https://youtu.be/zJP6FsfAlhI?t=847))
+Взято и адаптировано из доклада Ивана Фролкова ([презентация](https://pgconf.ru/2021/288643), [видео](https://youtu.be/zJP6FsfAlhI?t=847))
 
 ```sql
 
@@ -1342,7 +1342,7 @@ WHERE v.id = u.id;
 create or replace function trg_only_5() returns trigger as
 $code$
 begin
-    if tg_op='DELETE' or tg_op='UPDATE' and old.client_id=new.client_id then    
+    if tg_op = 'DELETE' or (tg_op = 'UPDATE' and old.client_id = new.client_id) then
         return;  
     end if;  
     
