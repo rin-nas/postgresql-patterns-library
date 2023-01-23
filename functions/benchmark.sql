@@ -11,8 +11,8 @@ $$
 DECLARE
     sql constant text default concat('select (', sql_expr, ') from generate_series(1, $1)');
 BEGIN
-    EXECUTE sql using loop_count;
-    RETURN clock_timestamp() - now();
+    EXECUTE sql USING loop_count;
+    RETURN clock_timestamp() - statement_timestamp();
 END
 $$;
 
