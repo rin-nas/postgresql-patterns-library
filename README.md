@@ -1347,7 +1347,7 @@ begin
     end if;  
     
     -- важный момент с блокировкой для параллельных транзакций:
-    perform pg_xact_advisory_lock('order'::regclass::oid::int, new.client_id);
+    perform pg_advisory_xact_lock('order'::regclass::oid::int, new.client_id);
     --perform from client c where c.id = new.client_id for update;  -- или альтернативный вариант с блокировкой записи
     
     if (select count(*) from order o where o.client_id = new.client_id) > 5 then
