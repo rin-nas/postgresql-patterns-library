@@ -1351,6 +1351,12 @@ begin
     --perform from client c where c.id = new.client_id for update;  -- или альтернативный вариант с блокировкой записи
     
     if (select count(*) from order o where o.client_id = new.client_id) > 5 then
+        /*
+        https://postgrespro.ru/docs/postgresql/14/errcodes-appendix - это коды ошибок в БД
+        БД умеет кидать ошибки с произвольными кодами, поэтому для 23U01 получается так:
+        23 - это класс, U - user defined, 01 - порядковый номер
+        Польза таких кодов ошибок в том, что по ним можно быстро найти проблемное место в программном коде приложения.
+        */
         raise sqlstate '23U01' using message='Too many orders';  
     end if;  
     return new;
