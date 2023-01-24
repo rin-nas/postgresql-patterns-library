@@ -1,18 +1,22 @@
 -- PostgreSQL equivalent of MySQL's BENCHMARK() function
 
 CREATE OR REPLACE FUNCTION benchmark(loop_count int, sql_expr text) returns interval
-    immutable
-    strict
-    parallel safe -- Postgres 10 or later
+    volatile
+    returns null on null input -- = strict
+    parallel unsafe -- Postgres 10 or later
+    security invoker
     language plpgsql
     set search_path = ''
 AS
 $$
 DECLARE
-    sql constant text default concat('select (', sql_expr, ') from generate_series(1, $1)');
+    sql text;
+    started_at timestamptz;
 BEGIN
+    sql := concat('select (', sql_expr, ') from generate_series(1, $1)');
+    started_at := clock_timestamp();
     EXECUTE sql USING loop_count;
-    RETURN clock_timestamp() - statement_timestamp();
+    RETURN clock_timestamp() - started_at;
 END
 $$;
 
