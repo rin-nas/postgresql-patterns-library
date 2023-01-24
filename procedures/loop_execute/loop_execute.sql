@@ -431,7 +431,7 @@ BEGIN
                         exception_detail       := PG_EXCEPTION_DETAIL, -- text текст детального сообщения исключения (если есть)
                         exception_hint         := PG_EXCEPTION_HINT;   -- text текст подсказки к исключению (если есть)
 
-                    IF exception_message_text !~* '\mQuery cancelled by timeout\M' THEN
+                    IF exception_message_text !~* '\m(query cancelled by timeout|scan_timeout)\M' THEN
                         RAISE; -- raise the original exception
                     END IF;
 
