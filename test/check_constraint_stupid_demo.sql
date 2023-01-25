@@ -1,3 +1,5 @@
+--TODO переделать триггеры на CONSTRAINT TRIGGER, см. https://postgrespro.ru/docs/postgresql/12/sql-createtrigger
+
 create schema if not exists test;
 drop table if exists test.test_check;
 drop function if exists test.constraint_check(s text);
