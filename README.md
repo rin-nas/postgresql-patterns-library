@@ -787,16 +787,17 @@ PostgreSQL [extension](https://github.com/citusdata/postgresql-hll) adding Hyper
 ```sql
 -- через подзапрос с EXISTS этой же таблицы
 SELECT
-    ROW_NUMBER() OVER(PARTITION BY d.name ORDER BY d.id ASC) AS duplicate_num, -- номер дубля
-    d.*
+    ROW_NUMBER() OVER w AS duplicate_num, -- номер дубля
+    *
 FROM person AS d
-WHERE EXISTS(SELECT 1
+WHERE EXISTS(SELECT
              FROM person AS t
              WHERE t.name = d.name -- в идеале на это поле должен стоять индекс
                    -- если нет первичного ключа, замените "id" на "ctid"
                    AND d.id != t.id -- оригинал и дубликаты
                    -- AND d.id > t.id -- только дубликаты
             )
+WINDOW w AS (PARTITION BY name ORDER BY id)
 ORDER BY name, duplicate_num
 ```
 
