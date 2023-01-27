@@ -1,5 +1,7 @@
 --Inspired by https://hakibenita.com/future-proof-sql
 
+--TODO: добавить ещё параметры, см. https://postgrespro.ru/docs/postgresql/14/plpgsql-errors-and-messages
+
 create or replace function raise_exception(
     value anyelement,
     message text default 'Unhandled value',
