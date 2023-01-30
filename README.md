@@ -1272,7 +1272,7 @@ WHERE id = 123
 После редактирования в GUI обновляем запись в БД:
 
 ```sql
-UPDATE t 
+UPDATE t
 SET col1 = 'val1',  col2 = 'val2', ...
 WHERE id = 123
 AND updated_at = '2019-11-08 00:58:33' -- сравниваем со значением из предыдущего SELECT запроса
@@ -1288,7 +1288,8 @@ RETURNING *
 См. [Stackoverflow](https://stackoverflow.com/questions/18797608/update-multiple-rows-in-same-query-using-postgresql)
 
 ```sql
-UPDATE users as u SET
+UPDATE users AS u 
+SET
   email = v.email,
   first_name = v.first_name,
   last_name = v.last_name
@@ -1296,7 +1297,7 @@ FROM (VALUES
   (1, 'hollis@weimann.biz', 'Hollis', 'O''Connell'),
   (2, 'robert@duncan.info', 'Robert', 'Duncan')
 ) as v(id, email, first_name, last_name)
-WHERE v.id = u.id;
+WHERE u.id = v.id;
 ```
 
 ### Как обновить или удалить миллионы записей в таблице не блокируя все записи и не нагружая БД?
