@@ -54,6 +54,10 @@ do $$
                     perform raise_exception('1d2h3m4s'::interval, null, null, null, null);
                 elsif i = 6 then
                     perform raise_exception(now());
+                elsif i = 7 then
+                    perform raise_exception(true);
+                elsif i = 8 then
+                    perform raise_exception(-123.456);
                 end if;
                 EXIT WHEN true;
             EXCEPTION WHEN others THEN
