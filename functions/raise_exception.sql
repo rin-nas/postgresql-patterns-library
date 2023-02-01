@@ -52,6 +52,7 @@ comment on function raise_exception(
     Wrapper for RAISE command with EXCEPTION level in PL/pgSQL language.
 $$;
 
+------------------------------------------------------------------------------------------------------------------------
 --TEST FUNCTION
 do $$
     DECLARE
