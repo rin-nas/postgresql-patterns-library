@@ -49,7 +49,7 @@ do $$
         exception_datatype text;
     BEGIN
         LOOP
-            BEGIN -- subtransaction SAVEPOINT
+            BEGIN
                 i := i + 1;
                 if i = 1 then
                     perform raise_exception(null::int);
