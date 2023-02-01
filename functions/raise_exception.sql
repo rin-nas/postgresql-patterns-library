@@ -32,6 +32,7 @@ begin
         table       = coalesce("table", ''),
         schema      = coalesce("schema", ''),
         datatype    = pg_typeof(value);
+    return null::bool;
 end;
 $$;
 
@@ -101,3 +102,5 @@ where case when clock_timestamp() - statement_timestamp() < '1s'
       end
 order by i;
 */
+
+--https://stackoverflow.com/questions/24882630/equivalent-or-alternative-method-for-raise-exception-statement-for-function-in-l
