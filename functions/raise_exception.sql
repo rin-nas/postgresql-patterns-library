@@ -47,7 +47,7 @@ comment on function raise_exception(
     "table"      text,
     "schema"     text
 ) is $$
-    Function to throwing an error for user value.
+    Function to throwing an error for unhandled/impossible value.
     Uses in SQL language.
     Wrapper for RAISE command with EXCEPTION level in PL/pgSQL language.
 $$;
