@@ -26,7 +26,7 @@ begin
         message = coalesce(message, 'Unhandled value'),
         detail  = coalesce(detail, coalesce(to_json(value), 'null'::json)::text),
         hint    = coalesce(hint, 'See value in detail as JSON'),
-        errcode = coalesce(errcode, 'raise_exception'),
+        errcode = coalesce(errcode, 'raise_exception'/*ERRCODE_RAISE_EXCEPTION (P0001)*/),
         column      = coalesce("column", ''),
         constraint  = coalesce("constraint", ''),
         table       = coalesce("table", ''),
@@ -34,6 +34,22 @@ begin
         datatype    = pg_typeof(value)::text;
     return null::bool;
 end;
+$$;
+
+comment on function raise_exception(
+    value anyelement,
+    message text,
+    detail  text,
+    hint    text,
+    errcode text,
+    "column"     text,
+    "constraint" text,
+    "table"      text,
+    "schema"     text
+) is $$
+    Function to throwing an error for user value.
+    Uses in SQL language.
+    Wrapper for RAISE command with EXCEPTION level in PL/pgSQL language.
 $$;
 
 --TEST FUNCTION
