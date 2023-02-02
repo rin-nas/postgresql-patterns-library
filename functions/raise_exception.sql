@@ -6,7 +6,7 @@ create or replace function raise_exception(
     value anyelement,
     message text default 'Unhandled value',
     detail  text default null,
-    hint    text default 'See value in detail as JSON',
+    hint    text default 'See value (type %s) in detail as JSON',
     errcode text default 'raise_exception',
     "column"     text default null,
     "constraint" text default null,
@@ -25,7 +25,7 @@ begin
     raise exception using
         message = coalesce(message, 'Unhandled value'),
         detail  = coalesce(detail, coalesce(to_json(value), 'null'::json)::text),
-        hint    = coalesce(hint, 'See value in detail as JSON'),
+        hint    = format(coalesce(hint, 'See value (type %s) in detail as JSON'), pg_typeof(value)::text),
         errcode = coalesce(errcode, 'raise_exception'/*ERRCODE_RAISE_EXCEPTION (P0001)*/),
         column      = coalesce("column", ''),
         constraint  = coalesce("constraint", ''),
@@ -122,6 +122,18 @@ select case finger
 from generate_series(1, 5) as hand(finger);
 
 --USE EXAMPLE 2
+select hand1.finger, hand2.finger
+from generate_series(1, 5) as hand1(finger)
+left join generate_series(1, 4 + 1) as hand2(finger) using (finger)
+--we are insured against mistakes:
+where case when hand1.finger between 1 and 5
+            and hand2.finger is not null
+           then true
+           else raise_exception(array[hand1.finger, hand2.finger])
+      end
+order by hand1.finger;
+
+--USE EXAMPLE 3
 select i
 from generate_series(1, 300) as x(i)
 where case when clock_timestamp() - statement_timestamp() < '1s'
