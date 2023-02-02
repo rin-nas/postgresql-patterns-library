@@ -119,7 +119,7 @@ select case finger
             when 5 then 'five'
             else raise_exception(finger)::text
        end
-from unnest(array[1, 2, 3, 4, 5]::int[]) as hand(finger);
+from generate_series(1, 5) as hand(finger);
 
 --USE EXAMPLE 2
 select i
