@@ -1,5 +1,6 @@
 # TODO
 
+1. Исправить [ошибку](https://github.com/rin-nas/postgresql-patterns-library/issues/4) для PostgreSQL v12: `[0A000] ERROR: DROP INDEX CONCURRENTLY must be first action in transaction`
 1. Доработать `db_audit.ddl_objects`, чтобы корректно показывал дату создания и обновления для `CREATE VIEW` и `CREATE OR REPLACE VIEW`.
    С `CREATE [OR REPLACE] FUNCTION/PROCEDURE` уже сложнее, т.к. нужно ещё учитывать параметры функции. Добавить колонку `transaction_id`.
 1. Команды с опцией `IF [NOT] EXISTS`, которые создают только 1 событие `ddl_command_start` не выполняются, т.к. объект уже [не] существует. 
