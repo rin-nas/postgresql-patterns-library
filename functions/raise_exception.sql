@@ -136,7 +136,7 @@ order by hand1.finger;
 --USE EXAMPLE 3
 select i
 from generate_series(1, 300) as x(i)
-where case when clock_timestamp() - statement_timestamp() < '1s'
+where case when clock_timestamp() < '1s' + statement_timestamp()
            then true
            else public.raise_exception(i)
       end
