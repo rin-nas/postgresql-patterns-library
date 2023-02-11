@@ -2,7 +2,7 @@
 
 --Documentation: https://postgrespro.ru/docs/postgresql/14/plpgsql-errors-and-messages
 
-create or replace function raise_exception(
+create or replace function public.raise_exception(
     value anyelement,
     message text default 'Unhandled value',
     detail  text default null,
@@ -36,7 +36,7 @@ begin
 end;
 $$;
 
-comment on function raise_exception(
+comment on function public.raise_exception(
     value anyelement,
     message text,
     detail  text,
@@ -69,23 +69,23 @@ do $$
             BEGIN
                 i := i + 1;
                 if i = 1 then
-                    perform raise_exception(null::int);
+                    perform public.raise_exception(null::int);
                 elsif i = 2 then
-                    perform raise_exception(1234567890, null);
+                    perform public.raise_exception(1234567890, null);
                 elsif i = 3 then
-                    perform raise_exception('ABCDE'::text, null, null);
+                    perform public.raise_exception('ABCDE'::text, null, null);
                 elsif i = 4 then
-                    perform raise_exception(json_build_object('id', 123), null, null, null);
+                    perform public.raise_exception(json_build_object('id', 123), null, null, null);
                 elsif i = 5 then
-                    perform raise_exception('1d2h3m4s'::interval, null, null, null, null);
+                    perform public.raise_exception('1d2h3m4s'::interval, null, null, null, null);
                 elsif i = 6 then
-                    perform raise_exception(now(), null, null, null, null, null);
+                    perform public.raise_exception(now(), null, null, null, null, null);
                 elsif i = 7 then
-                    perform raise_exception(true, null, null, null, null, null, null);
+                    perform public.raise_exception(true, null, null, null, null, null, null);
                 elsif i = 8 then
-                    perform raise_exception(-123.456, null, null, null, null, null, null, null);
+                    perform public.raise_exception(-123.456, null, null, null, null, null, null, null);
                 elsif i = 9 then
-                    perform raise_exception(point(0, 0), null, null, null, null, null, null, null, null);
+                    perform public.raise_exception(point(0, 0), null, null, null, null, null, null, null, null);
                 end if;
                 EXIT WHEN true;
             EXCEPTION WHEN others THEN
@@ -117,7 +117,7 @@ select case finger
             when 3 then 'three'
             when 4 then 'four'
             when 5 then 'five'
-            else raise_exception(finger)::text
+            else public.raise_exception(finger)::text
        end
 from generate_series(1, 5) as hand(finger);
 
@@ -129,7 +129,7 @@ left join generate_series(1, 4 + 1) as hand2(finger) using (finger)
 where case when hand1.finger between 1 and 5
             and hand2.finger is not null
            then true
-           else raise_exception(array[hand1.finger, hand2.finger])
+           else public.raise_exception(array[hand1.finger, hand2.finger])
       end
 order by hand1.finger;
 
@@ -138,7 +138,7 @@ select i
 from generate_series(1, 300) as x(i)
 where case when clock_timestamp() - statement_timestamp() < '1s'
            then true
-           else raise_exception(i)
+           else public.raise_exception(i)
       end
 order by i;
 
