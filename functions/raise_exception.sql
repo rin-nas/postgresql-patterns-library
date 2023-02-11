@@ -141,5 +141,3 @@ where case when clock_timestamp() < '1s' + statement_timestamp()
            else public.raise_exception(i)
       end
 order by i;
-
---TODO https://stackoverflow.com/questions/24882630/equivalent-or-alternative-method-for-raise-exception-statement-for-function-in-l
