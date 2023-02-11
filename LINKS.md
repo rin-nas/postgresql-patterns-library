@@ -82,9 +82,10 @@
    1. https://begriffs.com/posts/2017-08-27-deferrable-sql-constraints.html
    1. https://begriffs.com/posts/2017-10-21-sql-domain-integrity.html
    1. https://begriffs.com/posts/2018-03-20-user-defined-order.html
-      1. https://ru.wikipedia.org/wiki/Дерево_Штерна_—_Броко
-      1. https://www.youtube.com/watch?v=qPeD87HJ0UA&ab_channel=InsightsintoMathematics
-      1. https://wiki.postgresql.org/wiki/User-specified_ordering_with_fractions
-      1. https://github.com/begriffs/pg_rational
-      1. https://begriffs.com/pdf/dec2frac.pdf
+   1. https://ru.wikipedia.org/wiki/Дерево_Штерна_—_Броко
+   1. https://www.youtube.com/watch?v=qPeD87HJ0UA&ab_channel=InsightsintoMathematics
+   1. https://wiki.postgresql.org/wiki/User-specified_ordering_with_fractions
+   1. https://github.com/begriffs/pg_rational
+   1. https://begriffs.com/pdf/dec2frac.pdf
    1. YouTube: [Advanced SQL](https://www.youtube.com/playlist?list=PL1XF9qjV8kH12PTd1WfsKeUQU6e83ldfc) — Chapter #07 — [Video #57 — PL/SQL use case: spreadsheet evaluation](https://www.youtube.com/watch?v=s49M6oeqkok&list=PL1XF9qjV8kH12PTd1WfsKeUQU6e83ldfc&index=57&ab_channel=DatabaseSystemsResearchGroupatUT%C3%BCbingen)
+   1. https://hakibenita.com/sql-anomaly-detection Simple Anomaly Detection Using Plain SQL
