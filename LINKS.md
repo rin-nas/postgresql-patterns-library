@@ -34,6 +34,7 @@
    1. https://github.com/heroku/heroku-pg-extras - This plugin is used to obtain information about a Heroku Postgres instance, that may be useful when analyzing performance issues. This includes information about locks, index usage, buffer cache hit ratios and vacuum statistics.
    1. https://github.com/rvkulikov/pg-deps-management - Recursively backup all dependent views, then modify base tables, then recreate all backuped views
    1. https://github.com/sjstoelting/pgsql-tweaks - PostgreSQL Views and Functions
+   1. https://github.com/theory/pgtap/ - unit testing framework for PostgreSQL
 
 # StackOverflow
    1. https://stackoverflow.com/questions/7923237/return-pre-update-column-values-using-sql-only
