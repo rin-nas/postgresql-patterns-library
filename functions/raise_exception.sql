@@ -141,3 +141,6 @@ where case when clock_timestamp() < '1s' + statement_timestamp()
            else public.raise_exception(i)
       end
 order by i;
+
+--See also: https://github.com/decibel/pgerror
+
