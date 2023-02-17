@@ -50,8 +50,6 @@
 # Other
    1. https://postgres.ai/blog/20211018-postgresql-lock-trees
    1. https://www.citusdata.com/blog/2018/02/22/seven-tips-for-dealing-with-postgres-locks/
-   1. http://cwestblog.com/2018/10/27/postgresql-query-hierarchical-data-without-recursion/
-   1. http://cwestblog.com/2018/10/29/postgresql-recursively-query-hierarchical-data/
    1. http://www.pateldenish.com/2018/11/postgres-11-partitioning.html
    1. https://use-the-index-luke.com/no-offset — Как правильно делать постраничную навигацию без OFFSET
    1. https://www.jooq.org/sakila — БД, для которой есть примеры SQL запросов в документации MySQL
