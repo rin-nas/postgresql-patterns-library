@@ -72,7 +72,6 @@
    1. https://wiki.postgresql.org/wiki/ArrXor
    1. http://akorotkov.github.io/blog/2016/06/17/faceted-search/ Фасетный поиск
    1. https://postgrespro.ru/media/2016/11/08/pgconfeu-fts-2016.pdf Better Full Text Search in PostgreSQL
-   1. http://sqlfiddle.postgrespro.ru/ - песочница
    1. https://www.percona.com/blog/2019/07/22/automatic-index-recommendations-in-postgresql-using-pg_qualstats-and-hypopg/
    1. https://tech.binary.com/lock-contention-in-postgres/ (интересный способ уменьшить блокировки)
    1. **https://dataedo.com/kb/query/** Useful queries for popular relational databases to explore schema. Database Data Dictionary Query Toolbox
@@ -88,3 +87,8 @@
    1. https://begriffs.com/pdf/dec2frac.pdf
    1. YouTube: [Advanced SQL](https://www.youtube.com/playlist?list=PL1XF9qjV8kH12PTd1WfsKeUQU6e83ldfc) — Chapter #07 — [Video #57 — PL/SQL use case: spreadsheet evaluation](https://www.youtube.com/watch?v=s49M6oeqkok&list=PL1XF9qjV8kH12PTd1WfsKeUQU6e83ldfc&index=57&ab_channel=DatabaseSystemsResearchGroupatUT%C3%BCbingen)
    1. https://hakibenita.com/sql-anomaly-detection Simple Anomaly Detection Using Plain SQL (Детектирование аномалий)
+
+# Сервисы для выполнения SQL (песочница)
+   1. http://sqlfiddle.postgrespro.ru/
+   1. https://dbfiddle.uk/
+   1. https://www.db-fiddle.com/
