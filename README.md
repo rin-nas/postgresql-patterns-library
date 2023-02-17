@@ -241,6 +241,8 @@ CREATE TRIGGER person_email_check_update
 
 ### Переезд из MySQL в PostgreSQL
 
+http://mysqltopgsql.com/
+
 #### Как сделать аналог функции `group_concat()` из MySQL
 
 ```sql
