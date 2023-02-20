@@ -560,7 +560,7 @@ LIMIT 100
 
 #### Как для слова с опечаткой (ошибкой) получить наиболее подходящие варианты слов для замены (исправление опечаток)?
 
-Смотри [`typos_correct.sql`](functions/typos_correct/typos_correct.sql)
+Смотри [`typos_correct`](functions/typos_correct/)
 
 **Пример результата запроса**
 
