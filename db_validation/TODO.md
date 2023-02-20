@@ -86,3 +86,7 @@ FROM transactions
 WHERE transaction_timestamp >= '2023-02-05 00:00'
 AND transaction_timestamp < '2023-02-06 00:00';
 ```
+
+# Ссылки
+
+* https://fosdem.org/2023/schedule/event/postgresql_dont_do_this/attachments/slides/5948/export/events/attachments/postgresql_dont_do_this/slides/5948/DontDoThis.pdf
