@@ -1964,7 +1964,7 @@ select * from pg_available_extensions where installed_version is not null;
 
 ### Как получить список таблиц с размером занимаемого места и примерным количеством строк?
 
-Выполните запрос [`pg_table_size_count.sql`](dba/pg_table_size_count.sql)
+Выполните запрос [`pg_table_size_rows_count.sql`](dba/pg_table_size_rows_count.sql)
 
 В результате вы получите примерно такую таблицу:
 
