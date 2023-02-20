@@ -1087,6 +1087,8 @@ SELECT COUNT(*) FROM unnest(ARRAY[1,2,3,4,5,6]) as x(id) WHERE NOT EXISTS(
 ); --4
 ```
 
+Вместо `NOT IN(...)` лучше использовать `NOT EXISTS(...)`
+
 ### Особенности сравнения record и NULL
 
 Testing a ROW expression with IS NULL only reports TRUE if every single column is NULL.
