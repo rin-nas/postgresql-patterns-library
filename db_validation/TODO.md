@@ -33,7 +33,7 @@
    1. https://github.com/IMRSVDataLabs/imrsv-schema-linter
    1. https://gitlab.com/depesz/pgWikiDont/-/tree/master/
    1. https://www.google.com/search?q=postgresq+schema+linter - ещё ссылки здесь
-1. Объекты БД должны принадлежать одному владельцу (опциональная проверка), см. [`pg_object_owner.sql`](views/pg_object_owner.sql)
+1. Объекты БД должны принадлежать одному владельцу (опциональная проверка), см. [`pg_object_owner.sql`](../views/pg_object_owner.sql)
 1. Запретить использовать колонку с типом `varchar`. Нужно использовать тип `text` с ограничением, например: `check(length(col) between 0 and 100)`
 1. Запретить возможность вставки в таблицу (название не заканчивается на `_log` или `_history`) дубликатов строк, если есть PK на колонку id и нет UK без id. В этой проверке не участвуют колонка с PK, колонки с датой, датой-временем.
 1. Добавить проверку при наличии расширения https://github.com/okbob/plpgsql_check/
