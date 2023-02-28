@@ -241,6 +241,8 @@ CREATE TRIGGER person_email_check_update
 
 ### Переезд из MySQL в PostgreSQL
 
+>There isn’t anything MySQL can do that PostgreSQL can’t do.
+>However, there are things that PostgreSQL can do that MySQL can’t do.
 http://mysqltopgsql.com/
 
 #### Как сделать аналог функции `group_concat()` из MySQL
