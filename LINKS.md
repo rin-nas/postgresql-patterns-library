@@ -36,6 +36,7 @@
    1. https://github.com/sjstoelting/pgsql-tweaks - PostgreSQL Views and Functions
    1. https://github.com/theory/pgtap/ - unit testing framework for PostgreSQL
    1. https://github.com/cybertec-postgresql/pgfaceting - PostgreSQL extension to quickly calculate facet counts using inverted index built with roaring bitmaps
+   1. https://github.com/PostgREST/postgrest - PostgREST is a standalone web server that turns your PostgreSQL database directly into a RESTful API.
 
 # StackOverflow
    1. https://stackoverflow.com/questions/7923237/return-pre-update-column-values-using-sql-only
