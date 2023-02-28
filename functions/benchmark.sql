@@ -31,3 +31,11 @@ SELECT benchmark(100000, $$uuid_in(overlay(overlay(md5(random()::text || ':' || 
 SELECT benchmark(100000, $$md5(random()::text || clock_timestamp()::text)::uuid$$);
 
 SELECT benchmark(100000, $$gen_random_uuid()$$);
+
+/*
+SELECT benchmark(100000, $$public.gen_random_uuid()$$), public.gen_random_uuid() as guid
+union all
+SELECT benchmark(100000, $$public.uuid_generate_v7()$$), public.uuid_generate_v7()
+union all
+SELECT benchmark(100000, $$public.uuid_generate_v8()$$), public.uuid_generate_v8();
+*/
