@@ -6,6 +6,9 @@ CREATE DOMAIN email AS text CHECK(
 
 COMMENT ON DOMAIN email IS 'Aдрес электронной почты с минимальной, но быстрой валидацией';
 
+--Полная, но относительно медленная валидация email почти по спецификации:
+--https://github.com/rin-nas/postgresql-patterns-library#Как-провалидировать-значение-поля-только-если-оно-явно-указано-в-UPDATE-запросе
+
 --TEST
 
 do $$
