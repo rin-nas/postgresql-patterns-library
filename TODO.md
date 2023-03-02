@@ -388,3 +388,8 @@ cross join lateral (
         NOW() - query_start as duration
 ) as e
 ```
+
+# Parse recursive json:
+
+* https://stackoverflow.com/questions/52773714/postgresql-recursively-parsing-nested-json
+* https://stackoverflow.com/questions/69126374/automatically-normalizing-a-postgres-json-column-into-a-new-table
