@@ -7,7 +7,7 @@ create or replace function unicode_unescape(text)
     set search_path = ''
 as
 $func$
-    select right(left(('"' || $1 || '"')::jsonb::text, -1), -1);
+    select right(left(concat('"', $1, '"')::jsonb::text, -1), -1);
 $func$;
 
 comment on function unicode_unescape(text) is $$
