@@ -8,7 +8,7 @@ create or replace function unicode_unescape(text)
 as
 $func$
 BEGIN
-    if current_setting('server_version_num') < '140000' then
+    if current_setting('server_version_num') >= '140000' then
         return unistr($1);
     else
         $1 := replace($1, $$'$$, $$''$$);
