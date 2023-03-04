@@ -3,19 +3,11 @@ create or replace function unicode_unescape(text)
     immutable
     returns null on null input
     parallel safe -- Postgres 10 or later
-    language plpgsql
+    language sql
     set search_path = ''
 as
 $func$
-BEGIN
-    if current_setting('server_version_num') >= '140000' then
-        return unistr($1);
-    else
-        $1 := replace($1, $$'$$, $$''$$);
-        EXECUTE 'SELECT E''' || $1 || '''' INTO $1;
-        return $1;
-    end if;
-END
+    select right(left(('"' || $1 || '"')::jsonb::text, -1), -1);
 $func$;
 
 comment on function unicode_unescape(text) is $$
