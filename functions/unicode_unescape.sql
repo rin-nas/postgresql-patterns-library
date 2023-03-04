@@ -23,6 +23,7 @@ comment on function unicode_unescape(text) is $$
     Unicode characters should be specified as \uXXXX (4 hexadecimal digits).
 $$;
 
+--TEST
 do $$
   begin
     assert unicode_unescape('\u017D\u010F\u00E1r') = 'Žďár';
