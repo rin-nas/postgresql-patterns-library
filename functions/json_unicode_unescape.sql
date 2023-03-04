@@ -16,7 +16,7 @@ comment on function json_unicode_unescape(json) is $$
     Hint: convert json column to jsonb.
 $$;
 
-
+--TEST
 do $$
 begin
     assert json_unicode_unescape('"''\u017D\u010F\u00E1r, \\Нello\r\n\t \u270C, Привет! \ud83d\udc18\ud83d\ude03"'::json)::text = '"''Žďár, \\Нello\r\n\t ✌, Привет! 🐘😃"';
