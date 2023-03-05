@@ -1,4 +1,4 @@
--- pg_basebackup progress bar, copy speed, estimated duration, estimated datetime finish
+-- pg_basebackup progress bar, copy speed, estimated duration, estimated finish datetime
 -- Запуcкать под ролью postgres
 
 SET TIME ZONE '+3'; --MSK
