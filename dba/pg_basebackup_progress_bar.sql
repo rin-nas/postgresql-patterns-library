@@ -1,4 +1,7 @@
---pg_basebackup progress bar, copy speed, estimated duration, estimated datetime finish
+-- pg_basebackup progress bar, copy speed, estimated duration, estimated datetime finish
+-- Запуcкать под ролью postgres
+
+SET TIME ZONE '+3'; --MSK
 
 select pg_size_pretty(b.backup_streamed) as pretty_backup_streamed,
        pg_size_pretty(b.backup_total) as pretty_backup_total,
