@@ -41,6 +41,9 @@ from r
 where jsonb_typeof(value) not in ('object', 'array');
 $func$;
 
+comment on function jsonb_unnest_recursive(data jsonb) is 'Recursive parse nested JSON (arrays and objects), returns keys and its values';
+
+
 --TEST AND USING EXAMPLE
 select cardinality(path) as level, *
 from jsonb_unnest_recursive('{"id":123,"g":null,"a":[9,8],"name":"unknown"}'::jsonb)
