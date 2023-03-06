@@ -38,8 +38,7 @@ union all
 )
 select *
 from r
-where jsonb_typeof(value) not in ('object', 'array')
---order by path;
+where jsonb_typeof(value) not in ('object', 'array');
 $func$;
 
 --TEST AND USING EXAMPLE
