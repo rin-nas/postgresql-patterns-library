@@ -1,6 +1,15 @@
 -- pg_basebackup progress bar, copy speed, estimated duration, estimated finish datetime
 -- Запуcкать под ролью postgres
 
+/*
+При копировании БД через pg_basebackup этот SQL запрос показывает:
+* сколько уже скопировано в байтах и всего сколько скопировать нужно
+* сколько в процентах уже скопировано
+* скорость копирования (байт в секунду)
+* вычисляет (прогноз) сколько времени осталось на копирование
+* вычисляет (прогноз) когда именно закончится копирование (дата и время)
+*/
+
 SET TIME ZONE '+3'; --MSK
 
 select pg_size_pretty(b.backup_streamed) as pretty_backup_streamed,
