@@ -77,7 +77,7 @@ BEGIN
             JOIN pg_class c ON c.oid = x.indrelid
             JOIN pg_am am ON am.oid = i.relam
             LEFT JOIN pg_namespace n ON n.oid = c.relnamespace
-            WHERE x.indisvalid
+            WHERE x.indisvalid --игнорируем "нерабочие" индексы, которые ещё создаются командой create index concurrently
         ),
         index_data2 AS (
             SELECT *
