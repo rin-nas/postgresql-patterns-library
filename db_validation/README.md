@@ -12,7 +12,7 @@
 
 ## Описание работы
 
-Валидатор представляет из себя [функцию](functions/db_validate_v2.sql) в БД PostgreSQL 12+.
+Валидатор представляет из себя [функцию](../functions/db_validate_v2.sql) в БД PostgreSQL 12+.
 
 Запуск:
 
