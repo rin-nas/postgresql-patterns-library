@@ -30,12 +30,17 @@ table db_audit.ddl_start_log limit 100;
 
 create view db_audit.ddl_objects as
 with t as (
-    select t.object_identity, t.object_type
+    select t.schema_name, t.object_identity, t.object_type
     from db_audit.ddl_log as t
     where t.object_identity is not null
       and t.object_type is not null
-      and coalesce(t.schema_name, '') not in ('pg_temp', 'pg_toast') --speed improves and fix error caused function to_regclass(t.object_identity): [42501] ERROR: permission denied for schema pg_toast
-    group by t.object_identity, t.object_type
+      and coalesce(t.schema_name, '') not in ('pg_temp', 'pg_toast')
+    group by t.object_identity, t.object_type, t.schema_name
+    having t.schema_name is null
+        -- check schema exists, check schema access:
+        or coalesce((select has_schema_privilege(ns.nspname, 'USAGE')
+                       from pg_catalog.pg_namespace as ns
+                      where ns.nspname = t.schema_name), false)
 )
 select t.*,
        --created:
@@ -108,13 +113,20 @@ left join lateral (
     group by ud.transaction_id
 ) as ud on true
 where not (c.created_at is null and u.created_at is null) --исключаем уже удалённые объекты
-  and case t.object_type --исключаем уже удалённые объекты
-          when 'table' then to_regclass(t.object_identity) is not null
-          when 'view' then to_regclass(t.object_identity) is not null
-          when 'function' then to_regprocedure(t.object_identity) is not null
-          when 'procedure' then to_regprocedure(t.object_identity) is not null
-          when 'type' then to_regtype(t.object_identity) is not null
-          else true
+  --исключаем уже удалённые объекты:
+  and case t.object_type
+        --t.schema_name is null:
+        when 'schema' then coalesce((select has_schema_privilege(ns.nspname, 'USAGE')
+                                       from pg_catalog.pg_namespace as ns 
+                                      where ns.nspname = t.object_identity), false)
+        when 'trigger' then true --TODO https://stackoverflow.com/questions/33174638/how-to-check-if-trigger-exists-in-postgresql
+        --t.schema_name is not null:
+        when 'table' then to_regclass(t.object_identity) is not null
+        when 'view' then to_regclass(t.object_identity) is not null
+        when 'function' then to_regprocedure(t.object_identity) is not null
+        when 'procedure' then to_regprocedure(t.object_identity) is not null
+        when 'type' then to_regtype(t.object_identity) is not null
+        else true --table column, index, sequence, table constraint --TODO?
       end
 order by coalesce(u.created_at, c.created_at) desc;
 
