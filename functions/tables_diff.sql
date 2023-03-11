@@ -1,4 +1,4 @@
-CREATE FUNCTION diff_tables(t1 regclass, t2 regclass) 
+CREATE FUNCTION tables_diff(t1 regclass, t2 regclass) 
   returns TABLE("+/-" text, line text)
 AS $func$
 BEGIN
@@ -18,7 +18,7 @@ $func$ language plpgsql;
 
 -- Source: https://github.com/dverite/postgresql-functions/blob/master/diff/diff-tables.sql
 
-comment on function $$
+comment on function tables_diff(t1 regclass, t2 regclass) $$
   Takes two table names (through the regclass type), 
   and returns a set of diff-like results with the rows that differ. 
   It does not require a primary key on tables to compare.
