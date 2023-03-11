@@ -1,10 +1,5 @@
-/*
- Take two table names (through the `regtable` type),
- build a query comparing their contents, execute it, and
- return a set of diff-like results with the rows that differ.
-*/
 CREATE FUNCTION diff_tables(t1 regclass, t2 regclass) 
- returns TABLE("+/-" text, line text)
+  returns TABLE("+/-" text, line text)
 AS $func$
 BEGIN
   RETURN QUERY EXECUTE format($$
@@ -22,3 +17,11 @@ END
 $func$ language plpgsql;
 
 -- Source: https://github.com/dverite/postgresql-functions/blob/master/diff/diff-tables.sql
+
+comment on function $$
+  Takes two table names (through the regclass type), 
+  and returns a set of diff-like results with the rows that differ. 
+  It does not require a primary key on tables to compare.
+$$;
+
+-- TODO returns TABLE("+/-" text, line jsonb)
