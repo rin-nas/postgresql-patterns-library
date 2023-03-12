@@ -1,0 +1,1 @@
+-- See https://github.com/dverite/postgresql-functions/blob/master/global_search/global_search.sql
