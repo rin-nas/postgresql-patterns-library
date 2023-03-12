@@ -29,4 +29,6 @@ ORDER BY schema_name
   , parameters
 ;
 
+COMMENT ON VIEW pg_functions IS 'The view returns all functions of the current database, excluding those in the schema pg_catalog and information_schema';
+
 -- Source: https://github.com/sjstoelting/pgsql-tweaks/blob/main/sql/view_pg_functions.sql
