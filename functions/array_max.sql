@@ -8,3 +8,5 @@ CREATE FUNCTION array_max(anyarray)
 AS $$
     SELECT max(x) FROM unnest($1) t(x);
 $$;
+
+COMMENT ON FUNCTION array_max(anyarray) IS 'Returns the maximum value of an array';
