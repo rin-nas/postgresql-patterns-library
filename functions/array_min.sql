@@ -8,3 +8,5 @@ CREATE FUNCTION array_min(anyarray)
 AS $$
     SELECT min(x) FROM unnest($1) t(x);
 $$;
+
+COMMENT ON FUNCTION array_min(anyarray) IS 'Returns the mininmum value of an array';
