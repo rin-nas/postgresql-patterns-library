@@ -1,4 +1,4 @@
---source: https://gist.github.com/kjmph/5bd772b2c2df145aa645b837da7eca74
+-- Source: https://gist.github.com/kjmph/5bd772b2c2df145aa645b837da7eca74
 
 -- Based off IETF draft, https://datatracker.ietf.org/doc/draft-peabody-dispatch-new-uuid-format/
 
