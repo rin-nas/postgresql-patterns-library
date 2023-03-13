@@ -21,11 +21,12 @@
 select id --, count(*), min(created_at)
 from db_audit.ddl_log as s
 where s.event = 'ddl_command_start'
-  and not exists(select s.*
+  and not exists(select
                  from db_audit.ddl_log as e
                  where e.transaction_id = s.transaction_id
                    and e.transaction_start_at = s.transaction_start_at
-                 and e.event != 'ddl_command_start'
+                   and e.event != 'ddl_command_start'
+                   and e.id != s.id
                  )
 order by id desc
 offset 1000
