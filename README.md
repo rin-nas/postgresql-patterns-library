@@ -289,7 +289,7 @@ where 10 & (1 << (num::int-1)) > 0;
 1. [iuliia_translate_mosmetro.sql](functions/iuliia_translate.sql)
 2. [iuliia_translate_wikipedia.sql](functions/iuliia_translate.sql)
 
-Устаревшая функции транслитерации [slugify.sql](functions/slugify.sql)
+Устаревшая функции транслитерации [slugify_ru.sql](functions/slugify_ru.sql)
 
 #### Как распарсить CSV строку в таблицу?
 
