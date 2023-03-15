@@ -13,7 +13,7 @@ DECLARE
     sql text;
     started_at timestamptz;
 BEGIN
-    sql := concat('select (', sql_expr, ') from generate_series(1, $1)');
+    sql := concat('select (', sql_expr, ') is null from generate_series(1, $1)');
     started_at := clock_timestamp();
     EXECUTE sql USING loop_count;
     RETURN clock_timestamp() - started_at;
