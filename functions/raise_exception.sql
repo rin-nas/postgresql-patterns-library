@@ -86,6 +86,8 @@ do $$
                     perform public.raise_exception(-123.456, null, null, null, null, null, null, null);
                 elsif i = 9 then
                     perform public.raise_exception(point(0, 0), null, null, null, null, null, null, null, null);
+                elsif i = 10 then
+                    perform public.raise_exception(row('a', 1)); --record test
                 end if;
                 EXIT WHEN true;
             EXCEPTION WHEN others THEN
