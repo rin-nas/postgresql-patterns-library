@@ -35,12 +35,13 @@ DECLARE
 BEGIN
     sql := concat('with recursive r (i, b) as (
                         select 1, (', sql_expr, ') is null
+                        where clock_timestamp() < $1
                         union
                         select i + 1, (', sql_expr, ') is null
                         from r
                         where clock_timestamp() < $1
-                    )
-                    select max(i) from r');
+                   )
+                   select max(i) from r');
     EXECUTE sql USING timeout + clock_timestamp() INTO loop_count;
     RETURN loop_count;
 END
