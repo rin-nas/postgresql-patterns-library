@@ -41,7 +41,7 @@ BEGIN
                         from r
                         where clock_timestamp() < $1
                    )
-                   select max(i) from r');
+                   select coalesce(max(i), 0) from r');
     EXECUTE sql USING timeout + clock_timestamp() INTO loop_count;
     RETURN loop_count;
 END
