@@ -2383,8 +2383,8 @@ $ crontab -l
 Запускать на реплике:
 ```sql
 select extract('epoch' from now() - pg_last_xact_replay_timestamp()) as replication_lag_seconds,
-       now() - pg_last_xact_replay_timestamp() as replication_lag_interval,
-       current_setting('max_standby_streaming_delay') as max_standby_streaming_delay;
+       now() - pg_last_xact_replay_timestamp()                       as replication_lag_interval,
+       current_setting('max_standby_streaming_delay')                as max_standby_streaming_delay;
 ```
 
 
