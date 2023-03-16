@@ -1964,7 +1964,10 @@ ORDER BY idstat.idx_scan DESC, pg_relation_size(indexrelid) DESC
 ### Как получить список установленных расширений (extensions)?
 
 ```sql
-select * from pg_available_extensions where installed_version is not null;
+select *
+from pg_available_extensions
+--where installed_version is not null
+order by installed_version is null, name
 ```
 
 ### Как получить список таблиц с размером занимаемого места и примерным количеством строк?
