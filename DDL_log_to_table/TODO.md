@@ -11,24 +11,3 @@
    1. ✔️ В триггерной функции `db_audit.ddl_command_end_log()` в SQL запрос автоочистки добавить `limit 1000` в оба SELECT подзапроса
 1. В `db_audit.ddl_start_log` добавить колонку `transactions_delta` для отображения прошедшего времени между предыдущей и следующей транзакцией
 1. Сделать представление `db_audit.ddl_objects_deleted`. Иногда нужно смотреть историю удалённых объектов.
-
-
-## Автоочистка таблицы
-
-```sql
-
---explain
-select id --, count(*), min(created_at)
-from db_audit.ddl_log as s
-where s.event = 'ddl_command_start'
-  and not exists(select
-                 from db_audit.ddl_log as e
-                 where e.transaction_id = s.transaction_id
-                   and e.transaction_start_at = s.transaction_start_at
-                   and e.event != 'ddl_command_start'
-                   and e.id != s.id
-                 )
-order by id desc
-offset 1000
-limit 1000
-```
