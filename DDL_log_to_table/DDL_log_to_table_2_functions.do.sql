@@ -146,15 +146,18 @@ BEGIN
 
     end if;
 
-    insert into db_audit.ddl_log (
-        event, tag, client_addr, client_port, via_pooler,
-        backend_pid, application_name, "session_user", "current_user", transaction_id,
-        conf_load_time, postmaster_start_time, server_version_num,
-        current_schemas, trigger_depth, top_queries, context_stack)
-    select TG_EVENT::db_audit.tg_event_type, TG_TAG, addr, port, via_proxy,
-           pg_backend_pid(), app_name, session_user, current_user, txid_current(),
-           pg_conf_load_time(), pg_postmaster_start_time(), current_setting('server_version_num')::int,
-           current_schemas(true), pg_trigger_depth(), trim(current_query(), E' \r\n\t'), stack;
+    --Protect Error: [0A000] ERROR: DROP INDEX CONCURRENTLY must be first action in transaction
+    if not (TG_TAG = 'DROP INDEX' and current_query() ~* '\mDROP\s+INDEX\s+CONCURRENTLY\M') then
+        insert into db_audit.ddl_log (
+            event, tag, client_addr, client_port, via_pooler,
+            backend_pid, application_name, "session_user", "current_user", transaction_id,
+            conf_load_time, postmaster_start_time, server_version_num,
+            current_schemas, trigger_depth, top_queries, context_stack)
+        select TG_EVENT::db_audit.tg_event_type, TG_TAG, addr, port, via_proxy,
+               pg_backend_pid(), app_name, session_user, current_user, txid_current(),
+               pg_conf_load_time(), pg_postmaster_start_time(), current_setting('server_version_num')::int,
+               current_schemas(true), pg_trigger_depth(), trim(current_query(), E' \r\n\t'), stack;
+    end if;
 
 END;
 $$;
