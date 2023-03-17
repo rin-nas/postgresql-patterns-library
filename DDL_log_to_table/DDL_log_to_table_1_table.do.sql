@@ -89,6 +89,6 @@ $do$;
 create index ddl_log_transaction_id on db_audit.ddl_log (transaction_id);
 create index ddl_log_multicolumn on db_audit.ddl_log (object_identity, object_type, created_at) where object_identity is not null;
 create index ddl_log_created_at_pg_temp on db_audit.ddl_log (created_at) where schema_name = 'pg_temp';
-create index ddl_log_created_at_event on db_audit.ddl_log(created_at, event);
+create index ddl_log_created_at_event on db_audit.ddl_log (created_at, event);
 
 GRANT SELECT ON db_audit.ddl_log TO alexan;
