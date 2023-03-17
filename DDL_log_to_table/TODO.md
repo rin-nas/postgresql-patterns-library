@@ -1,6 +1,6 @@
 # TODO
 
-1. Исправить [ошибку](https://github.com/rin-nas/postgresql-patterns-library/issues/4): `[0A000] ERROR: DROP INDEX CONCURRENTLY must be first action in transaction`
+1. ✔️ Исправить [ошибку](https://github.com/rin-nas/postgresql-patterns-library/issues/4): `[0A000] ERROR: DROP INDEX CONCURRENTLY must be first action in transaction`
 1. Доработать запрос `select * from db_audit.ddl_log`, чтобы при отсутствии прав доступа к объектам не выдавал ошибку
 1. Доработать `db_audit.ddl_objects`, чтобы корректно показывал дату создания и обновления для `CREATE VIEW` и `CREATE OR REPLACE VIEW`.
    С `CREATE [OR REPLACE] FUNCTION/PROCEDURE` уже сложнее, т.к. нужно ещё учитывать параметры функции. Добавить колонку `transaction_id`.
