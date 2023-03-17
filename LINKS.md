@@ -36,6 +36,7 @@
    1. https://github.com/rvkulikov/pg-deps-management - Recursively backup all dependent views, then modify base tables, then recreate all backuped views
    1. https://github.com/sjstoelting/pgsql-tweaks - PostgreSQL Views and Functions
    1. https://github.com/theory/pgtap/ - unit testing framework for PostgreSQL
+   1. https://github.com/dimitri/regresql - RegreSQL, Regression Testing your SQL queries
    1. https://github.com/cybertec-postgresql/pgfaceting - PostgreSQL extension to quickly calculate facet counts using inverted index built with roaring bitmaps
    1. https://github.com/PostgREST/postgrest - PostgREST is a standalone web server that turns your PostgreSQL database directly into a RESTful API.
 
