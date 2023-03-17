@@ -147,16 +147,49 @@ BEGIN
     end if;
 
     --Protect Error: [0A000] ERROR: DROP INDEX CONCURRENTLY must be first action in transaction
-    if not (TG_TAG = 'DROP INDEX' and current_query() ~* '\mDROP\s+INDEX\s+CONCURRENTLY\M') then
-        insert into db_audit.ddl_log (
-            event, tag, client_addr, client_port, via_pooler,
-            backend_pid, application_name, "session_user", "current_user", transaction_id,
-            conf_load_time, postmaster_start_time, server_version_num,
-            current_schemas, trigger_depth, top_queries, context_stack)
-        select TG_EVENT::db_audit.tg_event_type, TG_TAG, addr, port, via_proxy,
-               pg_backend_pid(), app_name, session_user, current_user, txid_current(),
-               pg_conf_load_time(), pg_postmaster_start_time(), current_setting('server_version_num')::int,
-               current_schemas(true), pg_trigger_depth(), trim(current_query(), E' \r\n\t'), stack;
+    if TG_TAG = 'DROP INDEX' and current_query() ~* '\mDROP\s+INDEX\s+CONCURRENTLY\M' then
+        return;
+    end if;
+
+    insert into db_audit.ddl_log (
+        event, tag, client_addr, client_port, via_pooler,
+        backend_pid, application_name, "session_user", "current_user", transaction_id,
+        conf_load_time, postmaster_start_time, server_version_num,
+        current_schemas, trigger_depth, top_queries, context_stack)
+    select TG_EVENT::db_audit.tg_event_type, TG_TAG, addr, port, via_proxy,
+           pg_backend_pid(), app_name, session_user, current_user, txid_current(),
+           pg_conf_load_time(), pg_postmaster_start_time(), current_setting('server_version_num')::int,
+           current_schemas(true), pg_trigger_depth(), trim(current_query(), E' \r\n\t'), stack;
+
+    /*
+    Команды с флагом IF [NOT] EXISTS не выполнятся, если объект БД уже/не существует.
+    В этом случае сохраняется только 1 событие: ddl_command_start.
+    Таблицу можно почистить от "мусора".
+    */
+    if current_query() ~* '\mIF\s+(NOT\s+)?EXISTS\M' then
+
+        with s as (
+            select s.id
+            from db_audit.ddl_log as s
+            where s.event = 'ddl_command_start'
+              and not exists(select
+                             from db_audit.ddl_log as e
+                             where e.transaction_id = s.transaction_id
+                               and e.transaction_start_at = s.transaction_start_at
+                               and e.event != 'ddl_command_start'
+                               and e.id != s.id
+                             )
+            order by s.created_at desc
+            for update of s -- пытаемся заблокировать строки таблицы от изменения в параллельных транзакциях
+            skip locked -- если строки заблокировать не удалось, пропускаем их (они уже заблокированы в параллельных транзакциях)
+            offset 1000
+            limit 1000
+        )
+        --select * from s; --для отладки
+        delete from db_audit.ddl_log as d
+        where d.id in (select s.id from s); -- наиболее эффективно удаление по первичному ключу
+        --returning id --для отладки
+
     end if;
 
 END;
