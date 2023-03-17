@@ -227,6 +227,7 @@ BEGIN
                 where t.schema_name = 'pg_temp'
                 order by t.created_at desc
                 offset 1000
+                limit 1000
             ),
             s as (
                 select m.id
@@ -234,6 +235,7 @@ BEGIN
                 where m.transaction_id in (select t.transaction_id from t)
                 for update of m -- пытаемся заблокировать строки таблицы от изменения в параллельных транзакциях
                 skip locked -- если строки заблокировать не удалось, пропускаем их (они уже заблокированы в параллельных транзакциях)
+                limit 1000
             )
             --select * from s; --для отладки
             delete from db_audit.ddl_log as d
