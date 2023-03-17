@@ -53,6 +53,7 @@ select t.*,
        c.client_addr as created_client_addr,
        c.client_port as created_client_port,
        c.via_pooler as created_via_pooler,
+       c.transaction_id as created_transaction_id,
        cd.events_total as created_events_total,
        cd.max_created_at - c.transaction_start_at as created_transaction_duration,
        --updated:
@@ -65,6 +66,7 @@ select t.*,
        u.client_addr as updated_client_addr,
        u.client_port as updated_client_port,
        u.via_pooler as updated_via_pooler,
+       u.transaction_id as updated_transaction_id,
        ud.events_total as updated_events_total,
        ud.max_created_at - u.transaction_start_at as updated_transaction_duration
 from t
@@ -117,7 +119,7 @@ where not (c.created_at is null and u.created_at is null) --исключаем �
   and case t.object_type
         --t.schema_name is null:
         when 'schema' then coalesce((select has_schema_privilege(ns.nspname, 'USAGE')
-                                       from pg_catalog.pg_namespace as ns 
+                                       from pg_catalog.pg_namespace as ns
                                       where ns.nspname = t.object_identity), false)
         when 'trigger' then true --TODO https://stackoverflow.com/questions/33174638/how-to-check-if-trigger-exists-in-postgresql
         --t.schema_name is not null:
