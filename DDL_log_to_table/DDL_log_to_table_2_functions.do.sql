@@ -173,6 +173,7 @@ BEGIN
             select s.id
             from db_audit.ddl_log as s
             where s.event = 'ddl_command_start'
+              and s.created_at < now() - '1 month'::interval
               and not exists(select
                              from db_audit.ddl_log as e
                              where e.transaction_id = s.transaction_id
@@ -249,7 +250,7 @@ BEGIN
                current_schemas(true), pg_trigger_depth(), trim(current_query(), E' \r\n\t'), stack,
                rec.object_type, rec.schema_name, rec.object_identity, rec.in_extension;
 
-        -- в истории создания и удаления временных таблиц храним только 1000 последних строк,
+        -- в истории создания и удаления временных таблиц храним как минимум 1000 последних строк,
         -- остальные удаляем в момент создания временной таблицы
         if rec.schema_name = 'pg_temp' and not is_deleted then
 
@@ -259,6 +260,7 @@ BEGIN
                 select t.transaction_id
                 from db_audit.ddl_log as t
                 where t.schema_name = 'pg_temp'
+                  and t.created_at < now() - '1 week'::interval
                 order by t.created_at desc
                 offset 1000
                 limit 1000
