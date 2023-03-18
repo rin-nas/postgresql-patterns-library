@@ -8,6 +8,7 @@ create or replace function db_audit.grep_ip(str text)
     returns null on null input
     parallel safe -- Postgres 10 or later
     language sql
+    set search_path = ''
 as $func$
     select (row_number() over ())::int as order_num,
         m[1] as all,
