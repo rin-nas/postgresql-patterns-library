@@ -15,7 +15,7 @@ comment on type company_person_permission_type is $$События:
 $$;
 
 create table db_audit.ddl_log (
-    id integer generated always as identity primary key,
+    id bigint generated always as identity primary key,
     transaction_start_at timestamp with time zone not null default transaction_timestamp() check(transaction_start_at <= clock_timestamp() + interval '10m'),
     created_at timestamp with time zone not null default clock_timestamp() check(created_at <= clock_timestamp() + interval '10m'),
     event db_audit.tg_event_type not null,
