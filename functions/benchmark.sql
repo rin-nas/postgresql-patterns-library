@@ -20,6 +20,8 @@ BEGIN
 END
 $$;
 
+comment on function benchmark(loop_count int, sql_expr text) is 'Measures the speed of expressions and functions for a given number of calls. Returns period of time.';
+
 CREATE OR REPLACE FUNCTION benchmark(timeout interval, sql_expr text) returns int
     volatile
     returns null on null input -- = strict
@@ -46,6 +48,8 @@ BEGIN
     RETURN loop_count;
 END
 $$;
+
+comment on function benchmark(timeout interval, sql_expr text) is 'Measures the speed of expressions and functions for a given period of time. Returns number of calls.';
 
 -- TESTS
 do $$
