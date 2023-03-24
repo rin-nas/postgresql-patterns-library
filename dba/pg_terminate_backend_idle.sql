@@ -18,7 +18,10 @@ select pg_terminate_backend(a.pid)
 from pg_stat_activity as a
 cross join lateral (
     select NOW() - a.xact_start as xact_elapsed,          --длительность выполнения транзакции или NULL, если транзакции нет
-           NOW() - a.query_start as query_elapsed,        --длительность выполнения запроса всего
+           case when a.state ~ '^idle\M' --idle, idle in transaction, idle in transaction (aborted)
+                    then state_change - query_start
+                    else NOW() - query_start
+               end as query_elapsed, --длительность выполнения запроса всего
            NOW() - a.state_change as state_change_elapsed --длительность выполнения запроса после изменения состояния (поля state)
 ) as e
 where true
