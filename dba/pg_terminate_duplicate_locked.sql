@@ -12,10 +12,10 @@
 
     $ crontab -l
     # m h dom mon dow command
-    * * * * *               psql -U postgres --file=/path/to/pg_terminate_backend_lock.sql
-    * * * * * ( sleep 15 && psql -U postgres --file=/path/to/pg_terminate_backend_lock.sql )
-    * * * * * ( sleep 30 && psql -U postgres --file=/path/to/pg_terminate_backend_lock.sql )
-    * * * * * ( sleep 45 && psql -U postgres --file=/path/to/pg_terminate_backend_lock.sql )
+    * * * * *               psql -U postgres --file=/path/to/pg_terminate_duplicate_locked.sql
+    * * * * * ( sleep 15 && psql -U postgres --file=/path/to/pg_terminate_duplicate_locked.sql )
+    * * * * * ( sleep 30 && psql -U postgres --file=/path/to/pg_terminate_duplicate_locked.sql )
+    * * * * * ( sleep 45 && psql -U postgres --file=/path/to/pg_terminate_duplicate_locked.sql )
 
 */
 

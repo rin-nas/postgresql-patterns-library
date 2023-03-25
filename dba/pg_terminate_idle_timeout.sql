@@ -7,7 +7,7 @@
 
     $ crontab -l
     # m h dom mon dow command
-    * * * * * psql -U postgres --file=/path/to/pg_terminate_backend_idle.sql
+    * * * * * psql -U postgres --file=/path/to/pg_terminate_idle_timeout.sql
 
 */
 
