@@ -365,3 +365,21 @@ cross join lateral (
         NOW() - query_start as duration
 ) as e
 ```
+
+# Как узнать стратегию хранения колонок для таблицы?
+
+```sql
+select att.attname,
+    case att.attstorage
+       when 'p' then 'plain'
+       when 'm' then 'main'
+       when 'e' then 'external'
+       when 'x' then 'extended'
+       end as attstorage
+from pg_attribute att
+join pg_class tbl on tbl.oid = att.attrelid
+join pg_namespace ns on tbl.relnamespace = ns.oid
+where tbl.relname = 'cts__cdr'
+  and ns.nspname = 'public'
+  and not att.attisdropped;
+```
