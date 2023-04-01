@@ -19,6 +19,9 @@
    1. При обнаружении избыточных индексов рекомендовать удалять индексы с названием `(_ccnew$|^pgcompact_index_\d+$)`, а не индексы с другими названиями
    1. B-деревья подходят для индексирования только скалярных данных. В массивах должен быть GIN индекс вместо btree.
    1. Добавить проверку на вероятно избыточный индекс, если для `field` есть `lower(field)`, `upper(field)`, `date(field)`. Рекомендовать удалить индекс на `field`!
+   1. Обнаруживать (и рекомендовать удалять, а не выдавать ошибку) такие избыточные индексы:
+      1. `CREATE UNIQUE INDEX ON paid_services.snapshot_package_limit USING btree (order_item_id, service_id, sort(uniq(zone_ids)))`
+      2. `CREATE UNIQUE INDEX ON paid_services.snapshot_package_limit USING btree (order_item_id, service_id, zone_ids)`
 1. Кроме ошибок нехватает рекоментаций, которые можно возвращать в результате работы функции валидации:
    1. Для текстовых полей с отсутствием ограничения `check(...)` рекомендовать делать валидацию `check(length(col) between X and Y)`.
    1. CASCADE использовать в миграциях опасно. 
