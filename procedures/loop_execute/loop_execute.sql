@@ -653,7 +653,7 @@ comment on procedure loop_execute(
     -- возвращаемые из процедуры параметры:
     inout result record
 ) is $$
-Safe modify millions rows in table.
+Safely modifies millions of rows in a table.
 
 Update or delete rows incrementally in batches with multiple separate transactions.
 This maximizes your table availability since you only need to keep locks for a short period of time. Also allows dead rows to be reused.
