@@ -1,60 +1,538 @@
-Calculating total rows for table table_name ...
-Done. 70733 total rows found for 0.02 sec
-Query 1: affected 100 rows, processed 113 rows, elapsed 0.04 sec, ROLLBACK MODE!
-Total: affected 100 rows, processed 113 rows
-Current datetime: 2021-09-29 12:19:04, elapsed time: 00:00:00, estimated time: ?, progress: 0.16 %
-Query 2: affected 200 rows, processed 233 rows, elapsed 0.06 sec, ROLLBACK MODE!
-Total: affected 300 rows, processed 346 rows
-Current datetime: 2021-09-29 12:19:04, elapsed time: 00:00:00, estimated time: ?, progress: 0.49 %
-Query 3: affected 400 rows, processed 476 rows, elapsed 0.12 sec, ROLLBACK MODE!
-Total: affected 700 rows, processed 822 rows
-Current datetime: 2021-09-29 12:19:04, elapsed time: 00:00:00, estimated time: ?, progress: 1.16 %
-Query 4: affected 800 rows, processed 923 rows, elapsed 0.26 sec, ROLLBACK MODE!
-Total: affected 1500 rows, processed 1745 rows
-Current datetime: 2021-09-29 12:19:05, elapsed time: 00:00:01, estimated time: ?, progress: 2.47 %
-Query 5: affected 1600 rows, processed 1874 rows, elapsed 0.51 sec, ROLLBACK MODE!
-Total: affected 3100 rows, processed 3619 rows
-Current datetime: 2021-09-29 12:19:05, elapsed time: 00:00:01, estimated time: ?, progress: 5.12 %
-Query 6: affected 3200 rows, processed 3698 rows, elapsed 0.89 sec, ROLLBACK MODE!
-Total: affected 6300 rows, processed 7317 rows
-Current datetime: 2021-09-29 12:19:06, elapsed time: 00:00:02, estimated time: ?, progress: 10.34 %
-Query 7: affected 6400 rows, processed 6853 rows, elapsed 2.00 sec, ROLLBACK MODE!
-Total: affected 12700 rows, processed 14170 rows
-Current datetime: 2021-09-29 12:19:08, elapsed time: 00:00:04, estimated time: 00:00:16, progress: 20.03 %
-Query 8: affected 3200 rows, processed 3366 rows, elapsed 0.85 sec, ROLLBACK MODE!
-Total: affected 15900 rows, processed 17536 rows
-Current datetime: 2021-09-29 12:19:09, elapsed time: 00:00:05, estimated time: 00:00:16, progress: 24.79 %
-Query 9: affected 6400 rows, processed 6754 rows, elapsed 1.58 sec, ROLLBACK MODE!
-Total: affected 22300 rows, processed 24290 rows
-Current datetime: 2021-09-29 12:19:10, elapsed time: 00:00:06, estimated time: 00:00:12, progress: 34.34 %
-Query 10: affected 3200 rows, processed 3378 rows, elapsed 0.83 sec, ROLLBACK MODE!
-Total: affected 25500 rows, processed 27668 rows
-Current datetime: 2021-09-29 12:19:11, elapsed time: 00:00:07, estimated time: 00:00:12, progress: 39.12 %
-Query 11: affected 6400 rows, processed 6759 rows, elapsed 2.21 sec, ROLLBACK MODE!
-Total: affected 31900 rows, processed 34427 rows
-Current datetime: 2021-09-29 12:19:14, elapsed time: 00:00:09, estimated time: 00:00:10, progress: 48.67 %
-Query 12: affected 3200 rows, processed 3363 rows, elapsed 0.88 sec, ROLLBACK MODE!
-Total: affected 35100 rows, processed 37790 rows
-Current datetime: 2021-09-29 12:19:14, elapsed time: 00:00:10, estimated time: 00:00:10, progress: 53.43 %
-Query 13: affected 6400 rows, processed 6785 rows, elapsed 1.64 sec, ROLLBACK MODE!
-Total: affected 41500 rows, processed 44575 rows
-Current datetime: 2021-09-29 12:19:16, elapsed time: 00:00:12, estimated time: 00:00:07, progress: 63.02 %
-Query 14: affected 3200 rows, processed 3400 rows, elapsed 0.81 sec, ROLLBACK MODE!
-Total: affected 44700 rows, processed 47975 rows
-Current datetime: 2021-09-29 12:19:17, elapsed time: 00:00:13, estimated time: 00:00:07, progress: 67.83 %
-Query 15: affected 6400 rows, processed 6787 rows, elapsed 1.56 sec, ROLLBACK MODE!
-Total: affected 51100 rows, processed 54762 rows
-Current datetime: 2021-09-29 12:19:18, elapsed time: 00:00:14, estimated time: 00:00:04, progress: 77.42 %
-Query 16: affected 3200 rows, processed 3383 rows, elapsed 0.93 sec, ROLLBACK MODE!
-Total: affected 54300 rows, processed 58145 rows
-Current datetime: 2021-09-29 12:19:19, elapsed time: 00:00:15, estimated time: 00:00:04, progress: 82.20 %
-Query 17: affected 6400 rows, processed 7227 rows, elapsed 1.49 sec, ROLLBACK MODE!
-Total: affected 60700 rows, processed 65372 rows
-Current datetime: 2021-09-29 12:19:21, elapsed time: 00:00:17, estimated time: 00:00:01, progress: 92.42 %
-Query 18: affected 3200 rows, processed 4670 rows, elapsed 0.78 sec, ROLLBACK MODE!
-Total: affected 63900 rows, processed 70042 rows
-Current datetime: 2021-09-29 12:19:22, elapsed time: 00:00:17, estimated time: 00:00:01, progress: 99.02 %
-Query 19: affected 468 rows, processed 691 rows, elapsed 0.11 sec, ROLLBACK MODE!
-Total: affected 64368 rows, processed 70733 rows
-Current datetime: 2021-09-29 12:19:22, elapsed time: 00:00:18, estimated time: 00:00:00, progress: 100.00 %
-Done. 4021 rows per second, 1.08 queries per second
+Calculating total rows for table resume_autoresponse_log from total query ...
+Done. 701158 total rows found for 0.05 sec
+
+Check CTE query execution plan using: $1 := 0, $2 := 1, $3 := 0
+CTE query execution plan is OK
+Query 1: affected 1 rows, processed 1 rows, elapsed 0.01 sec
+Total: affected 1 rows, processed 1 rows
+Current datetime: 2023-04-07 17:35:11, elapsed time: 00:00:00, estimated time: ?, progress: 0.00 %
+
+Check CTE query execution plan using: $1 := 0, $2 := 2, $3 := 0
+CTE query execution plan is OK
+Query 2: affected 2 rows, processed 2 rows, elapsed 0.02 sec
+Total: affected 3 rows, processed 3 rows
+Current datetime: 2023-04-07 17:35:11, elapsed time: 00:00:00, estimated time: ?, progress: 0.00 %
+
+Check CTE query execution plan using: $1 := 57583638, $2 := 4, $3 := 0
+CTE query execution plan is OK
+Query 3: affected 4 rows, processed 4 rows, elapsed 0.01 sec
+Total: affected 7 rows, processed 7 rows
+Current datetime: 2023-04-07 17:35:11, elapsed time: 00:00:00, estimated time: ?, progress: 0.00 %
+
+Check CTE query execution plan using: $1 := 57583640, $2 := 8, $3 := 0
+CTE query execution plan is OK
+Query 4: affected 8 rows, processed 8 rows, elapsed 0.01 sec
+Total: affected 15 rows, processed 15 rows
+Current datetime: 2023-04-07 17:35:11, elapsed time: 00:00:00, estimated time: ?, progress: 0.00 %
+
+Check CTE query execution plan using: $1 := 57583644, $2 := 16, $3 := 0
+CTE query execution plan is OK
+Query 5: affected 16 rows, processed 16 rows, elapsed 0.01 sec
+Total: affected 31 rows, processed 31 rows
+Current datetime: 2023-04-07 17:35:11, elapsed time: 00:00:00, estimated time: ?, progress: 0.00 %
+
+Check CTE query execution plan using: $1 := 57583652, $2 := 32, $3 := 0
+CTE query execution plan is OK
+Query 6: affected 32 rows, processed 32 rows, elapsed 0.01 sec
+Total: affected 63 rows, processed 63 rows
+Current datetime: 2023-04-07 17:35:11, elapsed time: 00:00:00, estimated time: ?, progress: 0.01 %
+
+Check CTE query execution plan using: $1 := 57583668, $2 := 64, $3 := 0
+CTE query execution plan is OK
+Query 7: affected 64 rows, processed 64 rows, elapsed 0.01 sec
+Total: affected 127 rows, processed 127 rows
+Current datetime: 2023-04-07 17:35:11, elapsed time: 00:00:00, estimated time: ?, progress: 0.02 %
+
+Check CTE query execution plan using: $1 := 57583700, $2 := 128, $3 := 0
+CTE query execution plan is OK
+Query 8: affected 128 rows, processed 128 rows, elapsed 0.03 sec
+Total: affected 255 rows, processed 255 rows
+Current datetime: 2023-04-07 17:35:11, elapsed time: 00:00:00, estimated time: ?, progress: 0.04 %
+
+Check CTE query execution plan using: $1 := 57583764, $2 := 256, $3 := 0
+CTE query execution plan is OK
+Query 9: affected 256 rows, processed 256 rows, elapsed 0.04 sec
+Total: affected 511 rows, processed 511 rows
+Current datetime: 2023-04-07 17:35:11, elapsed time: 00:00:00, estimated time: ?, progress: 0.07 %
+
+Check CTE query execution plan using: $1 := 57583892, $2 := 512, $3 := 0
+CTE query execution plan is OK
+Query 10: affected 512 rows, processed 512 rows, elapsed 0.08 sec
+Total: affected 1023 rows, processed 1023 rows
+Current datetime: 2023-04-07 17:35:11, elapsed time: 00:00:00, estimated time: ?, progress: 0.15 %
+
+Check CTE query execution plan using: $1 := 57584148, $2 := 1024, $3 := 0
+CTE query execution plan is OK
+Query 11: affected 1024 rows, processed 1024 rows, elapsed 0.16 sec
+Total: affected 2047 rows, processed 2047 rows
+Current datetime: 2023-04-07 17:35:11, elapsed time: 00:00:00, estimated time: 00:02:41, progress: 0.29 %
+
+Check CTE query execution plan using: $1 := 57584660, $2 := 2048, $3 := 0
+CTE query execution plan is OK
+Query 12: affected 2048 rows, processed 2048 rows, elapsed 1.58 sec
+Total: affected 4095 rows, processed 4095 rows
+Current datetime: 2023-04-07 17:35:13, elapsed time: 00:00:02, estimated time: 00:02:41, progress: 0.58 %
+
+Query 13: affected 1297 rows, processed 1297 rows, elapsed 0.90 sec
+Total: affected 5392 rows, processed 5392 rows
+Current datetime: 2023-04-07 17:35:14, elapsed time: 00:00:03, estimated time: 00:06:22, progress: 0.77 %
+
+Query 14: affected 1442 rows, processed 1442 rows, elapsed 1.04 sec
+Total: affected 6834 rows, processed 6834 rows
+Current datetime: 2023-04-07 17:35:15, elapsed time: 00:00:04, estimated time: 00:06:22, progress: 0.97 %
+
+Query 15: affected 1387 rows, processed 1387 rows, elapsed 0.42 sec
+Total: affected 8221 rows, processed 8221 rows
+Current datetime: 2023-04-07 17:35:15, elapsed time: 00:00:04, estimated time: 00:06:13, progress: 1.17 %
+
+Check CTE query execution plan using: $1 := 57590471, $2 := 2774, $3 := 0
+CTE query execution plan is OK
+Query 16: affected 2774 rows, processed 2774 rows, elapsed 0.49 sec
+Total: affected 10995 rows, processed 10995 rows
+Current datetime: 2023-04-07 17:35:15, elapsed time: 00:00:05, estimated time: 00:06:13, progress: 1.57 %
+
+Check CTE query execution plan using: $1 := 57591858, $2 := 5548, $3 := 0
+CTE query execution plan is OK
+Query 17: affected 5548 rows, processed 5548 rows, elapsed 0.98 sec
+Total: affected 16543 rows, processed 16543 rows
+Current datetime: 2023-04-07 17:35:16, elapsed time: 00:00:06, estimated time: 00:04:04, progress: 2.36 %
+
+Check CTE query execution plan using: $1 := 57594632, $2 := 5662, $3 := 0
+CTE query execution plan is OK
+Query 18: affected 5662 rows, processed 5662 rows, elapsed 1.02 sec
+Total: affected 22205 rows, processed 22205 rows
+Current datetime: 2023-04-07 17:35:17, elapsed time: 00:00:07, estimated time: 00:04:04, progress: 3.17 %
+
+Query 19: affected 5551 rows, processed 5551 rows, elapsed 1.03 sec
+Total: affected 27756 rows, processed 27756 rows
+Current datetime: 2023-04-07 17:35:19, elapsed time: 00:00:08, estimated time: 00:03:13, progress: 3.96 %
+
+Query 20: affected 5390 rows, processed 5390 rows, elapsed 0.98 sec
+Total: affected 33146 rows, processed 33146 rows
+Current datetime: 2023-04-07 17:35:19, elapsed time: 00:00:09, estimated time: 00:03:13, progress: 4.73 %
+
+Query 21: affected 5500 rows, processed 5500 rows, elapsed 1.13 sec
+Total: affected 38646 rows, processed 38646 rows
+Current datetime: 2023-04-07 17:35:21, elapsed time: 00:00:10, estimated time: 00:02:53, progress: 5.51 %
+
+Query 22: affected 4868 rows, processed 4868 rows, elapsed 0.71 sec
+Total: affected 43514 rows, processed 43514 rows
+Current datetime: 2023-04-07 17:35:21, elapsed time: 00:00:11, estimated time: 00:02:53, progress: 6.21 %
+
+Check CTE query execution plan using: $1 := 57622283, $2 := 6857, $3 := 0
+CTE query execution plan is OK
+Query 23: affected 6857 rows, processed 6857 rows, elapsed 0.84 sec
+Total: affected 50371 rows, processed 50371 rows
+Current datetime: 2023-04-07 17:35:22, elapsed time: 00:00:12, estimated time: 00:02:31, progress: 7.18 %
+
+Check CTE query execution plan using: $1 := 57627151, $2 := 8164, $3 := 0
+CTE query execution plan is OK
+Query 24: affected 8164 rows, processed 8164 rows, elapsed 1.08 sec
+Total: affected 58535 rows, processed 58535 rows
+Current datetime: 2023-04-07 17:35:23, elapsed time: 00:00:13, estimated time: 00:02:31, progress: 8.35 %
+
+Query 25: affected 7560 rows, processed 7560 rows, elapsed 1.43 sec
+Total: affected 66095 rows, processed 66095 rows
+Current datetime: 2023-04-07 17:35:25, elapsed time: 00:00:14, estimated time: 00:02:16, progress: 9.43 %
+
+Query 26: affected 5287 rows, processed 5287 rows, elapsed 1.11 sec
+Total: affected 71382 rows, processed 71382 rows
+Current datetime: 2023-04-07 17:35:26, elapsed time: 00:00:15, estimated time: 00:02:16, progress: 10.18 %
+
+Query 27: affected 4764 rows, processed 4764 rows, elapsed 0.86 sec
+Total: affected 76146 rows, processed 76146 rows
+Current datetime: 2023-04-07 17:35:27, elapsed time: 00:00:16, estimated time: 00:02:13, progress: 10.86 %
+
+Query 28: affected 5540 rows, processed 5540 rows, elapsed 0.69 sec
+Total: affected 81686 rows, processed 81686 rows
+Current datetime: 2023-04-07 17:35:27, elapsed time: 00:00:17, estimated time: 00:02:13, progress: 11.65 %
+
+Query 29: affected 8029 rows, processed 8029 rows, elapsed 1.45 sec
+Total: affected 89715 rows, processed 89715 rows
+Current datetime: 2023-04-07 17:35:29, elapsed time: 00:00:18, estimated time: 00:02:05, progress: 12.80 %
+
+Query 30: affected 5538 rows, processed 5538 rows, elapsed 0.84 sec
+Total: affected 95253 rows, processed 95253 rows
+Current datetime: 2023-04-07 17:35:30, elapsed time: 00:00:19, estimated time: 00:02:05, progress: 13.59 %
+
+Query 31: affected 6593 rows, processed 6593 rows, elapsed 0.86 sec
+Total: affected 101846 rows, processed 101846 rows
+Current datetime: 2023-04-07 17:35:31, elapsed time: 00:00:20, estimated time: 00:01:58, progress: 14.53 %
+
+Query 32: affected 7667 rows, processed 7667 rows, elapsed 0.78 sec
+Total: affected 109513 rows, processed 109513 rows
+Current datetime: 2023-04-07 17:35:31, elapsed time: 00:00:21, estimated time: 00:01:58, progress: 15.62 %
+
+Check CTE query execution plan using: $1 := 57685483, $2 := 9830, $3 := 0
+CTE query execution plan is OK
+Query 33: affected 9830 rows, processed 9830 rows, elapsed 0.71 sec
+Total: affected 119343 rows, processed 119343 rows
+Current datetime: 2023-04-07 17:35:32, elapsed time: 00:00:21, estimated time: 00:01:45, progress: 17.02 %
+
+Check CTE query execution plan using: $1 := 57693150, $2 := 13846, $3 := 0
+CTE query execution plan is OK
+Query 34: affected 13846 rows, processed 13846 rows, elapsed 1.56 sec
+Total: affected 133189 rows, processed 133189 rows
+Current datetime: 2023-04-07 17:35:34, elapsed time: 00:00:23, estimated time: 00:01:45, progress: 19.00 %
+
+Query 35: affected 8876 rows, processed 8876 rows, elapsed 1.41 sec
+Total: affected 142065 rows, processed 142065 rows
+Current datetime: 2023-04-07 17:35:35, elapsed time: 00:00:24, estimated time: 00:01:37, progress: 20.26 %
+
+Query 36: affected 6296 rows, processed 6296 rows, elapsed 0.84 sec
+Total: affected 148361 rows, processed 148361 rows
+Current datetime: 2023-04-07 17:35:36, elapsed time: 00:00:25, estimated time: 00:01:37, progress: 21.16 %
+
+Query 37: affected 7496 rows, processed 7496 rows, elapsed 1.19 sec
+Total: affected 155857 rows, processed 155857 rows
+Current datetime: 2023-04-07 17:35:37, elapsed time: 00:00:26, estimated time: 00:01:33, progress: 22.23 %
+
+Query 38: affected 6300 rows, processed 6300 rows, elapsed 0.93 sec
+Total: affected 162157 rows, processed 162157 rows
+Current datetime: 2023-04-07 17:35:38, elapsed time: 00:00:27, estimated time: 00:01:33, progress: 23.13 %
+
+Query 39: affected 6775 rows, processed 6775 rows, elapsed 0.94 sec
+Total: affected 168932 rows, processed 168932 rows
+Current datetime: 2023-04-07 17:35:39, elapsed time: 00:00:28, estimated time: 00:01:30, progress: 24.09 %
+
+Query 40: affected 7208 rows, processed 7208 rows, elapsed 1.15 sec
+Total: affected 176140 rows, processed 176140 rows
+Current datetime: 2023-04-07 17:35:40, elapsed time: 00:00:29, estimated time: 00:01:30, progress: 25.12 %
+
+Query 41: affected 6268 rows, processed 6268 rows, elapsed 0.92 sec
+Total: affected 182408 rows, processed 182408 rows
+Current datetime: 2023-04-07 17:35:41, elapsed time: 00:00:30, estimated time: 00:01:27, progress: 26.02 %
+
+Query 42: affected 6814 rows, processed 6814 rows, elapsed 1.06 sec
+Total: affected 189222 rows, processed 189222 rows
+Current datetime: 2023-04-07 17:35:42, elapsed time: 00:00:31, estimated time: 00:01:27, progress: 26.99 %
+
+Query 43: affected 6429 rows, processed 6429 rows, elapsed 0.87 sec
+Total: affected 195651 rows, processed 195651 rows
+Current datetime: 2023-04-07 17:35:43, elapsed time: 00:00:32, estimated time: 00:01:24, progress: 27.90 %
+
+Query 44: affected 7390 rows, processed 7390 rows, elapsed 1.23 sec
+Total: affected 203041 rows, processed 203041 rows
+Current datetime: 2023-04-07 17:35:44, elapsed time: 00:00:34, estimated time: 00:01:24, progress: 28.96 %
+
+Query 45: affected 6009 rows, processed 6009 rows, elapsed 0.57 sec
+Total: affected 209050 rows, processed 209050 rows
+Current datetime: 2023-04-07 17:35:45, elapsed time: 00:00:34, estimated time: 00:01:21, progress: 29.81 %
+
+Query 46: affected 10543 rows, processed 10543 rows, elapsed 1.06 sec
+Total: affected 219593 rows, processed 219593 rows
+Current datetime: 2023-04-07 17:35:46, elapsed time: 00:00:35, estimated time: 00:01:21, progress: 31.32 %
+
+Query 47: affected 9947 rows, processed 9947 rows, elapsed 0.90 sec
+Total: affected 229540 rows, processed 229540 rows
+Current datetime: 2023-04-07 17:35:47, elapsed time: 00:00:36, estimated time: 00:01:15, progress: 32.74 %
+
+Query 48: affected 11053 rows, processed 11053 rows, elapsed 2.22 sec
+Total: affected 240593 rows, processed 240593 rows
+Current datetime: 2023-04-07 17:35:49, elapsed time: 00:00:38, estimated time: 00:01:15, progress: 34.31 %
+
+Query 49: affected 5527 rows, processed 5527 rows, elapsed 1.69 sec
+Total: affected 246120 rows, processed 246120 rows
+Current datetime: 2023-04-07 17:35:51, elapsed time: 00:00:40, estimated time: 00:01:14, progress: 35.10 %
+
+Query 50: affected 3271 rows, processed 3271 rows, elapsed 0.90 sec
+Total: affected 249391 rows, processed 249391 rows
+Current datetime: 2023-04-07 17:35:51, elapsed time: 00:00:41, estimated time: 00:01:14, progress: 35.57 %
+
+Query 51: affected 3635 rows, processed 3635 rows, elapsed 1.03 sec
+Total: affected 253026 rows, processed 253026 rows
+Current datetime: 2023-04-07 17:35:52, elapsed time: 00:00:42, estimated time: 00:01:15, progress: 36.09 %
+
+Query 52: affected 3530 rows, processed 3530 rows, elapsed 0.95 sec
+Total: affected 256556 rows, processed 256556 rows
+Current datetime: 2023-04-07 17:35:53, elapsed time: 00:00:43, estimated time: 00:01:15, progress: 36.59 %
+
+Query 53: affected 3716 rows, processed 3716 rows, elapsed 0.97 sec
+Total: affected 260272 rows, processed 260272 rows
+Current datetime: 2023-04-07 17:35:54, elapsed time: 00:00:44, estimated time: 00:01:15, progress: 37.12 %
+
+Query 54: affected 3831 rows, processed 3831 rows, elapsed 0.90 sec
+Total: affected 264103 rows, processed 264103 rows
+Current datetime: 2023-04-07 17:35:55, elapsed time: 00:00:45, estimated time: 00:01:15, progress: 37.67 %
+
+Query 55: affected 4257 rows, processed 4257 rows, elapsed 0.94 sec
+Total: affected 268360 rows, processed 268360 rows
+Current datetime: 2023-04-07 17:35:56, elapsed time: 00:00:46, estimated time: 00:01:14, progress: 38.27 %
+
+Query 56: affected 4529 rows, processed 4529 rows, elapsed 1.21 sec
+Total: affected 272889 rows, processed 272889 rows
+Current datetime: 2023-04-07 17:35:57, elapsed time: 00:00:47, estimated time: 00:01:14, progress: 38.92 %
+
+Query 57: affected 3743 rows, processed 3743 rows, elapsed 0.80 sec
+Total: affected 276632 rows, processed 276632 rows
+Current datetime: 2023-04-07 17:35:58, elapsed time: 00:00:48, estimated time: 00:01:14, progress: 39.45 %
+
+Query 58: affected 4679 rows, processed 4679 rows, elapsed 1.04 sec
+Total: affected 281311 rows, processed 281311 rows
+Current datetime: 2023-04-07 17:35:59, elapsed time: 00:00:49, estimated time: 00:01:14, progress: 40.12 %
+
+Query 59: affected 4500 rows, processed 4500 rows, elapsed 0.98 sec
+Total: affected 285811 rows, processed 285811 rows
+Current datetime: 2023-04-07 17:36:00, elapsed time: 00:00:50, estimated time: 00:01:13, progress: 40.76 %
+
+Query 60: affected 4592 rows, processed 4592 rows, elapsed 0.97 sec
+Total: affected 290403 rows, processed 290403 rows
+Current datetime: 2023-04-07 17:36:01, elapsed time: 00:00:51, estimated time: 00:01:13, progress: 41.42 %
+
+Query 61: affected 4735 rows, processed 4735 rows, elapsed 0.83 sec
+Total: affected 295138 rows, processed 295138 rows
+Current datetime: 2023-04-07 17:36:02, elapsed time: 00:00:52, estimated time: 00:01:11, progress: 42.09 %
+
+Query 62: affected 5705 rows, processed 5705 rows, elapsed 0.88 sec
+Total: affected 300843 rows, processed 300843 rows
+Current datetime: 2023-04-07 17:36:03, elapsed time: 00:00:52, estimated time: 00:01:11, progress: 42.91 %
+
+Query 63: affected 6483 rows, processed 6483 rows, elapsed 1.36 sec
+Total: affected 307326 rows, processed 307326 rows
+Current datetime: 2023-04-07 17:36:04, elapsed time: 00:00:54, estimated time: 00:01:09, progress: 43.83 %
+
+Query 64: affected 4767 rows, processed 4767 rows, elapsed 0.99 sec
+Total: affected 312093 rows, processed 312093 rows
+Current datetime: 2023-04-07 17:36:05, elapsed time: 00:00:55, estimated time: 00:01:09, progress: 44.51 %
+
+Query 65: affected 4816 rows, processed 4816 rows, elapsed 0.95 sec
+Total: affected 316909 rows, processed 316909 rows
+Current datetime: 2023-04-07 17:36:06, elapsed time: 00:00:56, estimated time: 00:01:08, progress: 45.20 %
+
+Query 66: affected 5070 rows, processed 5070 rows, elapsed 0.70 sec
+Total: affected 321979 rows, processed 321979 rows
+Current datetime: 2023-04-07 17:36:07, elapsed time: 00:00:56, estimated time: 00:01:08, progress: 45.92 %
+
+Query 67: affected 7243 rows, processed 7243 rows, elapsed 1.40 sec
+Total: affected 329222 rows, processed 329222 rows
+Current datetime: 2023-04-07 17:36:08, elapsed time: 00:00:58, estimated time: 00:01:06, progress: 46.95 %
+
+Query 68: affected 5174 rows, processed 5174 rows, elapsed 0.86 sec
+Total: affected 334396 rows, processed 334396 rows
+Current datetime: 2023-04-07 17:36:09, elapsed time: 00:00:59, estimated time: 00:01:06, progress: 47.69 %
+
+Query 69: affected 6017 rows, processed 6017 rows, elapsed 0.82 sec
+Total: affected 340413 rows, processed 340413 rows
+Current datetime: 2023-04-07 17:36:10, elapsed time: 00:00:59, estimated time: 00:01:04, progress: 48.55 %
+
+Query 70: affected 7338 rows, processed 7338 rows, elapsed 0.78 sec
+Total: affected 347751 rows, processed 347751 rows
+Current datetime: 2023-04-07 17:36:11, elapsed time: 00:01:00, estimated time: 00:01:04, progress: 49.60 %
+
+Query 71: affected 9408 rows, processed 9408 rows, elapsed 0.90 sec
+Total: affected 357159 rows, processed 357159 rows
+Current datetime: 2023-04-07 17:36:12, elapsed time: 00:01:01, estimated time: 00:00:59, progress: 50.94 %
+
+Query 72: affected 10454 rows, processed 10454 rows, elapsed 1.09 sec
+Total: affected 367613 rows, processed 367613 rows
+Current datetime: 2023-04-07 17:36:13, elapsed time: 00:01:02, estimated time: 00:00:59, progress: 52.43 %
+
+Query 73: affected 9591 rows, processed 9591 rows, elapsed 0.95 sec
+Total: affected 377204 rows, processed 377204 rows
+Current datetime: 2023-04-07 17:36:14, elapsed time: 00:01:03, estimated time: 00:00:55, progress: 53.80 %
+
+Query 74: affected 10096 rows, processed 10096 rows, elapsed 0.97 sec
+Total: affected 387300 rows, processed 387300 rows
+Current datetime: 2023-04-07 17:36:15, elapsed time: 00:01:04, estimated time: 00:00:55, progress: 55.24 %
+
+Query 75: affected 10409 rows, processed 10409 rows, elapsed 1.01 sec
+Total: affected 397709 rows, processed 397709 rows
+Current datetime: 2023-04-07 17:36:16, elapsed time: 00:01:05, estimated time: 00:00:50, progress: 56.72 %
+
+Query 76: affected 10306 rows, processed 10306 rows, elapsed 1.27 sec
+Total: affected 408015 rows, processed 408015 rows
+Current datetime: 2023-04-07 17:36:17, elapsed time: 00:01:06, estimated time: 00:00:50, progress: 58.19 %
+
+Query 77: affected 8115 rows, processed 8115 rows, elapsed 0.97 sec
+Total: affected 416130 rows, processed 416130 rows
+Current datetime: 2023-04-07 17:36:18, elapsed time: 00:01:07, estimated time: 00:00:47, progress: 59.35 %
+
+Query 78: affected 8366 rows, processed 8366 rows, elapsed 1.37 sec
+Total: affected 424496 rows, processed 424496 rows
+Current datetime: 2023-04-07 17:36:19, elapsed time: 00:01:09, estimated time: 00:00:47, progress: 60.54 %
+
+Query 79: affected 6107 rows, processed 6107 rows, elapsed 1.61 sec
+Total: affected 430603 rows, processed 430603 rows
+Current datetime: 2023-04-07 17:36:21, elapsed time: 00:01:10, estimated time: 00:00:45, progress: 61.41 %
+
+Query 80: affected 3794 rows, processed 3794 rows, elapsed 0.74 sec
+Total: affected 434397 rows, processed 434397 rows
+Current datetime: 2023-04-07 17:36:22, elapsed time: 00:01:11, estimated time: 00:00:45, progress: 61.95 %
+
+Query 81: affected 5128 rows, processed 5128 rows, elapsed 1.20 sec
+Total: affected 439525 rows, processed 439525 rows
+Current datetime: 2023-04-07 17:36:23, elapsed time: 00:01:12, estimated time: 00:00:44, progress: 62.69 %
+
+Query 82: affected 4274 rows, processed 4274 rows, elapsed 1.20 sec
+Total: affected 443799 rows, processed 443799 rows
+Current datetime: 2023-04-07 17:36:24, elapsed time: 00:01:14, estimated time: 00:00:44, progress: 63.30 %
+
+Query 83: affected 3562 rows, processed 3562 rows, elapsed 0.74 sec
+Total: affected 447361 rows, processed 447361 rows
+Current datetime: 2023-04-07 17:36:25, elapsed time: 00:01:14, estimated time: 00:00:43, progress: 63.80 %
+
+Query 84: affected 4814 rows, processed 4814 rows, elapsed 0.87 sec
+Total: affected 452175 rows, processed 452175 rows
+Current datetime: 2023-04-07 17:36:26, elapsed time: 00:01:15, estimated time: 00:00:43, progress: 64.49 %
+
+Query 85: affected 5534 rows, processed 5534 rows, elapsed 0.65 sec
+Total: affected 457709 rows, processed 457709 rows
+Current datetime: 2023-04-07 17:36:26, elapsed time: 00:01:16, estimated time: 00:00:41, progress: 65.28 %
+
+Query 86: affected 8514 rows, processed 8514 rows, elapsed 2.13 sec
+Total: affected 466223 rows, processed 466223 rows
+Current datetime: 2023-04-07 17:36:29, elapsed time: 00:01:18, estimated time: 00:00:41, progress: 66.49 %
+
+Query 87: affected 4257 rows, processed 4257 rows, elapsed 0.91 sec
+Total: affected 470480 rows, processed 470480 rows
+Current datetime: 2023-04-07 17:36:29, elapsed time: 00:01:19, estimated time: 00:00:39, progress: 67.10 %
+
+Query 88: affected 4679 rows, processed 4679 rows, elapsed 1.36 sec
+Total: affected 475159 rows, processed 475159 rows
+Current datetime: 2023-04-07 17:36:31, elapsed time: 00:01:20, estimated time: 00:00:39, progress: 67.77 %
+
+Query 89: affected 3441 rows, processed 3441 rows, elapsed 1.27 sec
+Total: affected 478600 rows, processed 478600 rows
+Current datetime: 2023-04-07 17:36:32, elapsed time: 00:01:21, estimated time: 00:00:38, progress: 68.26 %
+
+Query 90: affected 2710 rows, processed 2710 rows, elapsed 0.66 sec
+Total: affected 481310 rows, processed 481310 rows
+Current datetime: 2023-04-07 17:36:33, elapsed time: 00:01:22, estimated time: 00:00:38, progress: 68.65 %
+
+Query 91: affected 4107 rows, processed 4107 rows, elapsed 0.78 sec
+Total: affected 485417 rows, processed 485417 rows
+Current datetime: 2023-04-07 17:36:34, elapsed time: 00:01:23, estimated time: 00:00:37, progress: 69.23 %
+
+Query 92: affected 5266 rows, processed 5266 rows, elapsed 1.02 sec
+Total: affected 490683 rows, processed 490683 rows
+Current datetime: 2023-04-07 17:36:35, elapsed time: 00:01:24, estimated time: 00:00:37, progress: 69.98 %
+
+Query 93: affected 5163 rows, processed 5163 rows, elapsed 0.81 sec
+Total: affected 495846 rows, processed 495846 rows
+Current datetime: 2023-04-07 17:36:35, elapsed time: 00:01:25, estimated time: 00:00:36, progress: 70.72 %
+
+Query 94: affected 6375 rows, processed 6375 rows, elapsed 1.52 sec
+Total: affected 502221 rows, processed 502221 rows
+Current datetime: 2023-04-07 17:36:37, elapsed time: 00:01:26, estimated time: 00:00:36, progress: 71.63 %
+
+Query 95: affected 4195 rows, processed 4195 rows, elapsed 0.76 sec
+Total: affected 506416 rows, processed 506416 rows
+Current datetime: 2023-04-07 17:36:38, elapsed time: 00:01:27, estimated time: 00:00:34, progress: 72.23 %
+
+Query 96: affected 5520 rows, processed 5520 rows, elapsed 0.97 sec
+Total: affected 511936 rows, processed 511936 rows
+Current datetime: 2023-04-07 17:36:39, elapsed time: 00:01:28, estimated time: 00:00:34, progress: 73.01 %
+
+Query 97: affected 5691 rows, processed 5691 rows, elapsed 1.16 sec
+Total: affected 517627 rows, processed 517627 rows
+Current datetime: 2023-04-07 17:36:40, elapsed time: 00:01:29, estimated time: 00:00:32, progress: 73.82 %
+
+Query 98: affected 4907 rows, processed 4907 rows, elapsed 1.00 sec
+Total: affected 522534 rows, processed 522534 rows
+Current datetime: 2023-04-07 17:36:41, elapsed time: 00:01:30, estimated time: 00:00:32, progress: 74.52 %
+
+Query 99: affected 4907 rows, processed 4907 rows, elapsed 1.10 sec
+Total: affected 527441 rows, processed 527441 rows
+Current datetime: 2023-04-07 17:36:42, elapsed time: 00:01:31, estimated time: 00:00:31, progress: 75.22 %
+
+Query 100: affected 4461 rows, processed 4461 rows, elapsed 0.63 sec
+Total: affected 531902 rows, processed 531902 rows
+Current datetime: 2023-04-07 17:36:42, elapsed time: 00:01:32, estimated time: 00:00:31, progress: 75.86 %
+
+Query 101: affected 7081 rows, processed 7081 rows, elapsed 0.82 sec
+Total: affected 538983 rows, processed 538983 rows
+Current datetime: 2023-04-07 17:36:43, elapsed time: 00:01:33, estimated time: 00:00:28, progress: 76.87 %
+
+Query 102: affected 8636 rows, processed 8636 rows, elapsed 1.12 sec
+Total: affected 547619 rows, processed 547619 rows
+Current datetime: 2023-04-07 17:36:44, elapsed time: 00:01:34, estimated time: 00:00:28, progress: 78.10 %
+
+Query 103: affected 7711 rows, processed 7711 rows, elapsed 1.05 sec
+Total: affected 555330 rows, processed 555330 rows
+Current datetime: 2023-04-07 17:36:45, elapsed time: 00:01:35, estimated time: 00:00:25, progress: 79.20 %
+
+Query 104: affected 7344 rows, processed 7344 rows, elapsed 1.17 sec
+Total: affected 562674 rows, processed 562674 rows
+Current datetime: 2023-04-07 17:36:47, elapsed time: 00:01:36, estimated time: 00:00:25, progress: 80.25 %
+
+Query 105: affected 6277 rows, processed 6277 rows, elapsed 0.66 sec
+Total: affected 568951 rows, processed 568951 rows
+Current datetime: 2023-04-07 17:36:47, elapsed time: 00:01:37, estimated time: 00:00:23, progress: 81.14 %
+
+Query 106: affected 9511 rows, processed 9511 rows, elapsed 1.21 sec
+Total: affected 578462 rows, processed 578462 rows
+Current datetime: 2023-04-07 17:36:49, elapsed time: 00:01:38, estimated time: 00:00:23, progress: 82.50 %
+
+Query 107: affected 7861 rows, processed 7861 rows, elapsed 1.51 sec
+Total: affected 586323 rows, processed 586323 rows
+Current datetime: 2023-04-07 17:36:50, elapsed time: 00:01:39, estimated time: 00:00:20, progress: 83.62 %
+
+Query 108: affected 5206 rows, processed 5206 rows, elapsed 0.58 sec
+Total: affected 591529 rows, processed 591529 rows
+Current datetime: 2023-04-07 17:36:51, elapsed time: 00:01:40, estimated time: 00:00:20, progress: 84.36 %
+
+Query 109: affected 8976 rows, processed 8976 rows, elapsed 1.15 sec
+Total: affected 600505 rows, processed 600505 rows
+Current datetime: 2023-04-07 17:36:52, elapsed time: 00:01:41, estimated time: 00:00:17, progress: 85.64 %
+
+Query 110: affected 7806 rows, processed 7806 rows, elapsed 1.11 sec
+Total: affected 608311 rows, processed 608311 rows
+Current datetime: 2023-04-07 17:36:53, elapsed time: 00:01:42, estimated time: 00:00:17, progress: 86.76 %
+
+Query 111: affected 7033 rows, processed 7033 rows, elapsed 0.68 sec
+Total: affected 615344 rows, processed 615344 rows
+Current datetime: 2023-04-07 17:36:54, elapsed time: 00:01:43, estimated time: 00:00:15, progress: 87.76 %
+
+Query 112: affected 10343 rows, processed 10343 rows, elapsed 1.36 sec
+Total: affected 625687 rows, processed 625687 rows
+Current datetime: 2023-04-07 17:36:55, elapsed time: 00:01:44, estimated time: 00:00:15, progress: 89.24 %
+
+Query 113: affected 7606 rows, processed 7606 rows, elapsed 1.15 sec
+Total: affected 633293 rows, processed 633293 rows
+Current datetime: 2023-04-07 17:36:56, elapsed time: 00:01:46, estimated time: 00:00:12, progress: 90.32 %
+
+Query 114: affected 6614 rows, processed 6614 rows, elapsed 1.11 sec
+Total: affected 639907 rows, processed 639907 rows
+Current datetime: 2023-04-07 17:36:57, elapsed time: 00:01:47, estimated time: 00:00:12, progress: 91.26 %
+
+Query 115: affected 5959 rows, processed 5959 rows, elapsed 0.90 sec
+Total: affected 645866 rows, processed 645866 rows
+Current datetime: 2023-04-07 17:36:58, elapsed time: 00:01:48, estimated time: 00:00:10, progress: 92.11 %
+
+Query 116: affected 6622 rows, processed 6622 rows, elapsed 0.75 sec
+Total: affected 652488 rows, processed 652488 rows
+Current datetime: 2023-04-07 17:36:59, elapsed time: 00:01:48, estimated time: 00:00:10, progress: 93.06 %
+
+Query 117: affected 8830 rows, processed 8830 rows, elapsed 0.94 sec
+Total: affected 661318 rows, processed 661318 rows
+Current datetime: 2023-04-07 17:37:00, elapsed time: 00:01:49, estimated time: 00:00:07, progress: 94.32 %
+
+Query 118: affected 9394 rows, processed 9394 rows, elapsed 1.57 sec
+Total: affected 670712 rows, processed 670712 rows
+Current datetime: 2023-04-07 17:37:01, elapsed time: 00:01:51, estimated time: 00:00:07, progress: 95.66 %
+
+Query 119: affected 5984 rows, processed 5984 rows, elapsed 1.07 sec
+Total: affected 676696 rows, processed 676696 rows
+Current datetime: 2023-04-07 17:37:02, elapsed time: 00:01:52, estimated time: 00:00:05, progress: 96.51 %
+
+Query 120: affected 5593 rows, processed 5593 rows, elapsed 0.82 sec
+Total: affected 682289 rows, processed 682289 rows
+Current datetime: 2023-04-07 17:37:03, elapsed time: 00:01:53, estimated time: 00:00:05, progress: 97.31 %
+
+Query 121: affected 6821 rows, processed 6821 rows, elapsed 1.05 sec
+Total: affected 689110 rows, processed 689110 rows
+Current datetime: 2023-04-07 17:37:04, elapsed time: 00:01:54, estimated time: 00:00:02, progress: 98.28 %
+
+Query 122: affected 6497 rows, processed 6497 rows, elapsed 0.85 sec
+Total: affected 695607 rows, processed 695607 rows
+Current datetime: 2023-04-07 17:37:05, elapsed time: 00:01:55, estimated time: 00:00:02, progress: 99.21 %
+
+Query 123: affected 5551 rows, processed 5551 rows, elapsed 4.53 sec
+Total: affected 701158 rows, processed 701158 rows
+Current datetime: 2023-04-07 17:37:10, elapsed time: 00:01:59, estimated time: 00:00:00, progress: 100.00 %
+
+Query 124: affected 0 rows, processed 0 rows, elapsed 1.65 sec
+Total: affected 701158 rows, processed 701158 rows
+Current datetime: 2023-04-07 17:37:11, elapsed time: 00:02:01, estimated time: 00:00:00, progress: 100.00 %
+
+Done. 5806 rows per second, 1.03 queries per second
