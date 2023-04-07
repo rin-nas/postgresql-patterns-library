@@ -1,5 +1,5 @@
---PostgreSQL 12+
---see general description in end of file
+-- PostgreSQL 12+
+-- see general description in end of file
 
 drop table if exists loop_execute_error;
 
@@ -66,7 +66,7 @@ create unique index loop_execute_error_uniq on loop_execute_error(
 ------------------------------------------------------------------------------------------------------------------------
 
 create or replace procedure loop_execute(
-    --обязательные параметры:
+    -- обязательные параметры:
     table_name  regclass, -- название основной таблицы (дополненное схемой через точку, при необходимости),
                           -- из которой данные порциями в цикле будут читаться и модифицироваться
     query text, -- CTE запрос с SELECT, INSERT/UPDATE/DELETE и SELECT запросами для модификации записей
@@ -75,7 +75,7 @@ create or replace procedure loop_execute(
                 -- в $2 ограничение LIMIT
                 -- в $3 ограничение OFFSET
                 -- в $4 текущая дата-время с временной зоной (необязательная метка-заменитель)
-    --необязательные параметры:
+    -- необязательные параметры:
     disable_triggers boolean default false, -- That disables all triggers, include foreign keys. For the current database session only.
                                             -- Improves speed, saves from side effect. But superuser role required.
                                             -- Be careful to keep your database consistent!
@@ -99,7 +99,7 @@ create or replace procedure loop_execute(
     check_query_plan_rows integer default 1e5, -- если total_table_rows > check_query_plan_rows,
                                                -- то проверять, чтобы план выполнения CTE запроса использовал PK или UK индекс
                                                -- нельзя допустить, чтобы CTE запрос выполнялся очень долго
-    --возвращаемые из процедуры параметры:
+    -- возвращаемые из процедуры параметры:
     inout result record default null
     /*
         result.table_rows     int     -- сколько всего записей в таблице
@@ -112,7 +112,7 @@ create or replace procedure loop_execute(
 as
 $procedure$
 DECLARE
-    --константы
+    -- константы
     quote_regexp constant text not null default '([[\](){}.+*^$|\\?-])';  -- регулярное выражение для квотирования данных в регулярном выражении
     ident_regexp constant text not null default '(\m[a-zA-Z_]+[a-zA-Z_\d]*\M|"([^"]|"")+")'; -- регулярное выражение для захвата названия SQL идентификатора (таблицы, колонки и др.)
     alias_regexp constant text not null default format('(\s*(\m[Aa][Ss]\M\s*)?%s)?', ident_regexp); -- регулярное выражение для захвата названия SQL необязательного псевдонима (таблицы, колонки и др.)
@@ -127,7 +127,7 @@ DECLARE
     app_name constant text not null default regexp_replace(current_setting('application_name'), '\s*/\d+(?:\.\d+)?%', '');
     multiplier constant numeric not null default 2; --not integer!
 
-    --статистика
+    -- статистика
     total_time_start timestamp not null default clock_timestamp();
     total_time_elapsed numeric not null default 0; -- длительность выполнения всех запросов, в секундах
     total_affected_rows int not null default 0; -- сколько всего записей модифицировал пользовательский запрос в таблице
@@ -314,11 +314,11 @@ BEGIN
 
         PERFORM set_config('lock_timeout', lock_timeout, true);
         /*
-        --statement_timeout does not work inside PLpgSQL:
+        -- statement_timeout does not work inside PLpgSQL:
         do $$ begin set local statement_timeout to '1s'; perform pg_sleep(2); end;$$;
-        --statement_timeout works inside SQL:
+        -- statement_timeout works inside SQL:
         begin; set local statement_timeout to '1s'; select pg_sleep(2); commit;
-        --TODO use dblink to workаround?
+        -- TODO use dblink to workаround?
         */
 
         IF disable_triggers THEN
@@ -445,9 +445,9 @@ BEGIN
                         batch_rows := ceil(batch_rows / multiplier);
                         CONTINUE;
                     ELSIF uniq_column_type IN ('integer', 'bigint') THEN
-                        --на этом id в raise_exception() было брошено исключение 'query_canceled'
+                        -- на этом id в raise_exception() было брошено исключение 'query_canceled'
                         stop_id_bigint := ((exception_detail::jsonb)->>'id')::bigint;
-                        --поэтому последний stop_id_bigint будет перед ним
+                        -- поэтому последний stop_id_bigint будет перед ним
                         EXECUTE format(count_query_spec, table_name, uniq_column_name)
                             USING start_id_bigint, stop_id_bigint INTO processed_rows, stop_id_bigint;
                         IF start_id_bigint >= stop_id_bigint THEN
@@ -497,10 +497,10 @@ BEGIN
                         RAISE WARNING 'Attempt % of % reached!', cur_attempt, max_attempts;
                         RAISE; -- raise the original exception
                     ELSIF batch_rows > 1 THEN
-                        --позиционируемся на проблемную запись
+                        -- позиционируемся на проблемную запись
                         batch_rows := ceil(batch_rows / multiplier);
                     ELSIF error_table_name IS NULL THEN
-                        EXIT; --выходим из цикла FOR ... LOOP
+                        EXIT; -- выходим из цикла FOR ... LOOP
                     ELSE
                         EXECUTE replace($$
                             INSERT INTO :error_table_name as t (
@@ -550,9 +550,9 @@ BEGIN
                         offset_rows := offset_rows + 1;
                     END IF;
 
-            END; --subtransaction BEGIN/EXCEPTION/END
+            END; -- subtransaction BEGIN/EXCEPTION/END
 
-        END LOOP; --FOR LOOP
+        END LOOP; -- FOR LOOP
 
         IF is_rollback THEN
             ROLLBACK AND CHAIN;
@@ -567,7 +567,7 @@ BEGIN
         total_processed_rows := total_processed_rows + processed_rows;
 
         IF total_processed_rows > total_table_rows THEN
-            --корректируем значения в случае приблизительного вычисления кол-ва строк в таблице
+            -- корректируем значения в случае приблизительного вычисления кол-ва строк в таблице
             total_table_rows  := total_processed_rows;
             result.table_rows := total_table_rows;
         END IF;
@@ -582,10 +582,10 @@ BEGIN
         END IF;
         progress := round(total_processed_rows * 100.0 / total_table_rows, 2);
 
-        --RAISE NOTICE 'Query %, affected % rows, processed % rows (% > %) for % sec %',
+        -- RAISE NOTICE 'Query %, affected % rows, processed % rows (% > %) for % sec %',
         RAISE NOTICE 'Query %: affected % rows, processed % rows, elapsed % sec%',
             cycles, affected_rows, processed_rows,
-            --uniq_column_name, quote_literal(case when uniq_column_type in ('integer', 'bigint') then start_id_bigint::text else start_id_text end),
+            -- uniq_column_name, quote_literal(case when uniq_column_type in ('integer', 'bigint') then start_id_bigint::text else start_id_text end),
             query_time_elapsed, case when is_rollback then ', ROLLBACK MODE!' else '' end;
         RAISE NOTICE 'Total: affected % rows, processed % rows', total_affected_rows, total_processed_rows;
         RAISE NOTICE 'Current datetime: %, elapsed time: %, estimated time: %, progress: % %%',
@@ -604,14 +604,14 @@ BEGIN
 
         IF query_time_elapsed <= max_duration THEN
             -- увеличиваем значение
-            batch_rows := case when query_time_elapsed = 0 then batch_rows * multiplier --protect division by zero below
+            batch_rows := case when query_time_elapsed = 0 then batch_rows * multiplier -- protect division by zero below
                                else least(ceil(batch_rows * max_duration / query_time_elapsed), batch_rows * multiplier)
                           end;
             if has_bad_query_plan and batch_rows > max_batch_rows then
                 batch_rows := max_batch_rows;
             end if;
         ELSIF batch_rows > 1 THEN
-            --уменьшаем значение
+            -- уменьшаем значение
             batch_rows := greatest(ceil(batch_rows * max_duration / query_time_elapsed), ceil(batch_rows / multiplier));
         ELSIF affected_rows > 0 THEN
             delay := round(greatest(sqrt(query_time_elapsed * max_duration) - max_duration, 0), 2);
@@ -638,10 +638,10 @@ END
 $procedure$;
 
 comment on procedure loop_execute(
-    --обязательные параметры:
+    -- обязательные параметры:
     table_name  regclass,
     query       text,
-    --необязательные параметры:
+    -- необязательные параметры:
     disable_triggers boolean,
     batch_rows  integer,
     max_duration    numeric,
@@ -650,15 +650,17 @@ comment on procedure loop_execute(
     total_table_rows integer,
     exception_table_name regclass,
     check_query_plan_rows integer,
-    --возвращаемые из процедуры параметры:
+    -- возвращаемые из процедуры параметры:
     inout result record
 ) is $$
+Safe modify millions rows in table.
+
 Update or delete rows incrementally in batches with multiple separate transactions.
 This maximizes your table availability since you only need to keep locks for a short period of time. Also allows dead rows to be reused.
 There is a progress of execution in percent and a prediction of the end work time!
 
 Процедура для обработки строк в больших таблицах (тысячи и миллионы строк) с контролируемым временем блокировки строк на запись.
-Принцип работы -- выполняет в цикле CTE DML запрос, который добавляет, обновляет или удаляет записи в таблице.
+Принцип работы — выполняет в цикле CTE DML запрос, который добавляет, обновляет или удаляет записи в таблице.
 В завершении каждого цикла изменения фиксируются (либо откатываются для целей тестирования, это настраивается).
 Автоматически адаптируется под нагрузку на БД. На реплику данные передаются постепенно небольшими порциями, а не одним огромным куском.
 В процессе обработки показывает в psql консоли:
