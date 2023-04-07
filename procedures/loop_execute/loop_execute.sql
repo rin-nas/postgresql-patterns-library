@@ -76,6 +76,10 @@ create or replace procedure loop_execute(
                 -- в $3 ограничение OFFSET
                 -- в $4 текущая дата-время с временной зоной (необязательная метка-заменитель)
     -- необязательные параметры:
+    total_query text default 'approx', -- сколько всего записей в срезе таблицы, строки которой будут обработаны (используется для вычисления прогресса выполнения)
+                                       -- если 'approx', то для всей таблицы автоматически вычисляется приблизительное значение на основе статистики, но быстро
+                                       -- если 'exact', то для всей таблицы автоматически вычисляется точное значение, но медленно
+                                       -- в остальных случаях это м.б. SQL запрос типа 'select count(*) from ... where ...'
     disable_triggers boolean default false, -- That disables all triggers, include foreign keys. For the current database session only.
                                             -- Improves speed, saves from side effect. But superuser role required.
                                             -- Be careful to keep your database consistent!
@@ -91,9 +95,6 @@ create or replace procedure loop_execute(
     is_rollback boolean default false, -- откатывать запрос после каждого выполнения в цикле (для целей тестирования)
     max_cycles  integer default null, -- максимальное количество циклов (для целей тестирования при обработке больших таблиц)
                                       -- если null, то без ограничений
-    total_table_rows integer default null, -- сколько всего записей в таблице (для вычисления прогресса выполнения)
-                                           -- если null, то автоматически вычисляется приблизительное значение, но быстро
-                                           -- если <= 0, то автоматически вычисляется точное значение, но медленно
     error_table_name regclass default null, -- если указано, то процедура при выполнении CTE запроса в цикле
                                             -- не прерывает работу на первой ошибке, а сохраняет все ошибки в указанную таблицу
     check_query_plan_rows integer default 1e5, -- если total_table_rows > check_query_plan_rows,
@@ -102,7 +103,7 @@ create or replace procedure loop_execute(
     -- возвращаемые из процедуры параметры:
     inout result record default null
     /*
-        result.table_rows     int     -- сколько всего записей в таблице
+        result.table_rows     int     -- сколько всего записей в срезе таблицы
         result.affected_rows  int     -- сколько всего записей модифицировал пользовательский запрос в таблице
         result.processed_rows int     -- сколько всего записей просмотрел пользовательский запрос в таблице
         result.time_elapsed   numeric -- длительность выполнения, в секундах
@@ -132,6 +133,7 @@ DECLARE
     total_time_elapsed numeric not null default 0; -- длительность выполнения всех запросов, в секундах
     total_affected_rows int not null default 0; -- сколько всего записей модифицировал пользовательский запрос в таблице
     total_processed_rows int not null default 0; -- сколько всего записей просмотрел пользовательский запрос в таблице
+    total_table_rows integer default 0; -- сколько всего записей в таблице (для вычисления прогресса выполнения)
     estimated_time interval; -- оценочное время, сколько осталось работать
     rows_per_second numeric default 0;
     queries_per_second numeric default 0;
@@ -185,6 +187,7 @@ BEGIN
         RAISE EXCEPTION 'PostgreSQL 12+ required!';
     ELSIF table_name IS NULL OR
         query IS NULL OR
+        total_query IS NULL OR
         batch_rows IS NULL OR
         max_duration IS NULL OR
         is_rollback IS NULL OR
@@ -272,18 +275,31 @@ BEGIN
             USING HINT = format(last_subquery_exception_hint, uniq_column_name);
     END IF;
 
-    -- 4) подсчёт общего кол-ва записей
+    -- 4) подсчёт общего кол-ва записей в срезе таблицы
     query_time_start := clock_timestamp();
-    IF total_table_rows IS NULL THEN
-        RAISE NOTICE 'Calculating estimate total rows for table % ...', table_name;
-        select t.reltuples::bigint into total_table_rows
-        from pg_class as t
-        where t.oid = loop_execute.table_name;
-    END IF;
+    IF total_query not in ('approx', 'exact') THEN
 
-    IF total_table_rows <= 0 THEN
-        RAISE NOTICE 'Calculating exact total rows for table % ...', table_name;
-        EXECUTE format('SELECT COUNT(*) FROM %1$s', table_name) INTO total_table_rows;
+        IF total_query !~* table_name_quoted THEN
+            RAISE EXCEPTION 'Incorrect total query!'
+                USING HINT = format('Does total query has table name %I ?', table_name::text);
+        END IF;
+
+        RAISE NOTICE 'Calculating total rows for table % from total query ...', table_name;
+        EXECUTE total_query INTO STRICT total_table_rows;
+    ELSE
+
+        IF total_query = 'approx' THEN
+            RAISE NOTICE 'Calculating approximate (estimate) total rows for table % ...', table_name;
+            select t.reltuples::bigint into strict total_table_rows
+            from pg_class as t
+            where t.oid = loop_execute.table_name;
+        END IF;
+
+        IF total_table_rows <= 0 THEN
+            RAISE NOTICE 'Calculating exact total rows for table % ...', table_name;
+            EXECUTE format('SELECT COUNT(*) FROM %1$s', table_name) INTO STRICT total_table_rows;
+        END IF;
+
     END IF;
 
     query_time_elapsed := round(extract('epoch' from clock_timestamp() - query_time_start)::numeric, 2);
