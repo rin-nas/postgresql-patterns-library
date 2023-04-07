@@ -658,12 +658,12 @@ comment on procedure loop_execute(
     table_name  regclass,
     query       text,
     -- необязательные параметры:
+    total_query text,
     disable_triggers boolean,
     batch_rows  integer,
     max_duration    numeric,
     is_rollback boolean,
     max_cycles  integer,
-    total_table_rows integer,
     exception_table_name regclass,
     check_query_plan_rows integer,
     -- возвращаемые из процедуры параметры:
