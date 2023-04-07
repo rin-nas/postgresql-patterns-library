@@ -1,4 +1,4 @@
-# `loop_execute()` — safely modifies millions of rows in a table.
+# `loop_execute()` — safely modifies millions of rows in a table
 
 English:
 
