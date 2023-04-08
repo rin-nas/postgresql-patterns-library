@@ -26,14 +26,7 @@ call loop_execute(
         SELECT MAX(id)  AS stop_id,
                COUNT(*) AS affected_rows
         FROM s;
-    $$, --query
-    true, --disable_triggers
-    100,  --batch_rows
-    1,    --max_duration
-    true, --is_rollback (for test)
-    10, --max_cycles (for test)
-    null, --total_table_rows
-    null --error_table_name
+    $$
 );
 
 ------------------------------------------------------------------------------------------------------------------------
