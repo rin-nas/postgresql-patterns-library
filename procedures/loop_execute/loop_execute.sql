@@ -1,10 +1,10 @@
 -- PostgreSQL 12+
 -- see general description in end of file
 
-drop table if exists loop_execute_error;
+drop table if exists public.loop_execute_error;
 
 -- необязательная таблица для записи исключений
-create unlogged table loop_execute_error (
+create unlogged table public.loop_execute_error (
     id integer generated always as identity primary key,
     table_name regclass not null,
     uniq_column_name text not null,
@@ -33,39 +33,39 @@ create unlogged table loop_execute_error (
     )
 );
 
-comment on table loop_execute_error is 'Журнал исключений (ошибок) процедуры loop_execute()';
+comment on table public.loop_execute_error is 'Журнал исключений (ошибок) процедуры loop_execute()';
 
-comment on column loop_execute_error.id is 'ID строки';
-comment on column loop_execute_error.table_name is 'Название таблицы';
-comment on column loop_execute_error.uniq_column_name is 'Название primary/unique колонки';
-comment on column loop_execute_error.uniq_column_value_text is 'Значение текстовой колонки';
-comment on column loop_execute_error.uniq_column_value_bigint is 'Значение числовой колонки';
-comment on column loop_execute_error.repeat_error_count is 'Количество одинаковых ошибок';
+comment on column public.loop_execute_error.id is 'ID строки';
+comment on column public.loop_execute_error.table_name is 'Название таблицы';
+comment on column public.loop_execute_error.uniq_column_name is 'Название primary/unique колонки';
+comment on column public.loop_execute_error.uniq_column_value_text is 'Значение текстовой колонки';
+comment on column public.loop_execute_error.uniq_column_value_bigint is 'Значение числовой колонки';
+comment on column public.loop_execute_error.repeat_error_count is 'Количество одинаковых ошибок';
 
-comment on column loop_execute_error.exception_sqlstate is 'Код исключения, возвращаемый SQLSTATE';
-comment on column loop_execute_error.exception_constraint_name is 'Имя ограничения целостности, относящегося к исключению';
-comment on column loop_execute_error.exception_datatype_name is 'Имя типа данных, относящегося к исключению';
+comment on column public.loop_execute_error.exception_sqlstate is 'Код исключения, возвращаемый SQLSTATE';
+comment on column public.loop_execute_error.exception_constraint_name is 'Имя ограничения целостности, относящегося к исключению';
+comment on column public.loop_execute_error.exception_datatype_name is 'Имя типа данных, относящегося к исключению';
 
-comment on column loop_execute_error.exception_schema_name is 'Имя схемы, относящейся к исключению';
-comment on column loop_execute_error.exception_table_name is 'Имя таблицы, относящейся к исключению';
-comment on column loop_execute_error.exception_column_name is 'Имя столбца, относящегося к исключению';
+comment on column public.loop_execute_error.exception_schema_name is 'Имя схемы, относящейся к исключению';
+comment on column public.loop_execute_error.exception_table_name is 'Имя таблицы, относящейся к исключению';
+comment on column public.loop_execute_error.exception_column_name is 'Имя столбца, относящегося к исключению';
 
-comment on column loop_execute_error.exception_message_text is 'Текст основного сообщения исключения';
+comment on column public.loop_execute_error.exception_message_text is 'Текст основного сообщения исключения';
 
-comment on column loop_execute_error.exception_detail is 'Текст детального сообщения исключения (если есть)';
-comment on column loop_execute_error.exception_hint is 'Текст подсказки к исключению (если есть)';
-comment on column loop_execute_error.exception_context is 'Строки текста, описывающие стек вызовов в момент исключения';
+comment on column public.loop_execute_error.exception_detail is 'Текст детального сообщения исключения (если есть)';
+comment on column public.loop_execute_error.exception_hint is 'Текст подсказки к исключению (если есть)';
+comment on column public.loop_execute_error.exception_context is 'Строки текста, описывающие стек вызовов в момент исключения';
 
-comment on column loop_execute_error.created_at is 'Дата и время создания';
+comment on column public.loop_execute_error.created_at is 'Дата и время создания';
 
-create unique index loop_execute_error_uniq on loop_execute_error(
+create unique index loop_execute_error_uniq on public.loop_execute_error(
     table_name, exception_schema_name, exception_table_name, exception_column_name, exception_sqlstate,
     exception_constraint_name, exception_datatype_name, cast(md5(exception_message_text) as uuid), cast(md5(exception_context) as uuid)
 );
 
 ------------------------------------------------------------------------------------------------------------------------
 
-create or replace procedure loop_execute(
+create or replace procedure public.loop_execute(
     -- обязательные параметры:
     table_name  regclass, -- название основной таблицы (дополненное схемой через точку, при необходимости),
                           -- из которой данные порциями в цикле будут читаться и модифицироваться
@@ -110,14 +110,15 @@ create or replace procedure loop_execute(
     */
 )
     language plpgsql
+    -- set search_path = '' -- пока закомментировал из-за ошибки https://stackoverflow.com/questions/59159091/invalid-transaction-termination
 as
 $procedure$
 DECLARE
     -- константы
     quote_regexp constant text not null default '([[\](){}.+*^$|\\?-])';  -- регулярное выражение для квотирования данных в регулярном выражении
-    ident_regexp constant text not null default '(\m[a-zA-Z_]+[a-zA-Z_\d]*\M|"([^"]|"")+")'; -- регулярное выражение для захвата названия SQL идентификатора (таблицы, колонки и др.)
+    ident_regexp constant text not null default '(\m[a-zA-Z_]+[a-zA-Z_\d]*\M|"(?:[^"]|"")+")'; -- регулярное выражение для захвата названия SQL идентификатора (таблицы, колонки и др.)
     alias_regexp constant text not null default format('(\s*(\m[Aa][Ss]\M\s*)?%s)?', ident_regexp); -- регулярное выражение для захвата названия SQL необязательного псевдонима (таблицы, колонки и др.)
-    query_type_regexp constant text not null default '\m(?:(INSERT)\s+INTO(?:\s+ONLY)?|(UPDATE)(?:\s+ONLY)?|(DELETE)\s+FROM(?:\s+ONLY)?)\M';
+    query_type_regexp /*constant*/ text not null default '\m(?:(INSERT)\s+INTO(?:\s+ONLY)?|(UPDATE)(?:\s+ONLY)?|(DELETE)\s+FROM(?:\s+ONLY)?)\M'; -- часть рег. выражения для определения типа запроса, оно будет дополнено названием таблицы
     count_query      constant text not null default 'SELECT COUNT(*)            FROM %1$s WHERE %2$I > $1 AND %2$I <= $2'; -- SQL запрос для получения processed_rows
     count_query_spec constant text not null default 'SELECT COUNT(*), MAX(%2$I) FROM %1$s WHERE %2$I > $1 AND %2$I < $2'; -- SQL запрос для получения processed_rows (для query_canceled)
     last_subquery_exception_hint constant text not null default e'Last subquery must be:\nSELECT MAX(%I) AS stop_id, COUNT(*) AS affected_rows FROM ...';
@@ -126,7 +127,7 @@ DECLARE
     old_session_replication_role constant text not null default current_setting('session_replication_role');
     max_attempts constant smallint not null default 100;
     app_name constant text not null default regexp_replace(current_setting('application_name'), '\s*/\d+(?:\.\d+)?%', '');
-    multiplier constant numeric not null default 2; --not integer!
+    multiplier constant numeric not null default 2; -- not integer!
 
     -- статистика
     total_time_start timestamp not null default clock_timestamp();
@@ -143,8 +144,8 @@ DECLARE
     app_name_new text not null default '';
 
     -- свойства таблицы table_name:
-    table_name_quoted text; -- название таблицы (квотированнное) для использования в рег. выражении
-    uniq_column_name_quoted text; -- название primary/unique колонки (квотированнное) для использования в рег. выражении
+    table_name_regexp text; -- рег. выражение для названия таблицы (которое м.б. квотировано) с необязательной схемой
+    uniq_column_name_regexp text; -- рег. выражении для названия primary/unique колонки (которое м.б. квотировано) с необязательной таблицей
     uniq_column_name text; -- название primary/unique колонки
     uniq_column_type text; -- тип primary/unique колонки
     uniq_index_name text;  -- название индекса primary/unique колонки
@@ -155,18 +156,18 @@ DECLARE
     stop_id_bigint bigint;
     stop_id_text text;
     offset_rows int not null default 0;
-    affected_rows bigint not null default 0; --сколько записей модифицировал пользовательский запрос
-    processed_rows bigint not null default 0; --сколько записей просмотрел пользовательский запрос
+    affected_rows bigint not null default 0; -- сколько записей модифицировал пользовательский запрос
+    processed_rows bigint not null default 0; -- сколько записей просмотрел пользовательский запрос
     query_time_start timestamp;
     query_time_elapsed numeric not null default 0; -- длительность выполнения одного запроса, в секундах
-    query_type text; --тип запроса: INSERT/UPDATE/DELETE
+    query_type text; -- тип запроса: INSERT/UPDATE/DELETE
     query_explain_nodes jsonb;
     query_explain_path jsonpath;
     has_bad_query_plan boolean not null default false;
     max_batch_rows integer not null default 0;
     attempts_time_start timestamp;
     time_elapsed numeric not null default 0;
-    delay numeric; --задержка в секундах при возникновении блокировок
+    delay numeric; -- задержка в секундах при возникновении блокировок
     is_superuser boolean not null default false;
 
     -- для исключений
@@ -242,26 +243,38 @@ BEGIN
 
     -- 3) проверка необходимых частей в CTE запросе, в т.ч. защита от дурака
     -- при преобразовании типа из regclass в text, функция quote_ident() вызывается автоматически
-    table_name_quoted       := '(?:\m|(?="))' || regexp_replace(table_name::text, quote_regexp, '\\\1', 'g') || '(?:\M|(?<="))';
-    uniq_column_name_quoted := '(?:\m|(?="))' || regexp_replace(quote_ident(uniq_column_name), quote_regexp, '\\\1', 'g') || '(?:\M|(?<="))';
-    query_type              := upper((array_remove(
-                                    regexp_match(query, concat(query_type_regexp, '\s*', table_name_quoted), 'i'),
-                                    null
-                               ))[1]);
+    select string_agg(t3.s, '\.' order by t1.o)
+    into table_name_regexp
+    from unnest(string_to_array(loop_execute.table_name::text, '.')) with ordinality as t1(s, o)
+    cross join regexp_replace(t1.s, quote_regexp, '\\\1', 'g') as t2(s) -- квотируем
+    cross join concat('(?:\m|(?="))', t2.s, '(?:\M|(?<="))') as t3(s);
 
-    IF query_type IS NULL THEN
-        RAISE EXCEPTION 'Unknown CTE query type, expected INSERT/UPDATE/DELETE!'
-             USING HINT = format('Does CTE query has an INSERT/UPDATE/DELETE subquery with table name %I ?', table_name::text);
-    ELSIF query !~* format('%s\s*>\s*\$1\M', uniq_column_name_quoted) THEN
+    query_type_regexp := concat(query_type_regexp, '\s+', '(?:', ident_regexp, '\.)?', table_name_regexp);
+    query_type        := upper((array_remove(
+                             regexp_match(query, query_type_regexp, 'i'),
+                             null
+                         ))[1]);
+
+    IF coalesce(query_type, '') not in ('INSERT', 'UPDATE', 'DELETE') THEN
+        -- RAISE NOTICE 'query_type_regexp = %', query_type_regexp; -- debug
+        RAISE EXCEPTION 'Unknown CTE query type or table % is not found in your CTE query!', table_name
+             USING HINT = format('Check that CTE query has an INSERT/UPDATE/DELETE subquery with table name %I', table_name::text);
+    END IF;
+
+    uniq_column_name_regexp := concat('(?:', ident_regexp, '\.)?',
+                                      '(?:\m|(?="))',
+                                      regexp_replace(quote_ident(uniq_column_name), quote_regexp, '\\\1', 'g'), -- квотируем
+                                      '(?:\M|(?<="))');
+    IF query !~* format('%s\s*>\s*\$1\M', uniq_column_name_regexp) THEN
         RAISE EXCEPTION 'Entry "% > $1" is not found in your CTE query!', quote_ident(uniq_column_name)
             USING HINT = format('Add "%I > $1" to WHERE clause of SELECT subquery.', uniq_column_name);
-    ELSIF query !~* format('\morder\s+by\s*(%s\.)?%s(?!\s*\mdesc\M)', ident_regexp, uniq_column_name_quoted) THEN
+    ELSIF query !~* format('\mORDER\s+BY\s*%s(?!\s*\mDESC\M)', uniq_column_name_regexp) THEN
         RAISE EXCEPTION 'Entry "ORDER BY %" is not found in your CTE query!', quote_ident(uniq_column_name)
             USING HINT = format('Add "ORDER BY %I ASC" to end of SELECT subquery.', uniq_column_name);
-    ELSIF query !~* '\mlimit\s+\$2\M' THEN
+    ELSIF query !~* '\mLIMIT\s+\$2\M' THEN
         RAISE EXCEPTION 'Entry "LIMIT $2" is not found in your CTE query!'
             USING HINT = 'Add "LIMIT $2" to end of SELECT subquery.';
-    ELSIF query !~* '\moffset\s+\$3\M' THEN
+    ELSIF query !~* '\mOFFSET\s+\$3\M' THEN
         RAISE EXCEPTION 'Entry "OFFSET $3" is not found in your CTE query!'
             USING HINT = 'Add "OFFSET $3" to end of SELECT subquery.';
     ELSIF regexp_match(query,
@@ -279,7 +292,7 @@ BEGIN
     query_time_start := clock_timestamp();
     IF total_query not in ('approx', 'exact') THEN
 
-        IF total_query !~* table_name_quoted THEN
+        IF total_query !~* table_name_regexp THEN
             RAISE EXCEPTION 'Incorrect total query!'
                 USING HINT = format('Does total query has table name %I ?', table_name::text);
         END IF;
@@ -361,13 +374,15 @@ BEGIN
                 query_explain_path := format($$  $.** ? (@."Relation Name" == "%s")
                                                       ? (@."Node Type" == "Index Scan")
                                                       ? (@."Index Name" == "%s")
-                                             $$, to_json(string_to_array(table_name::text, '.'))->>-1, uniq_index_name)::jsonpath;
+                                             $$,
+                                             to_json(string_to_array(table_name::text, '.'))->>-1/*получаем только название таблицы без схемы*/,
+                                             uniq_index_name)::jsonpath;
             END IF;
 
             IF query_explain_nodes @? query_explain_path THEN
                 RAISE NOTICE 'CTE query execution plan is OK';
                 max_batch_rows := batch_rows;
-                EXIT; --выходим из LOOP
+                EXIT; -- выходим из LOOP
             END IF;
 
             has_bad_query_plan := true;
@@ -423,7 +438,7 @@ BEGIN
                 END IF;
 
                 offset_rows := 0;
-                EXIT; --запрос выполнился успешно, выходим из цикла FOR ... LOOP
+                EXIT; -- запрос выполнился успешно, выходим из цикла FOR ... LOOP
 
             EXCEPTION -- subtransaction ROLLBACK TO SAVEPOINT
                 WHEN lock_not_available /*55P03*/ THEN
@@ -483,7 +498,7 @@ BEGIN
                     END IF;
 
                     affected_rows := 0;
-                    EXIT; --считаем, что часть запроса выполнилась успешно, выходим из цикла FOR ... LOOP
+                    EXIT; -- считаем, что часть запроса выполнилась успешно, выходим из цикла FOR ... LOOP
 
                 -- ошибки ограничения уникальности, максимальной длины полей и другие
                 WHEN others /*все типы ошибок, кроме QUERY_CANCELED и ASSERT_FAILURE*/ THEN
@@ -653,7 +668,7 @@ BEGIN
 END
 $procedure$;
 
-comment on procedure loop_execute(
+comment on procedure public.loop_execute(
     -- обязательные параметры:
     table_name  regclass,
     query       text,
