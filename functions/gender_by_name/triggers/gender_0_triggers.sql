@@ -1,10 +1,12 @@
---Дать возможность в триггере для определения пола указывать пол явно
+-- Дать возможность в триггере для определения пола указывать пол явно
 
 CREATE OR REPLACE FUNCTION trigger_save_update_of() RETURNS TRIGGER
     LANGUAGE plpgsql AS
 $$
 BEGIN
-    -- для передачи данных между триггерными функциями используем временную таблицу, которая доступна только в транзакции
+    -- Для передачи данных между триггерными функциями используем временную таблицу, которая доступна только в транзакции.
+    -- В UPDATE запросе изменённые значения колонки легко узнать по условию NEW.column IS DISTINCT FROM OLD.column
+    -- В этой таблице будут храниться названия колонок, которые были явно указаны в UPDATE запросе, но их значения не изменились!
     CREATE TEMP TABLE IF NOT EXISTS update_of (
         table_oid oid not null,
         column_name text not null,
@@ -88,14 +90,14 @@ DROP TRIGGER IF EXISTS person__gender_determine_step1 ON person;
 CREATE TRIGGER person__gender_determine_step1
     BEFORE UPDATE OF gender ON person -- поле явно указано в UPDATE запросе
     FOR EACH ROW
-    WHEN (OLD.gender IS NOT DISTINCT FROM NEW.gender) --но при этом значение не меняется
+    WHEN (OLD.gender IS NOT DISTINCT FROM NEW.gender) --но при этом значение не изменилось!
     EXECUTE PROCEDURE trigger_save_update_of('gender');
 
 DROP TRIGGER IF EXISTS person__gender_determine_step2 ON person;
 CREATE TRIGGER person__gender_determine_step2
     BEFORE UPDATE OF surname, name, second_name ON person -- одно из полей явно указано в UPDATE запросе
     FOR EACH ROW
-    WHEN ((OLD.surname, OLD.name, OLD.second_name) IS NOT DISTINCT FROM (NEW.surname, NEW.name, NEW.second_name))
+    WHEN ((OLD.surname, OLD.name, OLD.second_name) IS NOT DISTINCT FROM (NEW.surname, NEW.name, NEW.second_name)) --но при этом значение не изменилось!
     EXECUTE PROCEDURE trigger_save_update_of('surname', 'name', 'second_name');
 
 DROP TRIGGER IF EXISTS person__gender_determine_step3 ON person;
