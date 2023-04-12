@@ -70,11 +70,14 @@ create or replace procedure public.loop_execute(
     table_name  regclass, -- название основной таблицы (дополненное схемой через точку, при необходимости),
                           -- из которой данные порциями в цикле будут читаться и модифицироваться
     query text, -- CTE запрос с SELECT, INSERT/UPDATE/DELETE и SELECT запросами для модификации записей
-                -- на каждой итерации цикла в следующие метки-заменители подставляются значения:
-                -- в $1 значение колонки с PK или UK индексом
-                -- в $2 ограничение LIMIT
-                -- в $3 ограничение OFFSET
-                -- в $4 текущая дата-время с временной зоной (необязательная метка-заменитель)
+                /*
+                На каждой итерации цикла в следующие метки-заменители подставляются значения:
+                  в $1 значение колонки с PK или UK индексом
+                  в $2 ограничение LIMIT
+                  в $3 ограничение OFFSET
+                  в $4 дата-время с временной зоной (необязательная метка-заменитель) на момент следующей итерации цикла
+                  в $5 дата-время с временной зоной (необязательная метка-заменитель) на момент запуска процедуры loop_execute()
+                */
     -- необязательные параметры:
     total_query text default 'approx', -- сколько всего записей в срезе таблицы, строки которой будут обработаны (используется для вычисления прогресса выполнения)
                                        -- если 'approx', то для всей таблицы автоматически вычисляется приблизительное значение на основе статистики, но быстро
@@ -130,7 +133,7 @@ DECLARE
     multiplier constant numeric not null default 2; -- not integer!
 
     -- статистика
-    total_time_start timestamp not null default clock_timestamp();
+    total_time_start timestamptz not null default clock_timestamp();
     total_time_elapsed numeric not null default 0; -- длительность выполнения всех запросов, в секундах
     total_affected_rows int not null default 0; -- сколько всего записей модифицировал пользовательский запрос в таблице
     total_processed_rows int not null default 0; -- сколько всего записей просмотрел пользовательский запрос в таблице
@@ -158,14 +161,14 @@ DECLARE
     offset_rows int not null default 0;
     affected_rows bigint not null default 0; -- сколько записей модифицировал пользовательский запрос
     processed_rows bigint not null default 0; -- сколько записей просмотрел пользовательский запрос
-    query_time_start timestamp;
+    query_time_start timestamptz;
     query_time_elapsed numeric not null default 0; -- длительность выполнения одного запроса, в секундах
     query_type text; -- тип запроса: INSERT/UPDATE/DELETE
     query_explain_nodes jsonb;
     query_explain_path jsonpath;
     has_bad_query_plan boolean not null default false;
     max_batch_rows integer not null default 0;
-    attempts_time_start timestamp;
+    attempts_time_start timestamptz;
     time_elapsed numeric not null default 0;
     delay numeric; -- задержка в секундах при возникновении блокировок
     is_superuser boolean not null default false;
@@ -298,7 +301,7 @@ BEGIN
         END IF;
 
         RAISE NOTICE 'Calculating total rows for table % from total query ...', table_name;
-        EXECUTE total_query INTO STRICT total_table_rows;
+        EXECUTE total_query USING null, null, null, clock_timestamp(), total_time_start INTO STRICT total_table_rows;
     ELSE
 
         IF total_query = 'approx' THEN
@@ -360,13 +363,13 @@ BEGIN
             EXIT WHEN total_table_rows <= check_query_plan_rows OR max_batch_rows >= batch_rows;
 
             IF uniq_column_type IN ('integer', 'bigint') THEN
-                RAISE NOTICE 'Check CTE query execution plan using: $1 := %, $2 := %, $3 := %', start_id_bigint, batch_rows, offset_rows;
+                RAISE NOTICE 'CTE query execution plan check using: $1 := %, $2 := %, $3 := %', start_id_bigint, batch_rows, offset_rows;
                 EXECUTE concat('EXPLAIN (FORMAT JSON) ', query)
-                    USING start_id_bigint, batch_rows, offset_rows, clock_timestamp() INTO query_explain_nodes;
+                    USING start_id_bigint, batch_rows, offset_rows, clock_timestamp(), total_time_start INTO query_explain_nodes;
             ELSE
-                RAISE NOTICE 'Check CTE query execution plan using: $1 := %, $2 := %, $3 := %', quote_literal(start_id_text), batch_rows, offset_rows;
+                RAISE NOTICE 'CTE query execution plan check using: $1 := %, $2 := %, $3 := %', quote_literal(start_id_text), batch_rows, offset_rows;
                 EXECUTE concat('EXPLAIN (FORMAT JSON) ', query)
-                    USING start_id_text, batch_rows, offset_rows, clock_timestamp() INTO query_explain_nodes;
+                    USING start_id_text, batch_rows, offset_rows, clock_timestamp(), total_time_start INTO query_explain_nodes;
             END IF;
 
             IF query_explain_path IS NULL THEN
@@ -413,7 +416,7 @@ BEGIN
 
                 IF uniq_column_type IN ('integer', 'bigint') THEN
                     start_id_bigint := coalesce(stop_id_bigint, start_id_bigint);
-                    EXECUTE query USING start_id_bigint, batch_rows, offset_rows, clock_timestamp() INTO STRICT stop_id_bigint, affected_rows;
+                    EXECUTE query USING start_id_bigint, batch_rows, offset_rows, clock_timestamp(), total_time_start INTO STRICT stop_id_bigint, affected_rows;
                     IF start_id_bigint >= stop_id_bigint THEN
                         RAISE EXCEPTION 'Infinity cycle has been found (start_id=% >= stop_id=%)! There are mistake in your CTE query.',
                             start_id_bigint, stop_id_bigint
@@ -423,7 +426,7 @@ BEGIN
                     END IF;
                 ELSE
                     start_id_text := coalesce(stop_id_text, start_id_text);
-                    EXECUTE query USING start_id_text, batch_rows, offset_rows, clock_timestamp() INTO STRICT stop_id_text, affected_rows;
+                    EXECUTE query USING start_id_text, batch_rows, offset_rows, clock_timestamp(), total_time_start INTO STRICT stop_id_text, affected_rows;
                     IF start_id_text >= stop_id_text THEN
                         RAISE EXCEPTION 'Infinity cycle has been found (start_id=% >= stop_id=%)! There are mistake in your CTE query.',
                             quote_literal(start_id_text), quote_literal(stop_id_text)
@@ -613,14 +616,17 @@ BEGIN
         END IF;
         progress := round(total_processed_rows * 100.0 / total_table_rows, 2);
 
-        -- RAISE NOTICE 'Query %, affected % rows, processed % rows (% > %) for % sec %',
         RAISE NOTICE 'Query %: affected % rows, processed % rows, elapsed % sec%',
             cycles, affected_rows, processed_rows,
-            -- uniq_column_name, quote_literal(case when uniq_column_type in ('integer', 'bigint') then start_id_bigint::text else start_id_text end),
             query_time_elapsed, case when is_rollback then ', ROLLBACK MODE!' else '' end;
+
+        RAISE NOTICE 'Using: $1 := %, $2 := %, $3 := %', case when uniq_column_type in ('integer', 'bigint') then start_id_bigint::text
+                                                                    else quote_literal(start_id_text)
+                                                               end, batch_rows, offset_rows;
+
         RAISE NOTICE 'Total: affected % rows, processed % rows', total_affected_rows, total_processed_rows;
         RAISE NOTICE 'Current datetime: %, elapsed time: %, estimated time: %, progress: % %%',
-            clock_timestamp()::timestamp(0),
+            clock_timestamp()::timestamptz(0),
             (clock_timestamp() - total_time_start)::interval(0),
             COALESCE(estimated_time::text, '?'),
             progress;
