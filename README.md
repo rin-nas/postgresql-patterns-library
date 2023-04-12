@@ -1503,8 +1503,8 @@ $$
 BEGIN
     -- обновляем только в случае настоящих изменений в данных
     IF (TG_OP = 'INSERT' OR NEW IS DISTINCT FROM OLD) THEN
-        --NEW.updated_at = now(); --Текущая дата и время (на момент начала транзакции)
-        NEW.updated_at = statement_timestamp(); --Текущая дата и время (на момент начала текущего оператора)
+        NEW.updated_at = transaction_timestamp(); --Текущая дата и время (на момент начала транзакции) = now()
+        --NEW.updated_at = statement_timestamp(); --Текущая дата и время (на момент начала текущего оператора)
         --NEW.updated_at = clock_timestamp(); --Текущая дата и время (меняется в процессе выполнения операторов)
     END IF;
     RETURN NEW;
