@@ -23,7 +23,8 @@
       1. `CREATE UNIQUE INDEX ON paid_services.snapshot_package_limit USING btree (order_item_id, service_id, sort(uniq(zone_ids)))`
       2. `CREATE UNIQUE INDEX ON paid_services.snapshot_package_limit USING btree (order_item_id, service_id, zone_ids)`
 1. Кроме ошибок нехватает рекоментаций, которые можно возвращать в результате работы функции валидации:
-   1. Для текстовых полей с отсутствием ограничения `check(...)` рекомендовать делать валидацию `check(length(col) between X and Y)`.
+   1. Для текстовых колонок `TEXT (VARCHAR)` без ограничения длины и с отсутствием ограничения `check(...)` рекомендовать делать валидацию `check(length(col) between X and Y)`.
+   1. Для колонок типа `json[b]` рекомендовать делать валидацию для верхнего уровня.
    1. CASCADE использовать в миграциях опасно. 
       Удаление может рекурсивно пойти по FK и удалить существующие объекты БД и записи в таблицах.
       Рекомендовать выстроить цепочку удаления объектов в правильной последовательности.
