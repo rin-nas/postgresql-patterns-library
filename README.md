@@ -1805,9 +1805,26 @@ create unique index on table_name (cast(md5(lower(cast(column_name as text))) as
 В PHPStorm есть возможность настроить для результата запроса значения в колонке `application_name`и вписать туда ПО и свою фамилию для своих SQL запросов. Для этого нужно открыть окно "Data Sources and Drivers", выбрать нужное соединение с БД из секции "Project Data Sources", перейти на вкладку "Advanced", отсортировать таблицу по колонке "Name", для "Name" равному "Application Name", изменить значение в колонке "Value" на что-то типа"PhpStorm Petrov Ivan" (строго на английском языке).
 
 ```sql
-SELECT pid, application_name, query, NOW() - query_start AS elapsed
-FROM pg_stat_activity
-ORDER BY elapsed DESC;
+select e.*,
+       pg_blocking_pids(pid),
+       a.*  --, pg_terminate_backend(pid)
+from pg_stat_activity as a
+cross join lateral (
+    select statement_timestamp() - xact_start as xact_elapsed,  --длительность транзакции или NULL, если транзакции нет
+           case when a.state ~ '^idle\M' --idle, idle in transaction, idle in transaction (aborted)
+                    then state_change - query_start
+                else statement_timestamp() - query_start
+               end as query_elapsed, --длительность выполнения запроса всего
+           statement_timestamp() - state_change as state_change_elapsed --длительность после изменения состояния (поля state)
+) as e
+where true
+  and state_change is not null --исключаем запросы для которых нехватило прав доступа
+  --and query ~ 'WITH  base_fcu_table'
+  --and application_name ilike '%RINAT_TEST%'
+  and state not in ('idle', 'idle in transaction', 'idle in transaction (aborted)')
+  --and wait_event = 'ClientRead' --https://postgrespro.ru/docs/postgresql/12/monitoring-stats#WAIT-EVENT-TABLE
+  --and (state_change_elapsed > interval '1 minutes' or xact_elapsed > interval '1 minutes')
+order by greatest(state_change_elapsed, query_elapsed, xact_elapsed) desc;
 ```
 
 ### Как остановить или завершить работу процессов?
