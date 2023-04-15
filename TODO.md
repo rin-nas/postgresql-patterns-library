@@ -450,3 +450,32 @@ where created_at < now() - interval '1 year'
     or session_id is not null
     or is_auto_generated is not null);
 ```
+
+
+# primary_key_columns
+
+source https://supabase.com/blog/audit
+
+```sql
+create or replace function audit.primary_key_columns(entity_oid oid)
+    returns text[]
+    stable
+    security definer
+    language sql
+as $$
+    -- Looks up the names of a table's primary key columns
+    select
+        coalesce(
+            array_agg(pa.attname::text order by pa.attnum),
+            array[]::text[]
+        ) column_names
+    from
+        pg_index pi
+        join pg_attribute pa
+            on pi.indrelid = pa.attrelid
+            and pa.attnum = any(pi.indkey)
+    where
+        indrelid = $1
+        and indisprimary
+$$;
+```
