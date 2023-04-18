@@ -144,5 +144,16 @@ where case when clock_timestamp() < '1s' + statement_timestamp()
       end
 order by i;
 
---See also: https://github.com/decibel/pgerror
+--USE EXAMPLE 4
+SELECT
+    case when data_type = 'jsonb'
+         then raise_exception(data_type, 'Миграцию БД накатывать не нужно, т.к. колонка scope уже имеет тип jsonb')
+    end
+FROM
+    information_schema.columns
+WHERE
+    table_schema = 'public' AND
+    table_name = 'source_1234567890' AND
+    column_name = 'scope';
 
+--See also: https://github.com/decibel/pgerror
