@@ -46,32 +46,44 @@
    1. https://gitlab.com/depesz/pgWikiDont/-/tree/master/
    1. https://www.google.com/search?q=postgresq+schema+linter - ещё ссылки здесь
 1. Объекты БД в одной схеме должны принадлежать одному владельцу (опциональная проверка), см. [`pg_object_owner.sql`](../views/pg_object_owner.sql)
-1. Запретить возможность вставки в таблицу (название не заканчивается на `_log` или `_history`) дубликатов строк, если есть PK на колонку id и нет UK без id. В этой проверке не участвуют колонка с PK, колонки с датой, датой-временем.
+1. Добавить проверку для заперщения возможности вставки в таблицу (название не заканчивается на `_log` или `_history`) дубликатов строк, если есть PK на колонку id и нет UK без id. В этой проверке не участвуют колонка с PK, колонки с датой, датой-временем.
 1. Добавить проверку при наличии расширения https://github.com/okbob/plpgsql_check/
 1. Добавить проверку отсутствия триггерных функций, которые нигде не используются. Пример: удалили триггер, который вызывал триггерную функцию. Теперь функция нигде не используется.
 1. Добавить проверку отсутствия дубликатов ограничений таблицы (`has_not_duplicate_constraint`), которые могут получиться при повторных накатах миграции БД:
-```sql
-with s as (
-   SELECT con.conrelid::regclass                                                   as table_name,
-          array_length(array_agg(pg_get_constraintdef(con.oid, true)), 1)          as def_count,
-          array_length(array_agg(distinct pg_get_constraintdef(con.oid, true)), 1) as def_uniq_count,
-          array_agg(pg_get_constraintdef(con.oid, true)) as def
-   FROM pg_constraint as con
-   WHERE connamespace::regnamespace not in ('pg_catalog', 'information_schema')
-     and con.conrelid != 0
-   GROUP BY con.conrelid::regclass
-)
-select s.table_name, t.*
-from s
-cross join lateral (
-    select u.value,
-           count(*) as duplicate_count
-    from unnest(s.def) as u(value)
-    group by u.value
-    having count(*) > 1
-) as t
-where def_count != def_uniq_count;
-```
+   ```sql
+   with s as (
+      SELECT con.conrelid::regclass                                                   as table_name,
+             array_length(array_agg(pg_get_constraintdef(con.oid, true)), 1)          as def_count,
+             array_length(array_agg(distinct pg_get_constraintdef(con.oid, true)), 1) as def_uniq_count,
+             array_agg(pg_get_constraintdef(con.oid, true)) as def
+      FROM pg_constraint as con
+      WHERE connamespace::regnamespace not in ('pg_catalog', 'information_schema')
+        and con.conrelid != 0
+      GROUP BY con.conrelid::regclass
+   )
+   select s.table_name, t.*
+   from s
+   cross join lateral (
+       select u.value,
+              count(*) as duplicate_count
+       from unnest(s.def) as u(value)
+       group by u.value
+       having count(*) > 1
+   ) as t
+   where def_count != def_uniq_count;
+   ```
+1. Добавить проверку для последовательностей: процент достижения своего максимального значения > N%
+   ```sql
+   select schemaname as schema,
+          sequencename as sequence_name,
+          data_type,
+          used_percent
+   from pg_sequences
+   cross join round(last_value * 100.0 / max_value, 2) as used_percent
+   where last_value is not null /*null means access denied*/ and used_percent > 33
+   order by used_percent desc;
+   ```
+
 # TODO валидация потенциальных ошибок в SQL запросах
 
 К валидатору схемы БД это не относится. Собираю на будущее для другого валидатора.
