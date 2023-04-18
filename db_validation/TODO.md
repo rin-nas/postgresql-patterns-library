@@ -72,7 +72,11 @@
    ) as t
    where def_count != def_uniq_count;
    ```
-1. Добавить проверку для последовательностей: процент достижения своего максимального значения > N%
+1. Добавить проверку: если для последовательностей процент достижения своего максимального значения > N%, то рекоментовать сменить `int` на `bigint`.
+   Ссылки по теме: 
+   [1](https://stackoverflow.com/questions/54795701/migrating-int-to-bigint-in-postgressql-without-any-downtime),
+   [2](http://zemanta.github.io/2021/08/25/column-migration-from-int-to-bigint-in-postgresql/),
+   [3](https://engineering.silverfin.com/pg-zero-downtime-bigint-migration/).
    ```sql
    select schemaname as schema,
           sequencename as sequence_name,
