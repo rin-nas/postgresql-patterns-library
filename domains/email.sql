@@ -1,4 +1,6 @@
-CREATE DOMAIN email AS text CHECK(
+CREATE EXTENSION citext;
+
+CREATE DOMAIN email AS citext CHECK(
     octet_length(VALUE) BETWEEN 6 AND 320 -- https://en.wikipedia.org/wiki/Email_address
     AND VALUE LIKE '_%@_%.__%'            -- rough, but quick check email syntax
     --AND is_email(VALUE)                 -- accurate, but very slow check email syntax, so don't use it in domain!
