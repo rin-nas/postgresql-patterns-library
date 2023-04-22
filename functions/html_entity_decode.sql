@@ -2244,7 +2244,7 @@ as $func$
         for r in
             select distinct
                 m[1] as name
-            from regexp_matches(s, '&[a-zA-Z]+;?', 'g') as m
+            from regexp_matches(s, '&[a-zA-Z][a-zA-Z\d]+;?', 'g') as m
             where map->m[1] is not null
         loop
             s := replace(s, r.name, esc || (map->r.name->>'characters'));
@@ -2272,6 +2272,6 @@ as $func$
     end;
 $func$;
 
--- select html_entity_decode('&#9632; 1 &Afr; 2 &acE; 3 &#x25a0;');
+-- select html_entity_decode('&#9632; 1 &Afr; 2 &acE; 3 &#x25a0; &frac12;');
 
 -- https://stackoverflow.com/questions/14961992/postgresql-replace-html-entities-function
