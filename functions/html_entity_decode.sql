@@ -1,3 +1,4 @@
+--Depends on function public.html_entities() !
 create or replace function html_entity_decode(str text)
     returns text
     immutable
