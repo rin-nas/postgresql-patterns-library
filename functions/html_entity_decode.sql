@@ -82,7 +82,10 @@ as $func$
     end;
 $func$;
 
-comment on function html_entity_decode(str text) is 'Convert HTML entities to their corresponding characters. Depends on public.html_entities()';
+comment on function html_entity_decode(str text) is $$
+    Convert HTML entities to their corresponding characters. 
+    Depends on function public.html_entities()
+$$;
 
 -- TEST
 
