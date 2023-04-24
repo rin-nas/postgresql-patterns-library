@@ -2258,39 +2258,58 @@ as $func$
             int4range(1,            x'D800'::int,   '[)'),
             int4range(x'DFFF'::int, x'10FFFF'::int, '(]')
         ];
+
+        is_replaced bool not null default false;
     begin
+
+        if position('&' in str) = 0 then --speed improvements
+            return str;
+        end if;
+
         for rec in
             select distinct
-                r.m[1] as name
+                r.m[1] as entity
             from regexp_matches(str, '&[a-zA-Z][a-zA-Z\d]+;?', 'g') as r(m)
             where entities->r.m[1] is not null
         loop
-            str := replace(str, rec.name, concat(protect_char, (entities->rec.name->>'characters'), protect_char));
+            str := replace(str, rec.entity, concat(protect_char, (entities->rec.entity->>'characters'), protect_char));
+            is_replaced := true;
         end loop;
 
-        for rec in
-            select distinct
-                r.m[1] as name,
-                r.m[2]::int as codepoint
-            from regexp_matches(str, '(&#(\d{1,7});)', 'g') as r(m) -- maximum valid code point in Unicode is 1114111 (U+10FFFF)
-            where r.m[2]::int <@ any (codepoints_ranges) -- https://postgrespro.ru/docs/postgresql/12/functions-range
-        loop
-            str := replace(str, rec.name, concat(protect_char, chr(rec.codepoint), protect_char));
-        end loop;
+        if position('&#' in str) > 0 then --speed improvements
+            for rec in
+                select distinct
+                    r.m[1] as entity,
+                    r.m[2]::int as codepoint
+                from regexp_matches(str, '(&#(\d{1,7});)', 'g') as r(m) -- maximum valid code point in Unicode is 1114111 (U+10FFFF)
+                where r.m[2]::int <@ any (codepoints_ranges) -- https://postgrespro.ru/docs/postgresql/12/functions-range
+            loop
+                str := replace(str, rec.entity, concat(protect_char, chr(rec.codepoint), protect_char));
+                is_replaced := true;
+            end loop;
 
-        for rec in
-            select distinct
-                r.m[1] as name,
-                x.codepoint
-            from regexp_matches(str, '(&#x([\da-fA-F]{1,6});)', 'g') as r(m) -- maximum valid code point in Unicode is U+10FFFF
-            -- https://stackoverflow.com/questions/8316164/convert-hex-in-text-representation-to-decimal-number
-            cross join lateral (select ('x' || lpad(r.m[2], 8, '0'))::bit(32)::int) as x(codepoint)
-            where codepoint <@ any (codepoints_ranges) -- https://postgrespro.ru/docs/postgresql/12/functions-range
-        loop
-            str := replace(str, rec.name, concat(protect_char, chr(rec.codepoint), protect_char));
-        end loop;
+            if position('&#x' in str) > 0 then --speed improvements
+                for rec in
+                    select distinct
+                        r.m[1] as entity,
+                        x.codepoint
+                    from regexp_matches(str, '(&#x([\da-fA-F]{1,6});)', 'g') as r(m) -- maximum valid code point in Unicode is U+10FFFF
+                    -- https://stackoverflow.com/questions/8316164/convert-hex-in-text-representation-to-decimal-number
+                    cross join lateral (select ('x' || lpad(r.m[2], 8, '0'))::bit(32)::int) as x(codepoint)
+                    where codepoint <@ any (codepoints_ranges) -- https://postgrespro.ru/docs/postgresql/12/functions-range
+                loop
+                    str := replace(str, rec.entity, concat(protect_char, chr(rec.codepoint), protect_char));
+                    is_replaced := true;
+                end loop;
+            end if;
 
-        return replace(str, protect_char, '');
+        end if;
+
+        if is_replaced then
+            return replace(str, protect_char, '');
+        end if;
+
+        return str;
     end;
 $func$;
 
@@ -2312,6 +2331,7 @@ BEGIN
         ('&#x25a0; &#x02DC; &#x1D539; &#x10FFFF;', '■ ˜ 𝔹 􏿿'), --Hex code entities
 
         -- Negative
+        ('abcde', 'abcde'),
         ('&unknown; &unk', '&unknown; &unk'), --Named entities
         ('&#0; &#55296; &#57343; &#1234567; &#9999999; &#05_5', '&#0; &#55296; &#57343; &#1234567; &#9999999; &#05_5'), --Dec code entities
         ('&#x0; &#xD800; &#xDFFF; &#x12d687; &#xffffff; &#x25g0;', '&#x0; &#xD800; &#xDFFF; &#x12d687; &#xffffff; &#x25g0;') --Hex code entities
