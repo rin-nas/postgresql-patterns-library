@@ -110,7 +110,7 @@ BEGIN
         ('&#x0; &#xD800; &#xDFFF; &#x12d687; &#xffffff; &#x25g0;', '&#x0; &#xD800; &#xDFFF; &#x12d687; &#xffffff; &#x25g0;') --Hex code entities
     ) as t(str_in, str_out_expected)
     loop
-        str_out_returned = html_entity_decode2(rec.str_in);
+        str_out_returned = html_entity_decode(rec.str_in);
         ASSERT
             -- the result of the comparison should return boolean
             str_out_returned is not distinct from rec.str_out_expected,
