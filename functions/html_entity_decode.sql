@@ -111,9 +111,9 @@ BEGIN
     loop
         str_out_returned = html_entity_decode2(rec.str_in);
         ASSERT
-            -- результат сравнения должен вернуть boolean
+            -- the result of the comparison should return boolean
             str_out_returned is not distinct from rec.str_out_expected,
-            -- если результат сравнения не true, то вернётся сообщение с ошибкой
+            -- if the comparison result is not true, an error message will be returned
             format('in %L, out expected %L, out returned %L', rec.str_in, rec.str_out_expected, str_out_returned);
     end loop;
 END $$;
