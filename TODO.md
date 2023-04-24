@@ -516,3 +516,19 @@ WHERE
 ORDER BY
   pg_relation_size(c.oid) * s.null_frac DESC;
 ```
+
+# `html_strip_tags()` develop
+
+```sql
+select id,
+       description as html,
+       r6.s as text
+from vacancy
+--convert html to text, последовательность шагов обработки важна!
+cross join regexp_replace(description, '</?(br|li|p)\M[^>]*>', e'\n', 'gi') as r1(s)
+cross join regexp_replace(r1.s, '</?[a-z][^>]*>', ' ', 'gi') as r2(s)
+cross join html_entity_decode(r2.s) as r3(s) -- см. PHP html_entity_decode(), https://github.com/rin-nas/postgresql-patterns-library/blob/master/functions/html_entity_decode.sql
+cross join regexp_replace(r3.s, '(?:\s(?<![\n\r]))+', ' ', 'g') as r4(s) --заменяем несколько пробельных символов на один пробел
+cross join regexp_replace(r4.s, '\s*[\n\r]\s*', e'\n', 'g') as r5(s) --заменяем несколько переносов строк на один перенос
+cross join trim(r5.s, e' \n') as r6(s)
+```
