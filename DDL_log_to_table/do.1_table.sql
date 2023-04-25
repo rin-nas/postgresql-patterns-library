@@ -92,3 +92,4 @@ create index ddl_log_created_at_pg_temp on db_audit.ddl_log (created_at) where s
 create index ddl_log_created_at_event on db_audit.ddl_log (created_at, event);
 
 GRANT SELECT ON db_audit.ddl_log TO alexan;
+GRANT SELECT ON SEQUENCE db_audit.ddl_log_id_seq TO public;
