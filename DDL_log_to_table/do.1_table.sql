@@ -91,5 +91,5 @@ create index ddl_log_multicolumn on db_audit.ddl_log (object_identity, object_ty
 create index ddl_log_created_at_pg_temp on db_audit.ddl_log (created_at) where schema_name = 'pg_temp';
 create index ddl_log_created_at_event on db_audit.ddl_log (created_at, event);
 
-GRANT SELECT ON db_audit.ddl_log TO alexan;
+GRANT SELECT ON TABLE db_audit.ddl_log TO alexan;
 GRANT SELECT ON SEQUENCE db_audit.ddl_log_id_seq TO public;
