@@ -23,9 +23,11 @@ DDL команды обычно логируются в общем большо�
 # Cтатистические SQL запросы с примерами
 
 ```sql
-select tag, event, count(*) as total
+select tag, 
+       event, 
+       count(*) as total
 from db_audit.ddl_log
-group by tag, event
+group by 1, 2
 order by 1, 2;
 ```
 
@@ -84,3 +86,62 @@ order by 1, 2;
 | GRANT | ddl\_command\_end | 5 |
 | REFRESH MATERIALIZED VIEW | ddl\_command\_start | 17534 |
 | REFRESH MATERIALIZED VIEW | ddl\_command\_end | 17534 |
+
+```sql
+select tag,
+       lower(object_type) as object_type,
+       count(*) as total
+from db_audit.ddl_log
+where event != 'ddl_command_start'
+group by 1, 2
+order by 1, 2;
+```
+
+| tag | object\_type | total |
+| :--- | :--- | :--- |
+| ALTER FUNCTION | function | 15 |
+| ALTER SCHEMA | schema | 2 |
+| ALTER SEQUENCE | sequence | 4 |
+| ALTER TABLE | table | 77 |
+| ALTER TABLE | table column | 3 |
+| ALTER TABLE | table constraint | 3 |
+| ALTER TYPE | type | 6 |
+| ALTER VIEW | view | 2 |
+| COMMENT | function | 5 |
+| COMMENT | procedure | 3 |
+| COMMENT | schema | 2 |
+| COMMENT | table | 13 |
+| COMMENT | table column | 132 |
+| COMMENT | type | 7 |
+| COMMENT | view | 5 |
+| CREATE FUNCTION | function | 34 |
+| CREATE INDEX | index | 55 |
+| CREATE PROCEDURE | procedure | 5 |
+| CREATE SCHEMA | schema | 2 |
+| CREATE TABLE | index | 15 |
+| CREATE TABLE | sequence | 28 |
+| CREATE TABLE | table | 13989 |
+| CREATE TABLE AS | table | 8 |
+| CREATE TRIGGER | trigger | 20 |
+| CREATE TYPE | type | 2 |
+| CREATE VIEW | view | 8 |
+| DROP FUNCTION | function | 3 |
+| DROP INDEX | index | 10 |
+| DROP PROCEDURE | procedure | 1 |
+| DROP SCHEMA | schema | 1 |
+| DROP TABLE | default value | 6 |
+| DROP TABLE | index | 34 |
+| DROP TABLE | sequence | 2 |
+| DROP TABLE | table | 18 |
+| DROP TABLE | table constraint | 10 |
+| DROP TABLE | toast table | 10 |
+| DROP TABLE | trigger | 4 |
+| DROP TABLE | type | 48 |
+| DROP TRIGGER | trigger | 1 |
+| DROP TYPE | type | 2 |
+| DROP VIEW | rule | 1 |
+| DROP VIEW | type | 2 |
+| DROP VIEW | view | 1 |
+| GRANT | sequence | 1 |
+| GRANT | table | 4 |
+| REFRESH MATERIALIZED VIEW | materialized view | 17536 |
