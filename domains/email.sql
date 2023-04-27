@@ -1,5 +1,10 @@
-CREATE EXTENSION citext;
+CREATE EXTENSION IF NOT EXISTS citext;
 
+/*
+Why base type is citext and not text?
+Because email is case insensetive, for example: alex.f@ya.ru = Alex.F@ya.ru.
+So we can create unique constraint `alter table my_table add unique (email)`. Not `alter table my_table add unique (lower(email))`.
+*/
 CREATE DOMAIN email AS citext CHECK(
     octet_length(VALUE) BETWEEN 6 AND 320 -- https://en.wikipedia.org/wiki/Email_address
     AND VALUE LIKE '_%@_%.__%'            -- rough, but quick check email syntax
