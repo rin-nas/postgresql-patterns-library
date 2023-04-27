@@ -19,3 +19,68 @@ DDL команды обычно логируются в общем большо�
     * `unused` — здесь хранятся неиспользуемые и уже ненужные объекты БД перед их удалением
 1. Выявить DDL запросы в бизнес-логике приложения (такие запросы должны выполняться под отдельным пользователем?).
 1. Для отдела информационной безопасности появляется возможность интеграции с [SIEM](https://ru.wikipedia.org/wiki/SIEM) в качестве источника данных.
+
+# Cтатистические SQL запросы с примерами
+
+```sql
+select tag, event, count(*) as total
+from db_audit.ddl_log
+group by tag, event
+order by 1, 2;
+```
+
+| tag | event | total |
+| :--- | :--- | :--- |
+| ALTER FUNCTION | ddl\_command\_start | 15 |
+| ALTER FUNCTION | ddl\_command\_end | 15 |
+| ALTER SCHEMA | ddl\_command\_start | 2 |
+| ALTER SCHEMA | ddl\_command\_end | 2 |
+| ALTER SEQUENCE | ddl\_command\_start | 4 |
+| ALTER SEQUENCE | ddl\_command\_end | 4 |
+| ALTER TABLE | ddl\_command\_start | 79 |
+| ALTER TABLE | ddl\_command\_end | 79 |
+| ALTER TABLE | sql\_drop | 4 |
+| ALTER TYPE | ddl\_command\_start | 6 |
+| ALTER TYPE | ddl\_command\_end | 6 |
+| ALTER VIEW | ddl\_command\_start | 2 |
+| ALTER VIEW | ddl\_command\_end | 2 |
+| COMMENT | ddl\_command\_start | 167 |
+| COMMENT | ddl\_command\_end | 167 |
+| CREATE FUNCTION | ddl\_command\_start | 34 |
+| CREATE FUNCTION | ddl\_command\_end | 34 |
+| CREATE INDEX | ddl\_command\_start | 53 |
+| CREATE INDEX | ddl\_command\_end | 55 |
+| CREATE PROCEDURE | ddl\_command\_start | 5 |
+| CREATE PROCEDURE | ddl\_command\_end | 5 |
+| CREATE SCHEMA | ddl\_command\_start | 2 |
+| CREATE SCHEMA | ddl\_command\_end | 2 |
+| CREATE TABLE | ddl\_command\_start | 23258 |
+| CREATE TABLE | ddl\_command\_end | 13831 |
+| CREATE TABLE AS | ddl\_command\_start | 8 |
+| CREATE TABLE AS | ddl\_command\_end | 8 |
+| CREATE TRIGGER | ddl\_command\_start | 20 |
+| CREATE TRIGGER | ddl\_command\_end | 20 |
+| CREATE TYPE | ddl\_command\_start | 2 |
+| CREATE TYPE | ddl\_command\_end | 2 |
+| CREATE VIEW | ddl\_command\_start | 6 |
+| CREATE VIEW | ddl\_command\_end | 8 |
+| DROP FUNCTION | ddl\_command\_start | 3 |
+| DROP FUNCTION | sql\_drop | 3 |
+| DROP INDEX | ddl\_command\_start | 10 |
+| DROP INDEX | sql\_drop | 10 |
+| DROP PROCEDURE | ddl\_command\_start | 1 |
+| DROP PROCEDURE | sql\_drop | 1 |
+| DROP SCHEMA | ddl\_command\_start | 1 |
+| DROP SCHEMA | sql\_drop | 1 |
+| DROP TABLE | ddl\_command\_start | 32167 |
+| DROP TABLE | sql\_drop | 132 |
+| DROP TRIGGER | ddl\_command\_start | 16 |
+| DROP TRIGGER | sql\_drop | 1 |
+| DROP TYPE | ddl\_command\_start | 2 |
+| DROP TYPE | sql\_drop | 2 |
+| DROP VIEW | ddl\_command\_start | 1 |
+| DROP VIEW | sql\_drop | 4 |
+| GRANT | ddl\_command\_start | 5 |
+| GRANT | ddl\_command\_end | 5 |
+| REFRESH MATERIALIZED VIEW | ddl\_command\_start | 17534 |
+| REFRESH MATERIALIZED VIEW | ddl\_command\_end | 17534 |
