@@ -1,0 +1,25 @@
+[2023-05-16 16:05:55] Connected
+my_database> BEGIN
+[2023-05-16 16:05:55] completed in 12 ms
+my_database> SET LOCAL lock_timeout TO '1s'
+[2023-05-16 16:05:55] completed in 10 ms
+my_database> SET LOCAL statement_timeout TO '3s'
+[2023-05-16 16:05:55] completed in 8 ms
+my_database> DROP TRIGGER IF EXISTS person__gender_determine_step1 ON v3_person
+[2023-05-16 16:05:56] [55P03] ERROR: canceling statement due to lock timeout
+my_database> ROLLBACK
+[2023-05-16 16:06:05] completed in 9 ms
+my_database.public> call execute_attempt($$DROP TRIGGER IF EXISTS person__gender_determine_step1 ON v3_person;$$)
+[2023-05-16 16:06:58] [01000] Attempt 1 of 50 to execute query failed due lock timeout 100ms, next replay after 1.00 second
+[2023-05-16 16:06:59] [01000] Attempt 2 of 50 to execute query failed due lock timeout 100ms, next replay after 1.01 second
+[2023-05-16 16:07:01] [01000] Attempt 3 of 50 to execute query failed due lock timeout 100ms, next replay after 1.57 second
+[2023-05-16 16:07:02] [01000] Attempt 4 of 50 to execute query failed due lock timeout 100ms, next replay after 1.78 second
+[2023-05-16 16:07:04] [01000] Attempt 5 of 50 to execute query failed due lock timeout 100ms, next replay after 1.97 second
+[2023-05-16 16:07:06] [01000] Attempt 6 of 50 to execute query failed due lock timeout 100ms, next replay after 1.75 second
+[2023-05-16 16:07:08] [01000] Attempt 7 of 50 to execute query failed due lock timeout 100ms, next replay after 2.74 second
+[2023-05-16 16:07:11] [01000] Attempt 8 of 50 to execute query failed due lock timeout 100ms, next replay after 1.56 second
+[2023-05-16 16:07:13] [01000] Attempt 9 of 50 to execute query failed due lock timeout 100ms, next replay after 2.14 second
+[2023-05-16 16:07:15] [01000] Attempt 10 of 50 to execute query failed due lock timeout 100ms, next replay after 3.19 second
+[2023-05-16 16:07:19] [01000] Attempt 11 of 50 to execute query failed due lock timeout 100ms, next replay after 2.83 second
+[2023-05-16 16:07:22] [01000] Attempt 12 of 50 to execute query failed due lock timeout 100ms, next replay after 4.39 second
+[2023-05-16 16:07:26] completed in 28 s 397 ms
