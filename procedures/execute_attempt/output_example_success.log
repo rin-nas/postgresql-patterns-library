@@ -1,4 +1,3 @@
--- Success story example
 call execute_attempt($sql$
                       alter table region add constraint region_russia_federal_district_required check (country_id is distinct from 1 /*РФ*/ or federal_district_id is not null) not valid;
                   $sql$)
