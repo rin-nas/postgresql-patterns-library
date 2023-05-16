@@ -1,15 +1,3 @@
--- Success story example
-call execute_attempt($sql$
-                      alter table region add constraint region_russia_federal_district_required check (country_id is distinct from 1 /*РФ*/ or federal_district_id is not null) not valid;
-                  $sql$)
-[2023-03-14 16:49:07] [01000] Attempt 1 of 50 to execute query failed due lock timeout 100ms, next replay after 1.00 second
-[2023-03-14 16:49:08] [01000] Attempt 2 of 50 to execute query failed due lock timeout 100ms, next replay after 1.01 second
-[2023-03-14 16:49:10] [01000] Attempt 3 of 50 to execute query failed due lock timeout 100ms, next replay after 1.22 second
-[2023-03-14 16:49:11] [01000] Attempt 4 of 50 to execute query failed due lock timeout 100ms, next replay after 1.77 second
-[2023-03-14 16:49:13] [01000] Attempt 5 of 50 to execute query failed due lock timeout 100ms, next replay after 2.26 second
-[2023-03-14 16:49:15] completed in 7 s 832 ms
-
--- Failed story example
 call execute_attempt('alter table person alter column email type varchar(320)')
 [2021-11-18 01:39:58] [01000] Attempt 1 of 50 to execute query failed due lock timeout 100ms, next replay after 1.00 second
 [2021-11-18 01:40:00] [01000] Attempt 2 of 50 to execute query failed due lock timeout 100ms, next replay after 1.10 second
