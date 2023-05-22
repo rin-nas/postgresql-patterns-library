@@ -1501,7 +1501,8 @@ select * from test_history;
 CREATE OR REPLACE FUNCTION updated_at_set_now() RETURNS TRIGGER LANGUAGE plpgsql AS
 $$
 BEGIN
-    -- обновляем только в случае настоящих изменений в данных
+    -- Обновляем только в случае настоящих изменений в данных
+    -- ВНИМАНИЕ! Эта функция вернёт ошибку, если в таблице имеется колонка с типом JSON (он не поддерживает оператор сравнения)
     IF (TG_OP = 'INSERT' OR NEW IS DISTINCT FROM OLD) THEN
         NEW.updated_at = transaction_timestamp(); --Текущая дата и время (на момент начала транзакции) = now()
         --NEW.updated_at = statement_timestamp(); --Текущая дата и время (на момент начала текущего оператора)
