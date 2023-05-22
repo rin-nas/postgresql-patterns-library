@@ -141,3 +141,47 @@ GRANT SELECT ON db_audit.ddl_objects TO alexan;
 
 --TEST
 table db_audit.ddl_objects limit 100;
+
+------------------------------------------------------------------------------------------------------------------------
+
+CREATE VIEW db_audit.tables_from_unused_migration AS
+WITH t AS (
+    SELECT n.nspname as schema_name,
+           c.relname as table_name,
+           pg_total_relation_size(c.oid) as total_size,
+           (select reltuples::bigint
+            from pg_class
+            where  oid = (n.nspname || '.' || c.relname)::regclass
+           ) as rows_estimate_count
+    FROM pg_catalog.pg_class c,
+         pg_catalog.pg_namespace n
+    WHERE c.relnamespace = n.oid
+      AND c.relkind = 'r'
+      AND n.nspname IN ('migration', 'unused')
+)
+(SELECT
+    t.schema_name,
+    t.table_name,
+    pg_size_pretty(t.total_size) AS pretty_total_size,
+    regexp_replace(t.rows_estimate_count::text, '(?<=\d)(?<!\.[^.]*)(?=(\d\d\d)+(?!\d))', ',', 'g') AS pretty_rows_estimate_count,
+    coalesce(o.updated_at, o.created_at) as table_modified_at
+FROM t
+INNER JOIN db_audit.ddl_objects as o on o.object_identity = t.schema_name || '.' || t.table_name
+ORDER BY schema_name, table_name desc)
+union all
+(select null,
+        '*TOTAL*',
+        pg_size_pretty(sum(t.total_size)),
+        regexp_replace(sum(rows_estimate_count)::text, '(?<=\d)(?<!\.[^.]*)(?=(\d\d\d)+(?!\d))', ',', 'g'),
+        null
+ from t);
+
+comment on view db_audit.tables_from_unused_migration is 'Список таблиц из схем unused и migration с размером занимаемого места, количеством строк и датой модификации в каждой таблице';
+
+grant select on db_audit.tables_from_unused_migration to alexan;
+
+-- TEST
+-- список таблиц, которые можно удалить
+select *
+from db_audit.tables_from_unused_migration
+where table_modified_at < now() - interval '2 week';
