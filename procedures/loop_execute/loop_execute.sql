@@ -83,6 +83,8 @@ create or replace procedure public.loop_execute(
                                        -- если 'approx', то для всей таблицы автоматически вычисляется приблизительное значение на основе статистики, но быстро
                                        -- если 'exact', то для всей таблицы автоматически вычисляется точное значение, но медленно
                                        -- в остальных случаях это м.б. SQL запрос типа 'select count(*) from ... where ...'
+                                          -- не используйте в этом запросе "тяжёлые" вычисления!
+                                          -- обычно срез делают по дате-времени, пример: 'and updated_at between '2023-05-15' and  now()'
     disable_triggers boolean default false, -- That disables all triggers, include foreign keys. For the current database session only.
                                             -- Improves speed, saves from side effect. But superuser role required.
                                             -- Be careful to keep your database consistent!
