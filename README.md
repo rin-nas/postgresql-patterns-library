@@ -1645,7 +1645,19 @@ DROP TYPE status_enum_old;
 
 Получить список всех "нерабочих/битых" индексов в БД:
 ```sql
-select indexrelid::regclass index_name, indrelid::regclass table_name from pg_index where not indisvalid
+SELECT n.nspname              AS schemaname,
+       c.relname              AS tablename,
+       i.relname              AS indexname,
+       t.spcname              AS tablespace,
+       pg_get_indexdef(i.oid) AS indexdef
+FROM pg_index x
+JOIN pg_class c ON c.oid = x.indrelid
+JOIN pg_class i ON i.oid = x.indexrelid
+LEFT JOIN pg_namespace n ON n.oid = c.relnamespace
+LEFT JOIN pg_tablespace t ON t.oid = i.reltablespace
+WHERE (c.relkind = ANY (ARRAY ['r', 'm', 'p']))
+  AND (i.relkind = ANY (ARRAY ['i', 'I']))
+  AND not x.indisvalid;
 ```
 В момент работы `create index concurrently` в списке будут присутствовать "нерабочие/битые" индексы!
 
