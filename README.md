@@ -1678,21 +1678,21 @@ $$;
 
 ```sql
 -- для неуникального индекса:
-CREATE INDEX CONCURRENTLY new_index ON ...; -- делаем дубликат индекса old_index
-DROP INDEX CONCURRENTLY old_index;
-ALTER INDEX new_index RENAME TO old_index;
+CREATE INDEX CONCURRENTLY tmp_index ON ...; -- делаем дубликат индекса my_index
+DROP INDEX CONCURRENTLY my_index;
+ALTER INDEX tmp_index RENAME TO my_index;
 
 -- для первичного ключа:
-CREATE UNIQUE INDEX CONCURRENTLY new_unique_index ON distributors (dist_id);
+CREATE UNIQUE INDEX CONCURRENTLY tmp_unique_index ON distributors (dist_id);
 ALTER TABLE table_name
-    DROP CONSTRAINT old_unique_index,
-    ADD CONSTRAINT old_unique_index PRIMARY KEY USING INDEX new_unique_index;
-    
+    DROP CONSTRAINT my_unique_index,
+    ADD CONSTRAINT my_unique_index PRIMARY KEY USING INDEX tmp_unique_index;
+
 -- для уникального индекса (если на ограничение есть ссылающиеся записи по внешнему ключу из других таблиц, то будет ошибка):
-CREATE UNIQUE INDEX CONCURRENTLY new_unique_index ON ...;
+CREATE UNIQUE INDEX CONCURRENTLY tmp_unique_index ON ...;
 ALTER TABLE table_name
-    DROP CONSTRAINT old_unique_index,
-    ADD CONSTRAINT old_unique_index UNIQUE USING INDEX new_unique_index;
+    DROP CONSTRAINT my_unique_index,
+    ADD CONSTRAINT my_unique_index UNIQUE USING INDEX tmp_unique_index;
 ```
 
 ### Как сделать составной уникальный индекс, где одно из полей может быть null?
