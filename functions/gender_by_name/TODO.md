@@ -9,3 +9,7 @@ select gender_by_name(e'Gorkovenko\nAlexander'); --unknown
 select gender_by_name(e'Kutsemakhin\nMichael'); --unknown
 select gender_by_name(e'Нематов\nУмат'); --female
 ```
+
+# Неопределяется пол
+
+См. `JOB-9968`
