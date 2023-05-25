@@ -72,7 +72,7 @@ $$, 'gx') as t
         1 + coalesce(d.popularity, 0) as weight
     from sentence2 as s
     join depers.person_name_dictionary as d
-         on d.gender is not null -- пропускаем неоднозначные имена типа "никита"
+         on d.gender is not null -- пропускаем неоднозначные имена типа "саша"
          and s.word in (lower(d.name), lower(d.name_translit))
     left join enter_sentence2 as es on es.word = s.word
 
