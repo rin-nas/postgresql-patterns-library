@@ -1,6 +1,28 @@
 # Функция на PostgreSQL 12+ для определение пола по русскоязычным ФИО (фамилии, имени, отчеству)
 
-## Результаты тестирования качества `gender_by_name()`
+## Пример использования
+
+Когда части ФИО находятся в одном поле:
+
+```sql
+select gender_by_name('Савина Анна Николаевна'); --female
+select gender_by_name('Савина Анна'); --female
+select gender_by_name('Анна'); --female
+```
+
+Когда части ФИО находятся в разных полях, то качество детектирования пола можно немного улучшить.
+Последовательность перечисления частей ФИО важна. Нужен именно такой порядок: фамилия, имя, отчество.
+Для разделения частей ФИО используется перенос строки `\n`.
+
+```sql
+select gender_by_name(pg_catalog.concat('Савина', e'\n', 'Анна', e'\n', 'Николаевна')); --female
+select gender_by_name(pg_catalog.concat('Савина', e'\n', 'Анна', e'\n', null)); --female
+select gender_by_name(pg_catalog.concat('Савина', e'\n', 'Анна', e'\n', '')); --female
+select gender_by_name(pg_catalog.concat(null,     e'\n', 'Анна', e'\n', '')); --female
+select gender_by_name(pg_catalog.concat('',       e'\n', 'Анна', e'\n', '')); --female
+```
+
+## Результаты тестирования качества
 
 Для женских ФИО:
 
