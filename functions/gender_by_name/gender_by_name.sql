@@ -25,6 +25,7 @@ with enter_sentence as (
            (array['L', 'F', 'M'])[t.position] as type  -- L - lastname, F - firstname, M - middlename
     from unnest(string_to_array(gender_by_name.full_name, e'\n')) with ordinality t(phrase, position)
     where array_length(regexp_split_to_array(gender_by_name.full_name, '\n\s*'), 1) = 3
+    --where array_length(string_to_array(gender_by_name.full_name, e'\n'), 1) = 3 --TODO speed improvement
 )
 , enter_sentence2 as (
     select distinct on (es.word) es.*
