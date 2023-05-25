@@ -56,3 +56,6 @@ comment on column depers.person_name_dictionary.popularity is 'Популярн�
 alter table depers.person_name_dictionary add primary key (id);
 create unique index on depers.person_name_dictionary (lower(name));
 create index on depers.person_name_dictionary (lower(name_translit));
+
+-- исправления в словаре имён
+update person_name_dictionary set gender = 'male' where name = 'Даня' and gender is null;
