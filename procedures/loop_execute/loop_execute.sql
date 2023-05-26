@@ -154,7 +154,7 @@ DECLARE
     uniq_column_name_regexp text; -- рег. выражении для названия primary/unique колонки (которое м.б. квотировано) с необязательной таблицей
     uniq_column_name text; -- название primary/unique колонки
     uniq_column_type text; -- тип primary/unique колонки
-    uniq_index_name text;  -- название индекса primary/unique колонки
+    uniq_index_names text[];  -- название индексов primary/unique колонок
 
     -- для пользовательского CTE запроса query, выполняемого в цикле:
     start_id_bigint bigint not null default 0;
@@ -218,27 +218,64 @@ BEGIN
       INTO result;
 
     -- 2) проверка наличия not null уникального ключа
+    -- https://stackoverflow.com/questions/2204058/list-columns-with-indexes-in-postgresql
+    WITH u AS (
+        -- сначала получим первичный или уникальный индекс
+        SELECT a.attname,
+               z.col_type,
+               i.relname,
+               t.oid
+        FROM
+            pg_class AS t,
+            pg_class AS i,
+            pg_index AS ix,
+            pg_attribute AS a,
+            pg_namespace AS n,
+            format_type(a.atttypid, a.atttypmod) as z(col_type)
+        WHERE true
+          AND t.oid = loop_execute.table_name
+          AND ix.indisunique
+          AND ix.indrelid = t.oid
+          AND ix.indexrelid = i.oid
+          AND cardinality(ix.indkey) = 1 -- one column in index
+          AND t.relnamespace = n.oid
+          AND a.attrelid = t.oid
+          AND a.attnum = any(ix.indkey)
+          AND a.attnotnull
+        ORDER BY ix.indisprimary DESC -- primary key in priority
+        LIMIT 1
+    )
+    -- select * from u; -- test
+    -- колонка из первичного или уникального индекса может быть частью другого составного индекса, который м.б. неуникальным (да, это выглядит нелогично)!
     SELECT a.attname,
-           format_type(a.atttypid, a.atttypmod),
-           cc.relname
-    INTO uniq_column_name, uniq_column_type, uniq_index_name
-    FROM pg_index AS i,
-         pg_class AS c,
-         pg_class AS cc,
-         pg_attribute AS a,
-         pg_namespace AS n
-    WHERE i.indisunique
-      AND c.oid = loop_execute.table_name
-      AND i.indrelid = c.oid
-      AND i.indexrelid = cc.oid
-      AND c.relnamespace = n.oid
-      AND a.attrelid = c.oid
-      AND a.attnum = any(i.indkey)
+           z.col_type,
+           array_agg(i.relname ORDER BY ix.indisprimary DESC)
+    INTO uniq_column_name, uniq_column_type, uniq_index_names
+    FROM
+        pg_class AS t,
+        pg_class AS i,
+        pg_index AS ix,
+        pg_attribute AS a,
+        pg_namespace AS n,
+        format_type(a.atttypid, a.atttypmod) as z(col_type),
+        u
+    WHERE true
+      AND t.oid = u.oid
+      AND a.attname = u.attname
+      AND z.col_type = u.col_type
+      AND ix.indrelid = t.oid
+      AND ix.indexrelid = i.oid
+      AND t.relnamespace = n.oid
+      AND a.attrelid = t.oid
+      AND a.attnum = any(ix.indkey)
       AND a.attnotnull
-    ORDER BY i.indisprimary DESC -- primary key in priority
+      AND array_position((ix.indkey)[:], a.attnum) = 1 --https://stackoverflow.com/questions/69649737/postgres-array-positionarray-element-sometimes-0-indexed
+    GROUP BY
+        a.attname,
+        z.col_type
     LIMIT 1;
 
-    IF uniq_index_name IS NULL THEN
+    IF uniq_index_names IS NULL THEN
         RAISE EXCEPTION 'Table % must has a column with primary/unique not null index!', table_name;
     END IF;
 
@@ -376,13 +413,16 @@ BEGIN
             END IF;
 
             IF query_explain_path IS NULL THEN
-                -- JSONPath syntax https://habr.com/ru/company/postgrespro/blog/448612/
+                -- JSONPath syntax
+                -- https://postgrespro.ru/docs/postgresql/14/functions-json#FUNCTIONS-SQLJSON-PATH
+                -- https://habr.com/ru/company/postgrespro/blog/448612/
                 query_explain_path := format($$  $.** ? (@."Relation Name" == "%s")
-                                                      ? (@."Node Type" == "Index Scan")
-                                                      ? (@."Index Name" == "%s")
+                                                      ? (@."Node Type" == "Index Scan" || @."Node Type" == "Index Only Scan")
+                                                      ? (%s)
                                              $$,
                                              to_json(string_to_array(table_name::text, '.'))->>-1/*получаем только название таблицы без схемы*/,
-                                             uniq_index_name)::jsonpath;
+                                             (select string_agg(concat('@."Index Name" == "', t.n, '"'), ' || ') from unnest(uniq_index_names) as t(n))
+                                            )::jsonpath;
             END IF;
 
             IF query_explain_nodes @? query_explain_path THEN
