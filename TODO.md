@@ -532,3 +532,10 @@ cross join regexp_replace(r3.s, '(?:\s(?<![\n\r]))+', ' ', 'g') as r4(s) --за�
 cross join regexp_replace(r4.s, '\s*[\n\r]\s*', e'\n', 'g') as r5(s) --заменяем несколько переносов строк на один перенос
 cross join trim(r5.s, e' \n') as r6(s)
 ```
+
+# Как восстановить значение последовательности
+
+```sql
+select setval(pg_get_serial_sequence('paid_services.kpi_bars', 'id'), max(id), true)
+from paid_services.kpi_bars;
+```
