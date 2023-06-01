@@ -2359,7 +2359,7 @@ alter system set max_standby_streaming_delay = '1h';
 
 Параметр `idle_session_timeout` появился только PostgreSQL v14+. 
 В PgBouncer есть параметр [`server_idle_timeout`](https://www.pgbouncer.org/config.html), который по сути является аналогом `idle_session_timeout`.
-Для PostgreSQL версий < 14 cоздайте файл [`pg_terminate_backend_idle.sql`](dba/pg_terminate_backend_idle.sql).
+Для PostgreSQL версий < 14 cоздайте файл [`pg_terminate_backend_idle.sql`](old/pg_terminate/pg_terminate_idle_timeout.sql).
 Запрос необходимо выполнять 1 раз в минуту (например, из крона).
 ```
 $ crontab -l
@@ -2377,7 +2377,7 @@ $ crontab -l
 Среди этих запросов могут быть "невиновные" запросы.
 Но можно терминировать только проблемные запросы и транзакции.
 
-Создайте файл [`pg_terminate_backend_lock.sql`](dba/pg_terminate_backend_lock.sql):
+Создайте файл [`pg_terminate_backend_lock.sql`](old/pg_terminate/pg_terminate_duplicate_locked.sql):
 
 Запрос необходимо выполнять 1 раз в 15 секунд (например, из крона).
 
