@@ -2,7 +2,8 @@
 #для миграций длительностью < 5 минут этот скрипт не нужен, можно подождать
 
 #core_max=`nproc`
-core_max=$((`nproc` / 2))
+#core_max=$((`nproc` / 2))
+core_max=8
 #echo "$core_max"
 
 name=`basename $0 .sh`
