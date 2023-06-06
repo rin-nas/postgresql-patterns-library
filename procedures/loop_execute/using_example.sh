@@ -33,7 +33,7 @@ do
     cat "${name}.sql" \
         | sed -E -e "s/${regexp}/use_parallel(\1, ${core_num}, ${core_max})/g" \
         | psql postgresql://${user}@${host}:${port}/${database}?application_name=${0} \
-               --echo-all \
+               --echo-errors \
                --set="ON_ERROR_STOP=1" \
                --log-file=${name}_${core_num}.log 2> ${name}_${core_num}.stderr.log &
 done
