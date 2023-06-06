@@ -7,6 +7,7 @@ core_max=$((`nproc` / 2))
 
 name=`basename $0 .sh`
 host='host'         #modify me!
+port=5433           #modify me!
 database='database' #modify me!
 user='user'         #modify me!
 #пароль укажите в файле ~/.pgpass
@@ -30,7 +31,7 @@ for ((core_num = 1; core_num <= core_max; core_num++))
 do
     cat "${name}.sql" \
         | sed -E -e "s/${regexp}/use_parallel(\1, ${core_num}, ${core_max})/g" \
-        | psql postgresql://${user}@${host}:5433/${database}?application_name=${0} \
+        | psql postgresql://${user}@${host}:${port}/${database}?application_name=${0} \
                --echo-all \
                --set="ON_ERROR_STOP=1" \
                --log-file=${name}_${core_num}.log 2> ${name}_${core_num}.stderr.log &
