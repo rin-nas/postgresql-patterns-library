@@ -1,4 +1,4 @@
-# PostgreSQL SQL syntax check
+# PostgreSQL SQL syntax check function
 
 ## Usage
 
