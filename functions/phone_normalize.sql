@@ -1,5 +1,3 @@
--- TODO add support for https://datatracker.ietf.org/doc/html/rfc3966  (see https://habr.com/ru/post/278345/)
-
 create or replace function phone_normalize(
     country_code int, --код страны в любом формате или NULL
     area_code text,   --код зоны в любом формате или NULL
@@ -187,3 +185,5 @@ do $$
         assert phone_normalize(null,null, '8x977_1234567') is null;
     end;
 $$;
+
+-- TODO add support for https://datatracker.ietf.org/doc/html/rfc3966  (see https://habr.com/ru/post/278345/)
