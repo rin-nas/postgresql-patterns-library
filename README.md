@@ -2412,11 +2412,11 @@ $ crontab -l
 ### Как узнать отставание реплики?
 
 Запускать на реплике:
-```sql
-select extract('epoch' from now() - pg_last_xact_replay_timestamp()) as replication_lag_seconds,
-       now() - pg_last_xact_replay_timestamp()                       as replication_lag_interval,
-       current_setting('max_standby_streaming_delay')                as max_standby_streaming_delay;
-```
 
+```sql
+select now() - pg_last_xact_replay_timestamp() as replication_lag_interval,
+       current_setting('max_standby_archive_delay') as max_standby_archive_delay,
+       current_setting('max_standby_streaming_delay') as max_standby_streaming_delay
+```
 
 ![visitors](https://visitor-badge.glitch.me/badge?page_id=github.com/rin-nas/postgresql-patterns-library)
