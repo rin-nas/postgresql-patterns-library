@@ -1495,7 +1495,7 @@ select * from test_history;
 
 ### Как сделать автоматически обновляемое поле `updated_at`?
 
-Чтобы в поле `updated_at` хранилась дата-время последнего обновления строки:
+Чтобы в поле `updated_at` хранилась настоящая дата-время последнего обновления строки, независимо от того, какое значение пришло от клиента:
 
 ```sql
 CREATE OR REPLACE FUNCTION updated_at_set_now() RETURNS TRIGGER LANGUAGE plpgsql AS
