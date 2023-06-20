@@ -1,4 +1,3 @@
--- check Regexp syntax exactly in your PostgreSQL version
 CREATE OR REPLACE FUNCTION is_regexp(regexp text, is_notice boolean default false)
     returns boolean
     returns null on null input
@@ -30,6 +29,8 @@ BEGIN
     RETURN TRUE;
 END
 $$;
+
+comment on function is_regexp(regexp text, is_notice boolean) is 'Check Regexp syntax exactly in your PostgreSQL version';
 
 -- TEST
 do $$
