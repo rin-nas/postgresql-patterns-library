@@ -1,17 +1,5 @@
---Валидатор схемы БД v2
-
-create or replace function db_validate_v2(
-    checks                text[] default null,         -- Коды необходимых проверок
-                                                       -- Если передан null - то все возможные проверки
-                                                       -- Если передан пустой массив - то ни одной проверки
-
-    schemas_ignore_regexp text default null,           -- Регулярное выражение со схемами, которые нужно проигнорировать
-    schemas_ignore        regnamespace[] default null, -- Список схем, которые нужно проигнорировать
-                                                       -- В список схем автоматически добавляются служебные схемы "information_schema" и "pg_catalog", указывать их явно не нужно
-
-    tables_ignore_regexp  text default null,           -- Регулярное выражение с таблицами (с указанием схемы), которые нужно проигнорировать
-    tables_ignore         regclass[] default null      -- Список таблиц в формате {scheme}.{table}, которые нужно проигнорировать
-)
+--Валидатор схемы БД v3
+create or replace function db_validation.schema_validate()
     returns void
     stable
     --returns null on null input
@@ -20,13 +8,16 @@ create or replace function db_validate_v2(
     set search_path = ''
 AS $func$
 DECLARE
-    rec record;
+    rec    record;
+    config record;
 BEGIN
 
-    schemas_ignore := coalesce(schemas_ignore, '{}') || '{information_schema,pg_catalog,pg_toast}';
+    select * into config from db_validation.schema_validate_config order by id limit 1;
+
+    config.schemas_ignore := coalesce(config.schemas_ignore, '{}') || '{information_schema,pg_catalog,pg_toast}';
 
     -- Наличие первичного или уникального индекса в таблице
-    if checks is null or 'has_pk_uk' = any(checks) then
+    if config.checks is null or 'has_pk_uk' = any(config.checks) then
         raise notice 'check has_pk_uk';
 
         WITH t AS materialized (
@@ -45,13 +36,13 @@ BEGIN
         cross join lateral (select concat_ws('.', quote_ident(t.table_schema), quote_ident(t.table_name))) as p(table_full_name)
         WHERE true
               -- исключаем схемы
-              AND (schemas_ignore_regexp is null OR t.table_schema !~ schemas_ignore_regexp)
-              AND t.table_schema::regnamespace != ALL (schemas_ignore)
+              AND (config.schemas_ignore_regexp is null OR t.table_schema !~ config.schemas_ignore_regexp)
+              AND t.table_schema::regnamespace != ALL (config.schemas_ignore)
               AND pg_catalog.has_schema_privilege(t.table_schema, 'USAGE') --fix [42501] ERROR: permission denied for schema ...
 
               -- исключаем таблицы
-              AND (tables_ignore_regexp is null OR p.table_full_name !~ tables_ignore_regexp)
-              AND (tables_ignore is null OR p.table_full_name::regclass != ALL (tables_ignore))
+              AND (config.tables_ignore_regexp is null OR p.table_full_name !~ config.tables_ignore_regexp)
+              AND (config.tables_ignore is null OR p.table_full_name::regclass != ALL (config.tables_ignore))
         ORDER BY t.table_schema, t.table_name
         LIMIT 1;
 
@@ -62,7 +53,7 @@ BEGIN
     end if;
 
     -- Отсутствие избыточных индексов в таблице
-    if checks is null or 'has_not_redundant_index' = any(checks) then
+    if config.checks is null or 'has_not_redundant_index' = any(config.checks) then
         raise notice 'check has_not_redundant_index';
 
         WITH index_data AS (
@@ -86,13 +77,13 @@ BEGIN
             WHERE true
 
             -- исключаем схемы
-            AND (schemas_ignore_regexp is null OR t.table_schema !~ schemas_ignore_regexp)
-            AND t.table_schema::regnamespace != ALL (schemas_ignore)
+            AND (config.schemas_ignore_regexp is null OR t.table_schema !~ config.schemas_ignore_regexp)
+            AND t.table_schema::regnamespace != ALL (config.schemas_ignore)
             AND pg_catalog.has_schema_privilege(t.table_schema, 'USAGE') --fix [42501] ERROR: permission denied for schema ...
 
             -- исключаем таблицы
-            AND (tables_ignore_regexp is null OR p.table_full_name !~ tables_ignore_regexp)
-            AND (tables_ignore is null OR p.table_full_name::regclass != ALL (tables_ignore))
+            AND (config.tables_ignore_regexp is null OR p.table_full_name !~ config.tables_ignore_regexp)
+            AND (config.tables_ignore is null OR p.table_full_name::regclass != ALL (config.tables_ignore))
         ),
         t AS (
              SELECT
@@ -129,7 +120,7 @@ BEGIN
     end if;
 
     -- Наличие индексов для ограничений внешних ключей в таблице
-    if checks is null or 'has_index_for_fk' = any(checks) then
+    if config.checks is null or 'has_index_for_fk' = any(config.checks) then
         raise notice 'check has_index_for_fk';
 
         -- запрос для получения FK без индексов, взял по ссылке ниже и модифицировал
@@ -261,7 +252,7 @@ BEGIN
 
     end if;
 
-    if checks is null or 'has_table_comment' = any(checks) then
+    if config.checks is null or 'has_table_comment' = any(config.checks) then
         raise notice 'check has_table_comment';
 
         select --obj_description((t.table_schema || '.' || t.table_name)::regclass::oid),
@@ -275,13 +266,13 @@ BEGIN
           and coalesce(trim(obj_description((t.table_schema || '.' || t.table_name)::regclass::oid)), '') in ('', t.table_name)
 
           -- исключаем схемы
-          AND (schemas_ignore_regexp is null OR t.table_schema !~ schemas_ignore_regexp)
-          AND t.table_schema::regnamespace != ALL (schemas_ignore)
+          AND (config.schemas_ignore_regexp is null OR t.table_schema !~ config.schemas_ignore_regexp)
+          AND t.table_schema::regnamespace != ALL (config.schemas_ignore)
           AND pg_catalog.has_schema_privilege(t.table_schema, 'USAGE') --fix [42501] ERROR: permission denied for schema ...
 
           -- исключаем таблицы
-          AND (tables_ignore_regexp is null OR p.table_full_name !~ tables_ignore_regexp)
-          AND (tables_ignore is null OR p.table_full_name::regclass != ALL (tables_ignore))
+          AND (config.tables_ignore_regexp is null OR p.table_full_name !~ config.tables_ignore_regexp)
+          AND (config.tables_ignore is null OR p.table_full_name::regclass != ALL (config.tables_ignore))
 
           -- исключаем таблицы-секции
           AND NOT EXISTS (SELECT
@@ -298,7 +289,7 @@ BEGIN
 
     end if;
 
-    if checks is null or 'has_column_comment' = any(checks) then
+    if config.checks is null or 'has_column_comment' = any(config.checks) then
         raise notice 'check has_column_comment';
 
         select --col_description((c.table_schema || '.' || t.table_name)::regclass::oid, c.ordinal_position) as column_comment,
@@ -313,13 +304,13 @@ BEGIN
           and coalesce(trim(col_description((c.table_schema || '.' || t.table_name)::regclass::oid, c.ordinal_position)), '') in ('', c.column_name)
 
           -- исключаем схемы
-          AND (schemas_ignore_regexp is null OR t.table_schema !~ schemas_ignore_regexp)
-          AND t.table_schema::regnamespace != ALL (schemas_ignore)
+          AND (config.schemas_ignore_regexp is null OR t.table_schema !~ config.schemas_ignore_regexp)
+          AND t.table_schema::regnamespace != ALL (config.schemas_ignore)
           AND pg_catalog.has_schema_privilege(t.table_schema, 'USAGE') --fix [42501] ERROR: permission denied for schema ...
 
           -- исключаем таблицы
-          AND (tables_ignore_regexp is null OR p.table_full_name !~ tables_ignore_regexp)
-          AND (tables_ignore is null OR p.table_full_name::regclass != ALL (tables_ignore))
+          AND (config.tables_ignore_regexp is null OR p.table_full_name !~ config.tables_ignore_regexp)
+          AND (config.tables_ignore is null OR p.table_full_name::regclass != ALL (config.tables_ignore))
 
           -- исключаем таблицы-секции
           AND NOT EXISTS (SELECT
@@ -339,20 +330,8 @@ BEGIN
 END
 $func$;
 
---alter function db_validate_v2(text[], text, regnamespace[], text, regclass[]) owner to alexan;
+alter function db_validation.schema_validate() owner to alexan;
 
 -- TEST
 -- запускаем валидатор БД
-select db_validate_v2(
-    --'{has_pk_uk,has_not_redundant_index,has_index_for_fk}', --some checks
-    null, --all checks
-
-    null, --schemas_ignore_regexp
-    '{unused,migration,test}', --schemas_ignore
-
-    '(?<![a-z])(te?mp|test|unused|backups?|deleted)(?![a-z])|_\d{4}[_\-]\d\d?$', --tables_ignore_regexp
-    '{_migration_versions}' --tables_ignore
-);
-
-
---SELECT EXISTS(SELECT * FROM pg_proc WHERE proname = 'db_validate_v2'); -- проверяем наличие валидатора
+select db_validation.schema_validate();
