@@ -13,7 +13,7 @@ select
                 when octet_length(s.char) > 1 or s.char !~ '[0-9a-zA-Z:/@._?#-]+'
                 then regexp_replace(upper(substring(s.char::bytea::text, 3)), '(..)', E'%\\1', 'g')
                 else s.char
-                end,
+            end,
             ''
         )
 from (
