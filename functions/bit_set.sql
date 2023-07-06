@@ -26,7 +26,7 @@ $$;
 
 --TEST
 do $$
-BEGIN
+begin
     assert bit_set(8, 4, false) = 0;
     assert bit_set(9, 4, false) = 1;
     assert bit_set(25, 5, false) = 9;
