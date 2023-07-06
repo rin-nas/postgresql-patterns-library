@@ -21,7 +21,7 @@ $$;
 
 --TEST
 do $$
-BEGIN
+begin
     assert not bit_get(7, 4);
     assert bit_get(8, 4);
     assert bit_get(13, 4);
