@@ -855,7 +855,7 @@ ORDER BY kladr_id, duplicate_num
 ### Как получить длительность выполнения запроса в его результате?
 
 ```sql
-SELECT extract(seconds FROM clock_timestamp() - now()) AS execution_time FROM pg_sleep(1.5);
+SELECT extract(seconds FROM clock_timestamp() - now()) AS execution_duration FROM pg_sleep(1.5);
 ```
 Это работает, потому что `now()` вычислится ещё на этапе планирования запроса, а `clock_timestamp()` на этапе выполнения.
 
