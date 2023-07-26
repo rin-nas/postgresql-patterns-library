@@ -1944,9 +1944,28 @@ SELECT
             INNER JOIN pg_attribute AS a ON a.attrelid=c.confrelid AND a.attnum=t.attnum
     ) AS to_cols,
 
-    CASE confupdtype WHEN 'r' THEN 'restrict' WHEN 'c' THEN 'cascade' WHEN 'n' THEN 'set null' WHEN 'd' THEN 'set default' WHEN 'a' THEN 'no action' ELSE NULL END AS on_update,
-    CASE confdeltype WHEN 'r' THEN 'restrict' WHEN 'c' THEN 'cascade' WHEN 'n' THEN 'set null' WHEN 'd' THEN 'set default' WHEN 'a' THEN 'no action' ELSE NULL END AS on_delete,
-    CASE confmatchtype::text WHEN 'f' THEN 'full' WHEN 'p' THEN 'partial' WHEN 'u' THEN 'simple' WHEN 's' THEN 'simple' ELSE NULL END AS match_type,  -- In earlier postgres docs, simple was 'u'nspecified, but current versions use 's'imple.  text cast is required.
+    CASE confupdtype WHEN 'r' THEN 'restrict'
+                     WHEN 'c' THEN 'cascade'
+                     WHEN 'n' THEN 'set null'
+                     WHEN 'd' THEN 'set default'
+                     WHEN 'a' THEN 'no action'
+                     --ELSE NULL
+    END AS on_update,
+
+    CASE confdeltype WHEN 'r' THEN 'restrict'
+                     WHEN 'c' THEN 'cascade'
+                     WHEN 'n' THEN 'set null'
+                     WHEN 'd' THEN 'set default'
+                     WHEN 'a' THEN 'no action'
+                     --ELSE NULL
+    END AS on_delete,
+
+    CASE confmatchtype::text WHEN 'f' THEN 'full'
+                             WHEN 'p' THEN 'partial'
+                             WHEN 'u' THEN 'simple'
+                             WHEN 's' THEN 'simple'
+                             --ELSE NULL
+    END AS match_type,  -- In earlier postgres docs, simple was 'u'nspecified, but current versions use 's'imple.  text cast is required.
 
     pg_catalog.pg_get_constraintdef(c.oid, true) as condef
 FROM
