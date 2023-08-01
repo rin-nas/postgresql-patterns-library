@@ -87,7 +87,8 @@
    1. [Как изменить ограничение внешнего ключа без блокирования таблицы?](#как-изменить-ограничение-внешнего-ключа-без-блокирования-таблицы)
    1. [Как проверить, что при добавлении или обновлении записи заполнены N полей из M возможных?](#как-проверить-что-при-добавлении-или-обновлении-записи-заполнены-n-полей-из-m-возможных)
    1. [Как из enum типа удалить значение?](#как-из-enum-типа-удалить-значение)
-   1. [Как найти все упоминания названия объекта БД по всей БД](#как-найти-все-упоминания-названия-объекта-бд-по-всей-бд)
+   1. [Как найти все упоминания названия объекта БД по всей БД?](#как-найти-все-упоминания-названия-объекта-бд-по-всей-бд)
+   1. [Как изменить тип колонки с `int` на `bigint`?](#как-изменить-тип-колонки-с-int-на-bigint)
   
 **[Индексы](#индексы)**
    1. [Как создать или пересоздать индекс в существующей таблице без её блокирования?](#как-создать-или-пересоздать-индекс-в-существующей-таблице-без-её-блокирования)
@@ -1621,7 +1622,7 @@ DROP TYPE status_enum_old;
 * `invalid input value for enum {enum name}: "{some value}"` - One or more rows have a value ("{some value}") that is not in your new type. You must handle these rows before you can update the column type.
 * `default for column "{column_name}" cannot be cast automatically to type {enum_name}` - The default value for the column is not in your new type. You must change or remove the default value for the column before you can update the column type.
 
-### Как найти все упоминания названия объекта БД по всей БД
+### Как найти все упоминания названия объекта БД по всей БД?
 
 Используется в задаче удаления неиспользуемых объектов БД (таблиц, колонок, функций и т.д.), чтобы найти зависимые объекты БД. Т.о. минимизируются риски сломать что-либо в БД после накатывания миграции.
 
@@ -1632,6 +1633,15 @@ DROP TYPE status_enum_old;
 Ищем упоминания в файле:
 
 `$ reset && cat schema.sql | sed -E 's/^\-\-[^\r\n]*//g' | grep -P -A1 '\btable_name\b'`
+
+### Как изменить тип колонки с `int` на `bigint`?
+
+Если простой alter запрос будет работать > 1-3 секунд, это может привести к очереди запросов, пул которых в БД может закончиться. А это приведёт к отказу в обслуживании.
+
+Поэтому есть обходныек пути:
+* https://stackoverflow.com/questions/54795701/migrating-int-to-bigint-in-postgressql-without-any-downtime
+* http://zemanta.github.io/2021/08/25/column-migration-from-int-to-bigint-in-postgresql/
+* https://engineering.silverfin.com/pg-zero-downtime-bigint-migration/
 
 ## Индексы
 
