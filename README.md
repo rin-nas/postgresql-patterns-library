@@ -119,6 +119,7 @@
    1. [Как журналировать DDL команды в таблицу БД?](#как-журналировать-ddl-команды-в-таблицу-бд)
    1. [Как узнать, какие самые частые действия в таблице совершаются?](#как-узнать-какие-самые-частые-действия-в-таблице-совершаются)
    1. [Как узнать отставание реплики?](#как-узнать-отставание-реплики)
+   1. [Как узнать процент достижения своего максимального значения для последовательностей?](#как-узнать-процент-достижения-своего-максимального-значения-для-последовательностей)
 
 ## Получение пользовательских данных
 
@@ -2437,5 +2438,25 @@ select now() - pg_last_xact_replay_timestamp() as replication_lag_interval,
        current_setting('max_standby_archive_delay') as max_standby_archive_delay,
        current_setting('max_standby_streaming_delay') as max_standby_streaming_delay
 ```
+
+### Как узнать процент достижения своего максимального значения для последовательностей?
+
+```sql
+select schemaname as schema,
+       sequencename as sequence_name,
+       data_type,
+       used_percent
+from pg_sequences
+cross join round(last_value * 100.0 / max_value, 2) as used_percent
+where last_value is not null /*null means access denied*/ and used_percent > 33
+order by used_percent desc; 
+```
+
+Пример результата:
+
+|schema |sequence_name  |data_type | used_percent|
+|-------|---------------|----------|-------------|
+|public |table_a_id_seq |integer   |100          |
+|public |table_b_id_seq |integer   |37.13        |
 
 ![visitors](https://visitor-badge.glitch.me/badge?page_id=github.com/rin-nas/postgresql-patterns-library)
