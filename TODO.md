@@ -451,7 +451,7 @@ where created_at < now() - interval '1 year'
     or is_auto_generated is not null);
 ```
 
-# Улучшаем сжатия TOAST (лайвхак)
+# Улучшаем сжатие TOAST (лайвхак)
 
 ```
 -- смотрим, как сжимаются данные в механизме TOAST
