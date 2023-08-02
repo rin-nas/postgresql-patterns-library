@@ -304,7 +304,7 @@ GROUP BY KEY HAVING count(*)>1
 ORDER BY sum(pg_relation_size(idx)) DESC;
 ```
 
-# Создание индекса для uuid[]
+# Создание GIN индекса для uuid[]
 
 ```sql
 CREATE TABLE someitems (
@@ -451,6 +451,41 @@ where created_at < now() - interval '1 year'
     or is_auto_generated is not null);
 ```
 
+# Улучшаем сжатия TOAST (лайвхак)
+
+```
+-- смотрим, как сжимаются данные в механизме TOAST
+with t as (
+    select id,
+           history,
+           pg_column_size(history) as "varchar",
+           pg_column_size(history::json) as "json",
+           pg_column_size(history::jsonb) as "jsonb"
+    from public.cts__cdr
+    limit 100000
+)
+select pg_size_pretty(sum("varchar")) as varchar_compressed, --108 MB
+       pg_size_pretty(sum("json")) as json_uncompressed, --161 MB
+       pg_size_pretty(sum("jsonb")) as jsonb_uncompressed --180 MB
+from t;
+
+-- https://postgrespro.ru/docs/postgresql/12/storage-toast
+alter table cts__cdr alter column history set storage main; --запрос ничего не блокирует, текущие данные не изменяются
+
+select sum(pg_column_size(history)) --11,424,009
+from public.cts__cdr
+where id < 10000;
+
+update public.cts__cdr
+--set history = trim(history)
+set history = rpad(history, 2000, ' ')
+where id < 10000 and octet_length(history) < 2000;
+
+select sum(pg_column_size(history)) --6,294,649
+from public.cts__cdr
+where id < 10000;
+```
+Значит, можно сделать триггер и обновить все записи для TOAST сжатия.
 
 # primary_key_columns
 
