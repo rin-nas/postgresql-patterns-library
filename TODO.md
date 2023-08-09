@@ -565,3 +565,33 @@ cross join regexp_replace(r3.s, '(?:\s(?<![\n\r]))+', ' ', 'g') as r4(s) --за�
 cross join regexp_replace(r4.s, '\s*[\n\r]\s*', e'\n', 'g') as r5(s) --заменяем несколько переносов строк на один перенос
 cross join trim(r5.s, e' \n') as r6(s) --вырезаем первые и последние пробелы и переносы строк
 ```
+
+# Как посчитать длительность выполнения запросов в CTE?
+
+```sql
+--EXPLAIN
+WITH s AS MATERIALIZED (
+    SELECT id
+    FROM public.cts__cdr
+    WHERE start_at < now() - interval '6 month'
+      AND history IS NOT NULL
+    LIMIT 1000
+),
+u AS (
+    UPDATE public.cts__cdr AS u
+    SET history = NULL
+    FROM s
+    WHERE s.id = u.id
+    RETURNING clock_timestamp() as ts
+)
+SELECT --min(ts) - statement_timestamp() AS select_duration,
+       --max(ts) - min(ts) AS update_duration,
+       --clock_timestamp() - statement_timestamp() AS query_duration,
+       CASE
+           -- WHEN NOT EXISTS(TABLE u) THEN 0
+           WHEN count(ts) < 1000 THEN 0
+           WHEN max(ts) - min(ts) > '1s' THEN (1000 / 2)::int
+           ELSE 1000 * 2
+       END AS next_bath_size
+FROM u;
+```
