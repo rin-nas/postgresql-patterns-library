@@ -330,7 +330,7 @@ BEGIN
 END
 $func$;
 
-alter function db_validation.schema_validate() owner to alexan;
+-- alter function db_validation.schema_validate() owner to alexan;
 
 -- TEST
 -- запускаем валидатор БД
