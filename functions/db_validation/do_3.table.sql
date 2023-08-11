@@ -10,7 +10,7 @@ comment on type db_validation.schema_validate_checks is $$
     has_column_comment      - наличие описания для колонки
 $$;
 
-alter type db_validation.schema_validate_checks owner to alexan;
+-- alter type db_validation.schema_validate_checks owner to alexan;
 
 ------------------------------------------------------------------------------------------------------------------------
 
@@ -43,4 +43,4 @@ $$;
 comment on column db_validation.schema_validate_config.tables_ignore_regexp is 'Регулярное выражение с таблицами (с указанием схемы), которые нужно проигнорировать';
 comment on column db_validation.schema_validate_config.tables_ignore is 'Список таблиц в формате {scheme}.{table}, которые нужно проигнорировать';
 
-alter table db_validation.schema_validate_config owner to alexan;
+-- alter table db_validation.schema_validate_config owner to alexan;
