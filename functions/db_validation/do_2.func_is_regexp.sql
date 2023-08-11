@@ -32,7 +32,7 @@ $$;
 
 comment on function db_validation.is_regexp(regexp text, is_notice boolean) is 'Check Regexp syntax exactly in your PostgreSQL version';
 
-ALTER FUNCTION db_validation.is_regexp(regexp text, is_notice boolean) owner to alexan;
+-- ALTER FUNCTION db_validation.is_regexp(regexp text, is_notice boolean) owner to alexan;
 
 -- TEST
 do $$
