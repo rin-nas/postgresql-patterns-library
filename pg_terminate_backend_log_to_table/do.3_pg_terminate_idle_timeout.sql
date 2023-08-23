@@ -32,9 +32,9 @@ with s as (
     ) as e
     where true
       and a.pid != pg_backend_pid()
-      and a.backend_type = 'client backend'
+      and a.backend_type = 'client backend' --comment on v9.4
+      and a.wait_event_type = 'Client' --comment on v9.4
       and a.state ~ '^idle\M' --idle, idle in transaction, idle in transaction (aborted)
-      and a.wait_event_type = 'Client'
       --значение таймаутов в минутах д.б. меньше, чем указано на реплике в параметрах конфигурации max_standby_archive_delay или max_standby_streaming_delay
       and (e.state_change_elapsed > pg_terminate_idle_timeout.idle_session_timeout or
            e.xact_elapsed         > pg_terminate_idle_timeout.idle_in_transaction_session_timeout)
