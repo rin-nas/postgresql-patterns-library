@@ -569,6 +569,9 @@ cross join trim(r5.s, e' \n') as r6(s) --вырезаем первые и пос
 # Как посчитать длительность выполнения запросов в CTE?
 
 ```sql
+
+START TRANSACTION;
+
 --EXPLAIN
 WITH s AS MATERIALIZED (
     SELECT id
@@ -594,4 +597,6 @@ SELECT --min(ts) - statement_timestamp() AS select_duration,
            ELSE 1000 * 2
        END AS next_bath_size
 FROM u;
+
+ROLLBACK;
 ```
