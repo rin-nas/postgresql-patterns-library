@@ -152,7 +152,7 @@ select count(*) from t;
 --USE EXAMPLE 4
 SELECT
     case when data_type = 'jsonb'
-         then raise_exception(data_type, 'Миграцию БД накатывать не нужно, т.к. колонка scope уже имеет тип jsonb')
+         then public.raise_exception(data_type, 'Миграцию БД накатывать не нужно, т.к. колонка scope уже имеет тип jsonb')
     end
 FROM
     information_schema.columns
