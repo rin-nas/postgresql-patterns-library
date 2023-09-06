@@ -1,4 +1,4 @@
-create or replace function json_unnest_recursive(data json)
+create or replace function public.json_unnest_recursive(data json)
     returns table(
         path  text[],
         value json
@@ -40,10 +40,10 @@ from r
 where json_typeof(value) not in ('object', 'array');
 $func$;
 
-comment on function json_unnest_recursive(data json) is 'Recursive parse nested JSON (arrays and objects), returns keys and its values';
+comment on function public.json_unnest_recursive(data json) is 'Recursive parse nested JSON (arrays and objects), returns keys and its values';
 
 
 --TEST AND USING EXAMPLE
 select cardinality(path) as level, *
-from json_unnest_recursive('{"id":123,"g":null,"a":[9,8],"name":"unknown"}'::json)
+from public.json_unnest_recursive('{"id":123,"g":null,"a":[9,8],"name":"unknown"}'::json)
 order by path;
