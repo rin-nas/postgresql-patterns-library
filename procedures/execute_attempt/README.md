@@ -59,8 +59,8 @@ call execute_attempt('alter table manager_jail alter column email type varchar(3
 Пример 3
 ```sql
 call execute_attempt(
-    'ALTER TABLE person_email ADD COLUMN is_accepted BOOLEAN DEFAULT FALSE NOT NULL',
-    '100ms',
-    50
+    'ALTER TABLE person_email ADD COLUMN is_accepted BOOLEAN DEFAULT FALSE NOT NULL', --query
+    '100ms', --lock_timeout
+    50 --max_attempts
 );
 ```
