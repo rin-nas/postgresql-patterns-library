@@ -44,8 +44,23 @@ COMMIT;
 Рутинную работу по повторному накату из-за ошибки lock timeout можно автоматизировать
 Имеется готовое решение в виде SQL процедуры `execute_attempt()`, в параметр которой нужно передать проблемный DDL запрос.
 
+Пример 1
 ```sql
 call execute_attempt($$
-    drop trigger uniq_vacancy_telephone_vacancy ON v3_vacancy_telephone;
+    drop trigger uniq_vacancy_telephone_vacancy ON vacancy_telephone;
 $$);
+```
+
+Пример 2
+```sql
+call execute_attempt('alter table manager_jail alter column email type varchar(320)');
+```
+
+Пример 3
+```sql
+call execute_attempt(
+    'ALTER TABLE person_email ADD COLUMN is_accepted BOOLEAN DEFAULT FALSE NOT NULL',
+    '100ms',
+    50
+);
 ```
