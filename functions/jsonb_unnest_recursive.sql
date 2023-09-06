@@ -1,5 +1,4 @@
-
-create or replace function jsonb_unnest_recursive(data jsonb)
+create or replace function public.jsonb_unnest_recursive(data jsonb)
     returns table(
         path  text[],
         value jsonb
@@ -41,18 +40,18 @@ from r
 where jsonb_typeof(value) not in ('object', 'array');
 $func$;
 
-comment on function jsonb_unnest_recursive(data jsonb) is 'Recursive parse nested JSON (arrays and objects), returns keys and its values';
+comment on function public.jsonb_unnest_recursive(data jsonb) is 'Recursive parse nested JSON (arrays and objects), returns keys and its values';
 
 
 --TEST AND USING EXAMPLE
 select cardinality(path) as level, *
-from jsonb_unnest_recursive('{"id":123,"g":null,"a":[9,8],"name":"unknown"}'::jsonb)
+from public.jsonb_unnest_recursive('{"id":123,"g":null,"a":[9,8],"name":"unknown"}'::jsonb)
 order by path;
 
 /*
 -- Example: find all emails in JSON data
 select path, value->>0 as email
-from jsonb_unnest_recursive('[{"name":"Mike", "age": 45, "emails":[null, "mike.1977@gmail.com"]}]'::jsonb)
+from public.jsonb_unnest_recursive('[{"name":"Mike", "age": 45, "emails":[null, "mike.1977@gmail.com"]}]'::jsonb)
 where jsonb_typeof(value) = 'string'
   and is_email(value->>0);
 */
