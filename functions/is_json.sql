@@ -1,13 +1,13 @@
--- check JSON syntax exactly in your PostgreSQL version
-create or replace function is_json(str text, is_notice boolean default false)
-    RETURNS boolean
+create or replace function public.is_json(str text, is_notice boolean default false)
+    returns boolean
     returns null on null input
     parallel unsafe --(ERROR:  cannot start subtransactions during a parallel operation)
     stable
     language plpgsql
     set search_path = ''
+    cost 5
 as
-$$ --
+$$
 DECLARE
     exception_sqlstate text;
     exception_message text;
@@ -30,20 +30,22 @@ BEGIN
 END;
 $$;
 
+comment on function public.is_json(str text, is_notice boolean) is 'Checks JSON syntax for input string';
+
 --TEST
 do $$
     begin
         --positive
-        assert is_json('null');
-        assert is_json('true');
-        assert is_json('false');
-        assert is_json('0');
-        assert is_json('-0.1');
-        assert is_json('""');
-        assert is_json('[]');
-        assert is_json('{}');
+        assert public.is_json('null');
+        assert public.is_json('true');
+        assert public.is_json('false');
+        assert public.is_json('0');
+        assert public.is_json('-0.1');
+        assert public.is_json('""');
+        assert public.is_json('[]');
+        assert public.is_json('{}');
         --negative
-        assert not is_json('', true);
-        assert not is_json('{oops}', true);
+        assert not public.is_json('');
+        assert not public.is_json('{oops}');
     end
 $$;
