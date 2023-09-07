@@ -2,8 +2,9 @@
 
 1. Таблица `db_audit.ddl_objects`:
    1. Доработать запрос `select * from db_audit.ddl_objects`, чтобы при отсутствии прав доступа к объектам не выдавал ошибку (частично исправлено)
-   1. Доработать `db_audit.ddl_objects`, чтобы корректно показывал дату создания и обновления для `CREATE VIEW` и `CREATE OR REPLACE VIEW`. С `CREATE [OR REPLACE] FUNCTION/PROCEDURE` уже сложнее, т.к. нужно ещё учитывать параметры функции. 
-1. В `db_audit.ddl_start_log` добавить колонку `transactions_delta` для отображения прошедшего времени между предыдущей и следующей транзакцией (`transaction_start_at - lag(transaction_start_at) over () as transactions_delta`)
+   1. Доработать `db_audit.ddl_objects`, чтобы корректно показывал дату создания и обновления для `CREATE VIEW` и `CREATE OR REPLACE VIEW`. С `CREATE [OR REPLACE] FUNCTION/PROCEDURE` уже сложнее, т.к. нужно ещё учитывать параметры функции.
+1. В таблицу `db_audit.ddl_log` добавить колонку `client_hostname`. В списке процессов (`pg_stat_activity`) такая колонка есть.
+1. В view `db_audit.ddl_start_log` добавить колонку `transactions_delta` для отображения прошедшего времени между предыдущей и следующей транзакцией (`transaction_start_at - lag(transaction_start_at) over () as transactions_delta`)
 1. Сделать представление `db_audit.ddl_objects_deleted`. Иногда нужно смотреть историю удалённых объектов.
 1. Добавить автотесты!
 1. Подумать, как уменьшить кол-во строк, где `tag = 'REFRESH MATERIALIZED VIEW'`:
