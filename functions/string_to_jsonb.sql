@@ -25,7 +25,7 @@ $$;
 --TEST
 do $$
     begin
-        --positive
+        --positive (valid JSON)
         assert jsonb_typeof(public.string_to_jsonb('null')) = 'null';
         assert jsonb_typeof(public.string_to_jsonb('true')) = 'boolean';
         assert jsonb_typeof(public.string_to_jsonb('false')) = 'boolean';
@@ -37,7 +37,7 @@ do $$
         assert jsonb_typeof(public.string_to_jsonb('{}')) = 'object';
         assert jsonb_typeof(public.string_to_jsonb('{"":0}')) = 'object';
 
-        --negative
+        --negative (invalid JSON)
         assert jsonb_typeof(public.string_to_jsonb(null)) is null;
         assert jsonb_typeof(public.string_to_jsonb('')) is null;
         assert jsonb_typeof(public.string_to_jsonb('{"oops"}')) is null;
