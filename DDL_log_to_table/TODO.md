@@ -8,8 +8,8 @@
 1. Добавить автотесты!
 1. Подумать, как уменьшить кол-во строк, где `tag = 'REFRESH MATERIALIZED VIEW'`:
    ```sql
-   select count(*), --10,4786
-   count(*) filter (where tag = 'REFRESH MATERIALIZED VIEW') --35,066
+   select count(*), --179,180
+          count(*) filter (where tag = 'REFRESH MATERIALIZED VIEW') --67,132
    from db_audit.ddl_log;
    ```
 
