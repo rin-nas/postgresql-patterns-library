@@ -1,7 +1,8 @@
 create or replace function public.jsonb_unnest_recursive(data jsonb)
     returns table(
         path  text[],
-        value jsonb
+        value jsonb,
+        member_of text
     )
     immutable
     returns null on null input -- = strict
@@ -11,11 +12,12 @@ create or replace function public.jsonb_unnest_recursive(data jsonb)
     set search_path = ''
 as $func$
     --explain (analyse)
-    with recursive r as
+    with recursive r (path, value, member_of) as
     (
         select
-            array[k.key] as path,
-            v.value
+            array[k.key],
+            v.value,
+            t.type
         from jsonb_typeof(data) as t(type)
         left join jsonb_each(case t.type when 'object' then data end) as o(obj_key, obj_value) on true
         left join jsonb_array_elements(case t.type when 'array' then data end) with ordinality as a(arr_value, arr_key) on true
@@ -26,7 +28,8 @@ as $func$
     union all
         select
             array_append(r.path, k.key),
-            v.value
+            v.value,
+            t.type
         from r
         cross join jsonb_typeof(r.value) as t(type)
         left join jsonb_each(case t.type when 'object' then r.value end) as o(obj_key, obj_value) on true
@@ -46,8 +49,8 @@ comment on function public.jsonb_unnest_recursive(data jsonb) is 'Recursive pars
 
 --TEST AND USING EXAMPLE
 select cardinality(path) as level, *
-from public.jsonb_unnest_recursive('{"id":123,"g":null,"a":[9,8],"name":"unknown"}'::jsonb)
-order by path;
+from public.jsonb_unnest_recursive('{"id":123,"g":null,"a":[9,8,4,5],"name":"unknown", "7": 3}'::jsonb)
+order by level, member_of, path;
 
 /*
 -- Example: find all emails in JSON data
