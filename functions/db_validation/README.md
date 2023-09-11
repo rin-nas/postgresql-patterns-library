@@ -99,5 +99,3 @@ select db_validation.schema_validate();
 </tr>
 </tbody>
 </table>
-
-![visitors](https://visitor-badge.glitch.me/badge?page_id=github.com/rin-nas/postgresql-patterns-library/db_validate.md)
