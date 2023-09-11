@@ -33,7 +33,7 @@ begin
 end;
 $function$;
 
-comment on function public.has_xml(text) is 'Проверяет, что текст содержит xml или html';
+comment on function public.has_xml(text) is 'Checks that the text contains xml or html';
 
 --TEST
 
