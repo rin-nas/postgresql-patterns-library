@@ -1427,7 +1427,7 @@ create table test_history
 (
     id           integer generated always as identity primary key,
     reference_id integer not null, -- идентификатор связанной сущности, FK быть не должно, т.к. запись м.б. удалена
-    created_at timestamp(0) with time zone not null default now() check (created_at <= now() + interval '10m'),
+    created_at   timestamp(0) with time zone not null default now() check (created_at <= now() + interval '10m'),
     old_data     jsonb check(jsonb_typeof(old_data) = 'object'),
     new_data     jsonb check(jsonb_typeof(new_data) = 'object'),
     check (not (old_data is null and new_data is null))
