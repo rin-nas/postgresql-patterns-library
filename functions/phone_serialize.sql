@@ -1,4 +1,4 @@
-create or replace function phone_serialize(
+create or replace function public.phone_serialize(
     country_code text,  --код страны в любом формате или NULL
     area_code text,     --код зоны в любом формате или NULL
     local_number text,   --локальный номер телефона в любом формате или NULL
@@ -19,7 +19,7 @@ begin
 end
 $$;
 
-comment on function phone_serialize(
+comment on function public.phone_serialize(
     country_code text,
     area_code text,
     local_number text,
@@ -28,7 +28,7 @@ comment on function phone_serialize(
 
 ------------------------------------------------------------------------------------------------------------------------
 
-create or replace function phone_serialize(
+create or replace function public.phone_serialize(
     country_code int,   --код страны в любом формате или NULL
     area_code text,     --код зоны в любом формате или NULL
     local_number text,   --локальный номер телефона в любом формате или NULL
@@ -42,10 +42,10 @@ create or replace function phone_serialize(
     language sql
 as
 $$
-    select phone_serialize(country_code::text, area_code, local_number);
+    select public.phone_serialize(country_code::text, area_code, local_number);
 $$;
 
-comment on function phone_serialize(
+comment on function public.phone_serialize(
     country_code int,
     area_code text,
     local_number text,
@@ -57,14 +57,13 @@ comment on function phone_serialize(
 --TEST
 do $$
 begin
-    assert phone_serialize(7, '965', '1234567') = '7(-.-)965(-.-)1234567';
-    assert phone_serialize('+7', '965', '1234567') = '+7(-.-)965(-.-)1234567';
-    assert phone_serialize('', '', '') = '(-.-)(-.-)';
-    assert phone_serialize(null::text, null, null) = '(-.-)(-.-)';
-    assert phone_serialize(null::int, null, null) = '(-.-)(-.-)';
+    assert public.phone_serialize(7, '965', '1234567') = '7(-.-)965(-.-)1234567';
+    assert public.phone_serialize('+7', '965', '1234567') = '+7(-.-)965(-.-)1234567';
+    assert public.phone_serialize('', '', '') = '(-.-)(-.-)';
+    assert public.phone_serialize(null::text, null, null) = '(-.-)(-.-)';
+    assert public.phone_serialize(null::int, null, null) = '(-.-)(-.-)';
 
-    assert phone_serialize('7', '965', '1234567', '') = '79651234567';
-    assert phone_serialize('7', '965', '1234567', null) = '79651234567';
+    assert public.phone_serialize('7', '965', '1234567', '') = '79651234567';
+    assert public.phone_serialize('7', '965', '1234567', null) = '79651234567';
 end;
 $$;
-
