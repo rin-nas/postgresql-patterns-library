@@ -13,7 +13,7 @@
 START TRANSACTION;
  
     SET LOCAL lock_timeout TO '1s';
-    SET LOCAL statement_timeout TO '3s';
+    SET LOCAL statement_timeout TO '30s';
 
     -- здесь ваш код миграции, например
     drop trigger uniq_vacancy_telephone_vacancy ON v3_vacancy_telephone;
