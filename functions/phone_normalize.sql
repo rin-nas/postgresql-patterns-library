@@ -1,4 +1,6 @@
-create or replace function phone_normalize(
+-- TODO add support for https://datatracker.ietf.org/doc/html/rfc3966  (see https://habr.com/ru/post/278345/)
+
+create or replace function public.phone_normalize(
     country_code int, --код страны в любом формате или NULL
     area_code text,   --код зоны в любом формате или NULL
     local_number text --локальный номер телефона в любом формате или NULL
@@ -78,7 +80,7 @@ begin
 end;
 $$;
 
-comment on function phone_normalize(
+comment on function public.phone_normalize(
     country_code int,
     area_code text,
     local_number text
@@ -93,7 +95,7 @@ comment on function phone_normalize(
 Возвращает null, если строка не является номером телефона (минимальная проверка синтаксиса).
 $$;
 
-create or replace function phone_normalize(
+create or replace function public.phone_normalize(
     country_code text,
     area_code text,
     local_number text
@@ -106,14 +108,14 @@ create or replace function phone_normalize(
     set search_path = ''
 as
 $$
-    select phone_normalize(
+    select public.phone_normalize(
                    nullif(trim(country_code), '')::int,
                    area_code,
                    local_number
                )
 $$;
 
-create or replace function phone_normalize(
+create or replace function public.phone_normalize(
     phone text
 )
     returns text
@@ -131,7 +133,7 @@ $$
                       between 1/*+*/ + 8 --https://stackoverflow.com/questions/14894899/what-is-the-minimum-length-of-a-valid-international-phone-number
                       and 1/*+*/ + 15  --https://en.wikipedia.org/wiki/E.164 and https://en.wikipedia.org/wiki/Telephone_numbering_plan)
                   and phone ~ '^\+\d+$' then phone
-             else phone_normalize(null, null, phone)
+             else public.phone_normalize(null, null, phone)
         end;
 $$;
 
@@ -140,50 +142,48 @@ $$;
 do $$
     begin
         --positive
-        assert phone_normalize(' ',null,'+7 (977) 123-45-67') = '+79771234567';
-        assert phone_normalize(null,null,'+7 (977) 123-45-67') = '+79771234567';
-        assert phone_normalize(null,null,'+ 7 (977) 123-45-67') = '+79771234567';
-        assert phone_normalize(null,null,'++ 7 (977) 123-45-67 доб 123 Мария') = '+79771234567';
-        assert phone_normalize(null,null,'+ 7 (977) 123-45-67 вн. 123') = '+79771234567';
-        assert phone_normalize(null,null,'+ 7 (977) 123-45-67 моб.') = '+79771234567';
-        assert phone_normalize(null,null,'8/977/1234567') = '+79771234567';
-        assert phone_normalize(null,null,'8 (812) 123&ndash;45&minus;67') = '+78121234567';
-        assert phone_normalize(null,null,'моб.т. + 7 (977) 123-45-67 ') = '+79771234567';
-        assert phone_normalize(null,null,' моб. 8 /977/ 123-45-67/69/70 Мария/Иван ') = '+79771234567';
-        assert phone_normalize(null,null,' моб. 8 (977) 123-45-67/69 Мария Петровна ') = '+79771234567';
+        assert public.phone_normalize(' ',null,'+7 (977) 123-45-67') = '+79771234567';
+        assert public.phone_normalize(null,null,'+7 (977) 123-45-67') = '+79771234567';
+        assert public.phone_normalize(null,null,'+ 7 (977) 123-45-67') = '+79771234567';
+        assert public.phone_normalize(null,null,'++ 7 (977) 123-45-67 доб 123 Мария') = '+79771234567';
+        assert public.phone_normalize(null,null,'+ 7 (977) 123-45-67 вн. 123') = '+79771234567';
+        assert public.phone_normalize(null,null,'+ 7 (977) 123-45-67 моб.') = '+79771234567';
+        assert public.phone_normalize(null,null,'8/977/1234567') = '+79771234567';
+        assert public.phone_normalize(null,null,'8 (812) 123&ndash;45&minus;67') = '+78121234567';
+        assert public.phone_normalize(null,null,'моб.т. + 7 (977) 123-45-67 ') = '+79771234567';
+        assert public.phone_normalize(null,null,' моб. 8 /977/ 123-45-67/69/70 Мария/Иван ') = '+79771234567';
+        assert public.phone_normalize(null,null,' моб. 8 (977) 123-45-67/69 Мария Петровна ') = '+79771234567';
 
-        assert phone_normalize(null,null,'8(977)123-45-67 с 12.00 до 22.00') = '+79771234567';
-        assert phone_normalize(null,null,'8(977)123-45-67 с 9 по 11 ч. строго') = '+79771234567';
+        assert public.phone_normalize(null,null,'8(977)123-45-67 с 12.00 до 22.00') = '+79771234567';
+        assert public.phone_normalize(null,null,'8(977)123-45-67 с 9 по 11 ч. строго') = '+79771234567';
 
-        assert phone_normalize(null,null,'89771234567') = '+79771234567';
-        assert phone_normalize(null,null,'(977) 123-45-67') = '+79771234567';
-        assert phone_normalize(null,'8 977','123 45 67') = '+79771234567';
-        assert phone_normalize(null,'977','123 45 67') = '+79771234567';
-        assert phone_normalize(null,'831 66 1-23-45',null) = '+78316612345';
+        assert public.phone_normalize(null,null,'89771234567') = '+79771234567';
+        assert public.phone_normalize(null,null,'(977) 123-45-67') = '+79771234567';
+        assert public.phone_normalize(null,'8 977','123 45 67') = '+79771234567';
+        assert public.phone_normalize(null,'977','123 45 67') = '+79771234567';
+        assert public.phone_normalize(null,'831 66 1-23-45',null) = '+78316612345';
 
-        assert phone_normalize('7','','8 977 123 45 67') = '+79771234567';
-        assert phone_normalize(7,'8 977','123 45 67') = '+79771234567';
-        assert phone_normalize(8,'7 977','123 45 67') = '+79771234567';
-        assert phone_normalize(7,'977','1234567') = '+79771234567';
-        assert phone_normalize(8,null,'8 9771234567') = '+79771234567';
+        assert public.phone_normalize('7','','8 977 123 45 67') = '+79771234567';
+        assert public.phone_normalize(7,'8 977','123 45 67') = '+79771234567';
+        assert public.phone_normalize(8,'7 977','123 45 67') = '+79771234567';
+        assert public.phone_normalize(7,'977','1234567') = '+79771234567';
+        assert public.phone_normalize(8,null,'8 9771234567') = '+79771234567';
 
-        assert phone_normalize('8 977 1234567') = '+79771234567';
-        assert phone_normalize('+79771234567') = '+79771234567';
-        assert phone_normalize('677 1234567') = '+76771234567';
-        assert phone_normalize('+677 1234567') = '+6771234567';
-        assert phone_normalize('210(-.-)7905(-.-)1234567') = '+21079051234567';
+        assert public.phone_normalize('8 977 1234567') = '+79771234567';
+        assert public.phone_normalize('+79771234567') = '+79771234567';
+        assert public.phone_normalize('677 1234567') = '+76771234567';
+        assert public.phone_normalize('+677 1234567') = '+6771234567';
+        assert public.phone_normalize('210(-.-)7905(-.-)1234567') = '+21079051234567';
 
         --negative
-        assert phone_normalize(-1,'977','1234567') is null;
-        assert phone_normalize(1000,'977','1234567') is null;
-        assert phone_normalize(null,null,null) is null;
-        assert phone_normalize(null,null,null) is null;
-        assert phone_normalize(null,' ',' ') is null;
-        assert phone_normalize(null,null,'     123456    ') is null;
-        assert phone_normalize(null,'     123456    ',null) is null;
-        assert phone_normalize(null,null, '1234567890123456') is null;
-        assert phone_normalize(null,null, '8x977_1234567') is null;
+        assert public.phone_normalize(-1,'977','1234567') is null;
+        assert public.phone_normalize(1000,'977','1234567') is null;
+        assert public.phone_normalize(null,null,null) is null;
+        assert public.phone_normalize(null,null,null) is null;
+        assert public.phone_normalize(null,' ',' ') is null;
+        assert public.phone_normalize(null,null,'     123456    ') is null;
+        assert public.phone_normalize(null,'     123456    ',null) is null;
+        assert public.phone_normalize(null,null, '1234567890123456') is null;
+        assert public.phone_normalize(null,null, '8x977_1234567') is null;
     end;
 $$;
-
--- TODO add support for https://datatracker.ietf.org/doc/html/rfc3966  (see https://habr.com/ru/post/278345/)
