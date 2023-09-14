@@ -54,8 +54,8 @@ order by level, member_of, path;
 
 /*
 -- Example: find all emails in JSON data
-select path, value#>>'{}' as email
+select path, value #>> '{}' as email
 from public.json_unnest_recursive('[{"name":"Mike", "age": 45, "emails":[null, "mike.1977@gmail.com"]}]'::json)
 where json_typeof(value) = 'string'
-  and public.is_email(value#>>'{}');
+  and public.is_email(value #>> '{}');
 */
