@@ -15,6 +15,8 @@ AS $func$
     with recursive r (path, value, member_of) as
     (
         select
+            --distinct --[42883] ERROR: could not identify an equality operator for type json
+            distinct on (array[k.key], v.value::text, t.type) --!!! fix performance problem
             array[k.key],
             v.value,
             t.type
@@ -47,15 +49,31 @@ $func$;
 comment on function public.json_unnest_recursive(data json) is 'Recursive parse nested JSON (arrays and objects), returns keys and its values';
 
 
+------------------------------------------------------------------------------------------------------------------------
+--TEST
+
 --TEST AND USING EXAMPLE
 select cardinality(path) as level, *
 from public.json_unnest_recursive('{"id":123,"g":null,"a":[9,8,4,5],"name":"unknown", "7": 3}'::json)
 order by level, member_of, path;
 
+
 /*
 -- Example: find all emails in JSON data
-select path, value #>> '{}' as email
-from public.json_unnest_recursive('[{"name":"Mike", "age": 45, "emails":[null, "mike.1977@gmail.com"]}]'::json)
-where json_typeof(value) = 'string'
-  and public.is_email(value #>> '{}');
+select j.path, v.value as email
+from public.json_unnest_recursive('[{"name":"Mike", "age": 45, "emails":[null, "mike.1977@gmail.com", ""]}]'::json) as j
+cross join nullif(j.value #>> '{}', '') as v(value) --cast jsonb scalar to text (can be null)
+where json_typeof(j.value) = 'string'
+  and v.value is not null
+  and public.is_email(v.value);
 */
+
+do $$
+begin
+    assert (select count(*) = 8
+            from public.json_unnest_recursive(
+                    '{"id":123,"g":null,"a":[9,8,4,5],"name":"unknown", "7": 3}'::json
+                 )
+           );
+end;
+$$;
