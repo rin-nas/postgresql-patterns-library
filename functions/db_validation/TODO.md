@@ -97,7 +97,7 @@
        day_to   int check(day_to >= 0 AND day_from <= day_to)
    );
    --vs
-   CREATE TABLE test.test2
+   CREATE TABLE test.test1
    (
        day_from int check(day_from >= 0),
        day_to   int check(day_to >= 0), --тут запятая!
