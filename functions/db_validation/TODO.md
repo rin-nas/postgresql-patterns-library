@@ -89,6 +89,27 @@
    where last_value is not null /*null means access denied*/ and used_percent > 33
    order by used_percent desc;
    ```
+1. Ограничение с условиями между разными колонками на уровне строки таблицы смотрится понятнее. Пример:
+   ```sql
+   CREATE TABLE test.test1
+   (
+       day_from int check(day_from >= 0 and coalesce(day_from, day_to) is not null),
+       day_to   int check(day_to >= 0 AND day_from <= day_to)
+   );
+   --vs
+   CREATE TABLE test.test2
+   (
+       day_from int check(day_from >= 0),
+       day_to   int check(day_to >= 0), --тут запятая!
+       check (coalesce(day_from, day_to) is not null and day_from <= day_to)
+   );
+   -- TEST
+   insert into test.test1 values (null, null); --error
+   insert into test.test1 values (1, null); --ok
+   insert into test.test1 values (null, 1); --ok
+   insert into test.test1 values (1, 2); --ok
+   insert into test.test1 values (2, 1); --error
+   ```  
 
 # TODO валидация потенциальных ошибок в SQL запросах
 
