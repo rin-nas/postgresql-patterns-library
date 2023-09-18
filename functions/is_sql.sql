@@ -4,6 +4,7 @@ CREATE OR REPLACE FUNCTION is_sql(sql text, is_notice boolean default false)
     parallel unsafe --(ERROR:  cannot start subtransactions during a parallel operation)
     language plpgsql
     set search_path = ''
+    set client_min_messages = warning --suppress notice [42622] identifier "..." will be truncated to "..."
     cost 5
 AS
 $$
