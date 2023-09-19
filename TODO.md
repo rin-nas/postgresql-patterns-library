@@ -600,3 +600,95 @@ FROM u;
 
 ROLLBACK;
 ```
+
+# Идея получения даты-времени модификации для сущности
+
+1. Данные каждой сущности (вакансия, компания, персона и т.п.) могут храниться в нескольких связанных таблицах в отношении 1 к 1 (например vacancy, vacancy_additional_information), а так же 1 ко многим (например vacancy_region, vacancy_skills).
+2. Добавим для сущности ещё одну служебную таблицу `{entity}_modified` с отношением 1 к 1. Колонки: `id` сущности и `modified_at`
+3. Тогда, при изменении данных (включая удаление строк) в любой cвязанной таблице сущности, для id сущности запишем `modified_at=now()`. Для этого на все связанные таблицы сущности (со связью по id сущности) повесим триггеры уровня SQL оператора. Такие триггры будут срабатывать не для каждой строки, а 1 раз для SQL оператора `INSERT/UPDATE/DELETE`. В данном случае такие триггеры хорошо подходят для экономии ресурсов БД.
+
+В итоге для каждой нужной нам сущности в БД будет храниться дата-время последней её модификации.
+
+В SQL запросе для получения данных вакансии так же возвращаются данные для связанных сущностей. Например, вакансия связана с компанией. А для компании возвращаются какие-то данные.
+
+Полагаю, что служебные таблицы `{entity}_modified` позволят упростить и ускорить выполнение SQL запроса для получения даты-времени последнего изменения вакансии с учётом других связанных сущностей. Так же отсутствует зависимость от наличия колонки updated_at в каких-либо связанных таблицах.
+
+Пример на SQL
+```sql
+drop table if exists vacancy_modified;
+
+create table vacancy_modified (
+    vacancy_id int primary key references vacancy (id) on delete cascade on update cascade,
+    modified_at timestamptz(0) not null check (modified_at <= now() + interval '10m')
+);
+
+comment on table vacancy_modified is 'Таблица для хранения даты и времени последнего изменения сущности';
+comment on column vacancy_modified.vacancy_id is 'ID вакансии';
+comment on column vacancy_modified.modified_at is 'Дата-время добавления, обновления или удаления сущности или её связей';
+
+--https://www.postgrespro.ru/docs/postgresql/12/plpgsql-trigger
+--drop function if exists vacancy_skill_save_modified_at();
+
+--эту триггерную функцию можно написать так, 
+--чтобы она была одной для всех триггеров от разных сущностей и разных таблиц
+create or replace function vacancy_skill_save_modified_at()
+    returns trigger
+    language plpgsql
+as
+$$
+begin
+    if TG_OP in ('INSERT', 'UPDATE') then
+        insert into vacancy_modified as m (vacancy_id, modified_at)
+            select distinct t.vacancy_id, now()
+            from new_table as t
+            where t.vacancy_id is not null
+        on conflict (vacancy_id)
+        do update set modified_at = excluded.modified_at
+           where m.modified_at != excluded.modified_at;
+    elsif TG_OP = 'DELETE' then
+        insert into vacancy_modified as m (vacancy_id, modified_at)
+            select distinct t.vacancy_id, now()
+            from old_table as t
+            where t.vacancy_id is not null
+        on conflict (vacancy_id)
+        do update set modified_at = excluded.modified_at
+           where m.modified_at != excluded.modified_at;
+    end if;
+    return null; -- возвращаемое значение для триггера AFTER игнорируется
+end
+$$;
+
+--https://www.postgrespro.ru/docs/postgresql/12/sql-createtrigger
+
+create trigger vacancy_skill_statement_trg_after_ins
+    after insert
+    on public.vacancy_skills
+    referencing new table as new_table
+    for each statement
+    execute function vacancy_skill_save_modified_at();
+
+create trigger vacancy_skill_statement_trg_after_upd
+    after update
+    on public.vacancy_skills
+    referencing new table as new_table
+    for each statement
+    execute function vacancy_skill_save_modified_at();
+
+create trigger vacancy_skill_statement_trg_after_del
+    after delete
+    on public.vacancy_skills
+    referencing old table as old_table
+    for each statement
+    execute function vacancy_skill_save_modified_at();
+
+--select * from vacancy; --30923954
+--select * from skill; -- 287508, 530280, 282319, 302537, 283800
+
+insert into vacancy_skills (vacancy_id, skill_id) values
+(30923954, 530280);
+
+delete from vacancy_skills where vacancy_id = 30923954 and skill_id = 530280;
+
+select * from vacancy_modified;
+```
+
