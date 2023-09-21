@@ -231,7 +231,8 @@ DROP TRIGGER IF EXISTS person_email_check_insert ON person_email;
 CREATE TRIGGER person_email_check_insert
     BEFORE INSERT ON person
     FOR EACH ROW
-    WHEN (NEW.email IS NOT NULL)
+    WHEN (NEW.email IS NOT NULL
+          AND NEW.email !~ '^\s*$')
     EXECUTE PROCEDURE person_email_check();
 
 --обновление
@@ -239,7 +240,9 @@ DROP TRIGGER IF EXISTS person_email_check_update ON person_email;
 CREATE TRIGGER person_email_check_update
     BEFORE UPDATE OF email ON person -- поле явно указано в UPDATE запросе!
     FOR EACH ROW
-    WHEN (NEW.email IS NOT NULL AND NEW.email IS DISTINCT FROM OLD.email) -- значение изменилось
+    WHEN (NEW.email IS NOT NULL
+          AND NEW.email !~ '^\s*$'
+          AND NEW.email IS DISTINCT FROM OLD.email) -- значение изменилось
     EXECUTE PROCEDURE person_email_check();
 ```
 
