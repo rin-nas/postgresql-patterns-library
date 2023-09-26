@@ -1,4 +1,4 @@
-create or replace function email_parse(
+create or replace function public.email_parse(
     email text,
     username out text,
     domain out text
@@ -11,11 +11,12 @@ create or replace function email_parse(
     parallel safe
     language sql
     set search_path = ''
+    cost 5
 as
 $$
     -- https://en.wikipedia.org/wiki/Email_address
     select t[1] as username, t[2] as domain
-    from regexp_match(email, '^(.+)@([^@]+)$', '') as t
+    from regexp_match(email, '^(.+)@([^@\s]+)$', '') as t
     where octet_length(email) between 6 and 320
       and position('@' in email) > 1 --speed improves
       and octet_length(t[1]) <= 64 and octet_length(t[2]) <= 255;
@@ -26,9 +27,10 @@ do $$
     begin
         --positive
         assert (select username = '111@222' and domain = 'ya.ru'
-                from email_parse('111@222@ya.ru') as t);
+                from public.email_parse('111@222@ya.ru') as t);
         --negative
-        assert email_parse('123@') is null;
-        assert email_parse('@123') is null;
+        assert public.email_parse('123@') is null;
+        assert public.email_parse('@123') is null;
+        assert public.email_parse('do@it. com') is null;
     end;
 $$;
