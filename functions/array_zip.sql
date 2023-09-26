@@ -1,0 +1,4 @@
+--TODO
+--Returns a merged array of structs in which the N-th struct contains all N-th values of input arrays.
+--https://stackoverflow.com/questions/12414750/is-there-something-like-a-zip-function-in-postgresql-that-combines-two-arrays
+--https://stackoverflow.com/questions/73078841/postgres-pair-elements-of-one-array-with-elements-of-another
