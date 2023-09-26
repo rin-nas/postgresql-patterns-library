@@ -15,13 +15,13 @@
     АА – признак актуальности адресного объекта
 */
 
-CREATE DOMAIN kladr AS text CHECK(octet_length(VALUE) IN (13, 17, 19) AND VALUE ~ '^\d+$');
+CREATE DOMAIN public.kladr AS text CHECK(octet_length(VALUE) IN (13, 17, 19) AND VALUE ~ '^\d+$');
 
-COMMENT ON DOMAIN kladr IS 'Идентификатор КЛАДР';
+COMMENT ON DOMAIN public.kladr IS 'Идентификатор КЛАДР';
 
 --TEST
-select '1234567890123'::kladr; --ok
-select '78000000000172700'::kladr; --ok
-select '1234567890123456789'::kladr; --ok
+select '1234567890123'::public.kladr; --ok
+select '78000000000172700'::public.kladr; --ok
+select '1234567890123456789'::public.kladr; --ok
 
-select '1234567890'::kladr; --error
+select '1234567890'::public.kladr; --error
