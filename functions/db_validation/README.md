@@ -36,14 +36,12 @@ select db_validation.schema_validate();
 <tbody>
 <tr>
     <th class="numberingColumn">№</th>
-    <th colspan="1">В какой версии сделано</th>
     <th colspan="1">Код проверки</th>
     <th>Название проверки</th>
     <th>Назначение (обоснование) проверки</th>
 </tr>
 <tr>
     <td class="numberingColumn">1</td>
-    <td colspan="1">v1</td>
     <td colspan="1"><code>has_pk_uk</code></td>
     <td>
         <p>Наличие первичного или уникального индекса в таблице</p>
@@ -60,7 +58,6 @@ select db_validation.schema_validate();
 </tr>
 <tr>
     <td class="numberingColumn">2</td>
-    <td colspan="1">v1</td>
     <td colspan="1"><code>has_not_redundant_index</code></td>
     <td>
         <p>Отсутствие избыточных индексов в таблице</p></td>
@@ -69,7 +66,6 @@ select db_validation.schema_validate();
 </tr>
 <tr>
     <td class="numberingColumn">3</td>
-    <td colspan="1">v2</td>
     <td colspan="1"><code>has_index_for_fk</code></td>
     <td colspan="1">
     <p>Наличие индексов для ограничений внешних ключей в таблице</p></td>
@@ -77,7 +73,6 @@ select db_validation.schema_validate();
 </tr>
 <tr>
     <td class="numberingColumn">4</td>
-    <td colspan="1">v2</td>
     <td colspan="1"><code>has_table_comment</code></td>
     <td colspan="1">Наличие описания для таблицы</td>
     <td colspan="1">На этапе проектирования описание помогает лучше понять назначение таблицы и на сколько удачно она названа исходя из описания.
@@ -88,7 +83,6 @@ select db_validation.schema_validate();
 </tr>
 <tr>
     <td class="numberingColumn">5</td>
-    <td colspan="1">v2</td>
     <td colspan="1"><code>has_column_comment</code></td>
     <td colspan="1">Наличие описания для колонки</td>
     <td colspan="1">На этапе проектирования описание помогает лучше понять назначение колонки и на сколько удачно она названа исходя из описания.
