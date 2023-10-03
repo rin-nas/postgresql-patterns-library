@@ -1406,7 +1406,7 @@ end
 $code$
 language plpgsql;
 
-create or replace trigger only5 before insert or update on order for each row execute procedure trg_only_5();
+create trigger only5 before insert or update on order for each row execute procedure trg_only_5();
 ```
 
 ### Как сделать журналирование изменений таблицы?
@@ -1445,7 +1445,6 @@ comment on column test_history.created_at is 'Дата-время действи
 comment on column test_history.old_data is 'Старые данные (для INSERT всегда NULL)';
 comment on column test_history.new_data is 'Новые данные (для DELETE всегда NULL)';
 
-drop function if exists test_history_save();
 CREATE OR REPLACE FUNCTION test_history_save() RETURNS TRIGGER
     LANGUAGE plpgsql
 AS
