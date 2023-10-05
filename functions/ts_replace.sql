@@ -12,24 +12,26 @@ create or replace function public.ts_replace(
     cost 1
 as
 $function$
-
-with s as (
-    select case when lexeme = str_from then str_to else lexeme end as new_lexeme,
-           unnest(positions) as position,
-           unnest(weights) as weight
-    from unnest(vector) as t(lexeme, positions, weights)
-)
---https://www.postgrespro.ru/docs/postgresql/12/datatype-textsearch#DATATYPE-TSVECTOR
-select array_to_string(array(
-   select concat(
-                 concat($$'$$, replace(replace(new_lexeme, $$'$$, $$''$$), $$\$$, $$\\$$), $$'$$),
-                 ':',
-                 string_agg(concat(position, weight), ',')
-               )
-   from s
-   group by new_lexeme
-), ' ')::tsvector;
-
+    with s as (
+        select case when lexeme = str_from then str_to
+                    else lexeme
+               end as new_lexeme,
+               unnest(positions) as position,
+               unnest(weights) as weight
+        from unnest(vector) as t(lexeme, positions, weights)
+    )
+    --https://www.postgrespro.ru/docs/postgresql/12/datatype-textsearch#DATATYPE-TSVECTOR
+    select array_to_string(array(
+        select concat(
+                      concat($$'$$,
+                             replace(replace(new_lexeme, $$'$$, $$''$$), $$\$$, $$\\$$),
+                             $$'$$),
+                      ':',
+                      string_agg(concat(position, weight), ',')
+                   )
+        from s
+        group by new_lexeme
+    ), ' ')::tsvector;
 $function$;
 
 comment on function public.ts_replace(vector tsvector, str_from text, str_to text) is 'Заменяет заданную лексему в векторе';
@@ -59,31 +61,45 @@ create or replace function public.ts_replace(
 )
     returns tsvector
     stable
-    returns null on null input
-    parallel safe
-    language sql
+    strict -- returns null if any parameter is null
+    parallel safe -- Postgres 10 or later
+    language plpgsql
     set search_path = ''
     cost 1
 as
 $function$
+begin
+    -- speed improves for empty input arrays
+    if cardinality(arr_from) = 0 or
+       cardinality(arr_to) = 0
+    then
+        return vector;
+    end if;
 
-with s as (
-    select coalesce(arr_to[array_position(arr_from, lexeme)], lexeme) as new_lexeme,
-           unnest(positions) as position,
-           unnest(weights) as weight
-    from unnest(vector) as t(lexeme, positions, weights)
-)
---https://www.postgrespro.ru/docs/postgresql/12/datatype-textsearch#DATATYPE-TSVECTOR
-select array_to_string(array(
-   select concat(
-                 concat($$'$$, replace(replace(new_lexeme, $$'$$, $$''$$), $$\$$, $$\\$$), $$'$$),
-                 ':',
-                 string_agg(concat(position, weight), ',')
-               )
-   from s
-   group by new_lexeme
-), ' ')::tsvector;
-
+    return (
+        with s as (
+            select coalesce(
+                       arr_to[array_position(arr_from, lexeme)],
+                       lexeme
+                   ) as new_lexeme,
+                   unnest(positions) as position,
+                   unnest(weights) as weight
+            from unnest(vector) as t(lexeme, positions, weights)
+        )
+        --https://www.postgrespro.ru/docs/postgresql/12/datatype-textsearch#DATATYPE-TSVECTOR
+        select array_to_string(array(
+            select concat(
+                          concat($$'$$,
+                                 replace(replace(new_lexeme, $$'$$, $$''$$), $$\$$, $$\\$$),
+                                 $$'$$),
+                          ':',
+                          string_agg(concat(position, weight), ',')
+                        )
+            from s
+            group by new_lexeme
+        ), ' ')::tsvector
+    );
+end;
 $function$;
 
 comment on function public.ts_replace(vector tsvector, arr_from text[], arr_to text[]) is 'Заменяет заданные лексемы в векторе';
