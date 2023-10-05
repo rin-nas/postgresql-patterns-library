@@ -1,6 +1,7 @@
 CREATE OR REPLACE FUNCTION fibonacci(pstop int = 10)
   RETURNS SETOF int
-  LANGUAGE plpgsql IMMUTABLE STRICT AS
+  LANGUAGE plpgsql 
+  IMMUTABLE STRICT AS
 $func$
 DECLARE
     a int := 0;
