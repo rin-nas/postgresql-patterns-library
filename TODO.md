@@ -692,3 +692,26 @@ delete from vacancy_skills where vacancy_id = 30923954 and skill_id = 530280;
 select * from vacancy_modified;
 ```
 
+# Как решить проблему с неэффективным планом запросов из-за OR с разными колонками
+
+У PostgreSQL есть проблема с неэффективным планом запросов с OR из разных колонок. Но есть обходной путь через UNION ALL.
+
+Было
+```sql
+select *
+from t
+where t.a > 0
+   or t.b < 0;
+```
+
+Стало (все условия OR переписываем через несколько SELECT запросов, объединяя их через UNION ALL)
+```sql
+select *
+from t
+where t.a > 0
+union all
+select *
+from t
+where t.b < 0
+```
+Это применимо как в основном запросе, так и в подзапросах.
