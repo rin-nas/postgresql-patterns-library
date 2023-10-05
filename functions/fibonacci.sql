@@ -1,7 +1,11 @@
 CREATE OR REPLACE FUNCTION fibonacci(pstop int = 10)
-  RETURNS SETOF int
-  LANGUAGE plpgsql 
-  IMMUTABLE STRICT AS
+  returns setof int
+  immutable
+  --strict -- returns null if any parameter is null
+  parallel safe
+  language plpgsql
+  set search_path = ''
+AS
 $func$
 DECLARE
     a int := 0;
