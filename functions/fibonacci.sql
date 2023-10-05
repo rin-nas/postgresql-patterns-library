@@ -39,3 +39,4 @@ do $$
     end;
 $$;
 
+--see also https://wiki.postgresql.org/wiki/Fibonacci_Numbers
