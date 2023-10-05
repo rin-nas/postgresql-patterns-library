@@ -2,7 +2,8 @@ CREATE OR REPLACE FUNCTION fibonacci(pstop int = 10)
   returns setof int
   immutable
   --strict -- returns null if any parameter is null
-  parallel safe
+  parallel safe -- Postgres 10 or later
+  security invoker
   language plpgsql
   set search_path = ''
 AS
