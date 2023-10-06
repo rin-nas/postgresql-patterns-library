@@ -8,6 +8,7 @@ comment on type db_validation.schema_validate_checks is $$
     has_index_for_fk        - наличие индексов для ограничений внешних ключей в таблице
     has_table_comment       - наличие описания для таблицы
     has_column_comment      - наличие описания для колонки
+    is_table_column_comment_unique - TODO
 $$;
 
 -- alter type db_validation.schema_validate_checks owner to alexan;
