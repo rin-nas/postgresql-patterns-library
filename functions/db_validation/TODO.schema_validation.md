@@ -75,16 +75,16 @@
 1. Добавить проверку отсутствия дубликатов ограничений таблицы (`has_not_duplicate_constraint`), которые могут получиться при повторных накатах миграции БД:
    ```sql
    with s as (
-      SELECT con.conrelid::regclass                                                   as table_name,
-             array_length(array_agg(pg_get_constraintdef(con.oid, true)), 1)          as def_count,
-             array_length(array_agg(distinct pg_get_constraintdef(con.oid, true)), 1) as def_uniq_count,
-             array_agg(pg_get_constraintdef(con.oid, true)) as def
-      FROM pg_constraint as con
+      SELECT s.conrelid                                                             as table_oid,
+             array_length(array_agg(pg_get_constraintdef(s.oid, true)), 1)          as def_count,
+             array_length(array_agg(distinct pg_get_constraintdef(s.oid, true)), 1) as def_uniq_count,
+             array_agg(pg_get_constraintdef(s.oid, true))                           as def
+      FROM pg_constraint as s
       WHERE connamespace::regnamespace not in ('pg_catalog', 'information_schema')
-        and con.conrelid != 0
-      GROUP BY con.conrelid::regclass
+        AND s.conrelid != 0
+      GROUP BY s.conrelid
    )
-   select s.table_name, t.*
+   select s.table_oid::regclass, t.*
    from s
    cross join lateral (
        select u.value,
