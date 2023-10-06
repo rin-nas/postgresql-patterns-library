@@ -8,7 +8,9 @@ comment on type db_validation.schema_validate_checks is $$
     has_index_for_fk        - наличие индексов для ограничений внешних ключей в таблице
     has_table_comment       - наличие описания для таблицы
     has_column_comment      - наличие описания для колонки
-    is_table_column_comment_unique - TODO
+    is_table_column_comment_unique - описания колонок в таблице должны быть уникальными
+    check_table_name
+    check_column_name
 $$;
 
 -- alter type db_validation.schema_validate_checks owner to alexan;
@@ -27,6 +29,9 @@ create table db_validation.schema_validate_config (
 
     tables_ignore_regexp  text check ( db_validation.is_regexp(schemas_ignore_regexp) ),
     tables_ignore         regclass[]
+
+    --check_table_name_regexp
+    --check_column_name_regexp
 );
 
 comment on table db_validation.schema_validate_config is 'Конфигурация валидатора схемы БД для текущей БД';
