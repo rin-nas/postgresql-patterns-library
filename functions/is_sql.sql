@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION is_sql(sql text, is_notice boolean default false)
+CREATE OR REPLACE FUNCTION public.is_sql(sql text, is_warning boolean default false)
     returns boolean
     returns null on null input
     parallel unsafe --(ERROR:  cannot start subtransactions during a parallel operation)
@@ -60,14 +60,14 @@ BEGIN
 
         EXECUTE sql;
     EXCEPTION WHEN others THEN
-        IF is_notice THEN
+        IF is_warning THEN
             GET STACKED DIAGNOSTICS
                 exception_sqlstate := RETURNED_SQLSTATE,
                 exception_message  := MESSAGE_TEXT,
                 exception_context  := PG_EXCEPTION_CONTEXT;
-            RAISE NOTICE 'exception_sqlstate = %', exception_sqlstate;
-            RAISE NOTICE 'exception_context = %', exception_context;
-            RAISE NOTICE 'exception_message = %', exception_message;
+            RAISE WARNING 'exception_sqlstate = %', exception_sqlstate;
+            RAISE WARNING 'exception_context = %', exception_context;
+            RAISE WARNING 'exception_message = %', exception_message;
         END IF;
         RETURN FALSE;
     END;
@@ -75,30 +75,31 @@ BEGIN
 END
 $$;
 
-COMMENT ON FUNCTION is_sql(sql text, is_notice boolean) IS 'Check SQL syntax exactly in your PostgreSQL version';
+COMMENT ON FUNCTION public.is_sql(sql text, is_warning boolean) IS 'Check SQL syntax exactly in your PostgreSQL version';
 
 -- TEST
 do $do$
 begin
     --positive
-    assert is_sql('SELECT x/*--;*/ ; ');
-    assert is_sql('SELECT x ; --');
-    assert is_sql('SELECT -- ; ');
-    assert is_sql('SELECT ; /*select ;*/ --');
-    assert is_sql('ABORT');
-    assert is_sql($$do ''$$);
-    assert is_sql(pg_catalog.pg_get_functiondef('public.is_sql'::regproc::oid)); --self test
+    assert public.is_sql('SELECT x/*--;*/ ; ');
+    assert public.is_sql('SELECT x ; --');
+    assert public.is_sql('SELECT -- ; ');
+    assert public.is_sql('SELECT ; /*select ;*/ --');
+    assert public.is_sql('ABORT');
+    assert public.is_sql($$do ''$$);
+    assert public.is_sql(pg_catalog.pg_get_functiondef('public.is_sql'::regproc::oid)); --self test
 
     --negative
-    assert not is_sql('');
-    assert not is_sql('do');
-    assert not is_sql('123');
-    assert not is_sql('SELECT !');
-    assert not is_sql('SELECT ;;');
-    assert not is_sql('SELECT ; ; /*select ;*/ --');
-    assert not is_sql('  --select 1  ');
-    assert not is_sql('  /*select 1*/  ');
-    assert not is_sql('return unknown');
+    assert not public.is_sql('');
+    assert not public.is_sql('do');
+    assert not public.is_sql('123');
+    assert not public.is_sql('SELECT !');
+    assert not public.is_sql('-------');
+    assert not public.is_sql('SELECT ;;');
+    assert not public.is_sql('SELECT ; ; /*select ;*/ --');
+    assert not public.is_sql('  --select 1  ');
+    assert not public.is_sql('  /*select 1*/  ');
+    assert not public.is_sql('return unknown');
 end;
 $do$;
 
