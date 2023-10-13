@@ -1147,7 +1147,7 @@ with recursive t (x) as (
     union
     select case x % 2 when 0 then x / 2 else 3 * x + 1 end
     from t
-    where x > 0
+    where x > 1
 )
 select max(x), count(x)
 from t
