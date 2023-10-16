@@ -1,6 +1,6 @@
 
-https://wiki.postgresql.org/wiki/Fibonacci_Numbers
-https://stackoverflow.com/questions/37479718/how-to-turn-integers-into-fibonacci-coding-efficiently
+* https://wiki.postgresql.org/wiki/Fibonacci_Numbers
+* https://stackoverflow.com/questions/37479718/how-to-turn-integers-into-fibonacci-coding-efficiently
 
 Негафибоначчи
 * https://en.wikipedia.org/wiki/Negafibonacci_coding
