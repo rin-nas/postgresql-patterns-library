@@ -42,7 +42,6 @@ comment on function public.fib_neg_seq(total int) is $$
     Generates negative Fibonacci (negafibonacci) sequence.
 $$;
 
-
 --TEST
 do $$
     begin
