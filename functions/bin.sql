@@ -1,4 +1,4 @@
-create or replace function public.int_to_binary(n int)
+create or replace function public.bin(n int)
     returns text
     immutable
     strict -- returns null if any parameter is null
@@ -10,8 +10,8 @@ AS $func$
     select greatest(regexp_replace(n::bit(32)::text, '^0+', ''), '0');
 $func$;
 
-comment on function public.int_to_binary(n int) is $$
-    Convert from an integer into a binary representation (for debug purpose).
+comment on function public.bin(n int) is $$
+    Convert from an integer into a bin representation (for debug purpose).
     Example:
     0 => 0
     1 => 1
@@ -30,13 +30,13 @@ do $do$
 begin
    assert (
         with recursive r (n, b) as (
-            select 0,     public.int_to_binary(0)
+            select -8,    public.bin(-8)
             union
-            select n + 1, public.int_to_binary(n + 1)
+            select n + 1, public.bin(n + 1)
             from r
             where n < 255
         )
-        select sum(n) = 32640 and length(string_agg(b, '')) = 1794
+        select count(n) = 264 and sum(n) = 32604 and length(string_agg(b, '')) = 2050
         from r
    );
 end;
