@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION public.negafibonacci_sequence(total int)
+CREATE OR REPLACE FUNCTION public.fib_neg_seq(total int)
     returns setof int
     immutable
     strict -- returns null if any parameter is null
@@ -22,8 +22,8 @@ BEGIN
         RAISE EXCEPTION 'First parameter betwen % and % expected, % given', min_total, max_total, total;
     END IF;
 
-    RETURN NEXT 0;
-    RETURN NEXT 1;
+    RETURN NEXT a;
+    RETURN NEXT b;
     LOOP
         i := i + 1;
         a := a - b;
@@ -38,18 +38,17 @@ BEGIN
 END;
 $func$;
 
-comment on function public.negafibonacci_sequence(total int) is $$
-    Generates negative Fibonacci sequence.
+comment on function public.fib_neg_seq(total int) is $$
+    Generates negative Fibonacci (negafibonacci) sequence.
 $$;
 
 
 --TEST
 do $$
     begin
-        assert (select count(*) = 32 and sum(v) = 832041 and max(v) = 1346269
-                from public.negafibonacci_sequence(32) with ordinality as t(v, o)
-               );
+        assert (
+            select (count(*), sum(v), max(v)) = (32, 832041, 1346269)
+            from public.fib_neg_seq(32) with ordinality as t(v, o)
+        );
     end;
 $$;
-
---select array(select public.negafibonacci_sequence(32));
