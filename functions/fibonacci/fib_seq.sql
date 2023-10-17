@@ -52,5 +52,3 @@ do $$
         );
     end;
 $$;
-
---select array(select public.fibonacci_sequence(32));
