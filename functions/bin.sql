@@ -4,15 +4,31 @@ create or replace function public.bin(n int)
     strict -- returns null if any parameter is null
     parallel safe -- Postgres 10 or later
     security invoker
-    language sql
+    language plpgsql
     set search_path = ''
 AS $func$
-    select greatest(regexp_replace(n::bit(32)::text, '^0+', ''), '0');
+declare
+    s text := '';
+    prefix text := case when n < 0 then '-' else '' end;
+begin
+    -- select greatest(regexp_replace(n::bit(32)::text, '^0+', ''), '0'); -- old deprecated
+    n = abs(n);
+    loop
+        s := (n % 2)::text || s;
+        n := n / 2;
+        exit when n = 0;
+    end loop;
+    return prefix || s;
+end;
 $func$;
 
 comment on function public.bin(n int) is $$
     Convert from an integer into a bin representation (for debug purpose).
     Example:
+    ...
+    -3 => -11
+    -2 => -10
+    -1 => -1
     0 => 0
     1 => 1
     2 => 10
@@ -36,7 +52,7 @@ begin
             from r
             where n < 255
         )
-        select count(n) = 264 and sum(n) = 32604 and length(string_agg(b, '')) = 2050
+        select (count(n), sum(n), length(string_agg(b, ''))) = (264, 32604, 1823)
         from r
    );
 end;
