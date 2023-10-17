@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION public.fibonacci_sequence(total int)
+CREATE OR REPLACE FUNCTION public.fib_seq(total int)
     returns setof int
     immutable
     strict -- returns null if any parameter is null
@@ -22,8 +22,8 @@ BEGIN
         RAISE EXCEPTION 'First parameter betwen % and % expected, % given', min_total, max_total, total;
     END IF;
 
-    RETURN NEXT 0;
-    RETURN NEXT 1;
+    RETURN NEXT a;
+    RETURN NEXT b;
     LOOP
         i := i + 1;
         a := a + b;
@@ -38,7 +38,7 @@ BEGIN
 END;
 $func$;
 
-comment on function public.fibonacci_sequence(total int) is $$
+comment on function public.fib_seq(total int) is $$
     Generates Fibonacci sequence.
     Fibonacci numbers form a sequence such that each number is the sum of the two preceding numbers, starting from 0 and 1.
 $$;
@@ -46,9 +46,10 @@ $$;
 --TEST
 do $$
     begin
-        assert (select count(*) = 32 and sum(v) = 3524577
-                from public.fibonacci_sequence(32) with ordinality as t(v, o)
-               );
+        assert (
+            select (count(*), sum(v)) = (32, 3524577)
+            from public.fib_seq(32) with ordinality as t(v, o)
+        );
     end;
 $$;
 
