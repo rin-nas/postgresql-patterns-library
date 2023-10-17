@@ -1,4 +1,4 @@
-create or replace function int_to_binary(n int)
+create or replace function public.int_to_binary(n int)
     returns text
     immutable
     strict -- returns null if any parameter is null
@@ -10,7 +10,7 @@ AS $func$
     select greatest(regexp_replace(n::bit(32)::text, '^0+', ''), '0');
 $func$;
 
-comment on function int_to_binary(n int) is $$
+comment on function public.int_to_binary(n int) is $$
     Convert from an integer into a binary representation (for debug purpose).
     Example:
     0 => 0
@@ -30,9 +30,9 @@ do $do$
 begin
    assert (
         with recursive r (n, b) as (
-            select 0,     int_to_binary(0)
+            select 0,     public.int_to_binary(0)
             union
-            select n + 1, int_to_binary(n + 1)
+            select n + 1, public.int_to_binary(n + 1)
             from r
             where n < 255
         )
