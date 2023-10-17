@@ -14,13 +14,10 @@ BEGIN
     loop
         exit when n = 0;
         rev = rev << 1;
-
         if (n & 1) = 1 then
             rev = rev # 1;
         end if;
-
         n = n >> 1;
-
     end loop;
     return rev;
 END;
@@ -35,7 +32,7 @@ $$;
 --TEST
 do $$
 begin
-    assert public.bit_reverse(11)::bit(8) = B'00001101';
-    assert public.bit_reverse(233)::bit(8) = B'10010111';
+    assert public.bit_reverse(B'00001011'::int) = B'00001101'::int;
+    assert public.bit_reverse(B'11101001'::int) = B'10010111'::int;
 end;
 $$;
