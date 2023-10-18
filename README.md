@@ -202,10 +202,10 @@ WHERE email IS NOT NULL    -- skip NULL
 Домен [`phone.sql`](domains/phone.sql) для валидации номера телефона в международном формате E.164
 
 См. ещё функции:
-  1. [`phone_normalize.sql`](functions/phone_normalize.sql)
-  1. [`phone_parse.sql`](functions/phone_parse.sql)
-  1. [`phone_format.sql`](functions/phone_format.sql)
-  1. [`phone_format_record.sql`](functions/phone_format_record.sql)
+  1. [`phone_normalize.sql`](functions/phone/phone_normalize.sql)
+  1. [`phone_parse.sql`](functions/phone/phone_parse.sql)
+  1. [`phone_format.sql`](functions/phone/phone_format.sql)
+  1. [`phone_format_record.sql`](functions/phone/phone_format_record.sql)
 
 #### Как провалидировать значение поля, только если оно явно указано в UPDATE запросе?
 
@@ -272,7 +272,7 @@ CREATE TABLE my_table (
                                )
 );
 ```
-Дополнительно смотри [`array_unique.sql`](functions/array_unique.sql)
+Дополнительно смотри [`array_unique.sql`](functions/array/array_unique.sql)
 
 #### Как сделать аналог функции `make_set()` из MySQL?
 
@@ -391,7 +391,7 @@ WHERE EXISTS(
 
 #### Агрегатная функция конкатенации (объединения) массивов
 
-Смотри [`array_cat_agg.sql`](functions/array_cat_agg.sql)
+Смотри [`array_cat_agg.sql`](functions/array/array_cat_agg.sql)
 
 #### Как получить одинаковые элементы массивов (пересечение массивов)?
 
