@@ -29,6 +29,6 @@ comment on function public.fib_encode(n int) is 'Encode decimal number to fibona
 select dec, dec_bin,
        fib, fib_bin
 from generate_series(0, 50) as dec
-cross join public.fib_encode(dec) as fib
+cross join fib_encode(dec) as fib
 cross join lpad(bin(dec), 8, ' ') as dec_bin
 cross join lpad(bin(fib), 8, ' ') as fib_bin;
