@@ -27,7 +27,7 @@ comment on function public.fib_encode(n int) is 'Encode decimal number to fibona
 
 --TEST
 with recursive r (dec, fib) as (
-    select 0 as i, public.fib_encode(0)
+    select 0,       public.fib_encode(0)
     union
     select dec + 1, public.fib_encode(dec + 1)
     from r
