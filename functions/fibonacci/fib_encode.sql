@@ -31,4 +31,4 @@ select dec, dec_bin,
 from generate_series(0, 50) as dec
 cross join public.fib_encode(dec) as fib
 cross join lpad(bin(dec), 8, ' ') as dec_bin
-cross join lpad(bin(fib), 8, ' ') as fib_bin
+cross join lpad(bin(fib), 8, ' ') as fib_bin;
