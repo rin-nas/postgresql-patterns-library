@@ -50,18 +50,18 @@ comment on function public.bin(n int) is 'Convert from an integer into a bit rep
 --TEST
 DO $$
     BEGIN
-        assert bin(-2147483648) = B'10000000000000000000000000000000';
-        assert bin(-4)          = B'11111111111111111111111111111100';
-        assert bin(-3)          = B'11111111111111111111111111111101';
-        assert bin(-2)          = B'11111111111111111111111111111110';
-        assert bin(-1)          = B'11111111111111111111111111111111';
-        assert bin(0)           = B'0';
-        assert bin(1)           = B'1';
-        assert bin(2)           = B'10';
-        assert bin(3)           = B'11';
-        assert bin(4)           = B'100';
-        assert bin(8)           = B'1000';
-        assert bin(16)          = B'10000';
-        assert bin(2147483647)  = B'1111111111111111111111111111111';
+        assert public.bin(-2147483648) = B'10000000000000000000000000000000';
+        assert public.bin(-4)          = B'11111111111111111111111111111100';
+        assert public.bin(-3)          = B'11111111111111111111111111111101';
+        assert public.bin(-2)          = B'11111111111111111111111111111110';
+        assert public.bin(-1)          = B'11111111111111111111111111111111';
+        assert public.bin(0)           = B'0';
+        assert public.bin(1)           = B'1';
+        assert public.bin(2)           = B'10';
+        assert public.bin(3)           = B'11';
+        assert public.bin(4)           = B'100';
+        assert public.bin(8)           = B'1000';
+        assert public.bin(16)          = B'10000';
+        assert public.bin(2147483647)  = B'1111111111111111111111111111111';
     END
 $$;
