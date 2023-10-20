@@ -683,7 +683,7 @@ SELECT ot1.name AS name_1, ot2.name as name_2, ot3.name as name_3, ot4.id as id
 
 #### Как использовать вывод EXPLAIN запроса в другом запросе?
 
-Смотри [`json_explain.sql`](functions/json_explain.sql)
+Смотри [` explain_json.sql`](functions/ explain_json.sql)
 
 #### Как ускорить SELECT запросы c тысячами значений в IN(...)?
 

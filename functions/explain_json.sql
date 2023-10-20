@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION json_explain(
+CREATE OR REPLACE FUNCTION public.explain_json(
     query TEXT,
     params TEXT[] DEFAULT ARRAY[]::text[]
 ) RETURNS SETOF JSON
@@ -15,7 +15,7 @@ END
 $$;
 
 --TEST
-SELECT (json_explain('SELECT * FROM pg_class', ARRAY['ANALYSE'])->0->'Plan'->>'Total Cost')::numeric as cost
+SELECT (public.explain_json('SELECT * FROM pg_class', ARRAY['ANALYSE'])->0->'Plan'->>'Total Cost')::numeric AS cost
 
 --TODO добавить 3-й параметр в функцию: returns_null_on_error
---select json_explain('select unknown_col from pg_class');
+--select  explain_json('select unknown_col from pg_class');
