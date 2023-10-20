@@ -385,7 +385,7 @@ WHERE EXISTS(
 
 #### Как сравнить 2 JSON объекта и получить отличия?
 
-Смотри [` jsonb_object_diff.sql`](functions/ jsonb_object_diff.sql)
+Смотри [` jsonb_object_diff.sql`](functions/json/jsonb_object_diff.sql)
 
 ### Массивы
 
