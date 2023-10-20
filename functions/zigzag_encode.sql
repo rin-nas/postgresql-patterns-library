@@ -37,3 +37,33 @@ DO $$
         );
     END
 $$;
+
+------------------------------------------------------------------------------------------------------------------------
+
+create or replace function public.zigzag_encode(a int[])
+    returns int[]
+    immutable
+    strict -- returns null if any parameter is null
+    parallel safe -- Postgres 10 or later
+    security invoker
+    language plpgsql
+    set search_path = ''
+as $func$
+    declare
+        len int := cardinality(a);
+        i int := 0;
+    begin
+        while i < len loop
+            i := i + 1;
+            a[i] := public.zigzag_encode(a[i]);
+        end loop;
+        return a;
+    end;
+$func$;
+
+--TEST
+do $$
+    begin
+        assert public.zigzag_encode('{-2,-1,0,1,2}'::int[]) = '{3,1,0,2,4}'::int[];
+    end;
+$$;
