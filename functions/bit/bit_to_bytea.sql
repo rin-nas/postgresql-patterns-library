@@ -8,11 +8,18 @@ create or replace function public.bit_to_bytea(bits bit varying)
     set search_path = ''
 AS $func$
     select public.bytea_agg(
-                decode(lpad(to_hex(substring(bits8 from i * 8 + 1 for 8)::int), 2, '0'), 'hex')
+                decode(
+                    lpad(
+                        to_hex(substring(bits8 from i * 8 + 1 for 8)::int),
+                        2,
+                        '0'
+                    ),
+                    'hex'
+                )
            )
     from octet_length(bits) as len
     cross join generate_series(0, len - 1) as i
-    cross join public.bit_rpad(bits, len * 8, B'0') as bits8;
+    cross join public.bit_rpad(bits, len * 8, B'0') as bits8; --trailing with zeros (multiple of 8)
 $func$;
 
 comment on function public.bit_to_bytea(bits bit varying) is 'Converts bit varying to bytea type';
