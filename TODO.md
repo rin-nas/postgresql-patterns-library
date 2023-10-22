@@ -715,3 +715,27 @@ from t
 where t.b < 0
 ```
 Это применимо как в основном запросе, так и в подзапросах.
+
+
+# Compress
+
+Flow `INPUT -> LZW -> BWT -> MTF -> OUTPUT`
+
+* https://github.com/mikeleo03/LZW-Compressor_Backend/blob/main/src/algorithm/algorithm.js
+* https://github.com/Wittline/move-to-front/blob/main/code/mtf.py MTF
+* https://www.phpclasses.org/browse/file/17180.html MTF
+
+
+# Hstore vs jsonb vs json performance
+
+```sql
+create extension if not exists hstore with schema public;
+
+CREATE TABLE hstore_test AS (SELECT 'a=>1, b=>2, c=>3, d=>4, e=>5'::hstore AS v FROM generate_series(1,1000000));
+CREATE TABLE json_test AS (SELECT '{"a":1, "b":2, "c":3, "d":4, "e":5}'::json AS v FROM generate_series(1,1000000));
+CREATE TABLE jsonb_test AS (SELECT '{"a":1, "b":2, "c":3, "d":4, "e":5}'::jsonb AS v FROM generate_series(1,1000000));
+
+SELECT sum((v->'e')::text::int) FROM json_test; --execution: 939 ms, fetching: 27 ms
+SELECT sum((v->'e')::text::int) FROM jsonb_test; --execution: 580 ms, fetching: 38 ms
+SELECT sum((v->'e')::int) FROM hstore_test; --execution: 304 ms, fetching: 63 ms
+```
