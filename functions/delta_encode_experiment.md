@@ -1,9 +1,9 @@
 # Эксперимент по дельта-кодированию числовых массивов в PostgreSQL
 
 ```sql
-drop table test.array_delta_test;
+drop table if exists test.delta;
 
-create table test.array_delta_test as
+create table test.delta as
 with t (t) as (
     -- sorted array, total 343 numbers
     select array[
@@ -42,7 +42,7 @@ with t (t) as (
            to_json(a) as a_json,   to_jsonb(a) as a_jsonb,
            to_json(ad) as ad_json, to_jsonb(ad) as ad_jsonb
     from a
-    cross join array_delta_encode(a) as ad
+    cross join public.delta_encode(a) as ad
 )
 select * from b;
 
@@ -51,21 +51,21 @@ select 'pg_int_array' as storage_type,
        pg_column_size(ad) as ad_compressed_size,
        pg_column_size(a::text::int[]) as a_uncompressed_size,
        pg_column_size(ad::text::int[]) as ad_uncompressed_size
-from test.array_delta_test
+from test.delta
 union all
 select 'json_int_array',
        pg_column_size(a_json),
        pg_column_size(ad_json),
        pg_column_size(a_json::text::json),
        pg_column_size(ad_json::text::json)
-from test.array_delta_test
+from test.delta
 union all
 select 'jsonb_int_array',
        pg_column_size(a_jsonb),
        pg_column_size(ad_jsonb),
        pg_column_size(a_jsonb::text::jsonb),
        pg_column_size(ad_jsonb::text::jsonb)
-from test.array_delta_test;
+from test.delta;
 ```
 
 | storage\_type | a\_compressed\_size | ad\_compressed\_size | a\_uncompressed\_size | ad\_uncompressed\_size |
