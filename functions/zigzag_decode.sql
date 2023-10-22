@@ -39,7 +39,7 @@ $$;
 
 ------------------------------------------------------------------------------------------------------------------------
 
-create or replace function public.zigzag_decode(a int[])
+create or replace function public.zigzag_decode(a int[], delta int default 0)
     returns int[]
     immutable
     strict -- returns null if any parameter is null
@@ -54,7 +54,7 @@ as $func$
     begin
         while i < len loop
             i := i + 1;
-            a[i] := public.zigzag_decode(a[i]);
+            a[i] := public.zigzag_decode(a[i]) + delta;
         end loop;
         return a;
     end;
