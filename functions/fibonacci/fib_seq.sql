@@ -47,8 +47,8 @@ $$;
 do $$
     begin
         assert (
-            select (count(*), sum(v)) = (32, 3524577)
-            from public.fib_seq(32) with ordinality as t(v, o)
+            select array(select fib from public.fib_seq(32) as t(fib))
+                 = '{0,1,1,2,3,5,8,13,21,34,55,89,144,233,377,610,987,1597,2584,4181,6765,10946,17711,28657,46368,75025,121393,196418,317811,514229,832040,1346269}'
         );
     end;
 $$;
