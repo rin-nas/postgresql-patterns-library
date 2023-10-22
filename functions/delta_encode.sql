@@ -17,4 +17,8 @@ $func$;
 comment on function public.delta_encode(a int[]) is 'https://en.wikipedia.org/wiki/Delta_encoding';
 
 -- TEST
-select public.delta_encode(array[2, 4, 6, 9, 7]) = array[2, 2, 2, 3, -2];
+do $$
+    begin
+        assert public.delta_encode(array[2, 4, 6, 9, 7]) = array[2, 2, 2, 3, -2];
+    end;
+$$;
