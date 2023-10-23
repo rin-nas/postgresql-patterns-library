@@ -10,14 +10,15 @@ as $func$
     select public.bit_to_bytea(
                 public.bit_agg(
                     public.fib_code_bin(
-                        public.fib_encode(dec)
+                        public.fib_encode(u.dec, f.seq)
                     )
                 )
            )
-    from unnest(a) as u(dec);
+    from unnest(a) as u(dec)
+    cross join lateral (select array(select t.n from public.fib_seq(47) as t(n) offset 2)) as f(seq); --1 2 3 5 8 13 21...
 $func$;
 
-comment on function public.fib_pack(a int[]) is 'Pack integers > 0 by Fibonacci encoding algorithm';
+comment on function public.fib_pack(a int[]) is 'Packs integers with values > 0 by Fibonacci encoding algorithm';
 
 --TEST
 do $$
