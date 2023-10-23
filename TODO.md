@@ -719,7 +719,8 @@ where t.b < 0
 
 # Compress
 
-Flow `INPUT -> LZW -> BWT -> MTF -> OUTPUT`
+Compression flow: `INPUT -> LZW -> BWT -> MTF -> OUTPUT`
+Decompression flow: in reverse order
 
 * https://github.com/mikeleo03/LZW-Compressor_Backend/blob/main/src/algorithm/algorithm.js
 * https://github.com/Wittline/move-to-front/blob/main/code/mtf.py MTF
