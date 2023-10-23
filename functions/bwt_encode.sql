@@ -8,6 +8,7 @@ with recursive r (pos, suffix) as (
     from r
     where octet_length(r.suffix) > 1
 )
+--select * from r; --test
 select array_to_string(array(
     select (select left(o.suffix, 1)
             from r as o
