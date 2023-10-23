@@ -11,7 +11,7 @@ with recursive r (pos, suffix) as (
 select array_to_string(array(
     select (select left(o.suffix, 1)
             from r as o
-            where case when i.pos - 1 = 0 then octet_length(i.suffix)
+            where case when i.pos - 1 = 0 then length(i.suffix)
                        else i.pos - 1
                   end = o.pos
             limit 1
