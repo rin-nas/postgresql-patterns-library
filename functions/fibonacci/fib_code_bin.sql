@@ -34,4 +34,5 @@ $$;
 select dec,
        fib_code_bin(fib)
 from generate_series(1, 500) as dec
-cross join fib_encode(dec) as fib;
+cross join lateral (select array(select t.n from public.fib_seq(47) as t(n) offset 2)) as f(seq) --1 2 3 5 8 13 21...
+cross join fib_encode(dec, f.seq) as fib;
