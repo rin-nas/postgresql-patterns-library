@@ -1,4 +1,4 @@
-create or replace function public.bwt_decode(s text, eof char)
+create or replace function public.bwt_decode(s text, eob char)
     returns text
     immutable
     strict -- returns null if any parameter is null
@@ -22,11 +22,11 @@ as $func$
     , r as (
         select s.char, s.next_pos
         from s
-        where s.char = bwt_decode.eof
+        where s.char = bwt_decode.eob --end of block
         union all
         select s.char, s.next_pos
         from r
-        inner join s on s.pos = r.next_pos and s.char != bwt_decode.eof
+        inner join s on s.pos = r.next_pos and s.char != bwt_decode.eob
     )
     select array_to_string(array(
                 select r.char
@@ -36,7 +36,7 @@ as $func$
 
 $func$;
 
-comment on function public.bwt_decode(s text, eof char) is 'https://en.wikipedia.org/wiki/Burrows%E2%80%93Wheeler_transform';
+comment on function public.bwt_decode(s text, eob char) is 'https://en.wikipedia.org/wiki/Burrows%E2%80%93Wheeler_transform';
 
 --TEST
 do $$

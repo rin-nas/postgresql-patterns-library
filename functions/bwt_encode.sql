@@ -1,4 +1,4 @@
-create or replace function public.bwt_encode(s text, eof char)
+create or replace function public.bwt_encode(s text, eob char)
     returns text
     immutable
     strict -- returns null if any parameter is null
@@ -12,11 +12,11 @@ as $func$
     --http://guanine.evolbio.mpg.de/cgi-bin/bwt/bwt.cgi.pl
     --https://www.dcode.fr/burrows-wheeler-transform
     with recursive r (pos, suffix) as (
-        select 1, bwt_encode.s || bwt_encode.eof
+        select 1, bwt_encode.s || bwt_encode.eob --end of block
         union all
         select pos + 1, right(r.suffix, -1)
         from r
-        where r.suffix != bwt_encode.eof
+        where r.suffix != bwt_encode.eob
     )
     --select * from r order by suffix collate "C"; --test
     select array_to_string(array(
@@ -34,7 +34,7 @@ as $func$
 
 $func$;
 
-comment on function public.bwt_encode(s text, eof char) is 'https://en.wikipedia.org/wiki/Burrows%E2%80%93Wheeler_transform';
+comment on function public.bwt_encode(s text, eob char) is 'https://en.wikipedia.org/wiki/Burrows%E2%80%93Wheeler_transform';
 
 --TEST
 do $$
