@@ -1,3 +1,5 @@
+--TODO при некорректных входных данных функция должна возвращать NULL
+
 create or replace function public.bwt_decode(s text, eob char)
     returns text
     immutable
