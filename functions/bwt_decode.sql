@@ -12,7 +12,7 @@ as $func$
     --http://guanine.evolbio.mpg.de/cgi-bin/bwt/bwt.cgi.pl
     --https://www.dcode.fr/burrows-wheeler-transform
     with recursive s as (
-        select row_number() over (order by char collate "C", next_pos) as pos,
+        select row_number() over (order by t.char collate "C", next_pos) as pos,
                t.char,
                t.next_pos
         from regexp_split_to_table(bwt_decode.s, '') with ordinality as t(char, next_pos)

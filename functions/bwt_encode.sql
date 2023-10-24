@@ -14,7 +14,7 @@ as $func$
     with recursive r (pos, suffix) as (
         select 1, bwt_encode.s || bwt_encode.eob --end of block
         union all
-        select pos + 1, right(r.suffix, -1)
+        select r.pos + 1, right(r.suffix, -1)
         from r
         where r.suffix != bwt_encode.eob
     )
@@ -29,7 +29,7 @@ as $func$
                 limit 1
                )
         from r
-        order by suffix collate "C"
+        order by r.suffix collate "C"
     ), '');
 
 $func$;
