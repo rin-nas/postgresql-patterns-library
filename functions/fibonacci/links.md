@@ -11,4 +11,3 @@
 
 Примеры кода
 * https://web.archive.org/web/20141016062442/http://www.moveinfo.ru/article/stablelink?page=0000041 - Система счисления Фибоначчи, реализация на C++
-* https://github.com/ducthanhtran/fibonacci-compression-coding/blob/master/fibonacci_coding.c
