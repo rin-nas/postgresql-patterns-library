@@ -11,11 +11,10 @@ DECLARE
     rev int := 0;
 BEGIN
     -- adapted from https://www.geeksforgeeks.org/reverse-actual-bits-given-number/
-    loop
-        exit when n = 0;
-        rev = rev << 1;
+    while n > 0 loop
+        rev := rev << 1;
         if (n & 1) = 1 then
-            rev = rev # 1;
+            rev := rev # 1;
         end if;
         n = n >> 1;
     end loop;
@@ -31,8 +30,12 @@ $$;
 
 --TEST
 do $$
-begin
-    assert public.bit_reverse(B'00001011'::int) = B'00001101'::int;
-    assert public.bit_reverse(B'11101001'::int) = B'10010111'::int;
-end;
+    begin
+        -- negative
+        assert public.bit_reverse(-1) = 0;
+
+        --positive
+        assert public.bit_reverse(B'00001011'::int) = B'00001101'::int;
+        assert public.bit_reverse(B'11101001'::int) = B'10010111'::int;
+    end;
 $$;
