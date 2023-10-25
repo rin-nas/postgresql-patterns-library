@@ -15,6 +15,9 @@ as $func$
         n_max int := -1;
     begin
         FOREACH n IN ARRAY a LOOP
+            IF n < 1 THEN
+                RETURN null;
+            END IF;
             n_max := greatest(n_max, n);
         END LOOP;
 
@@ -28,7 +31,7 @@ as $func$
             t := t[i] || t[:i-1] || t[i+1:];
         END LOOP;
 
-        return r;
+        RETURN r;
     end;
 $func$;
 
@@ -37,25 +40,29 @@ comment on function public.mtf_encode(a int[]) is 'https://en.wikipedia.org/wiki
 -- TEST
 do $$
     begin
+        --negative
+        assert public.mtf_encode('{-1, 0, 1}') is null;
+
+        --positive
         assert(
             with t (a) as (
                 select array(select ascii(t.c) from regexp_split_to_table('', '') as t(c) where t.c != '')
             )
-            select public.mtf_encode(a) = '{}' from t
+            select public.mtf_encode(a) = '{}'::int[] from t
         );
 
         assert(
             with t (a) as (
                 select array(select ascii(t.c) from regexp_split_to_table('inefficiencies', '') as t(c) where t.c != '')
             )
-            select public.mtf_encode(a) = '{105,110,103,104,1,4,103,2,4,5,4,4,4,115}' from t
+            select public.mtf_encode(a) = '{105,110,103,104,1,4,103,2,4,5,4,4,4,115}'::int[] from t
         );
 
         assert (
             with t (a) as (
                 select array(select ascii(t.c) from regexp_split_to_table('неэффективность', '') as t(c) where t.c != '')
             )
-            select public.mtf_encode(a) = '{1085,1078,1101,1093,1,3,1085,1092,1085,1081,8,1089,1092,6,1101}' from t
+            select public.mtf_encode(a) = '{1085,1078,1101,1093,1,3,1085,1092,1085,1081,8,1089,1092,6,1101}'::int[] from t
         );
     end
 $$;

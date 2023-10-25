@@ -15,6 +15,9 @@ as $func$
         n_max int := -1;
     begin
         FOREACH n IN ARRAY a LOOP
+            IF n < 1 THEN
+                RETURN null;
+            END IF;
             n_max := greatest(n_max, n);
         END LOOP;
 
@@ -37,6 +40,10 @@ comment on function public.mtf_decode(a int[]) is 'https://en.wikipedia.org/wiki
 -- TEST
 do $$
     begin
+        --negative
+        assert public.mtf_decode('{-1, 0, 1}') is null;
+
+        --positive
         assert(
             with t as (
                 select unnest(public.mtf_decode('{}'::int[])) as code
