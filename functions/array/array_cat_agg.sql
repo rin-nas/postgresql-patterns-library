@@ -1,11 +1,11 @@
-CREATE AGGREGATE array_cat_agg(anyarray) (
+CREATE AGGREGATE public.array_cat_agg(anyarray) (
     SFUNC     = array_cat
    ,STYPE     = anyarray
    ,INITCOND  = '{}'
 );
 
 --TEST
-SELECT id,  array_cat_agg(words::text[])
+SELECT id,  public.array_cat_agg(words::text[])
 FROM (VALUES
              ('1', '{"foo","bar","zap","bing"}'),
              ('2', '{"foo"}'),

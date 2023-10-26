@@ -1,9 +1,10 @@
 --simplest and faster
-CREATE FUNCTION array_unique(anyarray)
-    RETURNS anyarray
-    stable
-    returns null on null input
-    parallel safe
+CREATE FUNCTION public.array_unique(anyarray)
+    returns anyarray
+    immutable
+    strict -- returns null if any parameter is null
+    parallel safe -- Postgres 10 or later
+    security invoker
     language sql
     set search_path = ''
 AS $$
@@ -11,7 +12,7 @@ AS $$
     FROM unnest($1) t(x);
 $$;
 
-CREATE FUNCTION array_unique(
+CREATE FUNCTION public.array_unique(
       anyarray, -- input array 
       boolean -- flag to drop nulls
 ) 
