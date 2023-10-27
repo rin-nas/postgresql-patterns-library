@@ -15,7 +15,7 @@ as $func$
     );
 $func$;
 
-comment on function public.codepoints_gap_increase(a int[]) is 'Функция, обратная к public.codepoints_gap_decrease(a int[])';
+comment on function public.codepoints_gap_increase(a int[]) is 'Функция, обратная к codepoints_gap_decrease(a int[])';
 
 -- TEST
 do $$
