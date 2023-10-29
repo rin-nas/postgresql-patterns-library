@@ -1,4 +1,5 @@
 -- Binary Interpolative Code (BIC) algorithm invented by Moffat and Stuiver
+-- https://papers-gamma.link/static/memory/pdfs/204-Pibiri_Techniques_for_Inverted_Index_Compression_2020.pdf
 with recursive r (s, m, n, l, h, w, b, d, t) as (
     select s,
            m, n,
