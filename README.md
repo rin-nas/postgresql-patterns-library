@@ -1144,7 +1144,7 @@ where ...;
 with recursive t (x) as (
     select 27 --начальное значение
     --select 989345275647
-    union
+    union all
     select case x % 2 when 0 then x / 2 else 3 * x + 1 end
     from t
     where x > 1

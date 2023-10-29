@@ -31,7 +31,6 @@ with recursive r (s, m, n, l, h, w, b, d, t) as (
         cross join coalesce(s.s[m.m] - l.l - m.m + 1) as w(w)
         cross join coalesce(h.h - l.l - n.n + 1) as g(g)
         cross join coalesce(case when g.g = 0 then 0 else log(2, g.g) end) as b(b)
-        --cross join coalesce((h.h - l.l - n.n + 1)) as b(b)
         where rr.n > 1
           and (rr.n > 2 or rr.t = 'L')
           and rr.d < 1000 --infinite recursive protect on development
