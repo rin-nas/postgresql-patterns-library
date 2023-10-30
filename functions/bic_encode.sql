@@ -1,60 +1,57 @@
 -- Binary Interpolative Code (BIC) algorithm invented by Moffat and Stuiver
+-- https://github.com/jermp/interpolative_coding
+-- http://pages.di.unipi.it/pibiri/papers/BIC.pdf
 -- https://papers-gamma.link/static/memory/pdfs/204-Pibiri_Techniques_for_Inverted_Index_Compression_2020.pdf
-with recursive r (s, m, n, l, h, w, b, d, t) as (
-    select s,
-           m, n,
-           0, ss[len],
-           w, b,
-           0, null
-    from coalesce(array[3, 4, 7, 13, 14, 15, 21, 25, 36, 38,54, 62]::int[]) as ss
-    cross join array_length(ss, 1) as len
-    cross join coalesce(len - 1) as n
-    cross join ceil(n * 1.0 / 2) as m
-    cross join coalesce(ss[:n]) as s
-    cross join coalesce(s[m] - 0 - m + 1) as w
-    cross join coalesce(log(2, s[n] - 0 - n + 1)) as b
-    union all
-    select * from (
-        with rr as (
-            select * from r --workaround [42P19] ERROR: recursive reference to query "r" must not appear more than once
-        )
-        select s.s,
-               m.m, n.n,
-               l.l, h.h,
-               w.w, b.b,
-               rr.d + 1, 'L'
-        from rr
-        cross join coalesce(case when rr.n = 2 then rr.s[2 : 2] else rr.s[1 : rr.m-1] end) as s(s)
-        cross join array_length(s.s, 1) as n(n)
-        cross join ceil(n.n * 1.0 / 2) as m(m)
-        cross join coalesce(case when n.n = 1 then rr.s[rr.m] + 1 else rr.l end) as l(l)
-        cross join coalesce(case when n.n = 1 then rr.h else rr.s[rr.m] - 1 end) as h(h)
-        cross join coalesce(s.s[m.m] - l.l - m.m + 1) as w(w)
-        cross join coalesce(h.h - l.l - n.n + 1) as g(g)
-        cross join coalesce(case when g.g = 0 then 0 else log(2, g.g) end) as b(b)
-        where rr.n > 1
-          and (rr.n > 2 or rr.t = 'L')
-          and rr.d < 1000 --infinite recursive protect on development
-        union all -------------------------------------------------------------------------------------------
-        select s.s,
-               m.m, n.n,
-               l.l, h.h,
-               w.w, b.b,
-               rr.d + 1, 'R'
-        from rr
-        cross join coalesce(case when rr.n = 2 then rr.s[rr.n : rr.n] else rr.s[rr.m + 1 : rr.n] end) as s(s)
-        cross join array_length(s.s, 1) as n(n)
-        cross join ceil(n.n * 1.0 / 2) as m(m)
-        cross join coalesce(case when n.n = 0 then rr.l else rr.s[rr.m] + 1 end) as l(l)
-        cross join coalesce(case when n.n = 0 then s.s[1] else rr.h end) as h(h)
-        cross join coalesce(s.s[m.m] - l.l - m.m + 1) as w(w)
-        cross join coalesce(h.h - l.l - n.n + 1) as g(g)
-        cross join coalesce(case when g.g = 0 then 0 else log(2, g.g) end) as b(b)
-        where rr.n > 1
-          and (rr.n > 2 or rr.t = 'R')
-          and d < 1000 --infinite recursive protect on development
-   ) t
-)
+create or replace function public.bic_encode(s int[], lo int, hi int, t char, d int)
+    returns table (
+        xx int,
+        ss int[],
+        mm int,
+        nn int,
+        ll int,
+        hh int,
+        ww int,
+        rr int,
+        bb int,
+        dd int,
+        tt char
+    )
+    immutable
+    strict -- returns null if any parameter is null
+    parallel safe -- Postgres 10 or later
+    security invoker
+    language plpgsql
+    set search_path = ''
+as $$
+declare
+    n int not null default cardinality(s);
+    m int not null default n / 2 + 1;
+    x int;
+    w int;
+    r int;
+    msb int;
+    b int not null default 0;
+begin
+    if n > 0
+       and hi - lo + 1 != n --run (sequence of consecutive values)
+       and lo <= hi
+    then
+        x := s[m];
+        w := x - lo - (m - 1);
+        r := hi - lo - n + 1;
+        msb := r;
+        while msb > 0 loop
+            msb := msb >> 1;
+            b := b + 1;
+        end loop;
+        --raise notice 'x=%, s=%, m=%, n=%, lo=%, hi=%, w=%, b=%, d=%, t=%', x, s, m, n, lo, hi, w, b, d, t; --debug
+        return query select x, s, m, n, lo, hi, w, r, b, d, t;
+        return query select * from public.bic_encode(s[: m - 1], lo, x - 1, 'L', d + 1);
+        return query select * from public.bic_encode(S[m + 1 :], x + 1, hi, 'R', d + 1);
+    end if;
+end
+$$;
+
 select *
-from r
-order by n desc, s;
+from public.bic_encode('{3, 4, 7, 13, 14, 15, 21, 25, 36, 38, 54}', 0, 62, '*', 0)
+order by dd, xx;
