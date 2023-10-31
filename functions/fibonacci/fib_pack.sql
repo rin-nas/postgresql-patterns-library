@@ -14,8 +14,8 @@ as $func$
                     )
                 )
            )
-    from unnest(a) as u(dec)
-    cross join lateral (select array(select t.n from public.fib_seq(47) as t(n) offset 2)) as f(seq); --1 2 3 5 8 13 21...
+    from unnest(a) as u(dec),
+         coalesce(array(select t.n from public.fib_seq(47) as t(n) offset 2)) as f(seq); --1 2 3 5 8 13 21...
 $func$;
 
 comment on function public.fib_pack(a int[]) is 'Packs integers with values > 0 by Fibonacci encoding algorithm';

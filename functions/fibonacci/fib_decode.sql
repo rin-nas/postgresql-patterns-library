@@ -36,7 +36,7 @@ do $$
         assert not exists(
             select dec, fib, dec2
             from generate_series(0, 54) as dec
-            cross join lateral (select array(select t.n from public.fib_seq(47) as t(n) offset 2)) as f(seq) --1 2 3 5 8 13 21...
+            cross join coalesce(array(select t.n from public.fib_seq(47) as t(n) offset 2)) as f(seq) --1 2 3 5 8 13 21...
             cross join public.fib_encode(dec,f.seq) as fib
             cross join public.fib_decode(fib,f.seq) as dec2
             where dec is distinct from dec2

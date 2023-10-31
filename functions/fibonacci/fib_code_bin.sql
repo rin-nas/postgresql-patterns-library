@@ -35,6 +35,6 @@ select dec,
        fib_bin,
        bit_length(fib_bin) as fib_bin_length
 from generate_series(1, 100) as dec
-cross join lateral (select array(select t.n from public.fib_seq(47) as t(n) offset 2)) as f(seq) --1 2 3 5 8 13 21...
-cross join public.fib_encode(dec, f.seq) as fib
-cross join public.fib_code_bin(fib) as fib_bin;
+   , coalesce(array(select t.n from public.fib_seq(47) as t(n) offset 2)) as f(seq) --1 2 3 5 8 13 21...
+   , public.fib_encode(dec, f.seq) as fib
+   , public.fib_code_bin(fib) as fib_bin;
