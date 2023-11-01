@@ -1,5 +1,3 @@
---TODO при некорректных входных данных функция должна возвращать NULL
-
 create or replace function public.bwt_decode(s text, eob char)
     returns text
     immutable
@@ -30,23 +28,37 @@ as $func$
         from r
         inner join s on s.pos = r.next_pos and s.char != bwt_decode.eob
     )
-    select array_to_string(array(
-                select r.char
-                from r
-                offset 1
-           ), '');
+    , o as (
+        select array_to_string(array(
+                   select r.char
+                   from r
+                   offset 1 --without eob
+               ), '') as s
+    )
+    select case when octet_length(o.s) = octet_length(bwt_decode.s) - 1 then o.s end
+    from o
 
 $func$;
 
-comment on function public.bwt_decode(s text, eob char) is 'https://en.wikipedia.org/wiki/Burrows%E2%80%93Wheeler_transform';
+comment on function public.bwt_decode(s text, eob char) is $$
+    https://en.wikipedia.org/wiki/Burrows%E2%80%93Wheeler_transform
+    Returns null for invalid input string
+$$;
 
 --TEST
 do $$
     begin
+        --positive
         assert public.bwt_decode('ard$rcaaaabb', '$') = 'abracadabra';
         assert public.bwt_decode('ард$краааабб', '$') = 'абракадабра';
         assert public.bwt_decode('sinniieffcc$eie', '$') = 'inefficiencies';
         assert public.bwt_decode('aa$nmnnPBaaaa', '$') = 'PanamaBanana';
         assert public.bwt_decode('STEXYDST.E.IXXIIXXSSMPPS.B..EE.$.USFXDIIOIIIT', '$') = 'SIX.MIXED.PIXIES.SIFT.SIXTY.PIXIE.DUST.BOXES';
+
+        --negative
+        assert public.bwt_decode('ardr$caaaabb', '$') is null;
+        assert public.bwt_decode('ardrcaaaabb', '$') is null;
+        assert public.bwt_decode('ardrcaaaabb', '') is null;
+        assert public.bwt_decode('', '') is null;
     end;
 $$;
