@@ -1,4 +1,7 @@
-create or replace function public.bwt_encode(s text, eob char)
+create or replace function public.bwt_encode(
+    s text,
+    eob char --end of block
+)
     returns text
     immutable
     strict -- returns null if any parameter is null
@@ -11,12 +14,10 @@ as $func$
     --https://www.geeksforgeeks.org/burrows-wheeler-data-transform-algorithm/
     --http://guanine.evolbio.mpg.de/cgi-bin/bwt/bwt.cgi.pl
     --https://www.dcode.fr/burrows-wheeler-transform
-    with recursive r (pos, suffix) as (
-        select 1, bwt_encode.s || bwt_encode.eob --end of block
-        union all
-        select r.pos + 1, right(r.suffix, -1)
-        from r
-        where r.suffix != bwt_encode.eob
+    with r (pos, suffix) as (
+        select r.pos,
+               substring(bwt_encode.s from r.pos) || bwt_encode.eob as suffix
+        from generate_series(1, length(bwt_encode.s) + 1) as r(pos)
     )
     --select * from r order by suffix collate "C"; --test
     select array_to_string(array(
