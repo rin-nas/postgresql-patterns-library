@@ -38,19 +38,27 @@ with t (t) as (
     from t
 )
 , b as (
-    select a,                      ad,
-           to_json(a) as a_json,   to_jsonb(a) as a_jsonb,
-           to_json(ad) as ad_json, to_jsonb(ad) as ad_jsonb
+    select a,                           ad,
+           to_json(a) as a_json,        to_json(ad) as ad_json,
+           to_jsonb(a) as a_jsonb,      to_jsonb(ad) as ad_jsonb,
+           public.fib_pack(a) as a_fib, public.fib_pack(ad) as ad_fib
     from a
     cross join public.delta_encode(a) as ad
 )
 select * from b;
 
-select 'pg_int_array' as storage_type,
-       pg_column_size(a) as a_compressed_size,
-       pg_column_size(ad) as ad_compressed_size,
-       pg_column_size(a::text::int[]) as a_uncompressed_size,
-       pg_column_size(ad::text::int[]) as ad_uncompressed_size
+select 'fib_int_array' as storage_type,
+       pg_column_size(a_fib) as orig_compressed_size,
+       pg_column_size(ad_fib) as delta_compressed_size,
+       pg_column_size(a_fib::text::bytea) as orig_uncompressed_size,
+       pg_column_size(ad_fib::text::bytea) as delta_uncompressed_size
+from test.delta
+union all
+select 'pg_int_array',
+       pg_column_size(a),
+       pg_column_size(ad),
+       pg_column_size(a::text::int[]),
+       pg_column_size(ad::text::int[])
 from test.delta
 union all
 select 'json_int_array',
@@ -68,8 +76,9 @@ select 'jsonb_int_array',
 from test.delta;
 ```
 
-| storage\_type | a\_compressed\_size | ad\_compressed\_size | a\_uncompressed\_size | ad\_uncompressed\_size |
+| storage\_type | orig\_compressed\_size | delta\_compressed\_size | orig\_uncompressed\_size | delta\_uncompressed\_size |
 | :--- | :--- | :--- | :--- | :--- |
-| pg\_int\_array | 1392 | 1396 | 1396 | 1396 |
+| fib\_int\_array | 887 | 773 | 887 | 773 |
+| pg\_int\_array | 1392 | 1392 | 1396 | 1396 |
 | json\_int\_array | 2376 | 1578 | 2679 | 1717 |
 | jsonb\_int\_array | 2130 | 2044 | 5490 | 4496 |
