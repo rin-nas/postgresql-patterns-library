@@ -723,9 +723,6 @@ Compression flow: `INPUT -> LZW -> BWT -> MTF -> OUTPUT`
 Decompression flow: in reverse order
 
 * https://github.com/mikeleo03/LZW-Compressor_Backend/blob/main/src/algorithm/algorithm.js
-* https://github.com/Wittline/move-to-front/blob/main/code/mtf.py MTF
-* https://www.phpclasses.org/browse/file/17180.html MTF
-
 
 # Hstore vs jsonb vs json performance
 
@@ -740,3 +737,28 @@ SELECT sum((v->'e')::text::int) FROM json_test; --execution: 939 ms, fetching: 2
 SELECT sum((v->'e')::text::int) FROM jsonb_test; --execution: 580 ms, fetching: 38 ms
 SELECT sum((v->'e')::int) FROM hstore_test; --execution: 304 ms, fetching: 63 ms
 ```
+
+# Protect deadlock
+
+```sql
+EXPLAIN ANALYZE
+UPDATE
+  tbl
+SET
+  val = val + 1
+FROM
+  (
+    SELECT
+      ctid
+    FROM
+      tbl
+    WHERE
+      id IN (1, 2, 3)
+    ORDER BY
+      id
+    FOR UPDATE -- блокировка
+  ) lc
+WHERE
+  tbl.ctid = lc.ctid; -- поиск по физической позиции записи
+```
+https://habr.com/ru/companies/tensor/articles/567514/
