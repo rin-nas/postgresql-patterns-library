@@ -37,5 +37,9 @@ do $$
         --positive
         assert public.bit_reverse(B'00001011'::int) = B'00001101'::int;
         assert public.bit_reverse(B'11101001'::int) = B'10010111'::int;
+
+        assert public.bit_reverse(11) = 13;
+        assert public.bit_reverse(10) = 5;
+
     end;
 $$;
