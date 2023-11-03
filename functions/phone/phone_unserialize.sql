@@ -1,4 +1,4 @@
-create or replace function phone_unserialize(
+create or replace function public.phone_unserialize(
     phone text, --номер телефона, сериализованный функцией phone_serialize()
 
     country_code_example text, --nullable
@@ -12,12 +12,11 @@ create or replace function phone_unserialize(
     local_number out text  --nullable
 )
     returns record
-    stable
+    immutable
     --returns null on null input
     parallel safe
     language plpgsql
     set search_path = ''
-    cost 3
 as
 $$
 declare
@@ -71,7 +70,7 @@ begin
 end
 $$;
 
-comment on function phone_unserialize(
+comment on function public.phone_unserialize(
     phone text,
 
     country_code_example text,
@@ -87,7 +86,7 @@ comment on function phone_unserialize(
 
 ------------------------------------------------------------------------------------------------------------------------
 
-create or replace function phone_unserialize(
+create or replace function public.phone_unserialize(
     phone text, --номер телефона, сериализованный функцией phone_serialize()
 
     country_code_example int, --nullable
@@ -101,7 +100,7 @@ create or replace function phone_unserialize(
     local_number out text  --nullable
 )
     returns record
-    stable
+    immutable
     --returns null on null input
     parallel safe
     language sql
@@ -113,7 +112,7 @@ $$
                                   separator) as u;
 $$;
 
-comment on function phone_unserialize(
+comment on function public.phone_unserialize(
     phone text,
 
     country_code_example int,
@@ -143,8 +142,8 @@ begin
         )
         select t.*, s.*, u.*
         from t
-        cross join phone_serialize(t.country_code, t.area_code, t.local_number) as s(phone)
-        cross join phone_unserialize(s.phone, t.country_code, t.area_code, t.local_number) as u
+        cross join public.phone_serialize(t.country_code, t.area_code, t.local_number) as s(phone)
+        cross join public.phone_unserialize(s.phone, t.country_code, t.area_code, t.local_number) as u
         where t is distinct from u
     );
 
@@ -155,8 +154,8 @@ begin
         )
         select t.*, s.*, u.*
         from t
-        cross join phone_serialize(t.country_code, t.area_code, t.local_number) as s(phone)
-        cross join phone_unserialize(s.phone, t.country_code, t.area_code, t.local_number) as u
+        cross join public.phone_serialize(t.country_code, t.area_code, t.local_number) as s(phone)
+        cross join public.phone_unserialize(s.phone, t.country_code, t.area_code, t.local_number) as u
         where t is distinct from u
     );
 

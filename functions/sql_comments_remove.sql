@@ -2,7 +2,7 @@ create or replace function sql_comments_remove(
     sql text  --SQL запрос
 )
     returns text
-    stable
+    immutable
     returns null on null input
     parallel safe
     language sql

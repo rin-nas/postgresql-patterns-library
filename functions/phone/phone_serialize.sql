@@ -6,17 +6,14 @@ create or replace function public.phone_serialize(
                                    -- чтобы корректно работали функции phone_normalize() и phone_parse()
 )
     returns text --not null
-    stable
+    immutable
     --returns null on null input
     parallel safe
-    language plpgsql
+    language sql
     set search_path = ''
-    cost 2
 as
 $$
-begin
-    return concat_ws('', country_code, separator, area_code, separator, local_number);
-end
+    select concat_ws('', country_code, separator, area_code, separator, local_number);
 $$;
 
 comment on function public.phone_serialize(
@@ -36,7 +33,7 @@ create or replace function public.phone_serialize(
                                    -- чтобы корректно работали функции phone_normalize() и phone_parse()
 )
     returns text
-    stable
+    immutable
     --returns null on null input
     parallel safe
     language sql

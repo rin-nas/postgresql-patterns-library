@@ -17,7 +17,7 @@ CREATE FUNCTION public.array_unique(
       boolean -- flag to drop nulls
 ) 
     RETURNS anyarray
-    stable
+    immutable
     returns null on null input
     parallel safe
     language sql
