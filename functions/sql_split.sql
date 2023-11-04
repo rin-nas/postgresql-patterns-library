@@ -1,4 +1,4 @@
-create or replace function sql_split(
+create or replace function public.sql_split(
     sql text,
     is_remove_empty_query boolean default true, --удалять пустые запросы (даже если там есть только комментарии)
     is_remove_comments boolean default false --удалять комментарии (однострочные и многострочные)
@@ -90,7 +90,7 @@ begin
 end
 $func$;
 
-comment on function sql_split(sql text, is_remove_empty_query boolean, is_remove_comments boolean) is $$
+comment on function public.sql_split(sql text, is_remove_empty_query boolean, is_remove_comments boolean) is $$
     SQL парсер, разбивает SQL скрипт на отдельные команды по разделителю ';'.
     SQL parser, splits multiple SQL statements into individual SQL statements by simicolon delimiter.
 $$;
@@ -109,13 +109,13 @@ do $do$
 
         assert (select queries = array[$sql$select -11.22 as "1;1", 's'';tr', E'e\';f' from t$sql$,
                                        $sql$select $$test;$$ from t$sql$]
-                 from sql_split(sql, true, true) as t(queries));
+                 from public.sql_split(sql, true, true) as t(queries));
 
         assert (select queries = array[$sql$--comm;ent1
                        select -11.22 as "1;1", 's'';tr', E'e\';f' from t$sql$,
                        $sql$/*comm;ent2 */
                        select $$test;$$ from t$sql$]
-                   from sql_split(sql, true, false) as t(queries));
+                   from public.sql_split(sql, true, false) as t(queries));
 
     end;
 $do$;

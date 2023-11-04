@@ -1,4 +1,4 @@
-create or replace function sql_comments_remove(
+create or replace function public.sql_comments_remove(
     sql text  --SQL запрос
 )
     returns text
@@ -52,7 +52,7 @@ $function$
 
 $function$;
 
-comment on function depers.sql_comments_remove(sql text) is $$
+comment on function public.sql_comments_remove(sql text) is $$
     Удаляет из SQL запроса однострочные и многострочные комментарии (заменяет их на пробел)
     For example, it's useful to clean up the query field returned by the pg_stat_statements extension and remove all comments.
 $$;
@@ -78,6 +78,6 @@ TEST sql_comments_remove() end
 
 BEGIN
     --raise notice '%', sql_comments_remove(sql);
-    perform sql_comments_remove(sql);
+    perform public.sql_comments_remove(sql);
 END;
 $do$;
