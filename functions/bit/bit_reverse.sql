@@ -102,8 +102,8 @@ $$;
 
 ------------------------------------------------------------------------------------------------------------------------
 
-create or replace function public.bit_reverse(b bit varying)
-    returns bit varying
+create or replace function public.bit_reverse(b bit)
+    returns bit
     immutable
     strict -- returns null if any parameter is null
     parallel safe -- Postgres 10 or later
