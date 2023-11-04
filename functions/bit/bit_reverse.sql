@@ -99,3 +99,43 @@ do $$
         assert public.bit_reverse(B'01011'::int, 5) = B'11010'::int;
     end;
 $$;
+
+------------------------------------------------------------------------------------------------------------------------
+
+create or replace function public.bit_reverse(b bit varying)
+    returns bit varying
+    immutable
+    strict -- returns null if any parameter is null
+    parallel safe -- Postgres 10 or later
+    security invoker
+    language plpgsql
+    set search_path = ''
+AS $func$
+DECLARE
+    len int not null default bit_length(b) - 1;
+    x int;
+    y int;
+BEGIN
+    for i in 0 .. len / 2 loop
+        x := get_bit(b, i);
+        y := get_bit(b, len - i);
+        b := set_bit(b, len - i, x);
+        b := set_bit(b, i, y);
+    end loop;
+    return b;
+END;
+$func$;
+
+--TEST
+do $$
+    begin
+        assert public.bit_reverse(B'01') = B'10';
+        assert public.bit_reverse(B'10') = B'01';
+        assert public.bit_reverse(B'1011') = B'1101';
+        assert public.bit_reverse(B'01011') = B'11010';
+        assert public.bit_reverse(B'001011') = B'110100';
+        assert public.bit_reverse(B'10110') = B'01101';
+        assert public.bit_reverse(B'01011') = B'11010';
+        assert public.bit_reverse(B'111000') = B'000111';
+    end;
+$$;
