@@ -8,10 +8,10 @@ create or replace function public.raise_exception(
     detail  text default null,
     hint    text default 'See value (type %s) in detail as JSON',
     errcode text default 'raise_exception',
-    "column"     text default null,
     "constraint" text default null,
+    "schema"     text default null,
     "table"      text default null,
-    "schema"     text default null
+    "column"     text default null
 )
     returns boolean
     immutable
@@ -27,10 +27,10 @@ begin
         detail  = coalesce(detail, coalesce(to_json(value), 'null'::json)::text),
         hint    = format(coalesce(hint, 'See value (type %s) in detail as JSON'), pg_typeof(value)::text),
         errcode = coalesce(errcode, 'raise_exception'/*ERRCODE_RAISE_EXCEPTION (P0001)*/),
-        column      = coalesce("column", ''),
         constraint  = coalesce("constraint", ''),
-        table       = coalesce("table", ''),
         schema      = coalesce("schema", ''),
+        table       = coalesce("table", ''),
+        column      = coalesce("column", ''),
         datatype    = pg_typeof(value)::text;
     return null::bool;
 end;
