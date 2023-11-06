@@ -35,7 +35,7 @@ as $func$
                    offset 1 --without eob
                ), '') as s
     )
-    select case when octet_length(o.s) = octet_length(bwt_decode.s) - 1 then o.s end
+    select case when octet_length(o.s) + octet_length(bwt_decode.eob) = octet_length(bwt_decode.s) then o.s end
     from o
 
 $func$;
@@ -53,12 +53,18 @@ do $$
         assert public.bwt_decode('ард$краааабб', '$') = 'абракадабра';
         assert public.bwt_decode('sinniieffcc$eie', '$') = 'inefficiencies';
         assert public.bwt_decode('aa$nmnnPBaaaa', '$') = 'PanamaBanana';
-        assert public.bwt_decode('STEXYDST.E.IXXIIXXSSMPPS.B..EE.$.USFXDIIOIIIT', '$') = 'SIX.MIXED.PIXIES.SIFT.SIXTY.PIXIE.DUST.BOXES';
+        select public.bwt_decode('TOOOBBBRRTTTEEENNOOOOR$TO', '$') = 'TOBEORNOTTOBEORTOBEORNOT';
+
+        assert public.bwt_decode('STEXYDST.E.IXXIIXXSSMPPS.B..EE.$.USFXDIIOIIIT', '$')
+                               = 'SIX.MIXED.PIXIES.SIFT.SIXTY.PIXIE.DUST.BOXES';
+
+        select public.bwt_decode('.тллу..аукевзваауап!уук     $  кзккРрхц  икррррррррче Вдааееееууеееуауа еГГГ Г    икккккррнСЕ  ', '$')
+                               = 'Ехал Грека через реку. Видит Грека в реке рак. Сунул Грека руку в реку. Рак за руку Греку цап!';
 
         --negative
         assert public.bwt_decode('ardr$caaaabb', '$') is null;
         assert public.bwt_decode('ardrcaaaabb', '$') is null;
         assert public.bwt_decode('ardrcaaaabb', '') is null;
-        assert public.bwt_decode('', '') is null;
+        assert public.bwt_decode('', '') = '';
     end;
 $$;

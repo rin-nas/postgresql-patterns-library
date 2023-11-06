@@ -16,7 +16,7 @@ as $func$
     --https://www.dcode.fr/burrows-wheeler-transform
     with r (pos, suffix) as (
         select r.pos,
-               substring(bwt_encode.s from r.pos) || bwt_encode.eob as suffix
+               substring(bwt_encode.s from r.pos) || bwt_encode.eob
         from generate_series(1, length(bwt_encode.s) + 1) as r(pos)
     )
     --select * from r order by suffix collate "C"; --test
@@ -44,6 +44,12 @@ do $$
         assert public.bwt_encode('абракадабра', '$') = 'ард$краааабб';
         assert public.bwt_encode('inefficiencies', '$') = 'sinniieffcc$eie';
         assert public.bwt_encode('PanamaBanana', '$') = 'aa$nmnnPBaaaa';
-        assert public.bwt_encode('SIX.MIXED.PIXIES.SIFT.SIXTY.PIXIE.DUST.BOXES', '$') = 'STEXYDST.E.IXXIIXXSSMPPS.B..EE.$.USFXDIIOIIIT';
+        assert public.bwt_encode('TOBEORNOTTOBEORTOBEORNOT', '$') = 'TOOOBBBRRTTTEEENNOOOOR$TO';
+
+        assert public.bwt_encode('SIX.MIXED.PIXIES.SIFT.SIXTY.PIXIE.DUST.BOXES', '$')
+                               = 'STEXYDST.E.IXXIIXXSSMPPS.B..EE.$.USFXDIIOIIIT';
+
+        assert public.bwt_encode('Ехал Грека через реку. Видит Грека в реке рак. Сунул Грека руку в реку. Рак за руку Греку цап!', '$')
+                               = '.тллу..аукевзваауап!уук     $  кзккРрхц  икррррррррче Вдааееееууеееуауа еГГГ Г    икккккррнСЕ  ';
     end;
 $$;
