@@ -1,9 +1,8 @@
--- PostgreSQL equivalent of MySQL's BENCHMARK() function
-
-CREATE OR REPLACE FUNCTION benchmark(loop_count int, sql_expr text) returns interval
-    volatile
+CREATE OR REPLACE FUNCTION public.benchmark(loop_count int, sql_expr text)
+    returns interval
+    volatile --!!!
     returns null on null input -- = strict
-    parallel unsafe -- Postgres 10 or later
+    parallel unsafe --!!! -- Postgres 10 or later
     security invoker
     language plpgsql
     set search_path = ''
@@ -20,12 +19,17 @@ BEGIN
 END
 $$;
 
-comment on function benchmark(loop_count int, sql_expr text) is 'Measures the speed of expressions and functions for a given number of calls. Returns period of time.';
+comment on function public.benchmark(loop_count int, sql_expr text) is $$
+    Measures the speed of expressions and functions for a given number of calls. Returns period of time.
+    PostgreSQL equivalent of MySQL's BENCHMARK() function.
+$$;
 
-CREATE OR REPLACE FUNCTION benchmark(timeout interval, sql_expr text) returns int
-    volatile
+------------------------------------------------------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION public.benchmark(timeout interval, sql_expr text)
+    returns int
+    volatile --!!!
     returns null on null input -- = strict
-    parallel unsafe -- Postgres 10 or later
+    parallel unsafe --!!! -- Postgres 10 or later
     security invoker
     language plpgsql
     set search_path = ''
@@ -49,26 +53,29 @@ BEGIN
 END
 $$;
 
-comment on function benchmark(timeout interval, sql_expr text) is 'Measures the speed of expressions and functions for a given period of time. Returns number of calls.';
+comment on function public.benchmark(timeout interval, sql_expr text) is $$
+    Measures the speed of expressions and functions for a given period of time. Returns number of calls.
+$$;
 
+------------------------------------------------------------------------------------------------------------------------
 -- TESTS
 do $$
     begin
-        assert benchmark(1000, 'gen_random_uuid()') > '0'::interval;
-        assert benchmark('10ms'::interval, 'gen_random_uuid()') > 0;
+        assert public.benchmark(1000, 'gen_random_uuid()') > '0'::interval;
+        assert public.benchmark('10ms'::interval, 'gen_random_uuid()') > 0;
     end;
 $$;
 
 -- EXAMPLE 1: parse URL
-select benchmark(100000, $$substring(format('https://www.domain%s.com/?aaa=1111&b[2]=3#test', (random()*1000)::int::text) from '^[^:]+://([^/]+)')$$);
+select public.benchmark(100000, $$substring(format('https://www.domain%s.com/?aaa=1111&b[2]=3#test', (random()*1000)::int::text) from '^[^:]+://([^/]+)')$$);
 
 -- EXAMPLE 2: generate UUID
-SELECT benchmark(100000, $$uuid_in(overlay(overlay(md5(random()::text || ':' || clock_timestamp()::text) placing '4' from 13) placing to_hex(floor(random()*(11-8+1) + 8)::int)::text from 17)::cstring)$$);
-SELECT benchmark(100000, $$md5(random()::text || clock_timestamp()::text)::uuid$$);
+SELECT public.benchmark(100000, $$uuid_in(overlay(overlay(md5(random()::text || ':' || clock_timestamp()::text) placing '4' from 13) placing to_hex(floor(random()*(11-8+1) + 8)::int)::text from 17)::cstring)$$);
+SELECT public.benchmark(100000, $$md5(random()::text || clock_timestamp()::text)::uuid$$);
 
 -- EXAMPLE 3: benchmark generate UUID
-SELECT benchmark('1s'::interval, 'public.gen_random_uuid()'), public.gen_random_uuid() as guid
+SELECT public.benchmark('1s'::interval, 'public.gen_random_uuid()'), public.gen_random_uuid() as guid
 union all
-SELECT benchmark('1s'::interval, 'public.uuid_generate_v7()'), public.uuid_generate_v7()
+SELECT public.benchmark('1s'::interval, 'public.uuid_generate_v7()'), public.uuid_generate_v7()
 union all
-SELECT benchmark('1s'::interval, 'public.uuid_generate_v8()'), public.uuid_generate_v8();
+SELECT public.benchmark('1s'::interval, 'public.uuid_generate_v8()'), public.uuid_generate_v8();

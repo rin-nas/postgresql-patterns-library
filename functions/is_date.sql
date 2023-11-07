@@ -1,4 +1,4 @@
-create or replace function is_date(str text, is_notice boolean default false)
+create or replace function public.is_date(str text, is_notice boolean default false)
     returns boolean
     returns null on null input
     --parallel safe
@@ -46,12 +46,12 @@ $$;
 do $$
     begin
         --positive
-        assert is_date('01.01.2000');
-        assert is_date('2000-12-31');
+        assert public.is_date('01.01.2000');
+        assert public.is_date('2000-12-31');
 
         --negative
-        assert not is_date('01.01.2000 00:00:00');
-        assert not is_date('00.01.2000');
-        assert not is_date('30.02.2000');
+        assert not public.is_date('01.01.2000 00:00:00');
+        assert not public.is_date('00.01.2000');
+        assert not public.is_date('30.02.2000');
     end
 $$;

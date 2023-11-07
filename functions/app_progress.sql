@@ -1,4 +1,4 @@
-create or replace function app_progress(
+create or replace function public.app_progress(
     done_percent numeric, --прогресс выполнения некого запроса
     prefix char default '#', --символ-маркер, после которого должно быть число процентов
     is_local bool default false --false allow pass application_name's value to subtransaction
@@ -9,6 +9,7 @@ create or replace function app_progress(
     volatile --NOT stable!
     language plpgsql
     set search_path = ''
+    cost 5
 as
 $$
 declare
@@ -25,16 +26,14 @@ end
 $$;
 
 
-comment on function app_progress(
+comment on function public.app_progress(
     done_percent numeric,
     prefix char,
     is_local bool
 ) is $$
-    Дописывает или заменяет прогресс выполнения (в процентах) в application_name.
-    Сценарий использования.
-      Внутри процедуры с длительным временем работы после выполнения части работы нужно вызывать функцию app_progress().
-      Т.о. в списке процессов БД можно наблюдать вашу процедуру и отслеживать ход выполнения.
+    Дописывает или заменяет прогресс выполнения (в процентах) "тяжёлого" запроса в application_name.
+    Т.о. его можно наблюдать в списке процессов БД и отслеживать ход выполнения.
 $$;
 
 --TEST
---select app_progress(0), current_setting('application_name'), app_progress(1), current_setting('application_name');
+--select public.app_progress(0), current_setting('application_name'), public.app_progress(1), current_setting('application_name');

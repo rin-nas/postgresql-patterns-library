@@ -1,4 +1,4 @@
-create or replace function is_kpp(str text)
+create or replace function public.is_kpp(str text)
     returns boolean
     immutable
     returns null on null input
@@ -24,20 +24,20 @@ select
     and str !~ '^([1-9])\1+$'
 $$;
 
-comment on function is_kpp(text) is 'Проверяет, что переданная строка является КПП (код причины постановки на учёт)';
+comment on function public.is_kpp(text) is 'Проверяет, что переданная строка является КПП (код причины постановки на учёт)';
 
 --TEST
 
 DO $$
 BEGIN
     --positive
-    assert is_kpp('000000000');
-    assert is_kpp('123456789');
-    assert is_kpp('0000AZ000');
+    assert public.is_kpp('000000000');
+    assert public.is_kpp('123456789');
+    assert public.is_kpp('0000AZ000');
 
     --negative
-    assert not is_kpp('12345');
-    assert not is_kpp('1234567890');
-    assert not is_kpp('111111111');
+    assert not public.is_kpp('12345');
+    assert not public.is_kpp('1234567890');
+    assert not public.is_kpp('111111111');
 
 END $$;

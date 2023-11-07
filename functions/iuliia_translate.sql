@@ -1,6 +1,10 @@
 -- Функция транслитерации по правилам библиотеки "Юлия", https://github.com/nalgeon/iuliia
-create or replace function iuliia_translate(str text, rules jsonb) returns text
-    RETURNS NULL ON NULL INPUT
+create or replace function public.iuliia_translate(str text, rules jsonb)
+    returns text
+    immutable
+    strict -- returns null if any parameter is null
+    parallel safe -- Postgres 10 or later
+    security invoker
     language plpgsql
     set search_path = ''
 as
@@ -44,7 +48,7 @@ BEGIN
 END
 $$;
 
-comment on function iuliia_translate(str text, rules jsonb)
+comment on function public.iuliia_translate(str text, rules jsonb)
     is 'Транслитерация текста с правилами транслитерации в JSON, см. github.com/nalgeon/iuliia/';
 
 /*
@@ -53,14 +57,17 @@ comment on function iuliia_translate(str text, rules jsonb)
 Визуально самая приятная из всех, хотя уступает Википедии по фонетической точности.
 Сочетает удачные решения Википедии и Яндекс.Карт. Придумана в Студии Лебедева, официально нигде не описана.
 */
-create or replace function iuliia_translate_mosmetro(str text) returns text
+create or replace function public.iuliia_translate_mosmetro(str text)
+    returns text
     immutable
-    strict
+    strict -- returns null if any parameter is null
+    parallel safe -- Postgres 10 or later
+    security invoker
     language sql
-    PARALLEL SAFE -- Postgres 10 or later
+    set search_path = ''
 as
 $$
-select iuliia_translate(
+select public.iuliia_translate(
     str,
     -- https://github.com/nalgeon/iuliia/blob/master/mosmetro.json
     '{
@@ -168,7 +175,7 @@ select iuliia_translate(
 );
 $$;
 
-comment on function iuliia_translate_mosmetro(str text)
+comment on function public.iuliia_translate_mosmetro(str text)
     is 'Транслитерация текста с правилами транслитерации Мосметро, см. github.com/nalgeon/iuliia/blob/master/mosmetro.json';
 
 /*
@@ -177,14 +184,17 @@ comment on function iuliia_translate_mosmetro(str text)
 Самая продуманная, звучит лучше всех и выглядит приятнее большинства прочих схем.
 Пожалуй, неудачной вышла только буква Щ.
 */
-create or replace function iuliia_translate_wikipedia(str text) returns text
+create or replace function public.iuliia_translate_wikipedia(str text)
+    returns text
     immutable
-    strict
+    strict -- returns null if any parameter is null
+    parallel safe -- Postgres 10 or later
+    security invoker
     language sql
-    PARALLEL SAFE -- Postgres 10 or later
+    set search_path = ''
 as
 $$
-select iuliia_translate(
+select public.iuliia_translate(
    str,
    -- https://github.com/nalgeon/iuliia/blob/master/wikipedia.json
    '{
@@ -285,7 +295,7 @@ select iuliia_translate(
 );
 $$;
 
--- iuliia_translate_mosmetro() tests
+-- public.iuliia_translate_mosmetro() tests
 DO $$
 DECLARE
     rec record;
@@ -396,15 +406,15 @@ BEGIN
          }'::jsonb->'samples')
     loop
        raise notice '% => %', rec.src, rec.dst;
-       ASSERT
+       assert
            -- результат сравнения должен вернуть boolean
-           iuliia_translate_mosmetro(rec.src) is not distinct from rec.dst,
+           public.iuliia_translate_mosmetro(rec.src) is not distinct from rec.dst,
            -- если результат сравнения не true, то вернётся сообщение с ошибкой
            format('%L => %L', rec.src, rec.dst);
     end loop;
 END $$;
 
--- iuliia_translate_wikipedia() tests
+-- public.iuliia_translate_wikipedia() tests
 DO $$
 DECLARE
     rec record;
@@ -508,16 +518,17 @@ BEGIN
         }'::jsonb->'samples')
     loop
         raise notice '% => %', rec.src, rec.dst;
-        ASSERT
+        assert
             -- результат сравнения должен вернуть boolean
-            iuliia_translate_wikipedia(rec.src) is not distinct from rec.dst,
+            public.iuliia_translate_wikipedia(rec.src) is not distinct from rec.dst,
             -- если результат сравнения не true, то вернётся сообщение с ошибкой
             format('%L => %L', rec.src, rec.dst);
     end loop;
 END $$;
 
--- @UNDO
-
-drop function if exists iuliia_translate_mosmetro(str text);
-drop function if exists iuliia_translate_wikipedia(str text);
-drop function if exists iuliia_translate(str text, rules jsonb);
+-- UNDO
+/*
+drop function if exists public.iuliia_translate_mosmetro(str text);
+drop function if exists public.iuliia_translate_wikipedia(str text);
+drop function if exists public.iuliia_translate(str text, rules jsonb);
+*/

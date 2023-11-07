@@ -5,10 +5,10 @@ CREATE INDEX /*CONCURRENTLY*/ IF NOT EXISTS custom_query_group_name_name_trigram
 CREATE INDEX /*CONCURRENTLY*/ IF NOT EXISTS sphinx_wordforms_word_trigram_index ON public.sphinx_wordforms USING GIN (lower(word) gin_trgm_ops);
  
 SELECT COUNT(*) FROM sphinx_wordforms; -- 1,241,939 записей
- 
--- drop function typos_correct(text, interval, boolean);
 
-CREATE OR REPLACE FUNCTION typos_correct(
+-- drop function public.typos_correct(text, interval, boolean);
+
+CREATE OR REPLACE FUNCTION public.typos_correct(
     words    text,
     timeout  interval,
     is_debug bool default false
@@ -69,7 +69,6 @@ WITH
                 WHERE lower(dict.word) = lower(q.word_from)
                   AND mistake = FALSE
                   AND checked = TRUE
-                LIMIT 1
             ) AND
             -- есть слово в названиях профессий?
             NOT EXISTS(
@@ -77,7 +76,6 @@ WITH
                 FROM custom_query_group_name AS dict
                 --WHERE lower(q.word_from) = lower(dict.name)
                 WHERE lower(q.word_from) = ANY(string_to_array(lower(dict.name), ' ')) --Теперь корректор сравнивает каждое слово запроса с каждым словом из name (профессии). Сравнение именно по словам, иначе "программист net" и "bim менеджер" снова станут "программист туе" и "ишь менеджер".
-                LIMIT 1
             ) AS is_mistake
         FROM unnest((SELECT words_from FROM vars)) WITH ORDINALITY AS q(word_from, word_num)
     )
@@ -109,11 +107,11 @@ WITH
                         ) AS t
                    WHERE TRUE
                      AND levenshtein_distance1 < 5 AND levenshtein_rank3 > 0.55
-                       WINDOW w AS (ORDER BY levenshtein_distance1 ASC,
+                       WINDOW w AS (ORDER BY levenshtein_distance1,
                            levenshtein_rank3 DESC,
                            word_similarity_rank DESC,
                            similarity_rank DESC)
-                   ORDER BY levenshtein_distance1 ASC,
+                   ORDER BY levenshtein_distance1,
                             levenshtein_rank3 DESC,
                             word_similarity_rank DESC,
                             similarity_rank DESC
@@ -141,7 +139,7 @@ WITH
       AND NOT EXISTS(SELECT FROM words AS s WHERE s.word_num < 2 AND s.is_mistake = FALSE)
       -- если все отдельные слова не имеют опечаток, то прерываем цикл
       AND (SELECT COUNT(*) = 2 OR (COUNT(*) - 2) / 2 != COUNT(*) FILTER (WHERE s.word_num >= 2 AND s.is_mistake = FALSE) FROM words AS s)
-    ORDER BY word_num ASC
+    ORDER BY word_num
 )
 SELECT w.word_num,
        w.word_from,
@@ -159,8 +157,8 @@ $BODY$;
 
 -- Тестирование. Если какой-либо запрос не выполнится, то мы увидим текст ошибки.
 --EXPLAIN
-SELECT * FROM typos_correct(E'повар-пивовар\ngjdfh-gbdjdfh\nповар\nпивовар\ngjdfh\ngbdjdfh', '200ms'::interval, true);
-SELECT * FROM typos_correct(E'бухалтер\n,e[fknth', '200ms'::interval, true);
-SELECT * FROM typos_correct(E'моляр\nvjkzh', '200ms'::interval, true);
-SELECT * FROM typos_correct(E'моляр\nvjkzh', '200ms'::interval, false);
-SELECT * FROM typos_correct(E'моляр\nvjkzh', '200ms'::interval);
+SELECT * FROM public.typos_correct(E'повар-пивовар\ngjdfh-gbdjdfh\nповар\nпивовар\ngjdfh\ngbdjdfh', '200ms'::interval, true);
+SELECT * FROM public.typos_correct(E'бухалтер\n,e[fknth', '200ms'::interval, true);
+SELECT * FROM public.typos_correct(E'моляр\nvjkzh', '200ms'::interval, true);
+SELECT * FROM public.typos_correct(E'моляр\nvjkzh', '200ms'::interval, false);
+SELECT * FROM public.typos_correct(E'моляр\nvjkzh', '200ms'::interval);

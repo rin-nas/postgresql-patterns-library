@@ -1,4 +1,4 @@
-create or replace function phone_format_record(
+create or replace function public.phone_format_record(
     in_country_code text,
     in_area_code text,
     in_local_number text,
@@ -36,7 +36,7 @@ select
         ), 32) as local_number;
 $$;
 
-comment on function phone_format_record(
+comment on function public.phone_format_record(
     in_country_code text,
     in_area_code text,
     in_local_number text,
@@ -52,7 +52,7 @@ comment on function phone_format_record(
 
 ------------------------------------------------------------------------------------------------------------------------
 
-create or replace function phone_format_record(
+create or replace function public.phone_format_record(
     in_country_code int,
     in_area_code text,
     in_local_number text,
@@ -73,11 +73,11 @@ create or replace function phone_format_record(
 as
 $$;
     select t.country_code::int, t.area_code, t.local_number
-    from phone_format_record(in_country_code::text, in_area_code, in_local_number,
+    from public.phone_format_record(in_country_code::text, in_area_code, in_local_number,
                                     country_code_example::text, area_code_example, local_number_example) as t;
 $$;
 
-comment on function phone_format_record(
+comment on function public.phone_format_record(
     in_country_code int,
     in_area_code text,
     in_local_number text,
@@ -93,7 +93,7 @@ comment on function phone_format_record(
 
 ------------------------------------------------------------------------------------------------------------------------
 
-create or replace function phone_format_record(
+create or replace function public.phone_format_record(
     in_country_code int,
     in_area_code text,
     in_local_number text,
@@ -114,12 +114,12 @@ create or replace function phone_format_record(
 as
 $$;
     select t.*
-    from phone_format_record(in_country_code::text, in_area_code, in_local_number,
+    from public.phone_format_record(in_country_code::text, in_area_code, in_local_number,
                                     country_code_example, area_code_example, local_number_example) as t;
 $$;
 
 
-comment on function phone_format_record(
+comment on function public.phone_format_record(
     in_country_code int,
     in_area_code text,
     in_local_number text,
@@ -135,7 +135,7 @@ comment on function phone_format_record(
 
 ------------------------------------------------------------------------------------------------------------------------
 
-create or replace function phone_format_record(
+create or replace function public.phone_format_record(
     in_country_code text,
     in_area_code text,
     in_local_number text,
@@ -156,11 +156,11 @@ create or replace function phone_format_record(
 as
 $$;
     select t.country_code::int, t.area_code, t.local_number
-    from phone_format_record(in_country_code, in_area_code, in_local_number,
+    from public.phone_format_record(in_country_code, in_area_code, in_local_number,
                                     country_code_example::text, area_code_example, local_number_example) as t;
 $$;
 
-comment on function phone_format_record(
+comment on function public.phone_format_record(
     in_country_code text,
     in_area_code text,
     in_local_number text,
@@ -181,38 +181,38 @@ do $$
 begin
     -- int - int
     assert (select t is not distinct from row(null::int, null::text, '9651234567'::text)
-            from phone_format_record(7, '965', '1234567',
+            from public.phone_format_record(7, '965', '1234567',
                                             null::int, null::text, '000000') as t);
 
     -- int - text
     assert (select t is not distinct from row(null::text, null::text, '9651234567'::text)
-            from phone_format_record(7, '965', '1234567',
+            from public.phone_format_record(7, '965', '1234567',
                                             null::text, null::text, '000000') as t);
 
     -- text - int
     assert (select t is not distinct from row(null::int, null::text, '9651234567'::text)
-            from phone_format_record('7', '965', '1234567',
+            from public.phone_format_record('7', '965', '1234567',
                                             null::int, null::text, '000000') as t);
 
     -- text - text
     assert (select t is not distinct from row(''::text, ''::text, '965 1234567'::text)
-            from phone_format_record('7', '965', '1234567',
+            from public.phone_format_record('7', '965', '1234567',
                                             '', '', '000 000') as t);
 
     assert (select t is not distinct from row('7'::text, ''::text, '965 1234567'::text)
-            from phone_format_record('7', '965', '1234567',
+            from public.phone_format_record('7', '965', '1234567',
                                             '0', '', '000 000') as t);
 
     assert (select t is not distinct from row('+7'::text, '965'::text, '123-45-67 с 9 до 18'::text)
-            from phone_format_record('7', '965', '1234567',
+            from public.phone_format_record('7', '965', '1234567',
                                             '+0', '000', '000-00-00 с 9 до 18') as t);
 
     assert (select t is not distinct from row(''::text, '+7965'::text, '1234567'::text)
-            from phone_format_record('7', '965', '1234567',
+            from public.phone_format_record('7', '965', '1234567',
                                             '', '+000', '0000000') as t);
 
     assert (select t is not distinct from row(''::text, '7(965)'::text, '1234567'::text)
-            from phone_format_record('7', '965', '1234567',
+            from public.phone_format_record('7', '965', '1234567',
                                             '', '0(000)', '0000000') as t);
 end;
 $$;

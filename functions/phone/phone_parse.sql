@@ -1,6 +1,6 @@
 -- TODO add support for https://datatracker.ietf.org/doc/html/rfc3966  (see https://habr.com/ru/post/278345/)
 
-create or replace function phone_parse(
+create or replace function public.phone_parse(
     /*
     Номер телефона в международном или локальном формате, допускающим разделение групп цифр пробелами, скобками и дефисами
     Номер телефона должен:
@@ -8,7 +8,7 @@ create or replace function phone_parse(
         * или начинаться с national prefix и не цифры
         * или содержать только цифры (E.164 без знака "+")
     Номер телефона НЕ должен иметь какие-либо преписки в начале ("моб. тел.") и дописки в конце ("с 9 до 18")
-    Номер телефона в любом формате умеет обрабатывать функция phone_normalize()
+    Для конвертации номера телефона из любого формата в E.164 используйте функцию phone_normalize()
     */
     phone text,
     allow_calling_codes       bool default true,  --разрешить номера телефонов с используемыми кодами стран
@@ -28,6 +28,7 @@ create or replace function phone_parse(
     parallel safe
     language sql
     set search_path = ''
+    cost 10
 as
 $$
 with t as (
@@ -41,7 +42,7 @@ with t as (
         )?
         ( #2 country_code
           ( #3 calling code
-            #регулярное выражение для захвата телефонного кода страны сгенерировано автоматически, см. extra/phone.sql
+            #регулярное выражение для захвата телефонного кода страны сгенерировано автоматически, см. dev/phone.sql
             [17]
             |2(?:[07]|1[1-368]|[2-46]\d|5[0-8]|9[017-9])
             |3(?:[0-469]|5\d|7[0-8]|8[0-35-79])
@@ -92,7 +93,8 @@ cross join regexp_match(t.n,
 -- проверяем кол-во цифр
 where octet_length(replace(t.n, ' ', ''))
           between 8 --https://stackoverflow.com/questions/14894899/what-is-the-minimum-length-of-a-valid-international-phone-number
-          and 15 --https://en.wikipedia.org/wiki/E.164 and https://en.wikipedia.org/wiki/Telephone_numbering_plan
+              and 15 --https://en.wikipedia.org/wiki/E.164 and https://en.wikipedia.org/wiki/Telephone_numbering_plan
+                  + 3  --reserved for depersonalization
       and p[2] is not null --country_code
       and coalesce(p[7], p[8]) is not null --local_number
       and (allow_calling_codes     or p[3] is null)
@@ -101,13 +103,13 @@ where octet_length(replace(t.n, ' ', ''))
       and (not begins_special_spare_code or p[1] is not null);
 $$;
 
-comment on function phone_parse(
+comment on function public.phone_parse(
     phone text,
     allow_calling_codes     bool,
     allow_national_prefixes bool,
     allow_spare_codes       bool,
     begins_special_spare_code bool,
-    country_code out text,
+    country_code out int,
     area_code    out text,
     local_number out text
 ) is $$
@@ -123,88 +125,94 @@ do $$
         assert (select country_code = 7
                    and area_code = '499'
                    and local_number = '1234567'
-                from phone_parse('74991234567'));
+                from public.phone_parse('74991234567'));
         assert (select country_code = 7
                    and area_code = '499'
                    and local_number = '1234567'
-                from phone_parse('+7 (499) 1234567'));
+                from public.phone_parse('+7 (499) 1234567'));
         assert (select country_code = 7
                    and area_code = '499'
                    and local_number = '1234567'
-                from phone_parse('+7 4991234567'));
+                from public.phone_parse('+7 4991234567'));
         assert (select country_code = 7
                    and area_code = '499'
                    and local_number = '1234567'
-                from phone_parse('+7499 1234567'));
+                from public.phone_parse('+7499 1234567'));
         assert (select country_code = 7
                    and area_code = '499'
                    and local_number = '1234567'
-                from phone_parse('+74991234567'));
+                from public.phone_parse('+74991234567'));
         assert (select country_code = 7
                    and area_code = '499'
                    and local_number = '1234567'
-                from phone_parse('8 4991234567'));
+                from public.phone_parse('8 4991234567'));
 
         assert (select country_code = 54
                    and area_code = '9298'
                    and local_number = '2123456'
-                from phone_parse('+54 9 2982 123456'));
+                from public.phone_parse('+54 9 2982 123456'));
 
         assert (select country_code = 375
                    and area_code = '17'
                    and local_number = '1234567'
-                from phone_parse('+375 17 123-45-67'));
+                from public.phone_parse('+375 17 123-45-67'));
         assert (select country_code = 375
                    and area_code = '17'
                    and local_number = '1234567'
-                from phone_parse('+375 17 1234567'));
+                from public.phone_parse('+375 17 1234567'));
         assert (select country_code = 375
                    and area_code = '17'
                    and local_number = '1234567'
-                from phone_parse('+375171234567'));
+                from public.phone_parse('+375171234567'));
         assert (select country_code = 375
                    and area_code = '17'
                    and local_number = '1234567'
-                from phone_parse('375171234567'));
+                from public.phone_parse('375171234567'));
 
         assert (select country_code = 373
                    and area_code = '6'
                    and local_number = '8007777'
-                from phone_parse('+373 68 007777'));
+                from public.phone_parse('+373 68 007777'));
 
         assert (select country_code = 971
                    and area_code = '2'
                    and local_number = '6721797'
-                from phone_parse('+971 2 672 1797'));
+                from public.phone_parse('+971 2 672 1797'));
 
         -- short phone number
         assert (select country_code = 677
                    and area_code  = ''
                    and local_number = '12345'
-                from phone_parse('+677 12345'));
+                from public.phone_parse('+677 12345'));
 
         -- short phone number
         assert (select country_code = 677
                    and area_code  = ''
                    and local_number = '123456'
-                from phone_parse('+677 123456'));
+                from public.phone_parse('+677 123456'));
 
         -- special spare code
         assert (select country_code = 210
                            and area_code  = '7906'
                            and local_number = '1234567'
-                from phone_parse('+21079061234567', true, true, true, false));
+                from public.phone_parse('+21079061234567', true, true, true, false));
         assert (select country_code = 7
                            and area_code  = '906'
                            and local_number = '1234567'
-                from phone_parse('+21479061234567', true, true, true, true));
+                from public.phone_parse('+21479061234567', true, true, true, true));
 
         --negative
-        assert phone_parse('74991234567', false, true, true) is null;
-        assert phone_parse('8 4991234567', true, false, true) is null;
-        assert phone_parse('210 4991234567', true, true, false) is null;
-        assert phone_parse('9991234567') is null; --invalid phone number
-        assert phone_parse('+677 1234') is null; --minimum length
-        assert phone_parse('+375 17 12345671234567890') is null; --maximum length
+        assert public.phone_parse('74991234567', false, true, true) is null;
+        assert public.phone_parse('8 4991234567', true, false, true) is null;
+        assert public.phone_parse('210 4991234567', true, true, false) is null;
+        assert public.phone_parse('9991234567') is null; --invalid phone number
+        assert public.phone_parse('+677 1234') is null; --minimum length
+        assert public.phone_parse('+375 17 12345671234567890') is null; --maximum length
     end
 $$;
+
+/*
+TODO incorrect parse:
+select * from public.phone_parse('+21089651234567', true, true, true, true)
+(896,5,1234567)
+*/

@@ -2,7 +2,7 @@
 --Вызов этой функции при вызове миллионов раз занимает драгоценное время.
 --Используйте raise_exception(), пример смотри там же.
 
-create or replace function scan_timeout(
+create or replace function public.scan_timeout(
     timeout interval,
     start_at timestamptz default statement_timestamp()
 )
@@ -31,7 +31,7 @@ $$;
 
 ------------------------------------------------------------------------------------------------------------------------
 
-create or replace function scan_timeout(
+create or replace function public.scan_timeout(
     timeout interval,
     id int,
     start_at timestamptz default statement_timestamp()
@@ -61,7 +61,7 @@ BEGIN
 END
 $$;
 
-comment on function scan_timeout(
+comment on function public.scan_timeout(
     timeout interval,
     id int,
     start_at timestamptz
@@ -74,14 +74,14 @@ comment on function scan_timeout(
     FROM t
     WHERE t.id > $1
       -- используем CASE для управления приоритетом выполнения условий сравнения
-      AND CASE WHEN scan_timeout('5sec'::interval, t.id) THEN
+      AND CASE WHEN public.scan_timeout('5sec'::interval, t.id) THEN
               ... -- другие "тяжёлые" вычисления
           END
     ORDER BY t.id
 $$;
 
 ------------------------------------------------------------------------------------------------------------------------
-create or replace function scan_timeout(
+create or replace function public.scan_timeout(
     timeout interval,
     id bigint,
     start_at timestamptz default statement_timestamp()
@@ -113,7 +113,7 @@ $$;
 
 ------------------------------------------------------------------------------------------------------------------------
 
-create or replace function scan_timeout(
+create or replace function public.scan_timeout(
     timeout interval,
     id text,
     start_at timestamptz default statement_timestamp()
@@ -145,7 +145,7 @@ $$;
 
 ------------------------------------------------------------------------------------------------------------------------
 
-create or replace function scan_timeout(
+create or replace function public.scan_timeout(
     timeout interval,
     payload json,
     start_at timestamptz default statement_timestamp()
@@ -177,7 +177,7 @@ $$;
 
 ------------------------------------------------------------------------------------------------------------------------
 
-create or replace function scan_timeout(
+create or replace function public.scan_timeout(
     timeout interval,
     payload jsonb,
     start_at timestamptz default statement_timestamp()
@@ -213,22 +213,22 @@ $$;
 
 do $$
 begin
-    assert scan_timeout('1000ms'::interval);
-    assert scan_timeout('1000ms'::interval, statement_timestamp());
+    assert public.scan_timeout('1000ms'::interval);
+    assert public.scan_timeout('1000ms'::interval, statement_timestamp());
 
-    assert scan_timeout('1000ms'::interval, 1::int);
-    assert scan_timeout('1000ms'::interval, 1::int, statement_timestamp());
+    assert public.scan_timeout('1000ms'::interval, 1::int);
+    assert public.scan_timeout('1000ms'::interval, 1::int, statement_timestamp());
 
-    assert scan_timeout('1000ms'::interval, 1::bigint);
-    assert scan_timeout('1000ms'::interval, 1::bigint, statement_timestamp());
+    assert public.scan_timeout('1000ms'::interval, 1::bigint);
+    assert public.scan_timeout('1000ms'::interval, 1::bigint, statement_timestamp());
 
-    assert scan_timeout('1000ms'::interval, 'text');
-    assert scan_timeout('1000ms'::interval, 'text', statement_timestamp());
+    assert public.scan_timeout('1000ms'::interval, 'text');
+    assert public.scan_timeout('1000ms'::interval, 'text', statement_timestamp());
 
-    assert scan_timeout('1000ms'::interval, '{}'::json);
-    assert scan_timeout('1000ms'::interval, '{}'::json, statement_timestamp());
+    assert public.scan_timeout('1000ms'::interval, '{}'::json);
+    assert public.scan_timeout('1000ms'::interval, '{}'::json, statement_timestamp());
 
-    assert scan_timeout('1000ms'::interval, '[]'::jsonb);
-    assert scan_timeout('1000ms'::interval, '[]'::jsonb, statement_timestamp());
+    assert public.scan_timeout('1000ms'::interval, '[]'::jsonb);
+    assert public.scan_timeout('1000ms'::interval, '[]'::jsonb, statement_timestamp());
 end;
 $$;

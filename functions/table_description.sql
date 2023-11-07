@@ -1,4 +1,4 @@
-create or replace function table_description(
+create or replace function public.table_description(
     table_name regclass,
     new_description text default null
 )
@@ -33,7 +33,7 @@ begin
 end;
 $$;
 
-comment on function table_description is 'Get or set table description, like COMMENT ON TABLE command, but it can set description dynamically';
+comment on function public.table_description is 'Get or set table description, like COMMENT ON TABLE command, but it can set description dynamically';
 
 --TEST
 
@@ -42,8 +42,8 @@ begin
     create schema if not exists test;
     create table test.d();
 
-    assert table_description('test.d'::regclass) is null; --GET
-    assert table_description('test.d'::regclass, 'table''d') = 'table''d'; --SET
+    assert public.table_description('test.d'::regclass) is null; --GET
+    assert public.table_description('test.d'::regclass, 'table''d') = 'table''d'; --SET
 
     drop table test.d;
 end

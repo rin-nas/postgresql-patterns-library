@@ -1,4 +1,4 @@
-create or replace function unicode_unescape(text)
+create or replace function public.unicode_unescape(text)
     returns text
     immutable
     returns null on null input
@@ -10,7 +10,7 @@ $func$
     select concat('"', $1, '"')::jsonb->>0;
 $func$;
 
-comment on function unicode_unescape(text) is $$
+comment on function public.unicode_unescape(text) is $$
     Evaluate escaped Unicode characters in the argument.
     Unicode characters should be specified as \uXXXX (4 hexadecimal digits).
 $$;
@@ -18,8 +18,8 @@ $$;
 --TEST
 do $$
   begin
-    assert unicode_unescape('\u017D\u010F\u00E1r') = 'Žďár';
-    assert unicode_unescape('\u043f\u0440\u0438\u0432\u0435\u0442') = 'привет';
-    assert unicode_unescape('\ud83d\udc18\ud83d\ude03') = '🐘😃';
+    assert public.unicode_unescape('\u017D\u010F\u00E1r') = 'Žďár';
+    assert public.unicode_unescape('\u043f\u0440\u0438\u0432\u0435\u0442') = 'привет';
+    assert public.unicode_unescape('\ud83d\udc18\ud83d\ude03') = '🐘😃';
   end;
 $$;

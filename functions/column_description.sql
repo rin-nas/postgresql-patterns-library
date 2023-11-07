@@ -1,4 +1,4 @@
-create or replace function column_description(
+create or replace function public.column_description(
     table_name regclass,
     column_name name,
     new_description text default null
@@ -45,7 +45,7 @@ begin
 end;
 $$;
 
-comment on function column_description is 'Get or set table column description, like COMMENT ON COLUMN command, but it can set description dynamically';
+comment on function public.column_description is 'Get or set table column description, like COMMENT ON COLUMN command, but it can set description dynamically';
 
 --TEST
 
@@ -54,8 +54,8 @@ begin
     create schema if not exists test;
     create table test.d(i int);
 
-    assert column_description('test.d'::regclass, 'i') is null; --GET
-    assert column_description('test.d'::regclass, 'i', 'col''i') = 'col''i'; --SET
+    assert public.column_description('test.d'::regclass, 'i') is null; --GET
+    assert public.column_description('test.d'::regclass, 'i', 'col''i') = 'col''i'; --SET
 
     drop table test.d;
 end

@@ -3,7 +3,7 @@
 ## Usage
 
 ```sql
-select is_sql($is_sql$
+select public.is_sql($is_sql$
    -- insert your SQL code here
 $is_sql$);
 ```

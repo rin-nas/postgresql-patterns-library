@@ -2,8 +2,10 @@
 
 -- Based off IETF draft, https://datatracker.ietf.org/doc/draft-peabody-dispatch-new-uuid-format/
 
-create or replace function uuid_generate_v7()
-returns uuid
+create or replace function public.uuid_generate_v7()
+    returns uuid
+    volatile --!!!
+    language plpgsql
 as $$
 declare
   unix_ts_ms bytea;
@@ -22,6 +24,4 @@ begin
 
   return encode(uuid_bytes, 'hex')::uuid;
 end
-$$
-language plpgsql
-volatile;
+$$;

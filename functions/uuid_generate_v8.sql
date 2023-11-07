@@ -3,8 +3,10 @@
 -- Based off IETF draft, https://datatracker.ietf.org/doc/draft-peabody-dispatch-new-uuid-format/
 
 -- Generate a custom UUID v8 with microsecond precision
-create or replace function uuid_generate_v8()
-returns uuid
+create or replace function public.uuid_generate_v8()
+    returns uuid
+    volatile --!!!
+    language plpgsql
 as $$
 declare
   unix_ts_ms bytea;
@@ -12,7 +14,7 @@ declare
   timestamp    timestamptz;
   microseconds int;
 begin
-  timestamp    = clock_timestamp();
+  timestamp = clock_timestamp();
   unix_ts_ms = substring(int8send(floor(extract(epoch from timestamp) * 1000)::bigint) from 3);
   microseconds = (cast(extract(microseconds from timestamp)::int - (floor(extract(milliseconds from timestamp))::int * 1000) as double precision) * 4.096)::int;
 
@@ -28,6 +30,4 @@ begin
 
   return encode(uuid_bytes, 'hex')::uuid;
 end
-$$
-language plpgsql
-volatile;
+$$;

@@ -1,6 +1,7 @@
 -- Дать возможность в триггере для определения пола указывать пол явно
 
-CREATE OR REPLACE FUNCTION trigger_save_update_of() RETURNS TRIGGER
+CREATE OR REPLACE FUNCTION trigger_save_update_of()
+    RETURNS TRIGGER
     LANGUAGE plpgsql AS
 $$
 BEGIN
@@ -20,7 +21,8 @@ BEGIN
 END;
 $$;
 
-CREATE OR REPLACE FUNCTION gender_determine() RETURNS TRIGGER
+CREATE OR REPLACE FUNCTION gender_determine()
+    RETURNS TRIGGER
     LANGUAGE plpgsql AS
 $$
 DECLARE

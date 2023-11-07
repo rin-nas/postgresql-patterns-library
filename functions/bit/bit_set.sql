@@ -1,11 +1,10 @@
-CREATE OR REPLACE FUNCTION bit_set(num bigint, pos int, val boolean)
-    -- устанавливает для числа в заданной позиции бит в 1 или 0
-    RETURNS bigint
+CREATE OR REPLACE FUNCTION public.bit_set(num bigint, pos int, val boolean)
+    returns bigint
     stable
     returns null on null input
-    SECURITY INVOKER
-    PARALLEL SAFE
-    LANGUAGE plpgsql
+    security invoker
+    parallel safe
+    language plpgsql
     set search_path = ''
 AS $$
 DECLARE
@@ -24,11 +23,14 @@ begin
 end
 $$;
 
+comment on function public.bit_set(num bigint, pos int, val boolean)
+    is 'Устанавливает для числа в заданной позиции бит в 1 или 0';
+
 --TEST
 do $$
 begin
-    assert bit_set(8, 4, false) = 0;
-    assert bit_set(9, 4, false) = 1;
-    assert bit_set(25, 5, false) = 9;
+    assert public.bit_set(8, 4, false) = 0;
+    assert public.bit_set(9, 4, false) = 1;
+    assert public.bit_set(25, 5, false) = 9;
 end;
 $$;

@@ -1,4 +1,4 @@
-create or replace function is_correspondent_account(
+create or replace function public.is_correspondent_account(
     ks text, --к/с
     bik text default null --если передан, то дополнительно в к/с происходит проверка контрольного числа по БИК
 )
@@ -29,7 +29,7 @@ begin
         return false;
     elsif bik is null then
         return true;
-    elsif not is_bik(bik) then
+    elsif not public.is_bik(bik) then
         return false;
     end if;
 
@@ -47,22 +47,22 @@ begin
 end;
 $func$;
 
-comment on function is_correspondent_account(ks text, bik text) is 'Проверяет, что переданная строка является корреспондентским счётом';
+comment on function public.is_correspondent_account(ks text, bik text) is 'Проверяет, что переданная строка является корреспондентским счётом';
 
 --TEST
 DO $$
 BEGIN
     --positive
-    assert is_correspondent_account('40817810099910004312');
-    assert is_correspondent_account('30101810200000000827', '044030827');
-    assert is_correspondent_account('30101810400000000225', '044525225');
+    assert public.is_correspondent_account('40817810099910004312');
+    assert public.is_correspondent_account('30101810200000000827', '044030827');
+    assert public.is_correspondent_account('30101810400000000225', '044525225');
 
     --negative
-    assert not is_correspondent_account('3010181020000000082');
-    assert not is_correspondent_account('301018102000000008270');
-    assert not is_correspondent_account('3014567890123456789*');
-    assert not is_correspondent_account('12345678901234567890');
-    assert not is_correspondent_account('30101810300000000827', '044030827');
-    assert not is_correspondent_account('30101810500000000225', '044525225');
+    assert not public.is_correspondent_account('3010181020000000082');
+    assert not public.is_correspondent_account('301018102000000008270');
+    assert not public.is_correspondent_account('3014567890123456789*');
+    assert not public.is_correspondent_account('12345678901234567890');
+    assert not public.is_correspondent_account('30101810300000000827', '044030827');
+    assert not public.is_correspondent_account('30101810500000000225', '044525225');
 
 END $$;

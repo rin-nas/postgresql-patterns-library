@@ -1,5 +1,5 @@
-CREATE OR REPLACE FUNCTION is_timezone( tz TEXT ) RETURNS BOOLEAN
-    STABLE
+CREATE OR REPLACE FUNCTION public.is_timezone( tz TEXT ) RETURNS BOOLEAN
+    stable
     language plpgsql
     set search_path = ''
 AS $$

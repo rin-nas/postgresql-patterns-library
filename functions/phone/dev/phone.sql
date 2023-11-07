@@ -243,7 +243,7 @@ Calling Code ; Main Region ; Extra Regions                                      
 $$, ';', true) as p;
 
 ------------------------------------------------------------------------------------------------------------------------
-create or replace function regexp_class_digits_optimize(s text)
+create or replace function public.regexp_class_digits_optimize(s text)
     returns text
     stable
     returns null on null input
@@ -268,9 +268,9 @@ $$;
 --TEST
 do $$
     begin
-        assert regexp_class_digits_optimize('[0123456789]') = '\d';
-        assert regexp_class_digits_optimize('[123456789]') = '[1-9]';
-        assert regexp_class_digits_optimize('[0135679]') = '[0135-79]';
+        assert public.regexp_class_digits_optimize('[0123456789]') = '\d';
+        assert public.regexp_class_digits_optimize('[123456789]') = '[1-9]';
+        assert public.regexp_class_digits_optimize('[0135679]') = '[0135-79]';
     end;
 $$;
 

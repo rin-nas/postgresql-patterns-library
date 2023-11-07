@@ -1,13 +1,11 @@
---Adapted from https://stackoverflow.com/questions/28179335/crc32-function-with-pl-pgsql/28179336
-
---вычисляет crc32 от строки, возвращает число
-create or replace function crc32(t text)
+create or replace function public.crc32(t text)
     returns bigint
     immutable
     returns null on null input
     parallel safe
     language plpgsql
     set search_path = ''
+    cost 10
 as $$
 declare
     crc bigint default 0;
@@ -54,12 +52,14 @@ declare
         ];
 
 begin
+    --Adapted from https://stackoverflow.com/questions/28179335/crc32-function-with-pl-pgsql/28179336
 
     crc = ~crc;
     len = bit_length(t) / 8;
     bytes = decode(t, 'escape');
 
-    for i in 0..len-1 loop
+    for i in 0..len - 1
+    loop
         byte = (get_byte(bytes, i))::bigint;
         crc = (crc >> 8 & rt8_mask) # crc_table[((crc # byte) & byte_mask) + 1];
     end loop;
@@ -68,3 +68,5 @@ begin
     return crc & long_mask;
 end
 $$;
+
+comment on function public.crc32(t text) is 'Вычисляет crc32 от строки';

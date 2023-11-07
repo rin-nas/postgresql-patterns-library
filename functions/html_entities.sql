@@ -1,4 +1,4 @@
-create or replace function html_entities()
+create or replace function public.html_entities()
     returns jsonb
     immutable
     returns null on null input
@@ -2245,7 +2245,7 @@ as $func$
 
 $func$;
 
-comment on function html_entities() is 'Returns HTML entities as https://html.spec.whatwg.org/entities.json';
+comment on function public.html_entities() is 'Returns HTML entities as https://html.spec.whatwg.org/entities.json';
 
 -- TEST
-select html_entities()::jsonb is not null;
+select public.html_entities()::jsonb is not null;

@@ -1,4 +1,4 @@
-create or replace function slugify_ru(str text)
+create or replace function public.slugify_ru(str text)
     returns text
     language plpgsql
     set search_path = ''

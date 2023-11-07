@@ -1,4 +1,4 @@
-create or replace function is_bik(str text)
+create or replace function public.is_bik(str text)
     returns boolean
     immutable
     returns null on null input
@@ -22,19 +22,19 @@ select
         $regexp$, 'x') is not null
 $$;
 
-comment on function is_bik(text) is 'Проверяет, что переданная строка является БИК (Банковский Идентификационный Код)';
+comment on function public.is_bik(text) is 'Проверяет, что переданная строка является БИК (Банковский Идентификационный Код)';
 
 --TEST
 
 DO $$
 BEGIN
     --positive
-    assert is_bik('000000000');
-    assert is_bik('123456789');
+    assert public.is_bik('000000000');
+    assert public.is_bik('123456789');
 
     --negative
-    assert not is_bik('987654321');
-    assert not is_bik('123');
-    assert not is_bik('1234567890');
+    assert not public.is_bik('987654321');
+    assert not public.is_bik('123');
+    assert not public.is_bik('1234567890');
 
 END $$;

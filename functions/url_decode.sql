@@ -1,9 +1,10 @@
 --see also extension https://github.com/okbob/url_encode with C implementation
 
-CREATE OR REPLACE FUNCTION url_decode(input text) RETURNS text
-    IMMUTABLE
-    STRICT
-    LANGUAGE plpgsql
+CREATE OR REPLACE FUNCTION public.url_decode(input text)
+    returns text
+    immutable
+    strict -- returns null if any parameter is null
+    language plpgsql
     set search_path = ''
 AS $$
 DECLARE
@@ -22,4 +23,4 @@ END
 $$;
 
 --TEST
---select url_decode('Hell%C3%B6%20World%21') = 'Hellö World!'
+--select public.url_decode('Hell%C3%B6%20World%21') = 'Hellö World!'

@@ -1,11 +1,10 @@
-CREATE OR REPLACE FUNCTION bit_get(num bigint, pos int)
-    -- проверяет для числа в заданной позиции, установлен ли бит в 1
-    RETURNS bool
+CREATE OR REPLACE FUNCTION public.bit_get(num bigint, pos int)
+    returns bool
     stable
     returns null on null input
-    SECURITY INVOKER
-    PARALLEL SAFE
-    LANGUAGE plpgsql
+    security invoker
+    parallel safe
+    language plpgsql
     set search_path = ''
 AS $$
 begin
@@ -18,12 +17,14 @@ begin
 end
 $$;
 
+comment on function public.bit_get(num bigint, pos int)
+    is 'Проверяет для числа в заданной позиции, установлен ли бит в 1';
 
 --TEST
 do $$
 begin
-    assert not bit_get(7, 4);
-    assert bit_get(8, 4);
-    assert bit_get(13, 4);
+    assert not public.bit_get(7, 4);
+    assert public.bit_get(8, 4);
+    assert public.bit_get(13, 4);
 end;
 $$;

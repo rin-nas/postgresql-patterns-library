@@ -1,5 +1,5 @@
 --Depends on function public.html_entities() !
-create or replace function html_entity_decode(str text)
+create or replace function public.html_entity_decode(str text)
     returns text
     immutable
     returns null on null input
@@ -83,7 +83,7 @@ as $func$
     end;
 $func$;
 
-comment on function html_entity_decode(str text) is $$
+comment on function public.html_entity_decode(str text) is $$
     Convert HTML entities to their corresponding characters. 
     Depends on function public.html_entities()
 $$;
@@ -110,8 +110,8 @@ BEGIN
         ('&#x0; &#xD800; &#xDFFF; &#x12d687; &#xffffff; &#x25g0;', '&#x0; &#xD800; &#xDFFF; &#x12d687; &#xffffff; &#x25g0;') --Hex code entities
     ) as t(str_in, str_out_expected)
     loop
-        str_out_returned = html_entity_decode(rec.str_in);
-        ASSERT
+        str_out_returned = public.html_entity_decode(rec.str_in);
+        assert
             -- the result of the comparison should return boolean
             str_out_returned is not distinct from rec.str_out_expected,
             -- if the comparison result is not true, an error message will be returned

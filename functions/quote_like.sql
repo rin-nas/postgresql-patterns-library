@@ -1,12 +1,13 @@
-create function quote_like(text) returns text
-    stable
+create function public.quote_like(text)
+    returns text
+    immutable
     returns null on null input
-    parallel safe
+    parallel safe -- Postgres 10 or later
     language sql
     set search_path = ''
 as
 $$
-SELECT replace(replace(replace($1
+select replace(replace(replace($1
                                , '\', '\\') -- must come first!
                                , '_', '\_')
                                , '%', '\%');

@@ -1,4 +1,4 @@
-create or replace function is_snils(str text)
+create or replace function public.is_snils(str text)
     returns boolean
     immutable
     --returns null on null input
@@ -46,34 +46,34 @@ begin
 end;
 $func$;
 
-comment on function is_snils(str text) is 'Проверяет, что переданная строка является СНИЛС (страховой номер индивидуального лицевого счёта)';
+comment on function public.is_snils(str text) is 'Проверяет, что переданная строка является СНИЛС (страховой номер индивидуального лицевого счёта)';
 
 
 --TEST
 DO $$
 BEGIN
     --positive
-    assert is_snils('00000000000');
-    assert is_snils('00000000001');
-    assert is_snils('00000000002');
-    assert is_snils('00000000003');
-    assert is_snils('11223344595');
-    assert is_snils('08765430300');
-    assert is_snils('08765430200');
-    assert is_snils('08765430300');
-    assert is_snils('08675430300');
+    assert public.is_snils('00000000000');
+    assert public.is_snils('00000000001');
+    assert public.is_snils('00000000002');
+    assert public.is_snils('00000000003');
+    assert public.is_snils('11223344595');
+    assert public.is_snils('08765430300');
+    assert public.is_snils('08765430200');
+    assert public.is_snils('08765430300');
+    assert public.is_snils('08675430300');
 
     --negative
-    assert not is_snils('1234567890');
-    assert not is_snils('123456789012');
-    assert not is_snils('12345678901');
-    assert not is_snils('12345678902');
-    assert not is_snils('12345678903');
-    assert not is_snils('12345678904');
-    assert not is_snils('12345678905');
-    assert not is_snils('12345678906');
-    assert not is_snils('12345678907');
-    assert not is_snils('12345678908');
-    assert not is_snils('12345678909');
-    assert not is_snils('62602903622');
+    assert not public.is_snils('1234567890');
+    assert not public.is_snils('123456789012');
+    assert not public.is_snils('12345678901');
+    assert not public.is_snils('12345678902');
+    assert not public.is_snils('12345678903');
+    assert not public.is_snils('12345678904');
+    assert not public.is_snils('12345678905');
+    assert not public.is_snils('12345678906');
+    assert not public.is_snils('12345678907');
+    assert not public.is_snils('12345678908');
+    assert not public.is_snils('12345678909');
+    assert not public.is_snils('62602903622');
 END $$;

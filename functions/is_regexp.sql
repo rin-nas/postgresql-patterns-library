@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION is_regexp(regexp text, is_notice boolean default false)
+CREATE OR REPLACE FUNCTION public.is_regexp(regexp text, is_notice boolean default false)
     returns boolean
     returns null on null input
     parallel unsafe --(ERROR:  cannot start subtransactions during a parallel operation)
@@ -30,18 +30,18 @@ BEGIN
 END
 $$;
 
-comment on function is_regexp(regexp text, is_notice boolean) is 'Check Regexp syntax exactly in your PostgreSQL version';
+comment on function public.is_regexp(regexp text, is_notice boolean) is 'Check Regexp syntax exactly in your PostgreSQL version';
 
 -- TEST
 do $$
     begin
         --positive
-        assert is_regexp('^[z]+\d$');
-        assert is_regexp('');
+        assert public.is_regexp('^[z]+\d$');
+        assert public.is_regexp('');
 
         --negative
-        assert not is_regexp('[', true);
-        assert not is_regexp('*', true);
-        assert not is_regexp('\', true);
+        assert not public.is_regexp('[');
+        assert not public.is_regexp('*');
+        assert not public.is_regexp('\');
     end;
 $$;

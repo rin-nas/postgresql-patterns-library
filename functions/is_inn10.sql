@@ -1,11 +1,12 @@
 -- Проверяет на корректность ИНН юридического лица
 -- https://ru.wikipedia.org/wiki/Идентификационный_номер_налогоплательщика
-create or replace function is_inn10(inn text) returns boolean
+create or replace function public.is_inn10(inn text) returns boolean
     immutable
-    strict
+    strict -- returns null if any parameter is null
     parallel safe -- Postgres 10 or later
     language plpgsql
     set search_path = ''
+    cost 5
 as
 $$
 DECLARE
@@ -35,23 +36,23 @@ BEGIN
 END;
 $$;
 
-comment on function is_inn10(text) is 'Проверяет правильность ИНН юридического лица';
+comment on function public.is_inn10(text) is 'Проверяет правильность ИНН юридического лица';
 
 --TEST
 
 DO $$
 BEGIN
     --positive
-    ASSERT is_inn10('7725088527');
-    ASSERT is_inn10('7715034360');
+    ASSERT public.is_inn10('7725088527');
+    ASSERT public.is_inn10('7715034360');
 
     --negative 1 check sum
-    ASSERT NOT is_inn10('7725088528');
-    ASSERT NOT is_inn10('7715034361');
+    ASSERT NOT public.is_inn10('7725088528');
+    ASSERT NOT public.is_inn10('7715034361');
 
     --negative 2 check length
-    ASSERT NOT is_inn10('772508852');
+    ASSERT NOT public.is_inn10('772508852');
 
     --negative 3 check digits
-    ASSERT NOT is_inn10('qwertyuiop');
+    ASSERT NOT public.is_inn10('qwertyuiop');
 END $$;

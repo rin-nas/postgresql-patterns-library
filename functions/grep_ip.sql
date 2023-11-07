@@ -1,4 +1,4 @@
-create or replace function grep_ip(str text)
+create or replace function public.grep_ip(str text)
     returns table (order_num int, "all" text, addr inet, port int, mask int)
     stable
     returns null on null input
@@ -30,7 +30,7 @@ as $func$
       and (m[7] is null or m[7]::int < 33);
 $func$;
 
-comment on function grep_ip(str text) is $$
+comment on function public.grep_ip(str text) is $$
     Захватывает из строки все существующие IP адреса.
     IP адрес может иметь необязательный порт или маску.
 $$;
@@ -99,6 +99,6 @@ declare
 begin
     --positive and negative both
     assert (select json_agg(to_json(t))::text = str_out
-            from grep_ip(str_in) as t);
+            from public.grep_ip(str_in) as t);
 end;
 $do$;

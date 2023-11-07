@@ -1,6 +1,6 @@
 -- Метафон на plpgsql, источник: https://habr.com/ru/post/341142/
 
-create or replace function phoneme (in_lexeme text)
+create or replace function public.phoneme(in_lexeme text)
     returns text
     immutable
     language plpgsql
@@ -30,7 +30,7 @@ end;
 $$;
 
 
-create or replace function mquery(in_fullname text)
+create or replace function public.mquery(in_fullname text)
     returns text
     immutable
     language plpgsql
