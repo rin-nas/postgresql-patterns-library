@@ -1,9 +1,9 @@
 --see also extension https://github.com/okbob/url_encode with C implementation
 
-create or replace function url_encode(text)
+create or replace function public.url_encode(text)
     returns text
     immutable
-    strict
+    strict -- returns null if any parameter is null
     language sql
     set search_path = ''
 as $$
@@ -16,16 +16,13 @@ select
             end,
             ''
         )
-from (
-         select char
-         --from regexp_split_to_table($1, '') as ch
-         from unnest(string_to_array($1, null)) as char
-     ) as s;
+from --regexp_split_to_table($1, '') as s(char) --deprecated
+     unnest(string_to_array($1, null)) as s(char);
 $$;
 
 --TEST
 do $$
     begin
-        assert urlencode('hello, привет!') = 'hello%2C%20%D0%BF%D1%80%D0%B8%D0%B2%D0%B5%D1%82%21';
+        assert public.url_encode('hello, привет!') = 'hello%2C%20%D0%BF%D1%80%D0%B8%D0%B2%D0%B5%D1%82%21';
     end;
 $$;
