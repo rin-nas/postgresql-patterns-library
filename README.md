@@ -129,7 +129,7 @@
 
 #### Как проверить email на валидность?
 
-Домен [`email.sql`](domains/email.sql) (валидация базовая минимальная, но быстрая) и функция [`is_email.sql`](functions/is_email.sql) (валидация почти по спецификации, но медленная)
+Домен [`email.sql`](domains/email.sql) (валидация базовая минимальная, но быстрая) и функция [`is_email.sql`](functions/is/is_email.sql) (валидация почти по спецификации, но медленная)
 
 #### Как найти все невалидные email в таблице?
 
@@ -145,7 +145,7 @@ WHERE email IS NOT NULL    -- skip NULL
     )
 ```
 
-Функция [`is_email.sql`](functions/is_email.sql)
+Функция [`is_email.sql`](functions/is/is_email.sql)
 
 #### Как удалить все невалидные email из большой таблицы?
 
@@ -163,38 +163,38 @@ WHERE email IS NOT NULL    -- skip NULL
 
 ##### ИНН
 Домены: [`inn.sql`](domains/inn.sql), [`inn10.sql`](domains/inn10.sql), [`inn12.sql`](domains/inn12.sql).
-Функции: [`is_inn.sql`](functions/is_inn.sql), [`is_inn10.sql`](functions/is_inn10.sql), [`is_inn12.sql`](functions/is_inn12.sql).
+Функции: [`is_inn.sql`](functions/is/is_inn.sql), [`is_inn10.sql`](functions/is/is_inn10.sql), [`is_inn12.sql`](functions/is/is_inn12.sql).
 
 ##### КПП
 Домен: [`kpp.sql`](domains/kpp.sql).
-Функция: [`is_kpp.sql`](functions/is_kpp.sql).
+Функция: [`is_kpp.sql`](functions/is/is_kpp.sql).
 
 ##### ОГРН
 Домен: [`ogrn.sql`](domains/ogrn.sql).
-Функция: [`is_ogrn.sql`](functions/is_ogrn.sql).
+Функция: [`is_ogrn.sql`](functions/is/is_ogrn.sql).
 
 ##### ОГРНИП
 Домен: [`ogrnip.sql`](domains/ogrnip.sql).
-Функция: [`is_ogrnip.sql`](functions/is_ogrnip.sql).
+Функция: [`is_ogrnip.sql`](functions/is/is_ogrnip.sql).
 
 #### Как проверить банковские реквизиты (БИК, расчётный счёт, корреспондентский счёт) на валидность?
 
 ##### БИК
 Домен: [`bik.sql`](domains/bik.sql).
-Функция: [`is_bik.sql`](functions/is_bik.sql).
+Функция: [`is_bik.sql`](functions/is/is_bik.sql).
 
 ##### Банковский расчётный (клиентский) счёт (р/с)
 Домен: [`client_account.sql`](domains/client_account.sql).
-Функция: [`is_client_account.sql`](functions/is_client_account.sql).
+Функция: [`is_client_account.sql`](functions/is/is_client_account.sql).
 
 ##### Банковский корреспонденткий счёт (к/с)
 Домен: [`correspondent_account.sql`](domains/correspondent_account.sql).
-Функция: [`is_correspondent_account.sql`](functions/is_correspondent_account.sql).
+Функция: [`is_correspondent_account.sql`](functions/is/is_correspondent_account.sql).
 
 #### Как проверить СНИЛС на валидность?
 
 Домен: [`snils.sql`](domains/snils.sql).
-Функция: [`is_snils.sql`](functions/is_snils.sql).
+Функция: [`is_snils.sql`](functions/is/is_snils.sql).
 
 
 #### Как проверить номер телефона на валидность?
@@ -209,7 +209,7 @@ WHERE email IS NOT NULL    -- skip NULL
 
 #### Как провалидировать значение поля, только если оно явно указано в UPDATE запросе?
 
-Ограничения [`CHECK()`](https://postgrespro.ru/docs/postgresql/12/ddl-constraints#DDL-CONSTRAINTS-CHECK-CONSTRAINTS) для каждого поля таблицы срабатывают каждый раз при добавлении или обновлении записи таблицы. При добавлении записи всё логично — значение нужно проверить, даже если это значение по-умолчанию. Однако, в запросе на обновление даных даже неважно, изменилось значение поля на самом деле или нет (ну почему [так сделано](test/check_constraint_stupid_demo.sql)?). Если в `CHECK` проверка ресурсоёмая, то она может существенно замедлить обновление большого количества записей в таблице. Пример ресурсоёмкой проверки — валидация синтаксиса email функцией [`is_email()`](functions/is_email.sql).
+Ограничения [`CHECK()`](https://postgrespro.ru/docs/postgresql/12/ddl-constraints#DDL-CONSTRAINTS-CHECK-CONSTRAINTS) для каждого поля таблицы срабатывают каждый раз при добавлении или обновлении записи таблицы. При добавлении записи всё логично — значение нужно проверить, даже если это значение по-умолчанию. Однако, в запросе на обновление даных даже неважно, изменилось значение поля на самом деле или нет (ну почему [так сделано](test/check_constraint_stupid_demo.sql)?). Если в `CHECK` проверка ресурсоёмая, то она может существенно замедлить обновление большого количества записей в таблице. Пример ресурсоёмкой проверки — валидация синтаксиса email функцией [`is_email()`](functions/is/is_email.sql).
 
 Обойти данную проблему можно с использованием триггеров. 
 Предположим, есть таблица `person` с колонкой `email`.
@@ -2344,7 +2344,7 @@ pv my_table.sql.zst | zstd -dcq | psql --username=postgres --host=127.0.0.1 --db
 
 ### Как проверить синтаксис SQL кода без его выполнения?
 
-Готовая функция: [`is_sql.sql`](functions/is_sql.sql)
+Готовая функция: [`is_sql.sql`](functions/is/is_sql.sql)
 
 ```sql
 -- PostgreSQL syntax check without running the query
@@ -2367,7 +2367,7 @@ BEGIN;
 COMMIT;
 ```
 
-Внутри функции или процедуры код выше завершится с ошибкой, например в [`is_sql.sql`](functions/is_sql.sql).
+Внутри функции или процедуры код выше завершится с ошибкой, например в [`is_sql.sql`](functions/is/is_sql.sql).
 Но вы можете откатить часть SQL команд в транзакции через подтранзакции:
 ```sql
 DO $TEST$
