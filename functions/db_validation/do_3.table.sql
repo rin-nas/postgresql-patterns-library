@@ -28,7 +28,7 @@ create table db_validation.schema_validate_config (
     schemas_ignore_regexp text check ( db_validation.is_regexp(schemas_ignore_regexp) ),
     schemas_ignore regnamespace[],
 
-    tables_ignore_regexp  text check ( db_validation.is_regexp(schemas_ignore_regexp) ),
+    tables_ignore_regexp  text check ( db_validation.is_regexp(tables_ignore_regexp) ),
     tables_ignore         regclass[]
 
     --check_table_name_regexp
