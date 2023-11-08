@@ -1,4 +1,4 @@
-create or replace function public.shannon_entropy(s text)
+create or replace function public.entropy(s text)
     returns numeric
     immutable
     strict -- returns null if any parameter is null
@@ -10,15 +10,15 @@ as $func$
     with t(freq) as (
         select count(*) * 1.0 / l.l
         --from regexp_split_to_table(shannon_entropy.s, '') as s(char)
-        from unnest(string_to_array(shannon_entropy.s, null)) as s(char)
-           , char_length(shannon_entropy.s) as l(l)
+        from unnest(string_to_array(entropy.s, null)) as s(char)
+           , char_length(entropy.s) as l(l)
         group by s.char, l.l
     )
     select -1 * sum(t.freq * log(2, t.freq))
     from t
 $func$;
 
-comment on function public.shannon_entropy(s text) is $$
+comment on function public.entropy(s text) is $$
 Calculates Shannon entropy.
 Возвращает число >= 0.
 
@@ -37,15 +37,15 @@ $$;
 do $$
     begin
         --отсортировано по возрастанию энтропии
-        assert public.shannon_entropy('z') = 0;
-        assert public.shannon_entropy('zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz') = 0;
-        assert public.shannon_entropy('AB') = 1;
-        assert public.shannon_entropy('AABB') = 1;
-        assert public.shannon_entropy('AABC') = 1.5;
-        assert round(public.shannon_entropy('abracadabra'), 2) = 2.04;
-        assert round(public.shannon_entropy('абракадабра'), 2) = 2.04;
-        assert round(public.shannon_entropy('0123456789'), 2) = 3.32;
-        assert round(public.shannon_entropy('9876543210'), 2) = 3.32;
-        assert round(public.shannon_entropy('Ехал Грека через реку. Видит Грека в реке рак. Сунул Грека руку в реку. Рак за руку Греку цап!'), 2) = 3.81;
+        assert public.entropy('z') = 0;
+        assert public.entropy('zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz') = 0;
+        assert public.entropy('AB') = 1;
+        assert public.entropy('AABB') = 1;
+        assert public.entropy('AABC') = 1.5;
+        assert round(public.entropy('abracadabra'), 2) = 2.04;
+        assert round(public.entropy('абракадабра'), 2) = 2.04;
+        assert round(public.entropy('0123456789'), 2) = 3.32;
+        assert round(public.entropy('9876543210'), 2) = 3.32;
+        assert round(public.entropy('Ехал Грека через реку. Видит Грека в реке рак. Сунул Грека руку в реку. Рак за руку Греку цап!'), 2) = 3.81;
     end;
 $$
