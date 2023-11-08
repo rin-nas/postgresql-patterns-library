@@ -345,7 +345,7 @@ time (pg_restore --username=postgres --dbname=company_review_tmp --clean --if-ex
       | pv -l -s $(pg_restore -l company_review.dir.dump | grep -c '^[^;]') \
       > /dev/null)
 ```
-See also [https://www.google.com/search?q=pg_restore+pg_dump+pv] 
+See also [https://www.google.com/search?q=pg_restore+pg_dump+pv]
 
 
 # COPY progress bar with speed (MB/sec)
@@ -715,14 +715,6 @@ from t
 where t.b < 0
 ```
 Это применимо как в основном запросе, так и в подзапросах.
-
-
-# Compress
-
-Compression flow: `INPUT -> LZW -> BWT -> MTF -> OUTPUT`
-Decompression flow: in reverse order
-
-* https://github.com/mikeleo03/LZW-Compressor_Backend/blob/main/src/algorithm/algorithm.js
 
 # Hstore vs jsonb vs json performance
 
