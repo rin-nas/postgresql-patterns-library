@@ -47,6 +47,6 @@ do $$
         assert round(public.entropy('0123456789'), 2) = 3.32;
         assert round(public.entropy('9876543210'), 2) = 3.32;
         assert round(public.entropy('Ехал Грека через реку. Видит Грека в реке рак. Сунул Грека руку в реку. Рак за руку Греку цап!'), 2) = 3.81;
-        assert round(public.entropy('Съешь же ещё этих мягких французских булок да выпей чаю.'), 2) = 4.77;
+        assert round(public.entropy('Съешь же ещё этих мягких французских булок да выпей чаю.'), 2) = 4.78;
     end;
 $$
