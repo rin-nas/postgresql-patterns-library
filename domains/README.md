@@ -1,4 +1,14 @@
-# Domains list
+# DOMAIN vs CHECK CONSTRAINT
+
+So you might be wondering why you would use a domain when you could just use a check constraint on the data itself? 
+The simple answer here is that check constraints are not easily altered. They have to be dropped and re-added.
+
+Additionally, DOMAIN can be created at the schema level and there may be several tables with email address or birth dates. 
+Use one DOMAIN to control several fields, thus centralizing the logic.
+
+See more at https://www.crunchydata.com/blog/intro-to-postgres-custom-data-types
+
+# Domains list sql query
 
 ```sql
 SELECT n.nspname AS schema
