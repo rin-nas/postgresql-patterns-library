@@ -48,6 +48,6 @@ comment on column db_validation.schema_validate_config.schemas_ignore is $$
 В список схем автоматически добавляются служебные схемы "information_schema" и "pg_catalog", указывать их явно не нужно
 $$;
 comment on column db_validation.schema_validate_config.tables_ignore_regexp is 'Регулярное выражение с таблицами (с указанием схемы), которые нужно проигнорировать';
-comment on column db_validation.schema_validate_config.tables_ignore is 'Список таблиц в формате {scheme}.{table}, которые нужно проигнорировать';
+comment on column db_validation.schema_validate_config.tables_ignore is 'Список таблиц в формате {schema}.{table}, которые нужно проигнорировать';
 
 -- alter table db_validation.schema_validate_config owner to alexan;
