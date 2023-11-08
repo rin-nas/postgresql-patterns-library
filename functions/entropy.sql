@@ -32,7 +32,7 @@ Calculates Shannon entropy.
 https://en.wikipedia.org/wiki/Entropy_coding
 $$;
 
-create or replace function public.entropy(s bytea)
+create or replace function public.entropy(data bytea)
     returns numeric
     immutable
     strict -- returns null if any parameter is null
@@ -43,9 +43,9 @@ create or replace function public.entropy(s bytea)
 as $func$
     with t(freq) as (
         select count(*) * 1.0 / l.l
-        from octet_length(entropy.s) as l(l)
+        from octet_length(entropy.data) as l(l)
            , generate_series(1, l.l) as g(i)
-           , get_byte(substring(entropy.s from g.i for 1), 0) as s(code)
+           , get_byte(substring(entropy.data from g.i for 1), 0) as s(code)
         group by s.code, l.l
     )
     select -1 * sum(t.freq * log(2, t.freq))
@@ -90,4 +90,4 @@ do $$
         assert round(public.entropy('Съешь же ещё этих мягких французских булок да выпей чаю.'), 2) = 4.78;
         assert round(public.entropy('Съешь же ещё этих мягких французских булок да выпей чаю.'::bytea), 2) = 4.06;
     end;
-$$
+$$;
