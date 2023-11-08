@@ -48,21 +48,33 @@ do $$
             with t (a) as (
                 select array(select ascii(t.c) from regexp_split_to_table('', '') as t(c) where t.c != '')
             )
-            select public.mtf_encode(a) = '{}'::int[] from t
+            select public.mtf_encode(a) = '{}'::int[]
+            from t
         );
 
         assert(
             with t (a) as (
                 select array(select ascii(t.c) from regexp_split_to_table('inefficiencies', '') as t(c) where t.c != '')
             )
-            select public.mtf_encode(a) = '{105,110,103,104,1,4,103,2,4,5,4,4,4,115}'::int[] from t
+            select public.mtf_encode(a) = '{105,110,103,104,1,4,103,2,4,5,4,4,4,115}'::int[]
+            from t
         );
 
         assert (
             with t (a) as (
                 select array(select ascii(t.c) from regexp_split_to_table('неэффективность', '') as t(c) where t.c != '')
             )
-            select public.mtf_encode(a) = '{1085,1078,1101,1093,1,3,1085,1092,1085,1081,8,1089,1092,6,1101}'::int[] from t
+            select public.mtf_encode(a) = '{1085,1078,1101,1093,1,3,1085,1092,1085,1081,8,1089,1092,6,1101}'::int[]
+            from t
+        );
+
+        --https://doc.lagout.org/Others/Information%20Theory/Compression/Data%20Compression%20The%20Complete%20Reference%203rd%20Ed%20-%20David%20Salomon.pdf
+        assert (
+            with t (a) as (
+                select array(select ascii(t.c) from regexp_split_to_table('abcdmnopabcdmnop', '') as t(c) where t.c != '')
+            )
+            select public.mtf_encode(a) = '{97,98,99,100,109,110,111,112,8,8,8,8,8,8,8,8}'
+            from t
         );
     end
 $$;
