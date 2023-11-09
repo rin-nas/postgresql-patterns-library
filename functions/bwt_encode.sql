@@ -40,10 +40,11 @@ comment on function public.bwt_encode(s text, eob char) is 'https://en.wikipedia
 --TEST
 do $$
     begin
-        assert public.bwt_encode('abracadabra', '$') = 'ard$rcaaaabb';
-        assert public.bwt_encode('абракадабра', '$') = 'ард$краааабб';
+        assert public.bwt_encode('abcabc', '$')         = 'cc$aabb';
+        assert public.bwt_encode('abracadabra', '$')    = 'ard$rcaaaabb';
+        assert public.bwt_encode('абракадабра', '$')    = 'ард$краааабб';
         assert public.bwt_encode('inefficiencies', '$') = 'sinniieffcc$eie';
-        assert public.bwt_encode('PanamaBanana', '$') = 'aa$nmnnPBaaaa';
+        assert public.bwt_encode('PanamaBanana', '$')   = 'aa$nmnnPBaaaa';
         assert public.bwt_encode('TOBEORNOTTOBEORTOBEORNOT', '$') = 'TOOOBBBRRTTTEEENNOOOOR$TO';
 
         assert public.bwt_encode('SIX.MIXED.PIXIES.SIFT.SIXTY.PIXIE.DUST.BOXES', '$')

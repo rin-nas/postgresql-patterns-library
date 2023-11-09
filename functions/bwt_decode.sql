@@ -49,6 +49,7 @@ $$;
 do $$
     begin
         --positive
+        assert public.bwt_decode('cc$aabb', '$') = 'abcabc';
         assert public.bwt_decode('ard$rcaaaabb', '$') = 'abracadabra';
         assert public.bwt_decode('ард$краааабб', '$') = 'абракадабра';
         assert public.bwt_decode('sinniieffcc$eie', '$') = 'inefficiencies';
