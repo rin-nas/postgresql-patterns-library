@@ -31,8 +31,6 @@ create table db_validation.schema_validate_config (
     tables_ignore_regexp  text check ( db_validation.is_regexp(tables_ignore_regexp) ),
     tables_ignore         regclass[]
 
-    --check_table_name_regexp
-    --check_column_name_regexp
 );
 
 comment on table db_validation.schema_validate_config is 'Конфигурация валидатора схемы БД для текущей БД';
