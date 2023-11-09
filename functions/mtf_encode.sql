@@ -71,7 +71,7 @@ do $$
         --https://doc.lagout.org/Others/Information%20Theory/Compression/Data%20Compression%20The%20Complete%20Reference%203rd%20Ed%20-%20David%20Salomon.pdf
         assert (
             with t (a) as (
-                select array(select ascii(t.c) from regexp_split_to_table('abcdmnopabcdmnop', '') as t(c) where t.c != '')
+                select array(select ascii(t.c) from regexp_split_to_table('abcdmnop'||'abcdmnop', '') as t(c) where t.c != '')
             )
             select public.mtf_encode(a) = '{97,98,99,100,109,110,111,112,8,8,8,8,8,8,8,8}'
             from t
