@@ -16,8 +16,7 @@ select
             end,
             ''
         )
-from --regexp_split_to_table($1, '') as s(char) --deprecated
-     unnest(string_to_array($1, null)) as s(char);
+from unnest(string_to_array($1, null)) as s(char);
 $$;
 
 --TEST

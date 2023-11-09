@@ -15,7 +15,7 @@ as $func$
         select row_number() over (order by t.char collate "C", next_pos) as pos,
                t.char,
                t.next_pos
-        from regexp_split_to_table(bwt_decode.s, '') with ordinality as t(char, next_pos)
+        from unnest(string_to_array(bwt_decode.s, null)) with ordinality as t(char, next_pos)
         where t.char != ''
     )
     --select * from s; --test

@@ -9,7 +9,7 @@ create or replace function public.string_to_codepoints(s text)
 AS $func$
     select array(
         select ascii(t.c)
-        from regexp_split_to_table(string_to_codepoints.s, '') as t(c)
+        from unnest(string_to_array(string_to_codepoints.s, null)) as t(c)
         where t.c != ''
     );
 $func$;
