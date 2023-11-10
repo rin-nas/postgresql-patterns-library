@@ -26,11 +26,13 @@ create table db_validation.schema_validate_config (
     checks db_validation.schema_validate_checks[],
 
     schemas_ignore_regexp text check ( db_validation.is_regexp(schemas_ignore_regexp) ),
-    schemas_ignore regnamespace[],
+    schemas_ignore regnamespace[] check(cardinality(db_validation.array_unique(schemas_ignore)) = cardinality(schemas_ignore) and cardinality(schemas_ignore) > 0),
 
     tables_ignore_regexp  text check ( db_validation.is_regexp(tables_ignore_regexp) ),
-    tables_ignore         regclass[]
+    tables_ignore  regclass[] check(cardinality(db_validation.array_unique(tables_ignore)) = cardinality(tables_ignore) and cardinality(tables_ignore) > 0)
 
+    --TODO
+    --table_columns_ignore text[]     check(cardinality(depers.array_unique(columns_ignore)) = cardinality(columns_ignore) and cardinality(columns_ignore) > 0),
 );
 
 comment on table db_validation.schema_validate_config is 'Конфигурация валидатора схемы БД для текущей БД';
