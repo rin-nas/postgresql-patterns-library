@@ -2,16 +2,12 @@
 create type db_validation.schema_validate_checks as enum ('has_pk_uk', 'has_not_redundant_index', 'has_index_for_fk', 'has_table_comment', 'has_column_comment');
 
 comment on type db_validation.schema_validate_checks is $$
-Проверки в валидаторе схемы БД:
+Проверки в валидаторе качества схемы БД:
     has_pk_uk               - наличие первичного или уникального индекса в таблице
     has_not_redundant_index - отсутствие избыточных индексов в таблице
     has_index_for_fk        - наличие индексов для ограничений внешних ключей в таблице
     has_table_comment       - наличие описания для таблицы
     has_column_comment      - наличие описания для колонки
-    TODO:
-        is_table_column_comment_unique - в таблице описания колонок должны быть уникальными
-        check_table_name    - проверять названия таблиц на соответствие регулярному выражению
-        check_column_name   - проверять названия колонок на соответствие регулярному выражению
 $$;
 
 -- alter type db_validation.schema_validate_checks owner to alexan;
@@ -49,7 +45,7 @@ create table db_validation.schema_validate_config (
     check (created_at <= updated_at)
 );
 
-comment on table db_validation.schema_validate_config is 'Конфигурация валидатора схемы БД для текущей БД';
+comment on table db_validation.schema_validate_config is 'Конфигурация валидатора качества схемы БД для текущей БД';
 comment on column db_validation.schema_validate_config.id is 'ID';
 comment on column db_validation.schema_validate_config.checks is $$
 Список проверок (массив строк)
