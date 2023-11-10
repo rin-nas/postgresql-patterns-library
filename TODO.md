@@ -327,26 +327,6 @@ CREATE OPERATOR CLASS _uuid_ops DEFAULT FOR TYPE _uuid USING gin AS
 SELECT * FROM someitems WHERE items @> ARRAY['171e9457-5242-406d-ab5e-523419794d18']::uuid[];
 ```
 
-# Progress bar experiment
-
-Пример выгрузки дампа в формате директории:
-
-`pg_dump --username=postgres --host=127.0.0.1 --format=directory --clean --if-exists --dbname=company_review --file=company_review.dir.dump --compress=5 --jobs=10`
-
-Пример загрузки дампа в формате директории:
-
-`pg_restore --username=postgres --dbname=company_review --clean --if-exists --jobs=10 company_review.dir.dump`
-
-
-## pg_restore
-```bash
-time (pg_restore --username=postgres --dbname=company_review_tmp --clean --if-exists --jobs=10 --verbose company_review.dir.dump 2>&1 \
-      | grep -E '(processing item|finished item)' \
-      | pv -l -s $(pg_restore -l company_review.dir.dump | grep -c '^[^;]') \
-      > /dev/null)
-```
-See also [https://www.google.com/search?q=pg_restore+pg_dump+pv]
-
 
 # COPY progress bar with speed (MB/sec)
 

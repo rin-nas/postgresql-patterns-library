@@ -1,4 +1,12 @@
-# Queries
+# Эксперимент по сжатию текстовых данных в БД
+
+## Flow
+
+* Compression flow: `INPUT -> BWT -> MTF -> FIB -> OUTPUT`
+* Decompression flow: in reverse order
+
+
+## Queries
 
 ```sql
 with compress as (
@@ -42,10 +50,8 @@ select * from compress
 
 ```
 
-# TODO
+## TODO
 
-Compression flow: `INPUT -> LZW -> BWT -> MTF -> FIB -> OUTPUT`
-Decompression flow: in reverse order
 
 http://compression.ru/download/rev_univ.html
 https://compression.ru/arctest/descript/bwt-faq.htm#8
@@ -55,6 +61,7 @@ file:///home/r.mukhtarov/Downloads/document.pdf (3.6 Distance coding)
 https://www.sciencedirect.com/science/article/pii/S030439751000229X?ref=pdf_download&fr=RR-2&rr=81d3a310e82f160a
 file:///home/r.mukhtarov/Downloads/document.pdf
 https://pdf.sciencedirectassets.com/271538/1-s2.0-S0304397510X00159/1-s2.0-S030439751000229X/main.pdf?X-Amz-Security-Token=IQoJb3JpZ2luX2VjED8aCXVzLWVhc3QtMSJGMEQCIC0e2mZgUO%2BEH7TLfbbAdRzuPbswDSPRBpT%2FP5UdaaYsAiAhN%2F9yL4QHtA6kT65MdnUw7I%2FKT9%2B9E4yq773N31C2xSqyBQhoEAUaDDA1OTAwMzU0Njg2NSIMp9vYvySQkm%2FNbMKLKo8FxvI%2FI%2FvF1Kx3OumB0gks1HC4nS2rkuuUd%2BUT2jvHjPjD2vWvTI%2FHScqh8DgqJbwnZxS%2Ba0UW72M1gC31%2FRjKT5uCaCsg36%2BSrnche%2F%2FFujQeT3DPiJmLHnOnWrq6EU9xGrCAzdLtrHZ1BSDINcA%2FYAfZaPSPVWUAcYQv%2B5eFsnmtPO8fIN6XovjOvKIyxvWFuC05%2FsJI13QTEQb5WV1ZHNiNS1c51N0AxXXx81H79KXMsXIV3fFevSjwTaCYiyEwADPs0DeXBwvjFIFcnMXfhvyVo4J3GQcBvAIgsn2zZ%2FazeqeJRRxcP7X1CyTMF3STPvLb532V3KNEcv40B1OY5CLFOmSAfj0PTb%2B2pDYSBFNku8XpjSTs%2FbDxznZTjE06nn5i6cDwF5626uCWEWB5NiOKG80cgIMyBH18CXNMKUgvHdrBxIThVvzhniUTQpDMZfKMLAXOiLUStEUHednPQJFnT%2FVt4hQYHoH7WoJhm1BEh9LgjkcoDwA%2BOOjiTyUqn9tf8GCE1NzlgDdoRkvZ%2BUwIDdxV4oKv333s36n%2FwcR9VtSzLQj38P8UfLXv1tWEGBEFWzbblouAd5GdkA9X44XU2ckIUsw7%2FdPI%2B2GvPVnZEeFnC8oqstvjuJeZy2zOM%2Fg0GQjfOy60VIEejxM5X1pyRjLQFzL9qwExyE05eM8g%2BGsOIr3Q0STij9743SCExUg8ujjrtNbepOAjkQHkNebQPo8vzxe%2FB40qBFnB9Lvrv%2FjJzwp8rrGsDfdl5N3x3IWOVxxaDYS9WJwzE3bD48VGAgxaenWJ1kzkCbggo%2BziVe9cJyHTnEddXLsHj56hu6lChNwfPsDKQC%2BuNGYjekPQBmdKZWjJBBnj3uIdFDCUvOapBjqyAQga3p%2FlJsGxSE%2BFwCBNhzARY%2BYvyVSV6qWeHylcmFMn%2B1bihjN99q3vPel%2FiqWrLgd%2BhZo5jYerBi9QhN3NLOGzdEvcwGyx8zAFyudafCA%2Br4iA22XpjeL7yZRFzKzJofjKU%2BmY8qJgleZDszh7dt0wIhHwuhqkzDA1YjPunjE%2FxFV5GRnBcqmelINItn5yk8az%2BcZi2jQMiBV39htgEEnlL0FZ2lL8WiAILrwzObs6FfQ%3D&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20231025T233028Z&X-Amz-SignedHeaders=host&X-Amz-Expires=300&X-Amz-Credential=ASIAQ3PHCVTYV5HSIAIX%2F20231025%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Signature=6d7812bda7fddf1804ab28fc6adb85eb8eb9414700f5cd2ef89eb8f4acd386ae&hash=f8ab96332cea9416c0fb9f2b6ea317afece4aeacedccd57b3ea8724d8811f6ca&host=68042c943591013ac2b2430a89b270f6af2c76d8dfd086a07176afe7c76c2c61&pii=S030439751000229X&tid=spdf-03ec9a64-3309-4225-b0f2-1a7b17df85ff&sid=09d23b27340b024d5e89b4d008a3f0418de1gxrqb&type=client&tsoh=d3d3LnNjaWVuY2VkaXJlY3QuY29t&ua=14165656040a520751&rr=81be3f5ddc6f1693&cc=ru
+```
 Procedure Distance Coding
 (1) Write the first character in s;
 (2) For each other character σ ∈ Σ, write the distance to the first σ in s, or 1 if σ does not occur (notice no distance is 1, because we do
@@ -62,6 +69,7 @@ not reconsider the first character in s);
 (3) For each maximal run of a character σ , write the distance from the ending position of that run to the starting position of the next run
 of σ ’s, or 1 if there are no more σ ’s (again, no distance is 1);
 (4) Encode the length ` of the last run in s.
+```
 
 Вероятностное сжатие
 http://compression.ru/download/articles/rev_univ/fomin_1998_compression_fundamentals.pdf - теория
