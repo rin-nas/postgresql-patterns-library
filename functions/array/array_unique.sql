@@ -1,5 +1,4 @@
---simplest and faster
-CREATE FUNCTION public.array_unique(anyarray)
+create or replace function public.array_unique(anyarray)
     returns anyarray
     immutable
     strict -- returns null if any parameter is null
@@ -7,24 +6,45 @@ CREATE FUNCTION public.array_unique(anyarray)
     security invoker
     language sql
     set search_path = ''
-AS $$
-    SELECT array_agg(DISTINCT x) --using DISTINCT implicitly sorts the array
-    FROM unnest($1) t(x);
+as $$
+    select array(
+        select distinct t.x --using DISTINCT implicitly sorts the array
+        from unnest($1) t(x)
+    );
 $$;
 
-CREATE FUNCTION public.array_unique(
-      anyarray, -- input array 
-      boolean -- flag to drop nulls
-) 
-    RETURNS anyarray
+create or replace function public.array_unique(
+    anyarray, -- input array
+    boolean -- flag to drop nulls
+)
+    returns anyarray
     immutable
-    returns null on null input
-    parallel safe
+    strict -- returns null if any parameter is null
+    parallel safe -- Postgres 10 or later
+    security invoker
     language sql
     set search_path = ''
-AS $$
-      SELECT array_agg(DISTINCT x) --using DISTINCT implicitly sorts the array
-      FROM unnest($1) t(x) 
-      --WHERE CASE WHEN $2 THEN x IS NOT NULL ELSE true END;
-      WHERE NOT $2 OR x IS NOT NULL;
+as $$
+    select array(
+        SELECT DISTINCT t.x --using DISTINCT implicitly sorts the array
+        FROM unnest($1) t(x)
+        WHERE NOT $2 OR t.x IS NOT NULL
+    );
+$$;
+
+--TEST
+do $$
+    begin
+        assert public.array_unique('{}'::int[]) = '{}'::int[];
+        assert public.array_unique('{1,1,2,2,null,null}'::int[])  = '{null,1,2}';
+        assert public.array_unique('{x,x,y,y,null,null}'::text[]) = '{null,x,y}';
+
+        assert public.array_unique('{}'::int[], false) = '{}'::int[];
+        assert public.array_unique('{1,1,2,2,null,null}'::int[], false)  = '{null,1,2}';
+        assert public.array_unique('{x,x,y,y,null,null}'::text[], false) = '{null,x,y}';
+
+        assert public.array_unique('{}'::int[], true) = '{}'::int[];
+        assert public.array_unique('{1,1,2,2,null,null}'::int[], true)  = '{1,2}';
+        assert public.array_unique('{x,x,y,y,null,null}'::text[], true) = '{x,y}';
+    end;
 $$;
