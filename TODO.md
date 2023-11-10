@@ -734,3 +734,28 @@ WHERE
   tbl.ctid = lc.ctid; -- поиск по физической позиции записи
 ```
 https://habr.com/ru/companies/tensor/articles/567514/
+
+# Finding skewed data in Postgres
+
+https://www.crunchydata.com/blog/data-skews-in-postgres
+
+If you’ve got a growing data set and are periodically looking at query performance, checking for skewed data is a good idea.
+
+As a general rule, Postgres generally doesn't use an index if a single value is greater than 30% of the total data. 
+So skewed data can nullify an index in cases where you’re using a single or multi-column index and one of your columns has skewed data.
+
+Use these queries to see how your data is distributed by column:
+
+```sql
+SELECT starelid::regclass AS table_name,attname AS column_name,
+(SELECT string_agg('',format(E'\'%s\': %s%%\n', v,ROUND(n::numeric*100, 2)))
+FROM unnest(stanumbers1,stavalues1::text::text[])nvs(n,v)) pcts
+FROM pg_statistic
+JOIN pg_attribute ON attrelid=starelid
+AND attnum = staattnum
+JOIN pg_class ON attrelid = pg_class.oid
+WHERE stanumbers1[1] >= .3 and relname not like 'pg_%'
+\x\g\x
+```
+
+Luckily there’s a really easy fix for situations like this: partial indexing.
