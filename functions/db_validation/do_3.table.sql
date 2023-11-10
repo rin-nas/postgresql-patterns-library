@@ -23,7 +23,7 @@ drop table if exists db_validation.schema_validate_config;
 create table db_validation.schema_validate_config (
     id int generated always as identity primary key,
 
-    checks db_validation.schema_validate_checks[],
+    checks db_validation.schema_validate_checks[] check(cardinality(db_validation.array_unique(checks)) = cardinality(checks) and cardinality(checks) > 0),
 
     schemas_ignore_regexp text check ( db_validation.is_regexp(schemas_ignore_regexp) ),
     schemas_ignore regnamespace[] check(cardinality(db_validation.array_unique(schemas_ignore)) = cardinality(schemas_ignore) and cardinality(schemas_ignore) > 0),
