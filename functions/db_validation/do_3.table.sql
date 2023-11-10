@@ -23,16 +23,26 @@ drop table if exists db_validation.schema_validate_config;
 create table db_validation.schema_validate_config (
     id int generated always as identity primary key,
 
-    checks db_validation.schema_validate_checks[] check(cardinality(db_validation.array_unique(checks)) = cardinality(checks) and cardinality(checks) > 0),
+    checks db_validation.schema_validate_checks[] check(cardinality(db_validation.array_unique(checks)) = cardinality(checks)
+                                                        and cardinality(checks) > 0),
 
-    schemas_ignore_regexp text check ( db_validation.is_regexp(schemas_ignore_regexp) ),
-    schemas_ignore regnamespace[] check(cardinality(db_validation.array_unique(schemas_ignore)) = cardinality(schemas_ignore) and cardinality(schemas_ignore) > 0),
+    schemas_ignore_regexp text check (schemas_ignore_regexp != ''
+                                      and trim(schemas_ignore_regexp) = schemas_ignore_regexp
+                                      and db_validation.is_regexp(schemas_ignore_regexp)),
 
-    tables_ignore_regexp  text check ( db_validation.is_regexp(tables_ignore_regexp) ),
-    tables_ignore  regclass[] check(cardinality(db_validation.array_unique(tables_ignore)) = cardinality(tables_ignore) and cardinality(tables_ignore) > 0),
+    schemas_ignore regnamespace[] check(cardinality(db_validation.array_unique(schemas_ignore)) = cardinality(schemas_ignore)
+                                        and cardinality(schemas_ignore) > 0),
+
+    tables_ignore_regexp  text check (tables_ignore_regexp != ''
+                                      and trim(tables_ignore_regexp) = tables_ignore_regexp
+                                      and db_validation.is_regexp(tables_ignore_regexp) ),
+
+    tables_ignore  regclass[] check(cardinality(db_validation.array_unique(tables_ignore)) = cardinality(tables_ignore)
+                                    and cardinality(tables_ignore) > 0),
 
     --TODO
-    --table_columns_ignore text[]     check(cardinality(depers.array_unique(columns_ignore)) = cardinality(columns_ignore) and cardinality(columns_ignore) > 0),
+    /*table_columns_ignore text[] check(cardinality(depers.array_unique(table_columns_ignore)) = cardinality(table_columns_ignore)
+                                      and cardinality(table_columns_ignore) > 0),*/
 
     created_at timestamptz(0) not null default now() check (created_at <= now()::timestamptz(0)),
     updated_at timestamptz(0) not null default now() check (updated_at <= now()::timestamptz(0)),
