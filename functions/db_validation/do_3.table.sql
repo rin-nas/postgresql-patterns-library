@@ -29,10 +29,14 @@ create table db_validation.schema_validate_config (
     schemas_ignore regnamespace[] check(cardinality(db_validation.array_unique(schemas_ignore)) = cardinality(schemas_ignore) and cardinality(schemas_ignore) > 0),
 
     tables_ignore_regexp  text check ( db_validation.is_regexp(tables_ignore_regexp) ),
-    tables_ignore  regclass[] check(cardinality(db_validation.array_unique(tables_ignore)) = cardinality(tables_ignore) and cardinality(tables_ignore) > 0)
+    tables_ignore  regclass[] check(cardinality(db_validation.array_unique(tables_ignore)) = cardinality(tables_ignore) and cardinality(tables_ignore) > 0),
 
     --TODO
     --table_columns_ignore text[]     check(cardinality(depers.array_unique(columns_ignore)) = cardinality(columns_ignore) and cardinality(columns_ignore) > 0),
+
+    created_at timestamptz(0) not null default now() check (created_at <= now()::timestamptz(0)),
+    updated_at timestamptz(0) not null default now() check (updated_at <= now()::timestamptz(0)),
+    check (created_at <= updated_at)
 );
 
 comment on table db_validation.schema_validate_config is 'Конфигурация валидатора схемы БД для текущей БД';
