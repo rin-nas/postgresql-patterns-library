@@ -672,7 +672,7 @@ delete from vacancy_skills where vacancy_id = 30923954 and skill_id = 530280;
 select * from vacancy_modified;
 ```
 
-# Как решить проблему с неэффективным планом запросов из-за OR с разными колонками
+# Как решить проблему с неэффективным планом запросов из-за условия OR с разными колонками
 
 У PostgreSQL есть проблема с неэффективным планом запросов с OR из разных колонок. Но есть обходной путь через UNION ALL.
 
@@ -759,3 +759,16 @@ WHERE stanumbers1[1] >= .3 and relname not like 'pg_%'
 ```
 
 Luckily there’s a really easy fix for situations like this: partial indexing.
+
+# Roles
+
+```sql
+select admin_option,
+       roleid::regrole::text AS rolename,
+       member::regrole::text AS member_rolename,
+       grantor::regrole::text AS grantor_rolename
+from pg_auth_members
+order by rolename;
+
+select * from pg_roles;
+```
