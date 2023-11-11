@@ -2515,5 +2515,3 @@ order by used_percent desc;
 |-------|---------------|----------|-------------|
 |public |table_a_id_seq |integer   |100          |
 |public |table_b_id_seq |integer   |37.13        |
-
-![visitors](https://visitor-badge.glitch.me/badge?page_id=github.com/rin-nas/postgresql-patterns-library)
