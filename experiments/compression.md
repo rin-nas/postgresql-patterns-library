@@ -90,6 +90,7 @@ of σ ’s, or 1 if there are no more σ ’s (again, no distance is 1);
 * https://www.cs.auckland.ac.nz/~peter-f/FTPfiles/1997%20Sym%20Rank%20Compression.pdf see "Bloom’s LZP compressors"
 
 ### LZW
+* https://planetcalc.com/9069/ LZW online text compression 
 * http://compression.ru/book/part2/part2__2.htm LZW см. про скорость поиска следующего символа в таблице по хешу!  
 * https://github.com/mikeleo03/LZW-Compressor_Backend/blob/main/src/algorithm/algorithm.js
 * https://ru.wikipedia.org/wiki/Алгоритм_Лемпеля_—_Зива_—_Велча
