@@ -2368,7 +2368,7 @@ copy (
 ```
 
 ```bash
-cat select.sql | psql -U postgres --dbname=my_database | zstd -19 -T8 > select.csv.gz
+cat select.sql | psql -U postgres --dbname=my_database | zstd -19 -T8 > select.csv.zst
 ```
 
 ### Как проверить синтаксис SQL кода без его выполнения?
