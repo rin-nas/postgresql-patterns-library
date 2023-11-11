@@ -12,8 +12,8 @@ create or replace function public.is_crypt(str text)
 as
 $$
 select
-    octet_length(str) between (5+22) and 118 --speed improves
-    and regexp_match(
+    case when octet_length(str) between (5+22) and 118 --speed improves
+         then regexp_match(
             str,
             --$id$salt$encrypted
             --$id$rounds=yyy$salt$encrypted
@@ -29,7 +29,9 @@ select
                 \$
                 [A-Za-z\d./]{22,86} #encrypted
             $
-            $regexp$, 'x') is not null;
+            $regexp$, 'x') is not null
+         else false
+    end;
 $$;
 
 comment on function public.is_crypt(text) is 'Проверяет, что переданная строка является результатом Linux функции crypt';
