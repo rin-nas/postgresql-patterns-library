@@ -25,6 +25,12 @@ $$
     );
 $$;
 
+comment on function public.is_table_column(
+    schema_name text,
+    table_name text,
+    column_name text
+) is 'Check table column exists';
+
 create or replace function public.is_table_column(
     r public.table_column_type
 )
@@ -42,6 +48,11 @@ $$
         is_table_column.r.column
     );
 $$;
+
+comment on function public.is_table_column(
+    r public.table_column_type
+) is 'Check table column exists';
+
 
 --TEST
 do $$

@@ -25,6 +25,12 @@ $$
     );
 $$;
 
+comment on function public.is_view_column(
+    schema_name text,
+    view_name text,
+    column_name text
+) is 'Check view column exists';
+
 create or replace function public.is_view_column(
     r public.view_column_type
 )
@@ -42,6 +48,11 @@ $$
         is_view_column.r.column
     );
 $$;
+
+comment on function public.is_view_column(
+    r public.view_column_type
+) is 'Check view column exists';
+
 
 --TEST
 do $$
