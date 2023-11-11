@@ -12,14 +12,14 @@
    1. Добавить автотесты для каждого правила, для этого cделать тестовую схему `db_validation_test`.
    1. Добавить в таблицу `schema_validate_config` колонки (новые опции):   
       ```sql
-      views_ignore_regexp  text check ( db_validation.is_regexp(views_ignore_regexp) ),
+      views_ignore_regexp  text check ( views_ignore_regexp != ''
+                                        and trim(views_ignore_regexp) = views_ignore_regexp
+                                        and db_validation.is_regexp(views_ignore_regexp) ),
       views_ignore         regclass[],
-      columns_ignore       ?
-      --columns_ignore_regexp --не нужна, а то сложно
+      table_columns_ignore db_validation.table_column[], --см. домен public.table_column 
+      view_columns_ignore  db_validation.view_column[],  --см. домен public.view_column
       ```
       Добавить обработку этих опций в `schema_validate()` в каждую проверку. 
-      Тип колонки `columns_ignore` должен быть [составным типом](https://postgrespro.ru/docs/postgresql/14/rowtypes): `row(table_name regclass, column_name text)`.
-      Для валидации существования колонки нужен домен, т.к. в составных типах `check()` не работает. 
 1. Описания объектов БД (`COMMENT ON ...`)
    1. Добавить проверку наличия описания для объектов БД: схемы, представления, функции, процедуры, триггеры, типы, домены, роли. 
       В миграциях БД забывают это делать.
