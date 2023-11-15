@@ -38,7 +38,7 @@ $function$
                      \*/
                )*
              \*/
-          |  ("(?:[^\\"]+|""|\\.)*")        #1 identifiers
+          |  ("(?:[^"]+|"")*")              #1 identifiers
           |  ('(?:[^']+|'')*')              #2 string constants
           |  (\m[Ee]'(?:[^\\']+|''|\\.)*')  #3 string constants with c-style escapes
           |  (                              #4

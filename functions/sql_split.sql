@@ -44,7 +44,7 @@ declare
                      \*/
                )*
              \*/)
-          |  ("(?:[^\\"]+|""|\\.)*")      #4 identifiers
+          |  ("(?:[^"]+|"")*")            #1 identifiers
           |  ('(?:[^']+|'')*')            #5 string constants
           |  (\m[Ee]'(?:[^\\']+|''|\\.)*')  #6 string constants with c-style escapes
           |  (  #7
