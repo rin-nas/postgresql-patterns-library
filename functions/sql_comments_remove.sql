@@ -61,23 +61,28 @@ $$;
 DO $do$
 DECLARE
     sql text default $sql$
-TEST sql_comments_remove() start
-  ,qq   --/*7/*8*/9*/!
-  ,'st--\''ri$$ng/*--*/'!
-  ,e' \' --/*1''2 */'!
-  ,"id--""/*--*/en$$t\"\\"!
-  ,/*--"456--*/!
-  ,/* многострочный" комментарий"!
-  ,--123---!
-  ,\* /*с*/ вложенностью: /* вложенный /*блок*/" комментария */!
-  ,*/!
-  ,$$dol--lar$$!
-  ,$b$dol--lar$b$!
-TEST sql_comments_remove() end
+select
+  'TEST sql_comments_remove() start'
+  ,1,'qq'   --/*7/*8*/9*/!
+  ,2,'st--\''ri$$ng'/*--*/
+  ,3,'e', ' \' --/*1''2 */!'
+  ,4 as "id--""/*--*/en$$t\""\\!"
+  ,5 /*--"456--!*/
+  ,6 /* многострочный" комментарий"!
+  ,,--123---!
+  ,,\* /*с*/ вложенностью: /* вложенный /*блок*/" комментария */!
+  ,!*/
+  ,7, $$dol--lar!$$
+  ,8, $b$dol--lar!$b$
+  ,'TEST sql_comments_remove() end'
     $sql$;
-
 BEGIN
-    --raise notice '%', sql_comments_remove(sql);
-    perform public.sql_comments_remove(sql);
-END;
+    raise notice '%', sql;
+    execute sql;
+
+    sql := sql_comments_remove(sql);
+
+    raise notice '%', sql;
+    execute sql;
+END
 $do$;
