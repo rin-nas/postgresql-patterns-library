@@ -19,44 +19,44 @@ declare
     queries text[] not null default array[]::text[];
     pattern constant text not null default $regexp$
         (  #1 all
-             (--[^\r\n]*)                    #2 singe-line comment
+             (--[^\r\n]*?)                    #2 singe-line comment
           |  (/\*                            #3 multi-line comment (can be nested)
-               [^*/]* #speed improves
+               [^*/]*? #speed improves
                (?: [^*/]+
                  | \*[^/] #not end comment
                  | /[^*]  #not begin comment
                  |   #recursive:
                      /\*                            #multi-line comment (can be nested)
-                       [^*/]* #speed improves
-                       (?: [^*/]+
+                       [^*/]*? #speed improves
+                       (?: [^*/]+?
                          | \*[^/] #not end comment
                          | /[^*]  #not begin comment
                          |   #recursive:
                              /\*                            #multi-line comment (can be nested)
-                               [^*/]* #speed improves
-                               (?: [^*/]+
+                               [^*/]*? #speed improves
+                               (?: [^*/]+?
                                  | \*[^/] #not end comment
                                  | /[^*]  #not begin comment
                                  #| #recursive
-                               )*
+                               )*?
                              \*/
-                       )*
+                       )*?
                      \*/
-               )*
+               )*?
              \*/)
-          |  ("(?:[^"]+|"")*")            #1 identifiers
-          |  ('(?:[^']+|'')*')            #5 string constants
-          |  (\m[Ee]'(?:[^\\']+|''|\\.)*')  #6 string constants with c-style escapes
+          |  ("(?:[^"]+?|"")*?")            #1 identifiers
+          |  ('(?:[^']+?|'')*?')            #5 string constants
+          |  (\m[Ee]'(?:[^\\']+?|''|\\.)*?')  #6 string constants with c-style escapes
           |  (  #7
-                (\$[a-zA-Z]*\$)                #8 dollar-quoted string
-                    [^$]*  #speed improves
+                (\$[a-zA-Z]*?\$)                #8 dollar-quoted string
+                    [^$]*?  #speed improves
                     .*?
                 \8
              )
           |  (;)  #9 semicolon
-          |  \s+  #spaces and new lines
-          |  \d+  #digits
-          |  [a-zA-Z]{2,} #word
+          |  \s+?  #spaces and new lines
+          |  \d+?  #digits
+          |  [a-zA-Z]{2,}? #word
           |  [^;\s\d] #any char with exceptions
         )
     $regexp$;
@@ -68,13 +68,19 @@ begin
     end if;
 
     for rec in
-        select m[1] as "all", m[2] as "comment1", m[3] as "comment2", m[4] as identifier,
-               m[5] as string1, m[6] as string2, m[7] as string3, m[9] as semicolon
+        select m[1] as "all",
+               m[2] as "comment1",
+               m[3] as "comment2",
+               m[4] as identifier,
+               m[5] as string1,
+               m[6] as string2,
+               m[7] as string3,
+               m[9] as semicolon
         from regexp_matches(sql || E'\n;', pattern, 'gx') as m
     loop
         if rec.semicolon is not null then
             if not is_remove_empty_query or trim(query_alt, E' \r\n\t') != '' then
-                queries := queries || trim(query, E' \r\n\t');
+                queries := array_append(queries, trim(query, E' \r\n\t'));
                 query := '';
                 query_alt := '';
             end if;
