@@ -42,7 +42,7 @@ $function$
           |  ('(?:[^']+?|'')*?')              #2 string constants
           |  (\m[Ee]'(?:[^\\']+?|''|\\.)*?')  #3 string constants with c-style escapes
           |  (                                #4
-               (\$[a-zA-Z]*?\$)                 #5 dollar-quoted string
+               (\$[a-zA-Z\d_]*?\$)                 #5 dollar-quoted string
                  [^$]*?  #speed improves
                  .*?
                \5
@@ -88,3 +88,20 @@ BEGIN
     execute sql;
 END
 $do$;
+
+
+--TODO regexp error with `.*?`
+/*
+select m[1]
+from regexp_matches($SQL_split$
+    comment on type test.test1 is $$comment1$$;
+    comment on column test.test2 is $$comment2$$;
+$SQL_split$,
+$regexp$
+        (\$\$
+            #(?:(?!\$\$).)*
+            .*?
+        \$\$)
+      #| unknown # UNCOMMENT ME AND EXECUTE QUERY AGAIN! Ungreedy flag `?` does not work!
+$regexp$, 'gx') as m;
+*/

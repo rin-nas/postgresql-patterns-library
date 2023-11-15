@@ -92,6 +92,7 @@
    1. https://begriffs.com/pdf/dec2frac.pdf
    1. YouTube: [Advanced SQL](https://www.youtube.com/playlist?list=PL1XF9qjV8kH12PTd1WfsKeUQU6e83ldfc) — Chapter #07 — [Video #57 — PL/SQL use case: spreadsheet evaluation](https://www.youtube.com/watch?v=s49M6oeqkok&list=PL1XF9qjV8kH12PTd1WfsKeUQU6e83ldfc&index=57&ab_channel=DatabaseSystemsResearchGroupatUT%C3%BCbingen)
    1. https://hakibenita.com/sql-anomaly-detection Simple Anomaly Detection Using Plain SQL (Детектирование аномалий)
+   1. https://wiki.postgresql.org/wiki/Inlining_of_SQL_functions 
 
 # Сервисы для выполнения SQL (песочница)
    1. http://sqlfiddle.postgrespro.ru/

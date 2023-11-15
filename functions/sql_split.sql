@@ -19,10 +19,10 @@ declare
     queries text[] not null default array[]::text[];
     pattern constant text not null default $regexp$
         (  #1 all
-             (--[^\r\n]*?)                    #2 singe-line comment
+             (--[^\r\n]*?)                   #2 singe-line comment
           |  (/\*                            #3 multi-line comment (can be nested)
                [^*/]*? #speed improves
-               (?: [^*/]+
+               (?: [^*/]+?
                  | \*[^/] #not end comment
                  | /[^*]  #not begin comment
                  |   #recursive:
@@ -48,16 +48,15 @@ declare
           |  ('(?:[^']+?|'')*?')            #5 string constants
           |  (\m[Ee]'(?:[^\\']+?|''|\\.)*?')  #6 string constants with c-style escapes
           |  (  #7
-                (\$[a-zA-Z]*?\$)                #8 dollar-quoted string
+                (\$[a-zA-Z\d_]*?\$)              #8 dollar-quoted string
                     [^$]*?  #speed improves
                     .*?
                 \8
              )
           |  (;)  #9 semicolon
           |  \s+?  #spaces and new lines
-          |  \d+?  #digits
-          |  [a-zA-Z]{2,}? #word
-          |  [^;\s\d] #any char with exceptions
+          |  [[:alnum:]]+? #word (any language), number
+          |  [^;] #any char with exception
         )
     $regexp$;
 begin
@@ -125,3 +124,19 @@ do $do$
 
     end;
 $do$;
+
+--TODO regexp error with `.*?`
+/*
+select m[1]
+from regexp_matches($SQL_split$
+    comment on type test.test1 is $$comment1$$;
+    comment on column test.test2 is $$comment2$$;
+$SQL_split$,
+$regexp$
+        (\$\$
+            #(?:(?!\$\$).)*
+            .*?
+        \$\$)
+      #| unknown # UNCOMMENT ME AND EXECUTE QUERY AGAIN! Ungreedy flag `?` does not work!
+$regexp$, 'gx') as m;
+*/
