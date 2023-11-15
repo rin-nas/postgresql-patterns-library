@@ -1,3 +1,5 @@
+--WARNING This function works incorrect in some cases, see TODO below
+
 create or replace function public.sql_split(
     sql text,
     is_remove_empty_query boolean default true, --удалять пустые запросы (даже если там есть только комментарии)

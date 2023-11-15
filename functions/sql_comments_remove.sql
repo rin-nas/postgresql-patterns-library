@@ -1,3 +1,5 @@
+--WARNING This function works incorrect in some cases, see TODO below
+
 create or replace function public.sql_comments_remove(
     sql text  --SQL запрос
 )
