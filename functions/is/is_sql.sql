@@ -25,33 +25,33 @@ BEGIN
         sql := regexp_replace(sql, $regexp$
             ;?
             ((?: #1
-                 --[^\r\n]*                     #singe-line comment
+                 --[^\r\n]*?                    #singe-line comment
               |  /\*                            #multi-line comment (can be nested)
-                   [^*/]* #speed improves
-                   (?: [^*/]+
+                   [^*/]*? #speed improves
+                   (?: [^*/]+?
                      | \*[^/] #not end comment
                      | /[^*]  #not begin comment
                      |   #recursive:
                          /\*                            #multi-line comment (can be nested)
-                           [^*/]* #speed improves
-                           (?: [^*/]+
+                           [^*/]*? #speed improves
+                           (?: [^*/]+?
                              | \*[^/] #not end comment
                              | /[^*]  #not begin comment
                              |   #recursive:
                                  /\*                            #multi-line comment (can be nested)
-                                   [^*/]* #speed improves
-                                   (?: [^*/]+
+                                   [^*/]*? #speed improves
+                                   (?: [^*/]+?
                                      | \*[^/] #not end comment
                                      | /[^*]  #not begin comment
                                      #| #recursive
-                                   )*
+                                   )*?
                                  \*/
-                           )*
+                           )*?
                          \*/
-                   )*
+                   )*?
                  \*/
-              |  \s+
-            )*)
+              |  \s+?
+            )*?)
             $
         $regexp$, ';\1', 'x');
 
