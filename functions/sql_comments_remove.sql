@@ -13,37 +13,37 @@ $function$
     --https://postgrespro.ru/docs/postgresql/12/sql-syntax-lexical
     select regexp_replace(sql, $regexp$
         (?:
-             --[^\r\n]*                     #singe-line comment
+             --[^\r\n]*?                    #singe-line comment
           |  /\*                            #multi-line comment (can be nested)
-               [^*/]* #speed improves
-               (?: [^*/]+
+               [^*/]*? #speed improves
+               (?: [^*/]+?
                  | \*[^/] #not end comment
                  | /[^*]  #not begin comment
                  |   #recursive:
                      /\*                            #multi-line comment (can be nested)
-                       [^*/]* #speed improves
-                       (?: [^*/]+
+                       [^*/]*? #speed improves
+                       (?: [^*/]+?
                          | \*[^/] #not end comment
                          | /[^*]  #not begin comment
                          |   #recursive:
                              /\*                            #multi-line comment (can be nested)
-                               [^*/]* #speed improves
-                               (?: [^*/]+
+                               [^*/]*? #speed improves
+                               (?: [^*/]+?
                                  | \*[^/] #not end comment
                                  | /[^*]  #not begin comment
                                  #| #recursive
-                               )*
+                               )*?
                              \*/
-                       )*
+                       )*?
                      \*/
-               )*
+               )*?
              \*/
-          |  ("(?:[^"]+|"")*")              #1 identifiers
-          |  ('(?:[^']+|'')*')              #2 string constants
-          |  (\m[Ee]'(?:[^\\']+|''|\\.)*')  #3 string constants with c-style escapes
-          |  (                              #4
-               (\$[a-zA-Z]*\$)                #5 dollar-quoted string
-                 [^$]*  #speed improves
+          |  ("(?:[^"]+?|"")*?")              #1 identifiers
+          |  ('(?:[^']+?|'')*?')              #2 string constants
+          |  (\m[Ee]'(?:[^\\']+?|''|\\.)*?')  #3 string constants with c-style escapes
+          |  (                                #4
+               (\$[a-zA-Z]*?\$)                 #5 dollar-quoted string
+                 [^$]*?  #speed improves
                  .*?
                \5
              )
@@ -69,11 +69,13 @@ select
   ,4 as "id--""/*--*/en$$t\""\\!"
   ,5 /*--"456--!*/
   ,6 /* многострочный" комментарий"!
-  ,,--123---!
-  ,,\* /*с*/ вложенностью: /* вложенный /*блок*/" комментария */!
-  ,!*/
+     ,,--123---!
+     ,,\* /*с*/ вложенностью: /* вложенный /*блок*/" комментария */*
+     ,!*/
   ,7, $$dol--lar!$$
-  ,8, $b$dol--lar!$b$
+  ,8, $b$
+            /*$$'dol--lar'$$*/
+      $b$
   ,'TEST sql_comments_remove() end'
     $sql$;
 BEGIN
