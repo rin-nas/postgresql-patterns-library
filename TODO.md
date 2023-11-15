@@ -772,3 +772,20 @@ order by rolename;
 
 select * from pg_roles;
 ```
+
+# Regexp error with `.*?`
+
+```sql
+select m[1]
+from regexp_matches($SQL_split$
+    comment on type test.test1 is $$comment1$$;
+    comment on column test.test2 is $$comment2$$;
+$SQL_split$,
+$regexp$
+        (\$\$
+            #(?:(?!\$\$).)*
+            .*?
+        \$\$)
+      #| unknown # UNCOMMENT ME AND EXECUTE QUERY AGAIN! Ungreedy flag `?` does not work!
+$regexp$, 'gx') as m;
+```
