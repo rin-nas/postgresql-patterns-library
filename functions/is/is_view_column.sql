@@ -1,7 +1,7 @@
 create or replace function public.is_view_column(
-    schema_name text,
-    view_name text,
-    column_name text
+    schema_name pg_catalog.name,
+    view_name   pg_catalog.name,
+    column_name pg_catalog.name
 )
     returns boolean
     immutable
@@ -26,9 +26,9 @@ $$
 $$;
 
 comment on function public.is_view_column(
-    schema_name text,
-    view_name text,
-    column_name text
+    schema_name pg_catalog.name,
+    view_name   pg_catalog.name,
+    column_name pg_catalog.name
 ) is 'Check view column exists';
 
 create or replace function public.is_view_column(
@@ -43,8 +43,8 @@ create or replace function public.is_view_column(
 as
 $$
     select public.is_view_column(
-        is_view_column.r.schema::text,
-        is_view_column.r.view::text,
+        is_view_column.r.schema::pg_catalog.name,
+        is_view_column.r.view::pg_catalog.name,
         is_view_column.r.column
     );
 $$;

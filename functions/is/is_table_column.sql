@@ -1,7 +1,7 @@
 create or replace function public.is_table_column(
-    schema_name text,
-    table_name text,
-    column_name text
+    schema_name pg_catalog.name,
+    table_name  pg_catalog.name,
+    column_name pg_catalog.name
 )
     returns boolean
     immutable
@@ -26,9 +26,9 @@ $$
 $$;
 
 comment on function public.is_table_column(
-    schema_name text,
-    table_name text,
-    column_name text
+    schema_name pg_catalog.name,
+    table_name  pg_catalog.name,
+    column_name pg_catalog.name
 ) is 'Check table column exists';
 
 create or replace function public.is_table_column(
@@ -43,8 +43,8 @@ create or replace function public.is_table_column(
 as
 $$
     select public.is_table_column(
-        is_table_column.r.schema::text,
-        is_table_column.r.table::text,
+        is_table_column.r.schema::pg_catalog.name,
+        is_table_column.r.table::pg_catalog.name,
         is_table_column.r.column
     );
 $$;
