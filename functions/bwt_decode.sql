@@ -54,12 +54,12 @@ do $$
         assert public.bwt_decode('ард$краааабб', '$') = 'абракадабра';
         assert public.bwt_decode('sinniieffcc$eie', '$') = 'inefficiencies';
         assert public.bwt_decode('aa$nmnnPBaaaa', '$') = 'PanamaBanana';
-        select public.bwt_decode('TOOOBBBRRTTTEEENNOOOOR$TO', '$') = 'TOBEORNOTTOBEORTOBEORNOT';
+        assert public.bwt_decode('TOOOBBBRRTTTEEENNOOOOR$TO', '$') = 'TOBEORNOTTOBEORTOBEORNOT';
 
         assert public.bwt_decode('STEXYDST.E.IXXIIXXSSMPPS.B..EE.$.USFXDIIOIIIT', '$')
                                = 'SIX.MIXED.PIXIES.SIFT.SIXTY.PIXIE.DUST.BOXES';
 
-        select public.bwt_decode('.тллу..аукевзваауап!уук     $  кзккРрхц  икррррррррче Вдааееееууеееуауа еГГГ Г    икккккррнСЕ  ', '$')
+        assert public.bwt_decode('.тллу..аукевзваауап!уук     $  кзккРрхц  икррррррррче Вдааееееууеееуауа еГГГ Г    икккккррнСЕ  ', '$')
                                = 'Ехал Грека через реку. Видит Грека в реке рак. Сунул Грека руку в реку. Рак за руку Греку цап!';
 
         --negative
