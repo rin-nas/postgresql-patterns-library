@@ -150,3 +150,7 @@ order by 1, 2;
 | GRANT | sequence | 1 |
 | GRANT | table | 4 |
 | REFRESH MATERIALIZED VIEW | materialized view | 17536 |
+
+# Ссылки по теме
+
+* https://github.com/pgaudit/pgaudit/
