@@ -96,7 +96,7 @@
 
 # Databases
    1. [IP2Location™ LITE IP-COUNTRY Database](https://lite.ip2location.com/database/db1-ip-country)
-   1. [https://opendata.digital.gov.ru/registry/numeric/](Реестр российской системы и плана нумерации телефонных номеров по областям) 
+   1. [Реестр российской системы и плана нумерации телефонных номеров по областям](https://opendata.digital.gov.ru/registry/numeric/) 
 
 # Сервисы для выполнения SQL (песочница)
    1. http://sqlfiddle.postgrespro.ru/
