@@ -1,5 +1,6 @@
 # TODO
 
+1. Выводить в конце работы query maximum elapsed (см. HRX-3025) для выявления проблем.   
 1. Добавить автотесты
 1. https://github.com/theory/pgtap/blob/master/tools/parallel_conn.sh
 1. Избавиться от последнего запроса, который всегда возвращает `0 affected rows`
