@@ -2,7 +2,7 @@
 
 ## Flow
 
-* Compression flow: `INPUT -> BWT -> MTF -> FIB -> OUTPUT`
+* Compression flow: `INPUT -> BWT -> MTF -> FIBONACCI -> OUTPUT`
 * Decompression flow: in reverse order
 
 
