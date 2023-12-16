@@ -47,7 +47,7 @@ with t (t) as (
 )
 select * from b;
 
-select 'fib_bytea' as storage_type,
+select 'fibonacci_bytea' as storage_type,
        pg_column_size(a_fib) as orig_compressed_size,
        pg_column_size(ad_fib) as delta_compressed_size,
        pg_column_size(a_fib::text::bytea) as orig_uncompressed_size,
@@ -76,12 +76,12 @@ select 'jsonb_int_array',
 from test.delta;
 ```
 
-| storage\_type | orig\_compressed\_size | delta\_compressed\_size | orig\_uncompressed\_size | delta\_uncompressed\_size |
-| :--- | :--- | :--- | :--- | :--- |
-| fib\_int\_array | 887 | 773 | 887 | 773 |
-| pg\_int\_array | 1392 | 1392 | 1396 | 1396 |
-| json\_int\_array | 2376 | 1578 | 2679 | 1717 |
-| jsonb\_int\_array | 2130 | 2044 | 5490 | 4496 |
+| storage\_type     | orig\_compressed\_size | delta\_compressed\_size | orig\_uncompressed\_size | delta\_uncompressed\_size |
+|:------------------|-----------------------:|------------------------:|-------------------------:|--------------------------:|
+| fibonacci\_bytea  |                    887 |                     773 |                      887 |                       773 |
+| pg\_int\_array    |                   1392 |                    1392 |                     1396 |                      1396 |
+| json\_int\_array  |                   2376 |                    1578 |                     2679 |                      1717 |
+| jsonb\_int\_array |                   2130 |                    2044 |                     5490 |                      4496 |
 
 Отсортированный список чисел (например список идентификаторов) с дельта + Фибоначчи кодированием 
 и хранением в `bytea` занимает почти 2 раза меньше места, чем в обычном массиве `int[]`.   
