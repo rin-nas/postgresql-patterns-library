@@ -1,11 +1,3 @@
-CREATE EXTENSION IF NOT EXISTS fuzzymatch;
-CREATE EXTENSION IF NOT EXISTS pg_trgm;
- 
-CREATE INDEX /*CONCURRENTLY*/ IF NOT EXISTS custom_query_group_name_name_trigram_index ON public.custom_query_group_name USING GIN (lower(name) gin_trgm_ops);
-CREATE INDEX /*CONCURRENTLY*/ IF NOT EXISTS sphinx_wordforms_word_trigram_index ON public.sphinx_wordforms USING GIN (lower(word) gin_trgm_ops);
- 
-SELECT COUNT(*) FROM sphinx_wordforms; -- 1,241,939 записей
-
 -- drop function public.typos_correct(text, interval, boolean);
 
 CREATE OR REPLACE FUNCTION public.typos_correct(
@@ -67,16 +59,18 @@ WITH
                 SELECT 
                 FROM sphinx_wordforms AS dict
                 WHERE lower(dict.word) = lower(q.word_from)
-                  AND mistake = FALSE
                   AND checked = TRUE
-            ) AND
+            )
+            /*
             -- есть слово в названиях профессий?
-            NOT EXISTS(
+            AND NOT EXISTS(
                 SELECT 
                 FROM custom_query_group_name AS dict
                 --WHERE lower(q.word_from) = lower(dict.name)
                 WHERE lower(q.word_from) = ANY(string_to_array(lower(dict.name), ' ')) --Теперь корректор сравнивает каждое слово запроса с каждым словом из name (профессии). Сравнение именно по словам, иначе "программист net" и "bim менеджер" снова станут "программист туе" и "ишь менеджер".
-            ) AS is_mistake
+            )
+            */
+            AS is_mistake
         FROM unnest((SELECT words_from FROM vars)) WITH ORDINALITY AS q(word_from, word_num)
     )
     -- SELECT * FROM words_from; -- для отладки
@@ -90,20 +84,20 @@ WITH
                           levenshtein_rank3 - LEAD(levenshtein_rank3) OVER w AS next_levenshtein_rank3_delta
                    FROM (
                             -- нельзя выносить подзапрос в WITH name AS (SELECT ...),
-                            -- т.к. план запроса меняется, итоговый запрос выполняется в 2 раза медленнее!
+                            -- т.к. план запроса меняется, итоговый запрос выполняется в 2 раза медленнее (в PostgreSQL 10?)!
                             SELECT q.word_num,
                                    q.word_from,
-                                   t.name AS word_to,
-                                   round(word_similarity(q.word_from, t.name)::numeric, 4) AS word_similarity_rank,
-                                   round(similarity(q.word_from, t.name)::numeric, 4)      AS similarity_rank,
-                                   levenshtein(q.word_from, t.name)                                             AS levenshtein_distance1,
-                                   levenshtein(q.word_from, t.name, vars.ins_cost, vars.del_cost,vars.sub_cost) AS levenshtein_distance2,
-                                   round(sqrt(levenshtein(q.word_from, t.name) *
-                                              levenshtein(q.word_from, t.name, vars.ins_cost, vars.del_cost, vars.sub_cost))::numeric, 4) AS levenshtein_distance3, -- среднее геометрическое
-                                   round((1 - sqrt(levenshtein(q.word_from, t.name) *
-                                                   levenshtein(q.word_from, t.name, vars.ins_cost, vars.del_cost, vars.sub_cost)) / length(t.name))::numeric, 4) AS levenshtein_rank3
-                            FROM custom_query_group_name AS t, vars
-                            WHERE lower(t.name) % q.word_from -- используем GIN индекс!
+                                   t.word AS word_to,
+                                   round(word_similarity(q.word_from, t.word)::numeric, 4) AS word_similarity_rank,
+                                   round(similarity(q.word_from, t.word)::numeric, 4)      AS similarity_rank,
+                                   levenshtein(q.word_from, t.word)                                             AS levenshtein_distance1,
+                                   levenshtein(q.word_from, t.word, vars.ins_cost, vars.del_cost,vars.sub_cost) AS levenshtein_distance2,
+                                   round(sqrt(levenshtein(q.word_from, t.word) *
+                                              levenshtein(q.word_from, t.word, vars.ins_cost, vars.del_cost, vars.sub_cost))::numeric, 4) AS levenshtein_distance3, -- среднее геометрическое
+                                   round((1 - sqrt(levenshtein(q.word_from, t.word) *
+                                                   levenshtein(q.word_from, t.word, vars.ins_cost, vars.del_cost, vars.sub_cost)) / length(t.word))::numeric, 4) AS levenshtein_rank3
+                            FROM sphinx_wordforms AS t, vars
+                            WHERE lower(t.word) % q.word_from -- используем GIN индекс!
                         ) AS t
                    WHERE TRUE
                      AND levenshtein_distance1 < 5 AND levenshtein_rank3 > 0.55
@@ -136,9 +130,9 @@ WITH
       AND q.is_mistake = TRUE
       -- первые 2 элемента -- это всегда исходный текст и текст в другой раскладке клавиатуры
       -- если один из этих элементов не является опечаткой, то прерываем цикл
-      AND NOT EXISTS(SELECT FROM words AS s WHERE s.word_num < 2 AND s.is_mistake = FALSE)
+      AND NOT EXISTS(SELECT FROM words AS s WHERE s.word_num < 2)
       -- если все отдельные слова не имеют опечаток, то прерываем цикл
-      AND (SELECT COUNT(*) = 2 OR (COUNT(*) - 2) / 2 != COUNT(*) FILTER (WHERE s.word_num >= 2 AND s.is_mistake = FALSE) FROM words AS s)
+      AND (SELECT COUNT(*) = 2 OR (COUNT(*) - 2) / 2 != COUNT(*) FILTER (WHERE s.word_num >= 2) FROM words AS s)
     ORDER BY word_num
 )
 SELECT w.word_num,
