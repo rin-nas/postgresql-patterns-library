@@ -2364,11 +2364,16 @@ copy (
     from my_table
     where send_date > now() - interval '2 month'
     --limit 100
-) to stdout csv;
+) to stdout (format csv, header false);
 ```
 
 ```bash
-cat select.sql | psql -U postgres --dbname=my_database | zstd -19 -T8 > select.csv.zst
+cat select.sql | psql -U postgres --dbname=my_database | zstd -19 -T8 -o select.csv.zst
+```
+
+или (лучше сжимает, но значительно медленнее работает)
+```bash
+cat select.sql | psql -U postgres --dbname=my_database | xz -zc9 --threads=8 select.csv > select.csv.xz
 ```
 
 ### Как проверить синтаксис SQL кода без его выполнения?
