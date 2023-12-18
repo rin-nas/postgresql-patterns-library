@@ -2353,7 +2353,7 @@ Cжимаем:
 `zstd -19 -T8 my_tables.sql -o my_tables.sql.zst`
 
 Одной командой:
-`pg_dump -U postgres --db=my_database --table=public.my_table1 --table=public.my_table2 | zstd -19 -T8 > my_tables.sql.zst`
+`pg_dump -U postgres --db=my_database --table=public.my_table1 --table=public.my_table2 | zstd -19 -T8 -o my_tables.sql.zst`
 
 ### Как выгрузить результат SELECT запроса в CSV?
 
