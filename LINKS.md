@@ -9,8 +9,9 @@
    1. https://habr.com/ru/company/0/blog/316304/ Как заставить PostgreSQL считать быстрее
    1. https://m.habr.com/ru/post/468463/ - Улучшение производительности Zabbix + PostgreSQL при помощи партиционирования и индексирования
       1. https://github.com/Doctorbal/zabbix-postgres-partitioning
-   3. https://m.habr.com/ru/company/otus/blog/472364/ - PostgreSQL и настройки согласованности записи для каждого конкретного соединения
-   4. https://m.habr.com/ru/post/481556/ - Очередь задач в PostgreSQL
+   1. https://m.habr.com/ru/company/otus/blog/472364/ - PostgreSQL и настройки согласованности записи для каждого конкретного соединения
+   1. https://m.habr.com/ru/post/481556/ - Очередь задач в PostgreSQL
+   1. https://m.habr.com/ru/post/483014/ - Очереди сообщений в PostgreSQL с использованием PgQ
 
 # GitHub
    1. https://github.com/dataegret/pg-utils Useful DBA tools by Data Egret
