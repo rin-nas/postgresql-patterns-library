@@ -663,7 +663,7 @@ WHERE depth = (SELECT MIN(depth) FROM paths_with_cycle)
 
 #### Как защититься от циклических связей в графе?
 
-SQL-запросы `WITH RECURSIVE...` должны иметь [защиту от зацикливания](https://stackoverflow.com/questions/51025607/prevent-infinite-loop-in-recursive-query-in-postgresql)! Когда запрос зациклится, он будет выполняться очень долго, съедая ресурсы БД. А ещё таких запросов будет много. Повезёт, если сработает защита самого PostgreSQL.
+SQL-запросы `WITH RECURSIVE...` должны иметь [защиту от зацикливания](https://stackoverflow.com/questions/51025607/prevent-infinite-loop-in-recursive-query-in-postgresql)! Когда запрос зациклится, он будет выполняться очень долго, съедая ресурсы БД. А ещё таких запросов будет много. Повезёт, если сработает защита самого PostgreSQL.
 
 #### Как получить названия всех уровней сферы деятельности 4-го уровня?
 
@@ -863,7 +863,7 @@ ORDER BY kladr_id, duplicate_num
 ### Как получить длительность выполнения запроса в его результате?
 
 ```sql
-SELECT extract(seconds FROM clock_timestamp() - now()) AS execution_duration FROM pg_sleep(1.5);
+SELECT extract(seconds FROM clock_timestamp() - now()) AS execution_duration FROM pg_sleep(1.5);
 ```
 Это работает, потому что `now()` вычислится ещё на этапе планирования запроса, а `clock_timestamp()` на этапе выполнения.
 
@@ -1159,7 +1159,7 @@ from t
 
 ### Как добавить или обновить записи одним запросом (UPSERT)?
 
-* См. [INSERT ... ON CONFLICT DO NOTHING/UPDATE](https://habr.com/post/264281/) (Habr)
+* См. [INSERT ... ON CONFLICT DO NOTHING/UPDATE](https://habr.com/post/264281/) (Habr)
 * Элегантная [реализация на PL/pgSQL](https://postgrespro.ru/docs/postgresql/12/plpgsql-control-structures#PLPGSQL-UPSERT-EXAMPLE) из официальной документации PostgreSQL
 
 ### Как сделать `INSERT ... ON CONFLICT ...` без увеличения последовательности для дубликатов?
@@ -1328,7 +1328,7 @@ RETURNING *
 
 ### Как обновить несколько записей разными данными в одном запросе?
 
-См. [Stackoverflow](https://stackoverflow.com/questions/18797608/update-multiple-rows-in-same-query-using-postgresql)
+См. [Stackoverflow](https://stackoverflow.com/questions/18797608/update-multiple-rows-in-same-query-using-postgresql)
 
 ```sql
 UPDATE users AS u 
@@ -1537,7 +1537,7 @@ CREATE TRIGGER {table}_bu_updated_at_set_now BEFORE UPDATE ON {table} FOR EACH R
 
 ### Как добавить колонку в существующую таблицу без её блокирования?
 
-См. [Stackoverflow](https://ru.stackoverflow.com/questions/721985/%D0%9A%D0%B0%D0%BA-%D0%B4%D0%BE%D0%B1%D0%B0%D0%B2%D0%B8%D1%82%D1%8C-%D0%BF%D0%BE%D0%BB%D0%B5-%D0%B2-%D0%B1%D0%BE%D0%BB%D1%8C%D1%88%D1%83%D1%8E-%D1%82%D0%B0%D0%B1%D0%BB%D0%B8%D1%86%D1%83-postgresql-%D0%B1%D0%B5%D0%B7-%D0%B1%D0%BB%D0%BE%D0%BA%D0%B8%D1%80%D0%BE%D0%B2%D0%BA%D0%B8)
+См. [Stackoverflow](https://ru.stackoverflow.com/questions/721985/%D0%9A%D0%B0%D0%BA-%D0%B4%D0%BE%D0%B1%D0%B0%D0%B2%D0%B8%D1%82%D1%8C-%D0%BF%D0%BE%D0%BB%D0%B5-%D0%B2-%D0%B1%D0%BE%D0%BB%D1%8C%D1%88%D1%83%D1%8E-%D1%82%D0%B0%D0%B1%D0%BB%D0%B8%D1%86%D1%83-postgresql-%D0%B1%D0%B5%D0%B7-%D0%B1%D0%BB%D0%BE%D0%BA%D0%B8%D1%80%D0%BE%D0%B2%D0%BA%D0%B8)
 
 ### Как добавить ограничение таблицы, если оно ещё не существует?
 
@@ -1933,12 +1933,12 @@ WHERE p.prorettype <> 'pg_catalog.cstring'::pg_catalog.regtype
 
 ### Как получить список всех зависимостей (внешних ключей) между таблицами БД?
 
-Запрос возвращает колонки `from_table`, `from_cols`, `to_table`, `to_cols` и другие.
+Запрос возвращает колонки `from_table`, `from_cols`, `to_table`, `to_cols` и другие.
 
 Для какой-либо таблицы можно получить:
 
 * список исходящих связей (таблицы, которые зависят от текущей таблицы)
-* список входящих связей (таблицы, от которых зависит текущая таблица)
+* список входящих связей (таблицы, от которых зависит текущая таблица)
 
 [Источник](https://stackoverflow.com/questions/1152260/postgres-sql-to-list-table-foreign-keys/36800049#36800049)
 
