@@ -57,7 +57,7 @@ WITH
             -- есть слово в словаре русского языка?
             NOT EXISTS(
                 SELECT 
-                FROM sphinx_wordforms AS dict
+                FROM public.wordforms AS dict
                 WHERE lower(dict.word) = lower(q.word_from)
                   AND checked = TRUE
             )
@@ -96,7 +96,7 @@ WITH
                                               levenshtein(q.word_from, t.word, vars.ins_cost, vars.del_cost, vars.sub_cost))::numeric, 4) AS levenshtein_distance3, -- среднее геометрическое
                                    round((1 - sqrt(levenshtein(q.word_from, t.word) *
                                                    levenshtein(q.word_from, t.word, vars.ins_cost, vars.del_cost, vars.sub_cost)) / length(t.word))::numeric, 4) AS levenshtein_rank3
-                            FROM sphinx_wordforms AS t, vars
+                            FROM public.wordforms AS t, vars
                             WHERE lower(t.word) % q.word_from -- используем GIN индекс!
                         ) AS t
                    WHERE TRUE
