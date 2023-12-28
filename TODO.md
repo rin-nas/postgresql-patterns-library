@@ -790,7 +790,9 @@ $regexp$
 $regexp$, 'gx') as m;
 ```
 
-# Как правильно обрабатывать очередь?
+# Как правильно обрабатывать очередь? 
+
+Самый простой вариант обработки очереди, но не самый эффективный.
 
 ```sql
 delete from queue
@@ -812,3 +814,68 @@ returning *;
 1. Помечаем кортеж удаленным и **держим транзакцию открытой**
 1. В случае сбоя транзакция откатится и строка окажется неудалённой снова
 1. Хорошо работает, если вы находитесь в рамках одной БД и процесс обработки транзакции **«достаточно быстрый»**
+
+
+# Как определить, что таблицы в БД используются?
+
+```sql
+WITH t AS (
+    SELECT
+        a.rolname,
+        --round((s.calls * 100 / sum(s.calls) over())::numeric, 2) as percent,
+        s.calls,
+        d.datname,
+        --s.query,
+        qt.table_name
+
+    FROM pg_stat_statements as s
+    INNER JOIN pg_database as d ON d.oid = s.dbid
+    INNER JOIN pg_authid as a ON a.oid = s.userid
+    cross join pg_size_bytes(regexp_replace(trim(current_setting('track_activity_query_size')), '(?<![a-zA-Z])B$', '')) as q(track_activity_query_size_bytes)
+    inner join lateral (
+        select distinct to_regclass(m.v[1])
+        from regexp_matches(s.query, $regexp$
+            \m
+            (?:from|join|lateral)
+            \s+
+            (
+              (?:[a-zA-Z_]+[a-zA-Z_\d]*\. | "(?:[^"]|"")+"\.)? #schema name
+              [a-zA-Z_]+[a-zA-Z_\d]*\M | "(?:[^"]|"")+" #table name
+            )
+            (?![\(\)]) #not function like now()
+        $regexp$, 'ixg') as m(v)
+    ) as qt(table_name) on qt.table_name is not null
+    WHERE true
+      --and s.query ~* '(^|\n)\s*\m(insert\s+into|update|delete|truncate)\M' --только DML запросы
+      and s.query !~* '(^|\n)\s*\m(insert\s+into|update|delete|truncate)\M' --исключая DML запросы
+      --по умолчанию текст запроса обрезается до 1024 байт; это число определяется параметром track_activity_query_size
+      --обрезанные запросы игнорируем
+      and octet_length(s.query) < q.track_activity_query_size_bytes
+      and rolname not in ('postgres')
+    --ORDER BY calls DESC, table_name::text -- самые популярные по кол-ву
+    --LIMIT 100
+)
+, s as (
+    select t.datname,
+           t.table_name,
+           sum(t.calls) as calls_total
+    from t
+    group by t.datname, t.table_name
+    order by calls_total desc, t.datname, t.table_name
+    limit 100
+)
+select s.datname as db_name,
+       n.nspname as schema_name,
+       c.relname as table_name,
+       s.calls_total,
+       round((s.calls_total * 100 / sum(s.calls_total) over())::numeric, 2) as calls_total_percent
+from s
+join pg_class as c on c.oid = s.table_name
+join pg_namespace n on n.oid = c.relnamespace
+where n.nspname not in ('information_schema')
+order by s.calls_total desc,
+         s.datname,
+         n.nspname,
+         c.relname
+limit 100;
+```
