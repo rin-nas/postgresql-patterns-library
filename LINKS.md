@@ -40,6 +40,7 @@
    1. https://github.com/dimitri/regresql - RegreSQL, Regression Testing your SQL queries
    1. https://github.com/cybertec-postgresql/pgfaceting - PostgreSQL extension to quickly calculate facet counts using inverted index built with roaring bitmaps
    1. https://github.com/PostgREST/postgrest - PostgREST is a standalone web server that turns your PostgreSQL database directly into a RESTful API.
+   1. https://github.com/supabase/pg_jsonschema - PostgreSQL extension providing JSON Schema validation
 
 # StackOverflow
    1. https://stackoverflow.com/questions/7923237/return-pre-update-column-values-using-sql-only
