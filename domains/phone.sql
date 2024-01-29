@@ -5,4 +5,4 @@ CREATE DOMAIN public.phone AS text CHECK(
                        + 3  --reserved for depersonalization
     AND VALUE ~ '^\+\d+$' --international E.164 format
 );
-COMMENT ON DOMAIN public.phone IS 'Номер телефона в международном формате E.164';
+COMMENT ON DOMAIN public.phone IS 'Phone number in the international format E.164';
