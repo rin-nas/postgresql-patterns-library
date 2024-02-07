@@ -1,8 +1,8 @@
 
 # Btree, GIN, GIST indexes bloat
 
-source: https://stackoverflow.com/questions/56704625/index-bloat-on-gin-index-for-insert-only-table
-
+* source: https://stackoverflow.com/questions/56704625/index-bloat-on-gin-index-for-insert-only-table
+* see also: https://wiki.postgresql.org/wiki/Show_database_bloat
 
 ```sql
 WITH constants AS (
