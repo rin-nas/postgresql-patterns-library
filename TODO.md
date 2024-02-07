@@ -901,3 +901,4 @@ WHERE c.relkind IN ('r','s')
 AND (n.nspname !~ '^pg_toast' and nspname like 'pg_temp%')
 ORDER BY pg_relation_size(n.nspname ||'.'|| c.relname) DESC;
 ```
+Быстро проверить содержимое папки `pgsql_tmp`: `[PostgreSQL datadir]/base/pgsql_tmp/`
