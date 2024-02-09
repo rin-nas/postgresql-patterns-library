@@ -1116,6 +1116,8 @@ SELECT
       NOT (1, NULL) IS NULL as "NOT (1, NULL) IS NULL" --true --!!!
 ```
 
+См. так же [NULL-значения в PostgreSQL: правила и исключения](https://habr.com/ru/companies/postgrespro/articles/697300/)
+
 ### Как очень быстро получить количество записей в большой таблице?
 
 Применение: отображение общего кол-ва записей в админках.
