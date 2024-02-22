@@ -2106,6 +2106,7 @@ LIMIT 100;
 SELECT pg_stat_statements_reset(); -- для представления pg_stat_statements
 SELECT pg_stat_reset(); -- все представления по этому расширению
 ```
+См. так же https://youtu.be/uaQoa61LH1g?t=1489
 
 ### Как получить список SQL запросов, создающих временные файлы?
 
