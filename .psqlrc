@@ -1,26 +1,36 @@
-# Colors: https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit
+-- Colors: https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit
 
 -- If we're connecting through pgbouncer, then prompt's %p is not real, so get real PID
 select pg_backend_pid() \gset
 
+-- primary or standby
 select pg_is_in_recovery() \gset
 
 \if :pg_is_in_recovery
-    \set PROMPT1 '\n%[%033[36m%][%`date --rfc-3339=seconds`] %[%033[37m%]standby %[%033[33m%]psql://%[%033[32m%]%n%[%033[36m%]@%[%033[32m%]%`hostname`:%>%[%033[33m%]/%/ %[%033[K%]%[%033[0m%](pid=%:pg_backend_pid:) \n%x%[%033[1;31m%]%#%[%033[0m%] '
+    \set PROMPT1 '\n%[%033[36m%][%`date --rfc-3339=seconds`] %[%033[37m%]standby %[%033[33m%]psql://%[%033[32m%]%n%[%033[36m%]@%[%033[32m%]%`hostname`%[%033[36m%]:%[%033[32m%]%>%[%033[33m%]/%/ %[%033[K%]%[%033[0m%](pid=%:pg_backend_pid:) \n%x%[%033[1;31m%]%#%[%033[0m%] '
 \else
-    \set PROMPT1 '\n%[%033[36m%][%`date --rfc-3339=seconds`] %[%033[35m%]primary %[%033[33m%]psql://%[%033[32m%]%n%[%033[36m%]@%[%033[32m%]%`hostname`:%>%[%033[33m%]/%/ %[%033[K%]%[%033[0m%](pid=%:pg_backend_pid:) \n%x%[%033[1;31m%]%#%[%033[0m%] '
+    \set PROMPT1 '\n%[%033[36m%][%`date --rfc-3339=seconds`] %[%033[35m%]primary %[%033[33m%]psql://%[%033[32m%]%n%[%033[36m%]@%[%033[32m%]%`hostname`%[%033[36m%]:%[%033[32m%]%>%[%033[33m%]/%/ %[%033[K%]%[%033[0m%](pid=%:pg_backend_pid:) \n%x%[%033[1;31m%]%#%[%033[0m%] '
 \endif
 
 \set PROMPT2 ''
+
 \set ON_ERROR_ROLLBACK interactive
+
 \set HISTSIZE 2000
+
+-- If a command is run more than once in a row, only store it once in the history.
+\set HISTCONTROL ignoredups
 
 -- It's 21st century, let's use unicode for borders
 \pset linestyle unicode
+
 \pset pager always
+
 \pset null '¤'
 
 \timing
+
+-- Use table format (with headers across the top) by default, but switch to expanded table format when there's a lot of data, which makes it much easier to read
 \x auto
 
 \setenv PAGER 'less -iMFXSx4R'
