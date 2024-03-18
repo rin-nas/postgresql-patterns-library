@@ -6,9 +6,9 @@ select pg_backend_pid() \gset
 select pg_is_in_recovery() \gset
 
 \if :pg_is_in_recovery
-    \set PROMPT1 '\n%[%033[36m%][%`date --rfc-3339=seconds`] %[%033[37m%]standby %[%033[33m%]psql://%[%033[32m%]%n%[%033[36m%]@%[%033[32m%]%`hostname`:%>%[%033[33m%]/%/ %[%033[K%]%[%033[0m%](pid=%:pg_backend_pid:) \n%x%[%033[1;31m%]%#%[%033[0m%]'
+    \set PROMPT1 '\n%[%033[36m%][%`date --rfc-3339=seconds`] %[%033[37m%]standby %[%033[33m%]psql://%[%033[32m%]%n%[%033[36m%]@%[%033[32m%]%`hostname`:%>%[%033[33m%]/%/ %[%033[K%]%[%033[0m%](pid=%:pg_backend_pid:) \n%x%[%033[1;31m%]%#%[%033[0m%] '
 \else
-    \set PROMPT1 '\n%[%033[36m%][%`date --rfc-3339=seconds`] %[%033[35m%]primary %[%033[33m%]psql://%[%033[32m%]%n%[%033[36m%]@%[%033[32m%]%`hostname`:%>%[%033[33m%]/%/ %[%033[K%]%[%033[0m%](pid=%:pg_backend_pid:) \n%x%[%033[1;31m%]%#%[%033[0m%]'
+    \set PROMPT1 '\n%[%033[36m%][%`date --rfc-3339=seconds`] %[%033[35m%]primary %[%033[33m%]psql://%[%033[32m%]%n%[%033[36m%]@%[%033[32m%]%`hostname`:%>%[%033[33m%]/%/ %[%033[K%]%[%033[0m%](pid=%:pg_backend_pid:) \n%x%[%033[1;31m%]%#%[%033[0m%] '
 \endif
 
 \set PROMPT2 ''
