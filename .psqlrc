@@ -12,7 +12,7 @@
 \set HISTSIZE 2000
 
 \pset pager off
-\pset null '<null>'
+\pset null '¤'
 
 \timing
 \x auto
