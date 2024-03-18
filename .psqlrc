@@ -1,9 +1,3 @@
--- If we're connecting through pgbouncer, then prompt's %p is not real, so get real PID
-select pg_backend_pid() \gset
-
--- primary or standby
-select pg_is_in_recovery() \gset
-
 -- Colors: https://misc.flogisoft.com/bash/tip_colors_and_formatting
 -- Colors: https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit
 \set lred    '%[%033[1;31m%]%'
@@ -14,17 +8,37 @@ select pg_is_in_recovery() \gset
 \set magenta '%[%033[35m%]'
 \set reset   '%[%033[0m%]'
 
+-- If we're connecting through pgbouncer, then prompt's %p is not real, so get real PID
+select pg_backend_pid() \gset
+
+-- primary or standby
+select pg_is_in_recovery() \gset
+
 \if :pg_is_in_recovery
-    \set PROMPT1 :cyan'\n[%`date --rfc-3339=seconds`] ':white'standby ':yellow'psql://':green'%n':cyan'@':green'%`hostname`':cyan':':green'%>':yellow'/%/ ':white'(pid=%:pg_backend_pid:) \n%x':lred'#':reset' '
+    \set server_type :white'standby'
 \else
-    \set PROMPT1 :cyan'\n[%`date --rfc-3339=seconds`] ':magenta'primary ':yellow'psql://':green'%n':cyan'@':green'%`hostname`':cyan':':green'%>':yellow'/%/ ':white'(pid=%:pg_backend_pid:) \n%x':lred'#':reset' '
+    \set server_type :magenta'primary'
 \endif
 
+/* psql escape codes:
+%M - full host + domain for db server, or [local] (if over Unix socket), or [local:/dir/name]
+%m - host name of the db server, truncated at the first dot, or [local] (if over Unix socket)
+%> - port where db server is listening
+%n - database session user name (changes based on SET SESSION AUTHORIZATION)
+%/ - current database name
+%~ - like %/ but the output is ~ if the database is the default
+%# - # if user is superuser, else > (changes based on SET SESSION AUTHORIZATION)
+%R - in prompt 1: = (normal), ^ (single-line mode), ! (disconnected)
+%R - in prompt 2: - (more input expected), * (in a comment), ' or " or $ (inside a string)
+%x - Transaction status: an empty string when not in a transaction block, or * when in a transaction block, or ! when in a failed transaction block, or ? when the transaction state is indeterminate (for example, because there is no connection).
+*/
+
+\set PROMPT1 :cyan'\n[%`date --rfc-3339=seconds`] ':server_type' ':yellow'psql://':green'%n':cyan'@':green'%`hostname`':cyan':':green'%>':yellow'/%/ ':white'(pid=':pg_backend_pid') \n%x':lred'#':reset' '
 \set PROMPT2 ''
 
 \set ON_ERROR_ROLLBACK interactive
 
-\set HISTSIZE 2000
+\set HISTSIZE 9000
 
 -- If a command is run more than once in a row, only store it once in the history.
 \set HISTCONTROL ignoredups
