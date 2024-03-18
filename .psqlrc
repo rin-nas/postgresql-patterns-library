@@ -1,19 +1,18 @@
-# Цвета:
-# Зеленый – 32
-# Желтый – 33
-# Синий – 34
-# Пурпурный – 35
-# Голубой – 36
-# Белый – 37
+# Colors:
+# 32 for green
+# 33 for yellow
+# 34 for blue
+# 35 for magenta
+# 36 for cyan
+# 37 for white
 
 \set PROMPT1 '\n%[%033[36m%][%`date --rfc-3339=seconds`]%[%033[33m%] psql://%[%033[32m%]%n%[%033[36m%]@%[%033[32m%]%`hostname`:%>%[%033[33m%]/%/ %[%033[K%]%[%033[0m%] \n%x%[%033[1;31m%]%#%[%033[0m%] '
+\set PROMPT1 ''
+\set ON_ERROR_ROLLBACK interactive
+\set HISTSIZE 2000
 
 \pset pager off
-
-\timing
-
 \pset null '<null>'
 
+\timing
 \x auto
-
-\set ON_ERROR_ROLLBACK interactive
