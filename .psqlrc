@@ -1,15 +1,23 @@
--- Colors: https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit
-
 -- If we're connecting through pgbouncer, then prompt's %p is not real, so get real PID
 select pg_backend_pid() \gset
 
 -- primary or standby
 select pg_is_in_recovery() \gset
 
+-- Colors: https://misc.flogisoft.com/bash/tip_colors_and_formatting
+-- Colors: https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit
+\set lred    '%[%033[1;31m%]%'
+\set green   '%[%033[32m%]'
+\set yellow  '%[%033[33m%]'
+\set cyan    '%[%033[36m%]'
+\set white   '%[%033[37m%]'
+\set magenta '%[%033[35m%]'
+\set reset   '%[%033[0m%]'
+
 \if :pg_is_in_recovery
-    \set PROMPT1 '\n%[%033[36m%][%`date --rfc-3339=seconds`] %[%033[37m%]standby %[%033[33m%]psql://%[%033[32m%]%n%[%033[36m%]@%[%033[32m%]%`hostname`%[%033[36m%]:%[%033[32m%]%>%[%033[33m%]/%/ %[%033[K%]%[%033[0m%](pid=%:pg_backend_pid:) \n%x%[%033[1;31m%]%#%[%033[0m%] '
+    \set PROMPT1 :cyan'\n[%`date --rfc-3339=seconds`] ':white'standby ':yellow'psql://':green'%n':cyan'@':green'%`hostname`':cyan':':green'%>':yellow'/%/ ':white'(pid=%:pg_backend_pid:) \n%x':lred'#':reset' '
 \else
-    \set PROMPT1 '\n%[%033[36m%][%`date --rfc-3339=seconds`] %[%033[35m%]primary %[%033[33m%]psql://%[%033[32m%]%n%[%033[36m%]@%[%033[32m%]%`hostname`%[%033[36m%]:%[%033[32m%]%>%[%033[33m%]/%/ %[%033[K%]%[%033[0m%](pid=%:pg_backend_pid:) \n%x%[%033[1;31m%]%#%[%033[0m%] '
+    \set PROMPT1 :cyan'\n[%`date --rfc-3339=seconds`] ':magenta'primary ':yellow'psql://':green'%n':cyan'@':green'%`hostname`':cyan':':green'%>':yellow'/%/ ':white'(pid=%:pg_backend_pid:) \n%x':lred'#':reset' '
 \endif
 
 \set PROMPT2 ''
