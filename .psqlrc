@@ -1,0 +1,4 @@
+# https://github.com/lesovsky/uber-scripts/blob/master/postgresql/psqlrc
+\set PROMPT1 '\n%[%033[34m%][%`date "+%a %b %d %T %Y"`]%[%033[33m%] psql://%[%033[32m%]%n%[%033[34m%]@%[%033[32m%]%`hostname`:%>%[%033[33m%]/%/ %[%033[K%]%[%033[0m%]\n%[%033[1;31m%]%#%[%033[0m%] '
+\pset pager off
+\timing
