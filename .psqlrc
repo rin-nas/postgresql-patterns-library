@@ -1,18 +1,26 @@
-# Colors:
-# 32 for green
-# 33 for yellow
-# 34 for blue
-# 35 for magenta
-# 36 for cyan
-# 37 for white
+# Colors: https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit
 
-\set PROMPT1 '\n%[%033[36m%][%`date --rfc-3339=seconds`]%[%033[33m%] psql://%[%033[32m%]%n%[%033[36m%]@%[%033[32m%]%`hostname`:%>%[%033[33m%]/%/ %[%033[K%]%[%033[0m%] \n%x%[%033[1;31m%]%#%[%033[0m%] '
-\set PROMPT1 ''
+-- If we're connecting through pgbouncer, then prompt's %p is not real, so get real PID
+select pg_backend_pid() \gset
+
+select pg_is_in_recovery() \gset
+
+\if :pg_is_in_recovery
+    \set PROMPT1 '\n%[%033[36m%][%`date --rfc-3339=seconds`] %[%033[37m%]standby %[%033[33m%]psql://%[%033[32m%]%n%[%033[36m%]@%[%033[32m%]%`hostname`:%>%[%033[33m%]/%/ %[%033[K%]%[%033[0m%](pid=%:pg_backend_pid:) \n%x%[%033[1;31m%]%#%[%033[0m%]'
+\else
+    \set PROMPT1 '\n%[%033[36m%][%`date --rfc-3339=seconds`] %[%033[35m%]primary %[%033[33m%]psql://%[%033[32m%]%n%[%033[36m%]@%[%033[32m%]%`hostname`:%>%[%033[33m%]/%/ %[%033[K%]%[%033[0m%](pid=%:pg_backend_pid:) \n%x%[%033[1;31m%]%#%[%033[0m%]'
+\endif
+
+\set PROMPT2 ''
 \set ON_ERROR_ROLLBACK interactive
 \set HISTSIZE 2000
 
-\pset pager off
+-- It's 21st century, let's use unicode for borders
+\pset linestyle unicode
+\pset pager always
 \pset null '¤'
 
 \timing
 \x auto
+
+\setenv PAGER 'less -iMFXSx4R'
