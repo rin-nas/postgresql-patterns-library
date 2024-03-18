@@ -1,3 +1,5 @@
+-- Documentation: https://postgrespro.com/docs/postgresql/16/app-psql?lang=en#APP-PSQL-FILES-PSQLRC
+
 -- Colors: https://misc.flogisoft.com/bash/tip_colors_and_formatting
 -- Colors: https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit
 \set lred    '%[%033[1;31m%]%'
