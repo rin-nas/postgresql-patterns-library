@@ -1,9 +1,19 @@
-# based on https://github.com/lesovsky/uber-scripts/blob/master/postgresql/psqlrc
+# Цвета:
+# Зеленый – 32
+# Желтый – 33
+# Синий – 34
+# Пурпурный – 35
+# Голубой – 36
+# Белый – 37
 
-\set PROMPT1 '\n%[%033[34m%][%`date "+%a %b %d %T %Y"`]%[%033[33m%] psql://%[%033[32m%]%n%[%033[34m%]@%[%033[32m%]%`hostname`:%>%[%033[33m%]/%/ %[%033[K%]%[%033[0m%]\n%[%033[1;31m%]%#%[%033[0m%] '
+\set PROMPT1 '\n%[%033[36m%][%`date --rfc-3339=seconds`]%[%033[33m%] psql://%[%033[32m%]%n%[%033[36m%]@%[%033[32m%]%`hostname`:%>%[%033[33m%]/%/ %[%033[K%]%[%033[0m%] \n%x%[%033[1;31m%]%#%[%033[0m%] '
 
 \pset pager off
 
 \timing
 
-\pset null '<NULL>'
+\pset null '<null>'
+
+\x auto
+
+\set ON_ERROR_ROLLBACK interactive
