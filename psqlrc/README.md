@@ -12,3 +12,7 @@
 1. порт
 1. название базы данных
 1. pid процесса в СУБД
+
+Как установить: https://postgrespro.ru/docs/postgresql/16/app-psql#APP-PSQL-FILES-PSQLRC
+
+Файл с конфигурацией: [psqlrc](psqlrc)
