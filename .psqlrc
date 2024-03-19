@@ -10,11 +10,9 @@
 \set magenta '%[%033[35m%]'
 \set reset   '%[%033[0m%]'
 
--- If we're connecting through pgbouncer, then prompt's %p is not real, so get real PID
-select pg_backend_pid() \gset
-
--- primary or standby
-select pg_is_in_recovery() \gset
+select pg_backend_pid(),    -- If we're connecting through pgbouncer, then prompt's %p is not real, so get real PID
+       pg_is_in_recovery(), -- primary or standby
+       current_setting('server_version') as server_version \gset
 
 \if :pg_is_in_recovery
     \set server_type :white'standby'
@@ -35,7 +33,7 @@ select pg_is_in_recovery() \gset
 %x - Transaction status: an empty string when not in a transaction block, or * when in a transaction block, or ! when in a failed transaction block, or ? when the transaction state is indeterminate (for example, because there is no connection).
 */
 
-\set PROMPT1 :cyan'\n[%`date --rfc-3339=seconds`] ':server_type' ':yellow'psql://':green'%n':cyan'@':green'%`hostname`':cyan':':green'%>':yellow'/%/ ':white'(pid=':pg_backend_pid') \n%x':lred'#':reset' '
+\set PROMPT1 :cyan'\n[%`date --rfc-3339=seconds`] ':server_type' ':white'':server_version' ':yellow'psql://':green'%n':cyan'@':green'%`hostname`':cyan':':green'%>':yellow'/%/ ':white'(pid=':pg_backend_pid') \n%x':lred'#':reset' '
 \set PROMPT2 ''
 
 \set ON_ERROR_ROLLBACK interactive
