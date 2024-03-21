@@ -18,8 +18,12 @@
 select pg_backend_pid(),    -- If we're connecting through pgbouncer, then prompt's %p is not real, so get real PID
        pg_is_in_recovery(), -- primary or standby
        current_setting('server_version') as server_version,
-       (select count(*) from pg_stat_replication) as standby_count,
-       (select case when sender_host ~ '^\d+\.\d+\.\d+\.\d+$' then sender_host else split_part(sender_host, '.', 1) end from pg_stat_wal_receiver limit 1) as primary_dsn
+       (select count(*) from pg_stat_replication where state = 'streaming') as streaming_count,
+       coalesce((select case when sender_host ~ '^\d+\.\d+\.\d+\.\d+$' then sender_host
+                             else split_part(sender_host, '.', 1)
+                        end
+                 from pg_stat_wal_receiver 
+                 limit 1), '***LOST***') as primary_dsn
        \gset
 
 /* psql escape codes:
@@ -41,7 +45,7 @@ select pg_backend_pid(),    -- If we're connecting through pgbouncer, then promp
 \if :pg_is_in_recovery
     \set PROMPT1 :PROMPT1' ':magenta'standby':reset' (from ':primary_dsn')'
 \else
-    \set PROMPT1 :PROMPT1' ':red'primary':reset' (':standby_count' standby)'
+    \set PROMPT1 :PROMPT1' ':red'primary':reset' (':streaming_count' standby streaming)'
 \endif
 
 \set PROMPT1 :PROMPT1' ':yellow'%n':cyan'@':orange'%`hostname`':cyan':':green'%>':blue'/%/'
