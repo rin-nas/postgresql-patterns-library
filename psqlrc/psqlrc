@@ -39,9 +39,9 @@ select pg_backend_pid(),    -- If we're connecting through pgbouncer, then promp
 \set PROMPT1 :PROMPT1' ':reset'PostgreSQL ':server_version
 
 \if :pg_is_in_recovery
-    \set PROMPT1 :PROMPT1' ':reset'(':magenta'standby':reset' <- ':primary_dsn')'
+    \set PROMPT1 :PROMPT1' ':magenta'standby':reset' (from ':primary_dsn')'
 \else
-    \set PROMPT1 :PROMPT1' ':reset'(':red'primary':reset' -> ':standby_count' standby)'
+    \set PROMPT1 :PROMPT1' ':red'primary':reset' (':standby_count' standby)'
 \endif
 
 \set PROMPT1 :PROMPT1' ':yellow'%n':cyan'@':orange'%`hostname`':cyan':':green'%>':blue'/%/'
