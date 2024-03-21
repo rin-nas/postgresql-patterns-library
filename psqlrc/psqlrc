@@ -19,7 +19,7 @@ select pg_backend_pid(),    -- If we're connecting through pgbouncer, then promp
        pg_is_in_recovery(), -- primary or standby
        current_setting('server_version') as server_version,
        (select count(*) from pg_stat_replication) as standby_count,
-       (select split_part(sender_host, '.', 1) /*|| ':' || sender_port*/ from pg_stat_wal_receiver limit 1) as primary_dsn
+       (select case when sender_host ~ '^\d+\.\d+\.\d+\.\d+$' then sender_host else split_part(sender_host, '.', 1) end from pg_stat_wal_receiver limit 1) as primary_dsn
        \gset
 
 /* psql escape codes:
