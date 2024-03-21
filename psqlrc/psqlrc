@@ -1,24 +1,29 @@
 -- Documentation: https://postgrespro.com/docs/postgresql/16/app-psql?lang=en#APP-PSQL-FILES-PSQLRC
 
+-- Hide confirmation messages
+-- \set QUIET on
+
 -- Colors: https://misc.flogisoft.com/bash/tip_colors_and_formatting
 -- Colors: https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit
-\set lred    '%[%033[1;31m%]%'
-\set green   '%[%033[32m%]'
-\set yellow  '%[%033[33m%]'
-\set cyan    '%[%033[36m%]'
-\set white   '%[%033[37m%]'
-\set magenta '%[%033[35m%]'
+\set red     '%[%033[1;31m%]'
+\set green   '%[%033[0;32m%]'
+\set yellow  '%[%033[0;33m%]'
+\set blue    '%[%033[38;5;39m%]'
+\set orange  '%[%033[38;5;214m%]'
+\set magenta '%[%033[0;35m%]'
+\set cyan    '%[%033[0;36m%]'
+\set white   '%[%033[0;37m%]'
 \set reset   '%[%033[0m%]'
 
 select pg_backend_pid(),    -- If we're connecting through pgbouncer, then prompt's %p is not real, so get real PID
        pg_is_in_recovery(), -- primary or standby
-       current_setting('server_version') as server_version \gset
+       current_setting('server_version') as server_version,
+       (select count(*) from pg_stat_replication) as standby_count,
+       (select sender_host || ':' || sender_port from pg_stat_wal_receiver limit 1) as primary_dsn
+       \gset
 
-\if :pg_is_in_recovery
-    \set server_type :white'standby'
-\else
-    \set server_type :magenta'primary'
-\endif
+-- Show confirmation messages
+\set QUIET off
 
 /* psql escape codes:
 %M - full host + domain for db server, or [local] (if over Unix socket), or [local:/dir/name]
@@ -33,7 +38,19 @@ select pg_backend_pid(),    -- If we're connecting through pgbouncer, then promp
 %x - Transaction status: an empty string when not in a transaction block, or * when in a transaction block, or ! when in a failed transaction block, or ? when the transaction state is indeterminate (for example, because there is no connection).
 */
 
-\set PROMPT1 :cyan'\n[%`date --rfc-3339=seconds`] ':server_type' ':white'':server_version' ':yellow'psql://':green'%n':cyan'@':green'%`hostname`':cyan':':green'%>':yellow'/%/ ':white'(pid=':pg_backend_pid') \n%x':lred'#':reset' '
+\set PROMPT1 '\n':cyan'[%`date --rfc-3339=seconds`]'
+\set PROMPT1 :PROMPT1' ':white'PostgreSQL ':server_version
+
+\if :pg_is_in_recovery
+    \set PROMPT1 :PROMPT1' ':white'(':orange'standby':white' <- ':primary_dsn')'
+\else
+    \set PROMPT1 :PROMPT1' ':white'(':red'primary':white' -> ':standby_count' standby)'
+\endif
+
+\set PROMPT1 :PROMPT1' ':blue'%n':cyan'@':green'%`hostname`':cyan':':green'%>':yellow'/%/'
+\set PROMPT1 :PROMPT1' ':white'(pid=':pg_backend_pid')'
+\set PROMPT1 :PROMPT1'\n':white'%x%#':reset' '
+
 \set PROMPT2 ''
 
 \set ON_ERROR_ROLLBACK interactive
@@ -50,9 +67,12 @@ select pg_backend_pid(),    -- If we're connecting through pgbouncer, then promp
 
 \pset null '¤'
 
-\timing
+\timing on
 
 -- Use table format (with headers across the top) by default, but switch to expanded table format when there's a lot of data, which makes it much easier to read
 \x auto
 
 \setenv PAGER 'less -iMFXSx4R'
+
+-- Stop hiding confirmation messages
+-- \set QUIET off
