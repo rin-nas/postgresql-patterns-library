@@ -7,7 +7,7 @@
 -- Colors: https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit
 \set red     '%[%033[1;31m%]'
 \set green   '%[%033[0;32m%]'
-\set yellow  '%[%033[0;33m%]'
+\set yellow  '%[%033[38;5;220m%]'
 \set blue    '%[%033[38;5;39m%]'
 \set orange  '%[%033[38;5;214m%]'
 \set magenta '%[%033[0;35m%]'
@@ -19,7 +19,7 @@ select pg_backend_pid(),    -- If we're connecting through pgbouncer, then promp
        pg_is_in_recovery(), -- primary or standby
        current_setting('server_version') as server_version,
        (select count(*) from pg_stat_replication) as standby_count,
-       (select sender_host || ':' || sender_port from pg_stat_wal_receiver limit 1) as primary_dsn
+       (select split_part(sender_host, '.', 1) /*|| ':' || sender_port*/ from pg_stat_wal_receiver limit 1) as primary_dsn
        \gset
 
 /* psql escape codes:
@@ -36,17 +36,17 @@ select pg_backend_pid(),    -- If we're connecting through pgbouncer, then promp
 */
 
 \set PROMPT1 '\n':cyan'[%`date --rfc-3339=seconds`]'
-\set PROMPT1 :PROMPT1' ':white'PostgreSQL ':server_version
+\set PROMPT1 :PROMPT1' ':reset'PostgreSQL ':server_version
 
 \if :pg_is_in_recovery
-    \set PROMPT1 :PROMPT1' ':white'(':orange'standby':white' <- ':primary_dsn')'
+    \set PROMPT1 :PROMPT1' ':reset'(':magenta'standby':reset' <- ':primary_dsn')'
 \else
-    \set PROMPT1 :PROMPT1' ':white'(':red'primary':white' -> ':standby_count' standby)'
+    \set PROMPT1 :PROMPT1' ':reset'(':red'primary':reset' -> ':standby_count' standby)'
 \endif
 
-\set PROMPT1 :PROMPT1' ':blue'%n':cyan'@':green'%`hostname`':cyan':':green'%>':yellow'/%/'
-\set PROMPT1 :PROMPT1' ':white'(pid=':pg_backend_pid')'
-\set PROMPT1 :PROMPT1'\n':white'%x%#':reset' '
+\set PROMPT1 :PROMPT1' ':yellow'%n':cyan'@':orange'%`hostname`':cyan':':green'%>':blue'/%/'
+--\set PROMPT1 :PROMPT1' ':reset'(pid=':pg_backend_pid')'
+\set PROMPT1 :PROMPT1'\n':reset'%x%# '
 
 \set PROMPT2 ''
 
