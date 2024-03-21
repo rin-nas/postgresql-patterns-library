@@ -22,9 +22,6 @@ select pg_backend_pid(),    -- If we're connecting through pgbouncer, then promp
        (select sender_host || ':' || sender_port from pg_stat_wal_receiver limit 1) as primary_dsn
        \gset
 
--- Show confirmation messages
-\set QUIET off
-
 /* psql escape codes:
 %M - full host + domain for db server, or [local] (if over Unix socket), or [local:/dir/name]
 %m - host name of the db server, truncated at the first dot, or [local] (if over Unix socket)
