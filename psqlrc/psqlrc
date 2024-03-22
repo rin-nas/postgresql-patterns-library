@@ -39,7 +39,7 @@ select pg_backend_pid(),    -- If we're connecting through pgbouncer, then promp
 %x - Transaction status: an empty string when not in a transaction block, or * when in a transaction block, or ! when in a failed transaction block, or ? when the transaction state is indeterminate (for example, because there is no connection).
 */
 
-\set PROMPT1 '\n':cyan'[%`date --rfc-3339=seconds`]'
+\set PROMPT1 '\n':cyan'%`date --rfc-3339=seconds`'
 \set PROMPT1 :PROMPT1' ':reset'PostgreSQL ':server_version
 
 \if :pg_is_in_recovery
