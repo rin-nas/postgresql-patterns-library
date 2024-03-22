@@ -2379,6 +2379,13 @@ cat select.sql | psql -U postgres --dbname=my_database | zstd -19 -T8 -o select.
 cat select.sql | psql -U postgres --dbname=my_database | xz -zc9 --threads=8 > select.csv.xz
 ```
 
+Ещё один способ:
+```bash
+sudo su postgres -c "cd ~ && psql -qX --csv -c 'select * from pg_stat_activity'" > select.csv
+# или
+sudo su postgres -c "cd ~ && psql -qX --csv --file=select.sql" > select.csv
+```
+
 ### Как проверить синтаксис SQL кода без его выполнения?
 
 Готовая функция: [`is_sql.sql`](functions/is/is_sql.sql)
