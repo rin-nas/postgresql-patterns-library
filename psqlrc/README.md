@@ -1,4 +1,4 @@
-# Удобное цветное приглашение командной строки в psql
+# Удобное цветное приглашение командной строки в `psql`
 
 ![psqlrc primary](psqlrc.primary.png)
 ![psqlrc standby](psqlrc.standby.png)
