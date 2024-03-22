@@ -1,6 +1,8 @@
 # Удобное цветное приглашение командной строки в `bash`
 
-Добавьте этот код в конец файла `~/.bashrc` и перезапустите терминал.
+![bashrc](bashrc.png)
+
+Добавьте код ниже в конец файла `~/.bashrc` и перезапустите терминал.
 
 ```bash
 PROMPT_COMMAND=__prompt_command  # Function to generate PS1 after CMDs
