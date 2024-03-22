@@ -2376,7 +2376,7 @@ cat select.sql | psql -U postgres --dbname=my_database | zstd -19 -T8 -o select.
 
 или (лучше сжимает, но значительно медленнее работает)
 ```bash
-cat select.sql | psql -U postgres --dbname=my_database | xz -zc9 --threads=8 select.csv > select.csv.xz
+cat select.sql | psql -U postgres --dbname=my_database | xz -zc9 --threads=8 > select.csv.xz
 ```
 
 ### Как проверить синтаксис SQL кода без его выполнения?
