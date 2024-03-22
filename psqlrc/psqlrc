@@ -66,9 +66,9 @@ select pg_backend_pid(),    -- If we're connecting through pgbouncer, then promp
 
 -- It's 21st century, let's use unicode for borders
 \pset linestyle unicode
-\pset unicode_border_linestyle single
-\pset unicode_column_linestyle single
-\pset unicode_header_linestyle double
+--\pset unicode_border_linestyle single
+--\pset unicode_column_linestyle single
+--\pset unicode_header_linestyle double
 
 \pset pager always
 
