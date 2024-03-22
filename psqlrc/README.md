@@ -1,12 +1,18 @@
 # Удобное цветное приглашение командной строки в `psql`
 
-![psqlrc primary](psqlrc.primary.png)
-<!-- ![psqlrc standby](psqlrc.standby.png) -->
+## Пример снимка экрана основного PostgreSQL
 
-Отображается:
+![psqlrc primary](psqlrc.primary.png)
+
+## Пример снимка экрана резервного PostgreSQL
+
+![psqlrc standby](psqlrc.standby.png)
+
+## Что отображается
+
 1. дата-время с часовой зоной
 1. версия мажорная и минорная
-1. роль сервера: основной мастер (`primary`) или реплика (`standby`)
+1. роль сервера: основной мастер `primary` или резервный реплика `standby`
    1. для `primary` внутри круглых скобок количество реплик в статусе `streaming`
    1. для `standby` внутри круглых скобок название или IP primary сервера
 1. имя пользователя, под которым подключились
@@ -14,6 +20,7 @@
 1. порт
 1. название базы данных
 
-Как установить: https://postgrespro.ru/docs/postgresql/16/app-psql#APP-PSQL-FILES-PSQLRC
+## Как установить
 
-Файл с конфигурацией: [psqlrc](psqlrc)
+* https://postgrespro.ru/docs/postgresql/16/app-psql#APP-PSQL-FILES-PSQLRC
+* Файл с конфигурацией: [psqlrc](psqlrc)
