@@ -14,18 +14,18 @@ cross join lateral (
            statement_timestamp() - state_change as state_change_elapsed --длительность после изменения состояния (поля state)
 ) as e
 where true
-  and state_change is not null --исключаем запросы для которых нехватило прав доступа
-  --and query ~ 'WITH  base_fcu_table'
-  --and application_name ilike '%RINAT_TEST%'
-  and state not in ('idle', 'idle in transaction', 'idle in transaction (aborted)')
-  --and wait_event = 'ClientRead' --https://postgrespro.ru/docs/postgresql/12/monitoring-stats#WAIT-EVENT-TABLE
+  --and state_change is not null
+  --and query ~ ''
+  --and application_name ~ ''
+  --and state !~ '^idle'
+  --and wait_event = 'ClientRead' --https://postgrespro.ru/docs/postgresql/16/monitoring-stats#WAIT-EVENT-TABLE
   --and (state_change_elapsed > interval '1 minutes' or xact_elapsed > interval '1 minutes')
 order by greatest(state_change_elapsed, query_elapsed, xact_elapsed) desc;
 
 \gdesc
 EOF
 )
-FILE="pg_stat_activity_dump_$(date +%Y%m%d_%H%M%S).txt"
+FILE="pg_stat_activity_dump.$(date +%Y-%m-%d_%H%M%S).txt"
 
 echo "$SQL" \
   | (sudo su postgres --command="psql --quiet --no-psqlrc --pset=linestyle=unicode --pset=null=¤") > $FILE \
