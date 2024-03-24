@@ -14,6 +14,7 @@ cross join lateral (
            statement_timestamp() - state_change as state_change_elapsed --длительность после изменения состояния (поля state)
 ) as e
 where true
+  --and pid != pg_backend_pid()
   --and state_change is not null
   --and query ~ ''
   --and application_name ~ ''
