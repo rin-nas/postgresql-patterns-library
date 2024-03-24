@@ -12,10 +12,11 @@
 \set orange  '%[%033[38;5;214m%]'
 \set magenta '%[%033[0;35m%]'
 \set cyan    '%[%033[0;36m%]'
-\set white   '%[%033[0;37m%]'
+\set gray    '%[%033[0;37m%]'
+\set white   '%[%033[1;37m%]'
 \set reset   '%[%033[0m%]'
 
-select pg_backend_pid(),    -- If we're connecting through pgbouncer, then prompt's %p is not real, so get real PID
+select -- pg_backend_pid(),    -- If we're connecting through pgbouncer, then prompt's %p is not real, so get real PID
        pg_is_in_recovery(), -- primary or standby
        current_setting('server_version') as server_version,
        (select count(*) from pg_stat_replication where state = 'streaming') as streaming_count,
@@ -49,7 +50,6 @@ select pg_backend_pid(),    -- If we're connecting through pgbouncer, then promp
 \endif
 
 \set PROMPT1 :PROMPT1' ':yellow'%n':cyan'@':orange'%`hostname`':cyan':':green'%>':blue'/%/'
---\set PROMPT1 :PROMPT1' ':reset'(pid=':pg_backend_pid')'
 \set PROMPT1 :PROMPT1'\n':reset'%x%# '
 
 \set PROMPT2 ''
@@ -58,7 +58,6 @@ select pg_backend_pid(),    -- If we're connecting through pgbouncer, then promp
 \set ON_ERROR_ROLLBACK interactive
 
 \set HISTFILE ~/.psql_history-:DBNAME
-
 \set HISTSIZE 9000
 
 -- If a command is run more than once in a row, only store it once in the history.
@@ -70,16 +69,21 @@ select pg_backend_pid(),    -- If we're connecting through pgbouncer, then promp
 --\pset unicode_column_linestyle single
 --\pset unicode_header_linestyle double
 
-\pset pager always
-
+-- NULL replacement. See alternatives at https://symbl.cc/en/search/?q=null
 \pset null '¤'
 
+\pset pager always
+
+\if `command -v pspg &> /dev/null && echo 1 || echo 0`
+    \pset expanded off
+    \setenv PAGER 'pspg --reprint-on-exit --blackwhite'
+\else
+    \pset expanded auto
+    \setenv PAGER 'less -iMFXSx4R'
+    \echo '\033[1;37mUsing alternative psql pager called "pspg" is highly recommended (but not required): https://github.com/okbob/pspg \033[0m'
+\endif
+
 \timing on
-
--- Use table format (with headers across the top) by default, but switch to expanded table format when there's a lot of data, which makes it much easier to read
-\x auto
-
-\setenv PAGER 'less -iMFXSx4R'
 
 -- Stop hiding confirmation messages
 -- \set QUIET off
