@@ -30,6 +30,6 @@ EOF
 FILE="pg_stat_activity_dump.$(date +%Y-%m-%d_%H%M%S).txt"
 
 echo "$SQL" \
-  | (sudo su postgres --command="psql --quiet --no-psqlrc --pset=linestyle=unicode --pset=null=¤") > $FILE \
+  | (sudo su - postgres --command="psql --quiet --no-psqlrc --pset=linestyle=unicode --pset=null=¤") > $FILE \
   && echo "Dumped to file $FILE"
   
