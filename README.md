@@ -2381,9 +2381,9 @@ cat select.sql | psql -U postgres --dbname=my_database | xz -zc9 --threads=8 > s
 
 Ещё один способ:
 ```bash
-sudo su postgres -c "cd ~ && psql -qX --csv -c 'select * from pg_stat_activity'" > select.csv
+sudo su - postgres -c "psql -qX --csv -c 'select * from pg_stat_activity'" > select.csv
 # или
-sudo su postgres -c "cd ~ && psql -qX --csv --file=select.sql" > select.csv
+sudo su - postgres -c "psql -qX --csv --file=select.sql" > select.csv
 ```
 
 ### Как проверить синтаксис SQL кода без его выполнения?
