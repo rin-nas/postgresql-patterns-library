@@ -95,6 +95,7 @@
    1. YouTube: [Advanced SQL](https://www.youtube.com/playlist?list=PL1XF9qjV8kH12PTd1WfsKeUQU6e83ldfc) — Chapter #07 — [Video #57 — PL/SQL use case: spreadsheet evaluation](https://www.youtube.com/watch?v=s49M6oeqkok&list=PL1XF9qjV8kH12PTd1WfsKeUQU6e83ldfc&index=57&ab_channel=DatabaseSystemsResearchGroupatUT%C3%BCbingen)
    1. https://hakibenita.com/sql-anomaly-detection Simple Anomaly Detection Using Plain SQL (Детектирование аномалий)
    1. https://wiki.postgresql.org/wiki/Inlining_of_SQL_functions
+   1. https://www.crunchydata.com/postgres-tips
 
 # Databases
    1. [IP2Location™ LITE IP-COUNTRY Database](https://lite.ip2location.com/database/db1-ip-country)
