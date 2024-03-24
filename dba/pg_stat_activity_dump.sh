@@ -25,6 +25,7 @@ order by greatest(state_change_elapsed, query_elapsed, xact_elapsed) desc;
 \gdesc
 EOF
 )
+
 FILE="pg_stat_activity_dump.$(date +%Y-%m-%d_%H%M%S).txt"
 
 echo "$SQL" \
