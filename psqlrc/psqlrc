@@ -83,6 +83,7 @@ select -- pg_backend_pid(),    -- If we're connecting through pgbouncer, then pr
     \echo '\033[1;37mUsing alternative psql pager called "pspg" is highly recommended (but not required): https://github.com/okbob/pspg \033[0m'
 \endif
 
+-- Show query execution time
 \timing on
 
 -- Stop hiding confirmation messages
