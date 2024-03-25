@@ -20,7 +20,11 @@
 1. порт
 1. название базы данных
 
+## Поддержка внешнего ПО
+
+Используется пейджер [`pspg`](https://github.com/okbob/pspg), если он установлен. Иначе используется [`less`](https://en.wikipedia.org/wiki/Less_(Unix)).
+
 ## Как установить
 
-* https://postgrespro.ru/docs/postgresql/16/app-psql#APP-PSQL-FILES-PSQLRC
+* Документация: https://postgrespro.ru/docs/postgresql/16/app-psql#APP-PSQL-FILES-PSQLRC
 * Файл с конфигурацией: [psqlrc](psqlrc)
