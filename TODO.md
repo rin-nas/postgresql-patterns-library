@@ -737,7 +737,8 @@ https://habr.com/ru/companies/tensor/articles/567514/
 
 # Finding skewed data in Postgres
 
-https://www.crunchydata.com/blog/data-skews-in-postgres
+* https://www.crunchydata.com/blog/data-skews-in-postgres
+* https://www.crunchydata.com/postgres-tips#look-for-skewed-data
 
 If you’ve got a growing data set and are periodically looking at query performance, checking for skewed data is a good idea.
 
