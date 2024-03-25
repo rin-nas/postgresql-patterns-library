@@ -27,4 +27,4 @@
 ## Как установить
 
 * Документация: https://postgrespro.ru/docs/postgresql/16/app-psql#APP-PSQL-FILES-PSQLRC
-* Файл с конфигурацией: [psqlrc](psqlrc)
+* Файл с конфигурацией: [`psqlrc`](psqlrc)
