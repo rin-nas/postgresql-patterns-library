@@ -28,3 +28,7 @@
 
 * Документация: https://postgrespro.ru/docs/postgresql/16/app-psql#APP-PSQL-FILES-PSQLRC
 * Файл с конфигурацией: [`psqlrc`](psqlrc)
+
+## Ссылки по теме
+
+* [Удобное цветное приглашение командной строки в `bash`](../bashrc)
