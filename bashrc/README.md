@@ -22,7 +22,8 @@ __prompt_command() {
     local Orange='\[\e[38;5;214m\]'
     local Magenta='\[\e[0;35m\]'
     local Cyan='\[\e[0;36m\]'
-    local White='\[\e[0;37m\]'
+    local Gray='\[\e[0;37m\]'
+    local White='\[\e[1;37m\]'
     local Reset='\[\e[0m\]'
 
     PS1="\n"           #newline
