@@ -39,15 +39,22 @@ __prompt_command() {
 
     PS1="\n"           #newline
     PS1+="${Cyan}$(date --rfc-3339=seconds) " #datetime
-    PS1+="${Yellow}\u" #user
+
+    # https://stackoverflow.com/questions/18215973/how-to-check-if-running-as-root-in-a-bash-script
+    if [ "${EUID:-$(id -u)}" -eq 0 ]; then
+        PS1+="${Red}\u" #user
+    else
+        PS1+="${Yellow}\u" #user
+    fi
+
     PS1+="${Cyan}@"    #@
     PS1+="${Orange}\h" #host
     PS1+="${Cyan} "    #
     PS1+="${Blue}\w"   #directory
     PS1+="\n"
-    
+
     if [ $EXIT != 0 ]; then
-        PS1+="${Red}${EXIT} \$ ${Reset}"
+        PS1+="${Red}${EXIT}\a \\$ ${Reset}"
     else
         PS1+="${Green}\$ ${Reset}"
     fi
