@@ -56,7 +56,7 @@ __prompt_command() {
     if [ $EXIT != 0 ]; then
         PS1+="${Red}${EXIT}\a \\$ ${Reset}"
     else
-        PS1+="${Green}\$ ${Reset}"
+        PS1+="${Green}\\$ ${Reset}"
     fi
 }
 ```
