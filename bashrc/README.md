@@ -37,7 +37,7 @@ __prompt_command() {
     local White='\[\e[1;37m\]'
     local Reset='\[\e[0m\]'
 
-    PS1="\n"           #newline
+    PS1="\n" #newline
     PS1+="${Cyan}$(date --rfc-3339=seconds) " #datetime
 
     # https://stackoverflow.com/questions/18215973/how-to-check-if-running-as-root-in-a-bash-script
@@ -47,10 +47,10 @@ __prompt_command() {
         PS1+="${Yellow}\u" #user
     fi
 
-    PS1+="${Cyan}@"    #@
+    PS1+="${Cyan}@"
     PS1+="${Orange}\h" #host
-    PS1+="${Cyan} "    #
-    PS1+="${Blue}\w"   #directory
+    PS1+="${Cyan} "
+    PS1+="${Blue}\w" #directory
     PS1+="\n"
 
     if [ $EXIT != 0 ]; then
