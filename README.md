@@ -2504,11 +2504,12 @@ $ crontab -l
 ### Как узнать отставание реплики?
 
 Запускать на реплике:
-
 ```sql
-select now() - pg_last_xact_replay_timestamp() as replication_lag_interval,
+select case when not pg_is_in_recovery() or pg_last_wal_receive_lsn() = pg_last_wal_replay_lsn() then '0'::interval
+            else now() - pg_last_xact_replay_timestamp()
+       end as replication_lag_interval,
        current_setting('max_standby_archive_delay') as max_standby_archive_delay,
-       current_setting('max_standby_streaming_delay') as max_standby_streaming_delay
+       current_setting('max_standby_streaming_delay') as max_standby_streaming_delay;
 ```
 
 ### Как узнать процент достижения своего максимального значения для последовательностей?
