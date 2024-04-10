@@ -1,4 +1,4 @@
-# Удобное цветное приглашение командной строки в `psql` (Convenient color command line prompt in `psql`)
+# Удобное цветное приглашение командной строки в `psql` (Convenient colored command line prompt in `psql`)
 
 ## Пример снимка экрана основного PostgreSQL
 
