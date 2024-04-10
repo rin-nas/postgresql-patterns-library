@@ -16,7 +16,7 @@ START TRANSACTION;
     SET LOCAL statement_timeout TO '30s';
 
     -- здесь ваш код миграции, например
-    drop trigger uniq_vacancy_telephone_vacancy ON v3_vacancy_telephone;
+    drop trigger {trigger} ON {table};
  
 --ROLLBACK;
 COMMIT;
@@ -47,13 +47,13 @@ COMMIT;
 Пример 1
 ```sql
 call execute_attempt($$
-    drop trigger uniq_vacancy_telephone_vacancy ON vacancy_telephone;
+    drop trigger {trigger} ON {table};
 $$);
 ```
 
 Пример 2
 ```sql
-call execute_attempt('alter table manager_jail alter column email type varchar(320)');
+call execute_attempt('alter table person_email column email type varchar(320)');
 ```
 
 Пример 3
