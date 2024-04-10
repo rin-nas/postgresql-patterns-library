@@ -2525,7 +2525,9 @@ FROM pg_stat_replication;
 
 На реплике:
 ```sql
-select case when not pg_is_in_recovery() or pg_last_wal_receive_lsn() = pg_last_wal_replay_lsn() then '0'::interval
+select case when not pg_is_in_recovery() then null -- not standby
+            when not exists(select from pg_stat_wal_receiver) then null -- primary lost
+            when pg_last_wal_receive_lsn() = pg_last_wal_replay_lsn() then '0'::interval -- no lag
             else now() - pg_last_xact_replay_timestamp()
        end as replication_lag_interval,
        current_setting('max_standby_archive_delay') as max_standby_archive_delay,
