@@ -1,4 +1,4 @@
--- Documentation: https://postgrespro.com/docs/postgresql/16/app-psql?lang=en#APP-PSQL-FILES-PSQLRC
+-- Last version and documentation: https://github.com/rin-nas/postgresql-patterns-library/tree/master/psqlrc
 
 -- Hide confirmation messages
 -- \set QUIET on
