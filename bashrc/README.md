@@ -1,4 +1,4 @@
-# Удобное цветное приглашение командной строки в `bash`
+# Удобное цветное приглашение командной строки в `bash` (Convenient colored command line prompt in `bash`)
 
 ## Пример снимка экрана
 
@@ -20,6 +20,8 @@
 Добавьте код ниже в конец файла `~/.bashrc` и перезапустите терминал.
 
 ```bash
+# Last version and documentation: https://github.com/rin-nas/postgresql-patterns-library/tree/master/psqlrc
+
 PROMPT_COMMAND=__prompt_command  # Function to generate PS1 after CMDs
 
 __prompt_command() {
