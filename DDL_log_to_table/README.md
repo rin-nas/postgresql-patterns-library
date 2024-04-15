@@ -160,3 +160,4 @@ order by 1, 2;
 # Ссылки по теме
 
 * https://github.com/pgaudit/pgaudit/
+* https://github.com/pgMemento/pgMemento
