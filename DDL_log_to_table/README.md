@@ -1,5 +1,4 @@
-# Как в PostgreSQL журналировать DDL команды в таблицу БД?
-# How log DDL queries to table in PostgreSQL?
+# Как в PostgreSQL журналировать DDL команды в таблицу БД? (How log DDL queries to table in PostgreSQL?)
 
 DDL команды обычно логируются в общем большом файловом журнале. У этого подхода следующие недостатки:
 1. Там полно SELECT и DML команд, отыскать там DDL непросто. DDL запросы ещё могут сохраняться в Graylog, но отыскать там DDL тоже непросто.
