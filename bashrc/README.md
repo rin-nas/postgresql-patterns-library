@@ -19,6 +19,8 @@
 
 Добавьте код ниже в конец файла `~/.bashrc` и перезапустите терминал.
 
+Протестировано в `RHEL 8.9`.
+
 ```bash
 # Last version and documentation: https://github.com/rin-nas/postgresql-patterns-library/tree/master/psqlrc
 
