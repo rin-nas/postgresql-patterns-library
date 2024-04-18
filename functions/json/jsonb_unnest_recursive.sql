@@ -15,7 +15,7 @@ as $func$
     with recursive r (path, value, member_of) as
     (
         select
-            distinct --!!! fix performance problem
+            distinct --!!! fix PostgreSQL 12 performance problem
             array[k.key],
             v.value,
             t.type
