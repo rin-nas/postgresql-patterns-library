@@ -12,10 +12,10 @@ Overall info
 1. Databases total used space in percent (mark red if > 90%).
 1. Activity: currently used, total available, used precent (mark red if > 90%), total by status
 
-Configutarion problems
+Check configutarion problems
 1. Check config file `show config_file;` for errors:
-   * `select count(*) from pg_file_settings where error is not null or not applied;`
+   * `select exists(select from pg_file_settings where error is not null or not applied);`
 1. Check hba file `show hba_file;` for errors:
-   * `select count(*) from pg_hba_file_rules where error is not null;`
+   * `select exists(select from pg_hba_file_rules where error is not null);`
 1. Check need to restart server:
-   * `select count(*) from pg_settings where pending_restart;`
+   * `select exists(select from pg_settings where pending_restart);`
