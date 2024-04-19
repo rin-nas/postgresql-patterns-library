@@ -73,7 +73,7 @@ from coalesce(case when not pg_is_in_recovery() then null -- not standby
 \set ON_ERROR_STOP on
 \set ON_ERROR_ROLLBACK interactive
 
-\set HISTFILE ~/.psql_history-:DBNAME
+\set HISTFILE ~/.psql_history.:DBNAME
 \set HISTSIZE 9000
 
 -- If a command is run more than once in a row, only store it once in the history.
