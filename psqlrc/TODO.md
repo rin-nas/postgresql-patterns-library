@@ -14,7 +14,7 @@ Overall info
 
 Configutarion problems
 1. Check config file `show config_file;` for errors:
-   * `select count(*) from pg_file_setings where error is not null or not applied;`
+   * `select count(*) from pg_file_settings where error is not null or not applied;`
 1. Check hba file `show hba_file;` for errors:
    * `select count(*) from pg_hba_file_rules where error is not null;`
 1. Check need to restart server:
