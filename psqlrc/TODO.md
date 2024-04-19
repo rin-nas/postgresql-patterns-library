@@ -18,4 +18,4 @@ Configutarion problems
 1. Check hba file `show hba_file;` for errors:
    * `select count(*) from pg_hba_file_rules where error is not null;`
 1. Check need to restart server:
-   * `select count(*) from pg_settings where perding_restart;`
+   * `select count(*) from pg_settings where pending_restart;`
