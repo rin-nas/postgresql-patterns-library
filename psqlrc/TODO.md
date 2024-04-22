@@ -4,7 +4,9 @@ Get some ideas from
    * https://github.com/zalando/pg_view
    * https://github.com/lesovsky/pgcenter/tree/master/internal/query ; https://habr.com/ru/articles/494162/
 
-Add overall info
+Show current_user `SELECT SESSION_USER, CURRENT_USER;`
+
+Show overall info on `psql` start
 1. Uptime (mark red if < 1d)
    * `select now() - pg_postmaster_start_time() as uptime;`
 1. Databases total amount, tables size, indexes size, toast size, total size
