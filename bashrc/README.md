@@ -22,12 +22,18 @@
 Протестировано в `RHEL 8.9`.
 
 ```bash
-# Last version and documentation: https://github.com/rin-nas/postgresql-patterns-library/tree/master/psqlrc
+# last version and documentation: https://github.com/rin-nas/postgresql-patterns-library/tree/master/psqlrc
+
+# the history list is appended to the file named by the value of the HISTFILE variable when the shell exits, rather than overwriting the file
+shopt -s histappend
 
 PROMPT_COMMAND=__prompt_command  # Function to generate PS1 after CMDs
 
 __prompt_command() {
     local EXIT="$?" # This needs to be first
+
+    # append the new history lines to the history file
+    history -a
 
     # https://robotmoon.com/bash-prompt-generator/
     local Red='\[\e[1;31m\]'
