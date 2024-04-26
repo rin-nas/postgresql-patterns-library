@@ -24,7 +24,10 @@
 ```bash
 # Last version and documentation: https://github.com/rin-nas/postgresql-patterns-library/tree/master/psqlrc
 
-# The history list is appended to the file named by the value of the HISTFILE variable when the shell exits, rather than overwriting the file
+export HISTFILESIZE=5000
+export HISTCONTROL="ignoredups"
+
+# Protect command history loose on exit within parallel terminals
 shopt -s histappend
 
 PROMPT_COMMAND=__prompt_command  # function to generate PS1 after CMDs
