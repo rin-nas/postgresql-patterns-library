@@ -35,15 +35,8 @@
 \pset null '¤'
 
 \pset pager always
-
-\if `command -v pspg &> /dev/null && echo 1 || echo 0`
-    \pset expanded off
-    \setenv PAGER 'pspg --reprint-on-exit --blackwhite'
-\else
-    \pset expanded auto
-    \setenv PAGER 'less -iMFXSx4R'
-    \echo :white'Using alternative psql pager called "pspg" is highly recommended (but not required): https://github.com/okbob/pspg':reset
-\endif
+\pset expanded auto
+\setenv PAGER 'less -iMFXSx4R'
 
 select -- pg_backend_pid(),    -- If we're connecting through pgbouncer, then prompt's %p is not real, so get real PID
        pg_is_in_recovery(), -- primary or standby
@@ -81,6 +74,29 @@ from coalesce(case when not pg_is_in_recovery() then null -- not standby
      extract(epoch from r.lag) as e(epoch)
 \gset
 
+\if :pg_file_settings_error_count
+    \echo :red'Errors found in config files:':reset
+    with t as (
+        select distinct on (name) *
+        from pg_file_settings
+        order by name, seqno desc
+    )
+    select t.sourcefile,
+           t.sourceline,
+    	   t.name,
+    	   t.setting,
+    	   t.applied,
+    	   t.error,
+    	   s.vartype,
+    	   s.min_val,
+    	   s.max_val,
+    	   s.enumvals,
+    	   s.extra_desc
+    from t
+    join pg_settings as s on t.name = s.name
+    where not applied;
+\endif
+
 /* psql escape codes:
 %M - full host + domain for db server, or [local] (if over Unix socket), or [local:/dir/name]
 %m - host name of the db server, truncated at the first dot, or [local] (if over Unix socket)
@@ -107,6 +123,14 @@ from coalesce(case when not pg_is_in_recovery() then null -- not standby
 \set PROMPT1 :PROMPT1'\n':reset'%x%# '
 
 \set PROMPT2 ''
+
+\if `command -v pspg &> /dev/null && echo 1 || echo 0`
+    \echo '"pspg" pager is used'
+    \pset expanded off
+    \setenv PAGER 'pspg --reprint-on-exit --blackwhite'
+\else
+    \echo :white'Using alternative psql pager called "pspg" is highly recommended (but not required): https://github.com/okbob/pspg':reset
+\endif
 
 -- Show query execution time
 \timing on
