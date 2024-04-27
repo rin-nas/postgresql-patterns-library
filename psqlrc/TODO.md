@@ -24,15 +24,15 @@ Add check configutarion problems
     )
     select t.sourcefile,
            t.sourceline,
-         t.name,
-         t.setting,
-         t.applied,
-         t.error,
-         s.vartype,
-         s.min_val,
-         s.max_val,
-         s.enumvals,
-         s.extra_desc
+           t.name,
+           t.setting,
+           t.applied,
+           t.error,
+           s.vartype,
+           s.min_val,
+           s.max_val,
+           s.enumvals,
+           s.extra_desc
     from t
     join pg_settings as s on t.name = s.name
     where not applied;
