@@ -24,6 +24,7 @@
 ```bash
 # Last version and documentation: https://github.com/rin-nas/postgresql-patterns-library/tree/master/psqlrc
 
+export EDITOR=nano
 export HISTFILESIZE=5000
 export HISTCONTROL="ignoredups"
 
