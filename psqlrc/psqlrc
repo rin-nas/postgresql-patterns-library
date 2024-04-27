@@ -16,6 +16,35 @@
 \set white   '\033[1;37m'
 \set reset   '\033[0m'
 
+\set ON_ERROR_STOP on
+\set ON_ERROR_ROLLBACK interactive
+
+\set HISTFILE ~/.psql_history.:DBNAME
+\set HISTSIZE 9000
+
+-- If a command is run more than once in a row, only store it once in the history.
+\set HISTCONTROL ignoredups
+
+-- It's 21st century, let's use unicode for borders
+\pset linestyle unicode
+--\pset unicode_border_linestyle single
+--\pset unicode_column_linestyle single
+--\pset unicode_header_linestyle double
+
+-- NULL replacement. See alternatives at https://symbl.cc/en/search/?q=null
+\pset null '¤'
+
+\pset pager always
+
+\if `command -v pspg &> /dev/null && echo 1 || echo 0`
+    \pset expanded off
+    \setenv PAGER 'pspg --reprint-on-exit --blackwhite'
+\else
+    \pset expanded auto
+    \setenv PAGER 'less -iMFXSx4R'
+    \echo :white'Using alternative psql pager called "pspg" is highly recommended (but not required): https://github.com/okbob/pspg':reset
+\endif
+
 select -- pg_backend_pid(),    -- If we're connecting through pgbouncer, then prompt's %p is not real, so get real PID
        pg_is_in_recovery(), -- primary or standby
        current_setting('server_version') as server_version,
@@ -78,35 +107,6 @@ from coalesce(case when not pg_is_in_recovery() then null -- not standby
 \set PROMPT1 :PROMPT1'\n':reset'%x%# '
 
 \set PROMPT2 ''
-
-\set ON_ERROR_STOP on
-\set ON_ERROR_ROLLBACK interactive
-
-\set HISTFILE ~/.psql_history.:DBNAME
-\set HISTSIZE 9000
-
--- If a command is run more than once in a row, only store it once in the history.
-\set HISTCONTROL ignoredups
-
--- It's 21st century, let's use unicode for borders
-\pset linestyle unicode
---\pset unicode_border_linestyle single
---\pset unicode_column_linestyle single
---\pset unicode_header_linestyle double
-
--- NULL replacement. See alternatives at https://symbl.cc/en/search/?q=null
-\pset null '¤'
-
-\pset pager always
-
-\if `command -v pspg &> /dev/null && echo 1 || echo 0`
-    \pset expanded off
-    \setenv PAGER 'pspg --reprint-on-exit --blackwhite'
-\else
-    \pset expanded auto
-    \setenv PAGER 'less -iMFXSx4R'
-    \echo :white'Using alternative psql pager called "pspg" is highly recommended (but not required): https://github.com/okbob/pspg':reset
-\endif
 
 -- Show query execution time
 \timing on
