@@ -5,16 +5,16 @@
 
 -- Colors: https://misc.flogisoft.com/bash/tip_colors_and_formatting
 -- Colors: https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit
-\set red     '%[%033[1;31m%]'
-\set green   '%[%033[0;32m%]'
-\set yellow  '%[%033[38;5;220m%]'
-\set blue    '%[%033[38;5;39m%]'
-\set orange  '%[%033[38;5;214m%]'
-\set magenta '%[%033[0;35m%]'
-\set cyan    '%[%033[0;36m%]'
-\set gray    '%[%033[0;37m%]'
-\set white   '%[%033[1;37m%]'
-\set reset   '%[%033[0m%]'
+\set red     '\033[1;31m'
+\set green   '\033[0;32m'
+\set yellow  '\033[38;5;220m'
+\set blue    '\033[38;5;39m'
+\set orange  '\033[38;5;214m'
+\set magenta '\033[0;35m'
+\set cyan    '\033[0;36m'
+\set gray    '\033[0;37m'
+\set white   '\033[1;37m'
+\set reset   '\033[0m'
 
 select -- pg_backend_pid(),    -- If we're connecting through pgbouncer, then prompt's %p is not real, so get real PID
        pg_is_in_recovery(), -- primary or standby
@@ -105,7 +105,7 @@ from coalesce(case when not pg_is_in_recovery() then null -- not standby
 \else
     \pset expanded auto
     \setenv PAGER 'less -iMFXSx4R'
-    \echo '\033[1;37mUsing alternative psql pager called "pspg" is highly recommended (but not required): https://github.com/okbob/pspg \033[0m'
+    \echo :white'Using alternative psql pager called "pspg" is highly recommended (but not required): https://github.com/okbob/pspg':reset
 \endif
 
 -- Show query execution time
