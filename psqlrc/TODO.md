@@ -15,28 +15,6 @@ Show overall info on `psql` start
 1. Activity: currently used, total available, used precent (mark red if > 90%), total by status
 
 Add check configutarion problems
-1. Check config file `show config_file;` for errors:
-    ```sql
-    with t as (
-        select distinct on (name) *
-        from pg_file_settings
-        order by name, seqno desc
-    )
-    select t.sourcefile,
-           t.sourceline,
-           t.name,
-           t.setting,
-           t.applied,
-           t.error,
-           s.vartype,
-           s.min_val,
-           s.max_val,
-           s.enumvals,
-           s.extra_desc
-    from t
-    join pg_settings as s on t.name = s.name
-    where not applied;
-    ```
 1. Check hba file `show hba_file;` for errors:
    * `select exists(select from pg_hba_file_rules where error is not null);`
 1. Check need to restart server:
