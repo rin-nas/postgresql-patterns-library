@@ -77,7 +77,20 @@ select -- pg_backend_pid(), -- if we're connecting through pgbouncer, then promp
 
        exists(select from pg_hba_file_rules where error is not null) as is_hba_file_error,
 
-       exists(select from pg_settings where pending_restart) is_pending_restart
+       exists(select from pg_settings where pending_restart) as is_pending_restart,
+
+       exists(with f as (
+          select distinct on (name) *
+          from pg_file_settings
+          order by name, seqno desc
+       )
+       select
+       from f
+       cross join current_setting(f.name) as cs(setting)
+       join pg_settings as s on f.name = s.name
+                            and f.setting is distinct from cs.setting
+                            and f.setting is distinct from s.setting
+                            and f.applied and not s.pending_restart) as is_pending_reload
 
 from coalesce(case when not pg_is_in_recovery() then null -- not standby
                    when not exists(select from pg_stat_wal_receiver) then null -- primary lost
@@ -115,12 +128,31 @@ if :is_pending_restart
     )
     select f.sourcefile, f.sourceline, f.name, 
            cs.setting as current_setting,
-           f.setting as new_setting
+           f.setting as tobe_setting
     from f
     cross join current_setting(f.name) as cs(setting)
     join pg_settings as s on f.name = s.name
     and f.setting is distinct from cs.setting
     and s.pending_restart;
+\endif
+
+\if :is_pending_reload
+    \echo :yellow'Server is pending to reload!':reset
+    with f as (
+       select distinct on (name) *
+       from pg_file_settings
+       order by name, seqno desc
+    )
+    select f.sourcefile, f.sourceline, f.name, 
+           cs.setting as current_setting,
+           f.setting as tobe_setting,
+           f.applied
+    from f
+    cross join current_setting(f.name) as cs(setting)
+    join pg_settings as s on f.name = s.name
+                         and f.setting is distinct from cs.setting
+                         and f.setting is distinct from s.setting
+                         and f.applied and not s.pending_restart;
 \endif
 
 /* psql escape codes:
