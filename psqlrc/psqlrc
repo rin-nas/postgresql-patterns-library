@@ -131,7 +131,7 @@ from coalesce(
     select fs.sourcefile, fs.sourceline, fs.name, 
            cs.setting as current_setting,
            fs.setting as tobe_setting
-    from f
+    from fs
     cross join current_setting(fs.name) as cs(setting)
     join pg_settings as s on fs.name = s.name
     and fs.setting is distinct from cs.setting
@@ -147,9 +147,8 @@ from coalesce(
     )
     select fs.sourcefile, fs.sourceline, fs.name, 
            cs.setting as current_setting,
-           fs.setting as tobe_setting,
-           fs.applied
-    from f
+           fs.setting as tobe_setting
+    from fs
     cross join current_setting(fs.name) as cs(setting)
     join pg_settings as s on fs.name = s.name
                          and fs.setting is distinct from cs.setting
