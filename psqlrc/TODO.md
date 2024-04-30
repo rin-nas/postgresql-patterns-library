@@ -15,7 +15,5 @@ Show overall info on `psql` start
 1. Activity: currently used, total available, used precent (mark red if > 90%), total by status
 
 Add check configutarion problems
-1. Check hba file `show hba_file;` for errors:
-   * `select exists(select from pg_hba_file_rules where error is not null);`
 1. Check need to restart server:
    * `select exists(select from pg_settings where pending_restart);`
