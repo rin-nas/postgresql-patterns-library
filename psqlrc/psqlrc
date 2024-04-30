@@ -98,7 +98,7 @@ from coalesce(case when not pg_is_in_recovery() then null -- not standby
     	    s.vartype, s.min_val, s.max_val, s.enumvals, s.extra_desc
     from t
     join pg_settings as s on t.name = s.name
-    where not applied;
+    where not t.applied and not s.pending_restart;
 \endif
 
 \if :is_hba_file_error
@@ -114,11 +114,12 @@ if :is_pending_restart
        order by name, seqno desc
     )
     select f.sourcefile, f.sourceline, f.name, 
-           s.setting as current_setting,
+           cs.setting as current_setting,
            f.setting as new_setting
     from f
+    cross join current_setting(f.name) as cs(setting)
     join pg_settings as s on f.name = s.name
-    and f.setting is distinct from s.setting
+    and f.setting is distinct from cs.setting
     and s.pending_restart;
 \endif
 
