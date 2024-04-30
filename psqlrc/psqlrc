@@ -38,6 +38,11 @@
 \pset expanded auto
 \setenv PAGER 'less -iMFXSx4R'
 
+with fs as (
+    select distinct on (name) *
+    from pg_file_settings
+    order by name, seqno desc
+)
 select -- pg_backend_pid(), -- if we're connecting through pgbouncer, then prompt's %p is not real, so get real PID
 
        pg_is_in_recovery(), -- primary or standby
@@ -65,38 +70,35 @@ select -- pg_backend_pid(), -- if we're connecting through pgbouncer, then promp
            end
        ), ''), '?') as replication_lag,
 
-       exists((with t as (
-           select distinct on (name) *
-           from pg_file_settings
-           order by name, seqno desc
-       )
-       select
-       from t
-       join pg_settings as s on t.name = s.name
-       where not t.applied and not s.pending_restart)) as is_config_file_error,
+       exists(
+           select
+           from fs
+           join pg_settings as s on fs.name = s.name
+           where not fs.applied and not s.pending_restart
+       ) as is_config_file_error,
 
        exists(select from pg_hba_file_rules where error is not null) as is_hba_file_error,
 
        exists(select from pg_settings where pending_restart) as is_pending_restart,
 
-       exists(with f as (
-          select distinct on (name) *
-          from pg_file_settings
-          order by name, seqno desc
-       )
-       select
-       from f
-       cross join current_setting(f.name) as cs(setting)
-       join pg_settings as s on f.name = s.name
-                            and f.setting is distinct from cs.setting
-                            and f.setting is distinct from s.setting
-                            and f.applied and not s.pending_restart) as is_pending_reload
+       exists(
+           select
+           from fs
+           cross join current_setting(fs.name) as cs(setting)
+           join pg_settings as s on fs.name = s.name
+                                and fs.setting is distinct from cs.setting
+                                and fs.setting is distinct from s.setting
+                                and fs.applied and not s.pending_restart
+       ) as is_pending_reload
 
-from coalesce(case when not pg_is_in_recovery() then null -- not standby
-                   when not exists(select from pg_stat_wal_receiver) then null -- primary lost
-                   when pg_last_wal_receive_lsn() = pg_last_wal_replay_lsn() then '0'::interval -- no lag
-                   else now() - pg_last_xact_replay_timestamp()
-              end) as r(lag),
+from coalesce(
+         case when not pg_is_in_recovery() then null -- not standby
+              when not exists(select from pg_stat_wal_receiver) then null -- primary lost
+              when pg_last_wal_receive_lsn() = pg_last_wal_replay_lsn() then '0'::interval -- no lag
+              else now() - pg_last_xact_replay_timestamp()
+         end
+     ) as r(lag),
+
      extract(epoch from r.lag) as e(epoch)
 \gset
 
