@@ -38,11 +38,13 @@
 \pset expanded auto
 \setenv PAGER 'less -iMFXSx4R'
 
-select -- pg_backend_pid(),    -- If we're connecting through pgbouncer, then prompt's %p is not real, so get real PID
+select -- pg_backend_pid(), -- if we're connecting through pgbouncer, then prompt's %p is not real, so get real PID
 
        pg_is_in_recovery(), -- primary or standby
 
        current_setting('server_version') as server_version,
+       current_setting('config_file') as config_file,
+       current_setting('hba_file') as hba_file,
 
        (select count(*) from pg_stat_replication where state = 'streaming') as streaming_count,
 
@@ -53,25 +55,27 @@ select -- pg_backend_pid(),    -- If we're connecting through pgbouncer, then pr
                  limit 1), '***LOST***') as primary_dsn,
 
        coalesce(nullif(concat(
-           nullif(extract(day    from lag), 0) || 'd',
-           nullif(extract(hour   from lag), 0) || 'h',
-           nullif(extract(minute from lag), 0) || 'm',
-           case when epoch <    1.0 then round(extract(second from lag)::numeric * 1000, 0) || 'ms'
-                when epoch <   10.0 then round(extract(second from lag)::numeric, 2) || 's'
-                when epoch <   60.0 then round(extract(second from lag)::numeric, 1) || 's'
-                when epoch < 3600.0 then round(extract(second from lag)::numeric, 0) || 's'
+           nullif(extract(day    from r.lag), 0) || 'd',
+           nullif(extract(hour   from r.lag), 0) || 'h',
+           nullif(extract(minute from r.lag), 0) || 'm',
+           case when epoch <    1.0 then round(extract(second from r.lag)::numeric * 1000, 0) || 'ms'
+                when epoch <   10.0 then round(extract(second from r.lag)::numeric, 2) || 's'
+                when epoch <   60.0 then round(extract(second from r.lag)::numeric, 1) || 's'
+                when epoch < 3600.0 then round(extract(second from r.lag)::numeric, 0) || 's'
            end
        ), ''), '?') as replication_lag,
 
-       (with t as (
+       exists((with t as (
            select distinct on (name) *
            from pg_file_settings
            order by name, seqno desc
        )
-       select count(*)
+       select
        from t
        join pg_settings as s on t.name = s.name
-       where not applied) as pg_file_settings_error_count
+       where not applied)) as is_config_file_error,
+
+       exists(select from pg_hba_file_rules where error is not null) as is_hba_file_error
 
 from coalesce(case when not pg_is_in_recovery() then null -- not standby
                    when not exists(select from pg_stat_wal_receiver) then null -- primary lost
@@ -81,27 +85,23 @@ from coalesce(case when not pg_is_in_recovery() then null -- not standby
      extract(epoch from r.lag) as e(epoch)
 \gset
 
-\if :pg_file_settings_error_count
-    \echo :red'Errors found in config files:':reset
+\if :is_config_file_error
+    \echo :red'Errors found in config file "':config_file'"':reset
     with t as (
         select distinct on (name) *
         from pg_file_settings
         order by name, seqno desc
     )
-    select t.sourcefile,
-           t.sourceline,
-    	   t.name,
-    	   t.setting,
-    	   t.applied,
-    	   t.error,
-    	   s.vartype,
-    	   s.min_val,
-    	   s.max_val,
-    	   s.enumvals,
-    	   s.extra_desc
+    select t.sourcefile, t.sourceline, t.name, t.setting, t.applied, t.error,
+    	    s.vartype, s.min_val, s.max_val, s.enumvals, s.extra_desc
     from t
     join pg_settings as s on t.name = s.name
     where not applied;
+\endif
+
+\if :is_hba_file_error
+    \echo :red'Errors found in hba file "':hba_file'"':reset
+    select * from pg_hba_file_rules where error is not null;
 \endif
 
 /* psql escape codes:
