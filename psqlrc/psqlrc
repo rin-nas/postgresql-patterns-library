@@ -39,14 +39,19 @@
 \setenv PAGER 'less -iMFXSx4R'
 
 select -- pg_backend_pid(),    -- If we're connecting through pgbouncer, then prompt's %p is not real, so get real PID
+
        pg_is_in_recovery(), -- primary or standby
+
        current_setting('server_version') as server_version,
+
        (select count(*) from pg_stat_replication where state = 'streaming') as streaming_count,
+
        coalesce((select case when sender_host ~ '^\d+\.\d+\.\d+\.\d+$' then sender_host
                              else split_part(sender_host, '.', 1)
                         end
                  from pg_stat_wal_receiver
                  limit 1), '***LOST***') as primary_dsn,
+
        coalesce(nullif(concat(
            nullif(extract(day    from lag), 0) || 'd',
            nullif(extract(hour   from lag), 0) || 'h',
@@ -57,6 +62,7 @@ select -- pg_backend_pid(),    -- If we're connecting through pgbouncer, then pr
                 when epoch < 3600.0 then round(extract(second from lag)::numeric, 0) || 's'
            end
        ), ''), '?') as replication_lag,
+
        (with t as (
            select distinct on (name) *
            from pg_file_settings
@@ -66,6 +72,7 @@ select -- pg_backend_pid(),    -- If we're connecting through pgbouncer, then pr
        from t
        join pg_settings as s on t.name = s.name
        where not applied) as pg_file_settings_error_count
+
 from coalesce(case when not pg_is_in_recovery() then null -- not standby
                    when not exists(select from pg_stat_wal_receiver) then null -- primary lost
                    when pg_last_wal_receive_lsn() = pg_last_wal_replay_lsn() then '0'::interval -- no lag
