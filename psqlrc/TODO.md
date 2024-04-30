@@ -13,7 +13,3 @@ Show overall info on `psql` start
    * `select count(*), pg_size_pretty(sum(pg_database_size(datname))) from pg_database;`
 1. Databases total used space in percent (mark red if > 90%).
 1. Activity: currently used, total available, used precent (mark red if > 90%), total by status
-
-Add check configutarion problems
-1. Check need to restart server:
-   * `select exists(select from pg_settings where pending_restart);`
