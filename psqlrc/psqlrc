@@ -110,7 +110,7 @@ from coalesce(
         order by name, seqno desc
     )
     select t.sourcefile, t.sourceline, t.name, t.setting, t.applied, t.error,
-    	    s.vartype, s.min_val, s.max_val, s.enumvals, s.extra_desc
+            s.vartype, s.min_val, s.max_val, s.enumvals, s.extra_desc
     from t
     join pg_settings as s on t.name = s.name
     where not t.applied and not s.pending_restart;
