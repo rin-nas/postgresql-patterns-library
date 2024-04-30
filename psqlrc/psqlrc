@@ -73,7 +73,7 @@ select -- pg_backend_pid(), -- if we're connecting through pgbouncer, then promp
        select
        from t
        join pg_settings as s on t.name = s.name
-       where not applied)) as is_config_file_error,
+       where not t.applied and not s.pending_restart)) as is_config_file_error,
 
        exists(select from pg_hba_file_rules where error is not null) as is_hba_file_error,
 
