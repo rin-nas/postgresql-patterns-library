@@ -1,1 +1,3 @@
-Глобальные значения устанавливаюются в `/etc/inputrc`, а личные значения пользователей - в `~/.inputrc`
+# inputrc
+
+Documentation: https://wiki.archlinux.org/title/Readline
