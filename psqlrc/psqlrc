@@ -118,11 +118,13 @@ from coalesce(
 
 \if :is_hba_file_error
     \echo :red'Errors found in hba file "':hba_file'"':reset
+
     select * from pg_hba_file_rules where error is not null;
 \endif
 
 \if :is_pending_restart
     \echo :orange'Server is pending to restart!':reset
+
     with fs as (
        select distinct on (name) *
        from pg_file_settings
@@ -134,12 +136,13 @@ from coalesce(
     from fs
     cross join current_setting(fs.name) as cs(setting)
     join pg_settings as s on fs.name = s.name
-    and fs.setting is distinct from cs.setting
-    and s.pending_restart;
+                         and fs.setting is distinct from cs.setting
+                         and s.pending_restart;
 \endif
 
 \if :is_pending_reload
     \echo :yellow'Server is pending to reload!':reset
+
     with fs as (
        select distinct on (name) *
        from pg_file_settings
