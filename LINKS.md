@@ -65,7 +65,7 @@
    1. https://hashrocket.com/blog/posts/faster-json-generation-with-postgresql — генерация JSON 
    1. https://shusson.info/post/building-nested-json-objects-with-postgres — генерация JSON
    1. https://tapoueh.org/blog/2018/05/postgresql-data-types-point/ (см. запрос с итоговыми суммами и диаграммами внизу)
-   1. [задача параллельной многопроцессной обработки очереди](http://dklab.ru/chicken/nablas/53.html), обсуждение на [форуме](https://www.sql.ru/forum/681777/obsuzhdaem-blokirovki-pg-try-advisory-lock)
+   1. [задача параллельной многопроцессной обработки очереди](https://web.archive.org/web/20200204001129/http://dklab.ru/chicken/nablas/53.html), обсуждение на [форуме](https://web.archive.org/web/20131203125446/https://www.sql.ru/forum/681777/obsuzhdaem-blokirovki-pg-try-advisory-lock)
    1. https://pgday.ru/files/pgmaster14/max.boguk.query.optimization.pdf (оптимизация запросов)
    1. https://pgday.ru/presentation/232/5964945ea4142.pdf Учим слона танцевать
 рок-н-ролл (оптимизация запросов)
