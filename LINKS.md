@@ -29,7 +29,7 @@
    1. https://github.com/NikolayS/awesome-postgres - links
    1. https://gist.github.com/david-sanabria/0d3ff67eb56d2750502aed4186d6a4a7 - `CREATE OR REPLACE FUNCTION base62_encode( long_number bigint ) RETURNS text`
    1. https://gist.github.com/matheusoliveira/9488951 - Simple PostgreSQL functions to manipulate json objects: json_append(), json_delete(), json_merge(), json_update(), json_lint(), json_unlint()
-   1. https://medium.com/hootsuite-engineering/recursively-merging-jsonb-in-postgresql-efd787c9fad7
+   1. https://web.archive.org/web/20230712185409/https://medium.com/hootsuite-engineering/recursively-merging-jsonb-in-postgresql-efd787c9fad7
    1. https://github.com/glynastill/pg_jsonb_delete_op - Hstore style delete "-" operator for jsonb
    1. https://github.com/heroku/heroku-pg-extras - This plugin is used to obtain information about a Heroku Postgres instance, that may be useful when analyzing performance issues. This includes information about locks, index usage, buffer cache hit ratios and vacuum statistics.
    1. https://github.com/rvkulikov/pg-deps-management - Recursively backup all dependent views, then modify base tables, then recreate all backuped views
