@@ -138,6 +138,7 @@ from coalesce(
     cross join current_setting(fs.name) as cs(setting)
     join pg_settings as s on fs.name = lower(s.name)
                          and fs.setting is distinct from cs.setting
+                         and fs.setting is distinct from s.setting
                          and s.pending_restart;
 \endif
 
