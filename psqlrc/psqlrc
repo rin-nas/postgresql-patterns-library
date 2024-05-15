@@ -86,8 +86,8 @@ select -- pg_backend_pid(), -- if we're connecting through pgbouncer, then promp
            from fs
            cross join current_setting(fs.name) as cs(setting)
            join pg_settings as s on fs.name = lower(s.name)
-                                and fs.setting is distinct from cs.setting
-                                and fs.setting is distinct from s.setting
+                                and fs.setting is distinct from lower(cs.setting)
+                                and fs.setting is distinct from lower(s.setting)
                                 and fs.applied and not s.pending_restart
        ) as is_pending_reload
 
@@ -137,7 +137,7 @@ from coalesce(
     from fs
     cross join current_setting(fs.name) as cs(setting)
     join pg_settings as s on fs.name = lower(s.name)
-                         and fs.setting is distinct from cs.setting
+                         and fs.setting is distinct from lower(cs.setting)
                          and s.pending_restart;
 \endif
 
@@ -156,8 +156,8 @@ from coalesce(
     from fs
     cross join current_setting(fs.name) as cs(setting)
     join pg_settings as s on fs.name = lower(s.name)
-                         and fs.setting is distinct from cs.setting
-                         and fs.setting is distinct from s.setting
+                         and fs.setting is distinct from lower(cs.setting)
+                         and fs.setting is distinct from lower(s.setting)
                          and fs.applied and not s.pending_restart;
 \endif
 
