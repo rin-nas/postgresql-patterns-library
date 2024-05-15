@@ -130,8 +130,8 @@ from coalesce(
        from pg_file_settings
        order by name, seqno desc
     )
-    select fs.sourcefile, fs.sourceline, fs.name,
-           s.vartype,
+    select fs.sourcefile, fs.sourceline,
+           s.vartype, fs.name,
            cs.setting as current_setting,
            fs.setting as tobe_setting
     from fs
@@ -149,8 +149,8 @@ from coalesce(
        from pg_file_settings
        order by name, seqno desc
     )
-    select fs.sourcefile, fs.sourceline, fs.name,
-           s.vartype,
+    select fs.sourcefile, fs.sourceline,
+           s.vartype, fs.name,
            cs.setting as current_setting,
            fs.setting as tobe_setting
     from fs
