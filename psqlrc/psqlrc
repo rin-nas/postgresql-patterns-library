@@ -73,7 +73,7 @@ select -- pg_backend_pid(), -- if we're connecting through pgbouncer, then promp
        exists(
            select
            from fs
-           join pg_settings as s on fs.name = lower(s.name)
+           join pg_settings as s on lower(fs.name) = lower(s.name)
            where not fs.applied and not s.pending_restart
        ) as is_config_file_error,
 
@@ -85,9 +85,9 @@ select -- pg_backend_pid(), -- if we're connecting through pgbouncer, then promp
            select
            from fs
            cross join current_setting(fs.name) as cs(setting)
-           join pg_settings as s on fs.name = lower(s.name)
-                                and fs.setting is distinct from cs.setting
-                                and fs.setting is distinct from s.setting
+           join pg_settings as s on lower(fs.name) = lower(s.name)
+                                and lower(fs.setting) is distinct from lower(cs.setting)
+                                and lower(fs.setting) is distinct from lower(s.setting)
                                 and fs.applied and not s.pending_restart
        ) as is_pending_reload,
 
@@ -95,9 +95,9 @@ select -- pg_backend_pid(), -- if we're connecting through pgbouncer, then promp
            select
            from fs
            cross join current_setting(fs.name) as cs(setting)
-           join pg_settings as s on fs.name = lower(s.name)
-                                and fs.setting is distinct from cs.setting
-                                and fs.setting is distinct from s.setting
+           join pg_settings as s on lower(fs.name) = lower(s.name)
+                                and lower(fs.setting) is distinct from lower(cs.setting)
+                                and lower(fs.setting) is distinct from lower(s.setting)
                                 and fs.applied
                                 and case s.vartype
                                       when 'enum'    then fs.setting != any (s.enumvals)
@@ -129,7 +129,7 @@ from coalesce(
     select t.sourcefile, t.sourceline, t.name, t.setting, t.applied, t.error,
            s.vartype, s.min_val, s.max_val, s.enumvals, s.extra_desc
     from t
-    join pg_settings as s on t.name = lower(s.name)
+    join pg_settings as s on lower(t.name) = lower(s.name)
     where not t.applied and not s.pending_restart;
 \endif
 
@@ -153,9 +153,9 @@ from coalesce(
            fs.setting as tobe_setting
     from fs
     cross join current_setting(fs.name) as cs(setting)
-    join pg_settings as s on fs.name = lower(s.name)
-                         and fs.setting is distinct from cs.setting
-                         and fs.setting is distinct from s.setting
+    join pg_settings as s on lower(fs.name) = lower(s.name)
+                         and lower(fs.setting) is distinct from lower(cs.setting)
+                         and lower(fs.setting) is distinct from lower(s.setting)
                          and s.pending_restart;
 \endif
 
@@ -173,9 +173,9 @@ from coalesce(
            fs.setting as tobe_setting
     from fs
     cross join current_setting(fs.name) as cs(setting)
-    join pg_settings as s on fs.name = lower(s.name)
-                         and fs.setting is distinct from cs.setting
-                         and fs.setting is distinct from s.setting
+    join pg_settings as s on lower(fs.name) = lower(s.name)
+                         and lower(fs.setting) is distinct from lower(cs.setting)
+                         and lower(fs.setting) is distinct from lower(s.setting)
                          and fs.applied and not s.pending_restart;
 \endif
 
@@ -194,9 +194,9 @@ from coalesce(
            s.enumvals, s.min_val, s.max_val
     from fs
     cross join current_setting(fs.name) as cs(setting)
-    join pg_settings as s on fs.name = lower(s.name)
-                         and fs.setting is distinct from cs.setting
-                         and fs.setting is distinct from s.setting
+    join pg_settings as s on lower(fs.name) = lower(s.name)
+                         and lower(fs.setting) is distinct from lower(cs.setting)
+                         and lower(fs.setting) is distinct from lower(s.setting)
                          and fs.applied
                          and case s.vartype
                                when 'enum'    then fs.setting != any (s.enumvals)
