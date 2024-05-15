@@ -89,7 +89,23 @@ select -- pg_backend_pid(), -- if we're connecting through pgbouncer, then promp
                                 and fs.setting is distinct from cs.setting
                                 and fs.setting is distinct from s.setting
                                 and fs.applied and not s.pending_restart
-       ) as is_pending_reload
+       ) as is_pending_reload,
+
+       exists(
+           select
+           from fs
+           cross join current_setting(fs.name) as cs(setting)
+           join pg_settings as s on fs.name = lower(s.name)
+                                and fs.setting is distinct from cs.setting
+                                and fs.setting is distinct from s.setting
+                                and fs.applied
+                                and case s.vartype
+                                      when 'enum'    then fs.setting != any (s.enumvals)
+                                      --when 'integer' then fs.setting::int not between s.min_val::int and s.max_val::int
+                                      --when 'real'    then fs.setting::real not between s.min_val::real and s.max_val::real
+                                      else false
+                                    end
+       ) as is_config_file_setting_incorrect
 
 from coalesce(
          case when not pg_is_in_recovery() then null -- not standby
@@ -104,6 +120,7 @@ from coalesce(
 
 \if :is_config_file_error
     \echo :red'Errors found in config file "':config_file'"':reset
+
     with t as (
         select distinct on (name) *
         from pg_file_settings
@@ -160,6 +177,33 @@ from coalesce(
                          and fs.setting is distinct from cs.setting
                          and fs.setting is distinct from s.setting
                          and fs.applied and not s.pending_restart;
+\endif
+
+\if :is_config_file_setting_incorrect
+    \echo :red'Incorrect tobe setting found in config file "':config_file'"':reset
+
+    with fs as (
+       select distinct on (name) *
+       from pg_file_settings
+       order by name, seqno desc
+    )
+    select fs.sourcefile, fs.sourceline, 
+           fs.name, s.vartype,
+           cs.setting as current_setting,
+           fs.setting as tobe_setting,
+           s.enumvals, s.min_val, s.max_val
+    from fs
+    cross join current_setting(fs.name) as cs(setting)
+    join pg_settings as s on fs.name = lower(s.name)
+                         and fs.setting is distinct from cs.setting
+                         and fs.setting is distinct from s.setting
+                         and fs.applied
+                         and case s.vartype
+                               when 'enum'    then fs.setting != any (s.enumvals)
+                               --when 'integer' then fs.setting::int not between s.min_val::int and s.max_val::int
+                               --when 'real'    then fs.setting::real not between s.min_val::real and s.max_val::real
+                               else false
+                             end
 \endif
 
 /* psql escape codes:
