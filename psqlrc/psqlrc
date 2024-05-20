@@ -88,6 +88,7 @@ select -- pg_backend_pid(), -- if we're connecting through pgbouncer, then promp
            join pg_settings as s on lower(fs.name) = lower(s.name)
                                 and lower(fs.setting) is distinct from lower(cs.setting)
                                 and lower(fs.setting) is distinct from lower(s.setting)
+                                and not (s.setting = 'replica' and fs.setting = 'hot_standby')
                                 and fs.applied and not s.pending_restart
        ) as is_pending_reload,
 
@@ -100,7 +101,7 @@ select -- pg_backend_pid(), -- if we're connecting through pgbouncer, then promp
                                 and lower(fs.setting) is distinct from lower(s.setting)
                                 and fs.applied
                                 and case s.vartype
-                                      when 'enum'    then fs.setting != any (s.enumvals)
+                                      when 'enum'    then  fs.setting != any (s.enumvals) and not (s.setting = 'replica' and fs.setting = 'hot_standby')
                                       --when 'integer' then fs.setting::int not between s.min_val::int and s.max_val::int
                                       --when 'real'    then fs.setting::real not between s.min_val::real and s.max_val::real
                                       else false
@@ -176,6 +177,7 @@ from coalesce(
     join pg_settings as s on lower(fs.name) = lower(s.name)
                          and lower(fs.setting) is distinct from lower(cs.setting)
                          and lower(fs.setting) is distinct from lower(s.setting)
+                         and not (s.setting = 'replica' and fs.setting = 'hot_standby')
                          and fs.applied and not s.pending_restart;
 \endif
 
@@ -199,7 +201,7 @@ from coalesce(
                          and lower(fs.setting) is distinct from lower(s.setting)
                          and fs.applied
                          and case s.vartype
-                               when 'enum'    then fs.setting != any (s.enumvals)
+                               when 'enum'    then fs.setting != any (s.enumvals) and not (s.setting = 'replica' and fs.setting = 'hot_standby')
                                --when 'integer' then fs.setting::int not between s.min_val::int and s.max_val::int
                                --when 'real'    then fs.setting::real not between s.min_val::real and s.max_val::real
                                else false
