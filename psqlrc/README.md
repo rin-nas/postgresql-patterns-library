@@ -41,3 +41,4 @@
 ## Ссылки по теме
 
 * [Удобное цветное приглашение командной строки в `bash`](../bashrc)
+* https://wiki.postgresql.org/wiki/Psqlrc
