@@ -38,6 +38,8 @@
 \pset expanded auto
 \setenv PAGER 'less -iMFXSx4R'
 
+\set whoami 'SELECT current_user, session_user;'
+
 with fs as (
     select distinct on (name) *
     from pg_file_settings
