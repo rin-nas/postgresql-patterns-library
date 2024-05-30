@@ -10,3 +10,7 @@
 psql -U postgres -q -X -c "\echo 'Press CTRL+C to stop'" -c "\conninfo" -f connection_ping.sql -c "call connection_ping(1000, 0.5)" -h <host> -p <port>
 ```
 [connection_ping.sql](connection_ping.sql)
+
+## TODO
+
+Psql может "зависнуть" после потери соединения к СУБД. Можно ещё заглянуть в pg_stat_activity и термирировать процесс, если он долго ожидает клиента.
