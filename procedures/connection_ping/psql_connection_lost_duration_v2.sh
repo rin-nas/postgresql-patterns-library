@@ -68,3 +68,18 @@ echo "Press CTRL+C to stop"
 time_start=$(date +%s.%3N)
 
 # произошёл разрыв, пытаемся подключиться
+for i in  {1..10000}
+do
+    echo "Ping $i. Try connect to $host:$port"
+ 
+    psql -U postgres -q -X -c "\conninfo" -c "call connection_ping(1, 0)" -h $host -p $port
+    status=$?
+ 
+
+    sleep 0.1
+done
+
+if test $status != 0; then
+    echoerr "Error occured"
+    exit $status
+fi
