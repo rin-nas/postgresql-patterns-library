@@ -78,7 +78,7 @@ do
     if test $status = 0; then
         time_end=$(date +%s.%3N)
         echowarn "Connection established"
-        
+        elapsed=$(echo "time_end - $time_start" | bc | sed "/^\./0./")
         echosucc "Connection lost duration: ${elapsed}s"
         exit 0
     fi
