@@ -46,4 +46,4 @@ psql -q -X -U postgres -d "application_name='psql $(hostname -I | cut -f1 -d' ')
 1. Преимущества: отлавливает очень кратковременную недоступность подключения к СУБД.
 1. Недостатки: может «зависнуть»
 
-Файл [psql_connection_lost_duration_v2.sh](psql_connection_lost_duration_v2.sh)
+Файлы [psql_connection_lost_duration_v2.sh](psql_connection_lost_duration_v2.sh), [connection_ping.sql](connection_ping.sql)
