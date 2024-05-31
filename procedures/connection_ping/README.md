@@ -7,10 +7,19 @@
 1. Посмотреть результат в терминале 1. В случае потери соединения вывод уведомлений (ping) приостанавливается (в этом случае `psql` "зависает") или явно возвращается ошибка
 
 ```bash
-psql -U postgres -q -X -c "\echo 'Press CTRL+C to stop'" -c "\conninfo" -f connection_ping.sql -c "call connection_ping(1000, 0.5)" -h <host> -p <port>
+# устанавливаем psql, при необходимости
+sudo dnf -y install postgresql-14-14.5 postgresql-14-libs-14.5
+  
+# создаём файл .pgpass, при необходимости
+nano ~/.pgpass
+ 
+# передаём в application_name основной IP текущего сервера, т.к. запрос может проходить через прокси
+psql -q -X -U postgres -d "application_name='psql $(hostname -I | cut -f1 -d' ')'" \
+  -c "\echo 'Press CTRL+C to stop'" -c "\conninfo" -f connection_ping.sql -c "call connection_ping(1000, 1.0)" \
+  -h <host> -p <port>
 ```
 [connection_ping.sql](connection_ping.sql)
 
 ## TODO
 
-В случае "зависания" `psql` можно ещё заглянуть в `pg_stat_activity` и термирировать процесс (самоуничтожение), если он долго ожидает клиента.
+В случае "зависания" `psql` можно ещё попробовать заглянуть в `pg_stat_activity` и термирировать процесс (самоуничтожение), если он долго ожидает клиента.
