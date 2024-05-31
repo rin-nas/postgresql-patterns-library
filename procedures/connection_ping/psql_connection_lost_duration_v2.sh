@@ -75,6 +75,13 @@ do
     psql -U postgres -q -X -c "\conninfo" -c "call connection_ping(1, 0)" -h $host -p $port
     status=$?
  
+    if test $status = 0; then
+        time_end=$(date +%s.%3N)
+        echowarn "Connection established"
+        
+        echosucc "Connection lost duration: ${elapsed}s"
+        exit 0
+    fi
 
     sleep 0.1
 done
