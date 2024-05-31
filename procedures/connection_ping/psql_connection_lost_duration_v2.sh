@@ -48,3 +48,22 @@ host=$1
 port=$2
  
 cd $SCRIPT_DIR;
+
+# передаём в application_name основной IP текущего сервера, т.к. запрос может проходить через прокси
+# https://elephas.io/how-to-set-application_name-in-psql-command-line-utility/
+application_name="$(basename "$SCRIPT_FILE") $(hostname -I | cut -f1 -d' ')"
+export PGAPPNAME="$application_name"
+ 
+# смотрим на подключение, пока не произойдёт разрыв
+psql -U postgres -q -X -c "\echo 'Press CTRL+C to stop'" -c "\conninfo" -f connection_ping.sql -c "call connection_ping(1000, 0.5)" -h $host -p $port
+status=$?
+ 
+if test $status != 2; then
+    echoerr "Error occured"
+    exit $status
+fi
+ 
+echowarn "Сonnection lost"
+echo "Press CTRL+C to stop"
+time_start=$(date +%s.%3N)
+ 
