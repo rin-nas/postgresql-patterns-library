@@ -29,7 +29,7 @@
 
 ## Поддержка внешнего ПО
 
-Используется пейджер [`pspg`](https://github.com/okbob/pspg), если он установлен (см. [видео](https://pgconf.ru/talk/1589147) с презентацией `pspg` на русском языке). Иначе используется [`less`](https://en.wikipedia.org/wiki/Less_(Unix)).
+Используется пейджер [`pspg`](https://github.com/okbob/pspg), если он установлен. Иначе используется [`less`](https://en.wikipedia.org/wiki/Less_(Unix)).
 
 ## Как установить
 
@@ -42,3 +42,4 @@
 
 * [Удобное цветное приглашение командной строки в `bash`](../bashrc)
 * https://wiki.postgresql.org/wiki/Psqlrc
+* [Как использовать `pspg`, видео на русском языке](https://pgconf.ru/talk/1589147)
