@@ -12,6 +12,7 @@
   1. https://m.habr.com/ru/post/483014/ - Очереди сообщений в PostgreSQL с использованием PgQ
 
 # GitHub
+  1. https://github.com/dverite/postgresql-functions
   1. https://github.com/dataegret/pg-utils Useful DBA tools by Data Egret
   1. https://github.com/pgexperts/pgx_scripts/ A collection of useful little scripts for database analysis and administration, created by our team at PostgreSQL Experts
      1. index_bloat_checksql
@@ -40,7 +41,7 @@
   1. https://github.com/PostgREST/postgrest - PostgREST is a standalone web server that turns your PostgreSQL database directly into a RESTful API.
   1. https://github.com/supabase/pg_jsonschema - PostgreSQL extension providing JSON Schema validation
   1. https://github.com/tembo-io/pgmq - Postgres Message Queue (PGMQ)
-  1. https://github.com/benbjohnson/litestream - standalone disaster recovery tool for SQLite 
+  1. https://github.com/benbjohnson/litestream - standalone disaster recovery tool for SQLite
 
 # StackOverflow
   1. https://stackoverflow.com/questions/7923237/return-pre-update-column-values-using-sql-only
