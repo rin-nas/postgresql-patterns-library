@@ -126,8 +126,8 @@ from coalesce(
      extract(epoch from r.lag) as e(epoch)
 \gset
 
-\echo :white'Started at: ':started_at' (':start_uptime')':reset
-\echo :white'Loaded at:  ':loaded_at' (':load_uptime')':reset
+\echo :white'Started at: ':started_at' (':start_uptime' ago)':reset
+\echo :white'Loaded at:  ':loaded_at' (':load_uptime' ago)':reset
 
 \if :is_config_file_error
     \echo :red'Errors found in config file "':config_file'"':reset
