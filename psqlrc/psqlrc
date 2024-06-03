@@ -49,6 +49,11 @@ select -- pg_backend_pid(), -- if we're connecting through pgbouncer, then promp
 
        pg_is_in_recovery(), -- primary or standby
 
+       pg_postmaster_start_time()::timestamptz(0) as started_at,
+       pg_conf_load_time()::timestamptz(0)        as loaded_at,
+       now()::timestamptz(0) - pg_postmaster_start_time()::timestamptz(0) as start_uptime,
+       now()::timestamptz(0) - pg_conf_load_time()::timestamptz(0)        as load_uptime,
+
        current_setting('server_version') as server_version,
        current_setting('config_file') as config_file,
        current_setting('hba_file') as hba_file,
@@ -120,6 +125,9 @@ from coalesce(
 
      extract(epoch from r.lag) as e(epoch)
 \gset
+
+\echo :white'Started at: ':started_at' (':start_uptime')':reset
+\echo :white'Loaded at:  ':loaded_at' (':load_uptime')':reset
 
 \if :is_config_file_error
     \echo :red'Errors found in config file "':config_file'"':reset
