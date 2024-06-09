@@ -13,6 +13,7 @@
           count(*) filter (where tag = 'REFRESH MATERIALIZED VIEW') --67,132
    from db_audit.ddl_log;
    ```
+1. Сделать отдельное расширение? См. https://edu.postgrespro.ru/dba2-13/dba2_15_admin_extensions.html
 
 # DONE
 
