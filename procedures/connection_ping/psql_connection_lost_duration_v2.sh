@@ -1,5 +1,4 @@
 #!/bin/bash
-
 #https://habr.com/ru/company/ruvds/blog/325522/ - Bash documentation
 
 #https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html
