@@ -129,6 +129,12 @@ from coalesce(
 \echo :white'Started at:       ':started_at' (':start_uptime' ago)':reset
 \echo :white'Config loaded at: ':loaded_at' (':load_uptime' ago)':reset
 
+\if :pg_is_in_recovery
+    \echo :white'Role:             ':magenta'standby':reset' (':replication_lag' from ':primary_dsn')'
+\else
+    \echo :white'Role:             ':red'primary':reset' (':streaming_count' standby streaming)'
+\endif
+
 \if :is_config_file_error
     \echo :red'Errors found in config file "':config_file'"':reset
 
@@ -235,9 +241,9 @@ from coalesce(
 \set PROMPT1 :PROMPT1' ':reset'PostgreSQL ':server_version
 
 \if :pg_is_in_recovery
-    \set PROMPT1 :PROMPT1' ':magenta'standby':reset' (':replication_lag' from ':primary_dsn')'
+    \set PROMPT1 :PROMPT1' ':magenta'standby':reset
 \else
-    \set PROMPT1 :PROMPT1' ':red'primary':reset' (':streaming_count' standby streaming)'
+    \set PROMPT1 :PROMPT1' ':red'primary':reset
 \endif
 
 \set PROMPT1 :PROMPT1' ':yellow'%n':cyan'@':orange'%`hostname`':cyan':':green'%>':blue'/%/'
