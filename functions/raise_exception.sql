@@ -13,7 +13,7 @@ create or replace function public.raise_exception(
     "table"      text default null,
     "column"     text default null
 )
-    returns boolean
+    returns anyelement
     immutable
     --strict -- returns null if any parameter is null
     parallel safe
@@ -32,7 +32,7 @@ begin
         table       = coalesce("table", ''),
         column      = coalesce("column", ''),
         datatype    = pg_typeof(value)::text;
-    return null::bool;
+    return null::anyelement;
 end;
 $$;
 
@@ -133,7 +133,7 @@ left join generate_series(1, 4 + 1) as hand2(finger) using (finger)
 where case when hand1.finger between 1 and 5
             and hand2.finger is not null
            then true
-           else public.raise_exception(array[hand1.finger, hand2.finger])
+           else public.raise_exception(array[hand1.finger, hand2.finger])::text::bool
       end
 order by hand1.finger;
 
@@ -143,7 +143,7 @@ with t as materialized (
     from generate_series(1, 100000) as x(i)
     where case when clock_timestamp() < '1s' + statement_timestamp()
                then true
-               else public.raise_exception(i)
+               else public.raise_exception(i)::bool
           end
     order by i
 )
@@ -160,5 +160,10 @@ WHERE
     table_schema = 'public' AND
     table_name = 'source_1234567890' AND
     column_name = 'scope';
+
+--USE EXAMPLE 5
+SELECT CASE WHEN true THEN point(0,0)
+            ELSE public.raise_exception(null::point)
+       END;
 
 --See also: https://github.com/decibel/pgerror
