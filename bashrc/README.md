@@ -27,6 +27,7 @@
 export EDITOR=nano
 export HISTFILESIZE=5000
 export HISTCONTROL="ignoredups"
+export HISTTIMEFORMAT="%Y-%m-%d %T "
 
 # Protect command history loose on exit within parallel terminals
 shopt -s histappend
