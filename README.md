@@ -113,7 +113,7 @@
    1. [Как узнать, почему время ответа от базы периодически падает?](#как-узнать-почему-время-ответа-от-базы-периодически-падает)
    1. [Как обезопасить приложение от тяжёлых миграций, приводящих к блокированию запросов?](#как-обезопасить-приложение-от-тяжёлых-миграций-приводящих-к-блокированию-запросов)
    1. [Simple index checking](#simple-index-checking)
-   1. [Как скопировать таблицы из одной базы данных в другую?](#как-скопировать-таблицы-из-одной-базы-данных-в-другую)
+   1. [Как скопировать базу данных на другой сервер?](#как-скопировать-базу-данных-на-другой-сервер)
    1. [Как выгрузить таблицы из БД?](#как-выгрузить-таблицы-из-бд)
    1. [Как выгрузить результат SELECT запроса в CSV?](#как-выгрузить-результат-select-запроса-в-csv) 
    1. [Как проверить синтаксис SQL кода без его выполнения?](#как-проверить-синтаксис-sql-кода-без-его-выполнения)
@@ -2328,23 +2328,23 @@ left outer join index_io ii
 order by ti.table_page_read desc, ii.idx_page_read desc
 ```
 
-### Как скопировать таблицы из одной базы данных в другую?
+### Как скопировать базу данных на другой сервер?
 
-Одной командой:
+Одной командой, без промежуточных файлов:
 ```bash
 pg_dump -U postgres -h 127.0.0.1 --dbname=my_database_src --verbose \
-    | psql -U postgres -h 127.0.0.1 --dbname=my_database_dst 2> errors.txt
+    | psql -X -U postgres -h 127.0.0.1 --dbname=my_database_dst 2> my_database.stderr.log
 ```
 
 Двумя командами, через промежуточный сжатый файл.
 ```bash
 #на сервере A:
-pg_dump -U postgres -h 127.0.0.1 --clean --if-exists my_database_src | pv | pzstd -9 > my_table.sql.zst
+pg_dump -U postgres -h 127.0.0.1 --clean --if-exists my_database_src | pv | zstd --adapt > my_database.sql.zst
 
 #копируем my_table.sql.zst с сервера A на сервер B
 
 #на сервере B:
-pv my_table.sql.zst | zstd -dcq | psql --username=postgres --host=127.0.0.1 --dbname=my_database_dst --set=ON_ERROR_STOP=1 --echo-errors
+pv my_database.sql.zst | zstd -dcq | psql -X --username=postgres --host=127.0.0.1 --dbname=my_database_dst --set=ON_ERROR_STOP=1 --echo-errors
 ```
 
 ### Как выгрузить таблицы из БД?
