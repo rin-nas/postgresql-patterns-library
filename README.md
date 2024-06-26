@@ -2330,13 +2330,13 @@ order by ti.table_page_read desc, ii.idx_page_read desc
 
 ### Как скопировать базу данных?
 
-Одной командой, без промежуточных файлов:
+Без промежуточных файлов, одной командой:
 ```bash
 pg_dump -U postgres -h 127.0.0.1 --dbname=my_database_src --verbose \
     | psql -X -U postgres -h 127.0.0.1 --dbname=my_database_dst 2> my_database.stderr.log
 ```
 
-Двумя командами, через промежуточный сжатый файл.
+Через промежуточный сжатый файл.
 
 См. [`db_dump.sh`](DBA/db_dump.sh) и [`db_restore.sh`](DBA/db_restore.sh).
 
