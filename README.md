@@ -113,7 +113,7 @@
    1. [Как узнать, почему время ответа от базы периодически падает?](#как-узнать-почему-время-ответа-от-базы-периодически-падает)
    1. [Как обезопасить приложение от тяжёлых миграций, приводящих к блокированию запросов?](#как-обезопасить-приложение-от-тяжёлых-миграций-приводящих-к-блокированию-запросов)
    1. [Simple index checking](#simple-index-checking)
-   1. [Как скопировать базу данных на другой сервер?](#как-скопировать-базу-данных-на-другой-сервер)
+   1. [Как скопировать базу данных?](#как-скопировать-базу-данных)
    1. [Как выгрузить таблицы из БД?](#как-выгрузить-таблицы-из-бд)
    1. [Как выгрузить результат SELECT запроса в CSV?](#как-выгрузить-результат-select-запроса-в-csv) 
    1. [Как проверить синтаксис SQL кода без его выполнения?](#как-проверить-синтаксис-sql-кода-без-его-выполнения)
@@ -2050,7 +2050,7 @@ order by installed_version is null, name
 
 ### Как получить список таблиц с размером занимаемого места и примерным количеством строк?
 
-Выполните запрос [`pg_table_size_rows_count.sql`](dba/pg_table_size_rows_count.sql)
+Выполните запрос [`pg_table_size_rows_count.sql`](DBA/pg_table_size_rows_count.sql)
 
 В результате вы получите примерно такую таблицу:
 
@@ -2328,7 +2328,7 @@ left outer join index_io ii
 order by ti.table_page_read desc, ii.idx_page_read desc
 ```
 
-### Как скопировать базу данных на другой сервер?
+### Как скопировать базу данных?
 
 Одной командой, без промежуточных файлов:
 ```bash
@@ -2337,15 +2337,8 @@ pg_dump -U postgres -h 127.0.0.1 --dbname=my_database_src --verbose \
 ```
 
 Двумя командами, через промежуточный сжатый файл.
-```bash
-#на сервере A:
-pg_dump -U postgres -h 127.0.0.1 --clean --if-exists my_database_src | pv | zstd --adapt > my_database.sql.zst
 
-#копируем my_table.sql.zst с сервера A на сервер B
-
-#на сервере B:
-pv my_database.sql.zst | zstd -dcq | psql -X --username=postgres --host=127.0.0.1 --dbname=my_database_dst --set=ON_ERROR_STOP=1 --echo-errors
-```
+См. [`db_dump.sh`](DBA/db_dump.sh) и [`db_restore.sh`](DBA/db_restore.sh).
 
 ### Как выгрузить таблицы из БД?
 
@@ -2490,7 +2483,7 @@ $ crontab -l
 
 Одна из целей — установить значение [`fillfactor`](https://www.cybertec-postgresql.com/en/what-is-fillfactor-and-how-does-it-affect-postgresql-performance/) для таблиц с частыми UPDATE, чтобы задействовать [Heap-Only Tuple update](https://www.cybertec-postgresql.com/en/hot-updates-in-postgresql-for-better-performance/) для увеличения скорости работы.
 
-Готовое решение: [`pg_stat_user_tables_usage.sql`](dba/pg_stat_user_tables_usage.sql)
+Готовое решение: [`pg_stat_user_tables_usage.sql`](DBA/pg_stat_user_tables_usage.sql)
 
 Колонка `usage` содержит набор букв:
 |Действие |Много |Мало|
