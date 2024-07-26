@@ -22,7 +22,7 @@
 Протестировано в `RHEL 8.9`.
 
 ```bash
-# Last version and documentation: https://github.com/rin-nas/postgresql-patterns-library/tree/master/psqlrc
+# Last version and documentation: https://github.com/rin-nas/postgresql-patterns-library/tree/master/bashrc
 
 export EDITOR=nano
 export HISTFILESIZE=5000
