@@ -77,6 +77,29 @@ __prompt_command() {
 }
 ```
 
+## Как сделать так, чтобы при взятии `root` (`sudo su -`) профиль брался от исходного пользователя?
+
+Отредактируйте файл `/root/.bash_profile`.
+
+Замените 
+```bash
+if [ -f ~/.bashrc ]; then
+    . ~/.bashrc
+fi
+```
+
+на
+```bash
+REALUSER_NAME=$(who -m | cut -f1 -d' ')
+REALUSER_HOME=/home/cplext.ru/${REALUSER_NAME} #подправьте путь, при необходимости
+
+if [ -f $REALUSER_HOME/.bashrc ]; then
+    . $REALUSER_HOME/.bashrc
+elif [ -f ~/.bashrc ]; then
+    . ~/.bashrc
+fi
+```
+
 ## Ссылки по теме
 
 * [Удобное цветное приглашение командной строки в `psql`](../psqlrc)
