@@ -57,7 +57,8 @@ __prompt_command() {
 
     # https://stackoverflow.com/questions/18215973/how-to-check-if-running-as-root-in-a-bash-script
     if [ "${EUID:-$(id -u)}" -eq 0 ]; then
-        PS1+="${Red}\u" #user
+        REALUSER=$(who -m | cut -f1 -d' ')
+        PS1+="${Gray}${REALUSER}->${Red}\u" #user
     else
         PS1+="${Yellow}\u" #user
     fi
