@@ -10,7 +10,7 @@ SCRIPT_DIR=$(dirname "$SCRIPT_FILE")
 # Check syntax this file
 bash -n "${SCRIPT_FILE}" || exit
  
- 
+# если есть файл ~/.pgpass, то можно просто ввести Enter
 read -s -r -p "Enter password for postgres: " PGPASSWORD
 echo
 export PGPASSWORD
@@ -27,7 +27,6 @@ do
             | psql -U postgres -X \
                    --dbname=${dbname} \
                    --echo-errors \
-                   --set="ON_ERROR_STOP=1" \
                    --log-file="${LOG_DIR}/psql.stdout.${dbname}.log" \
                            2> "${LOG_DIR}/psql.stderr.${dbname}.log" \
     )
