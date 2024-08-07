@@ -1,4 +1,5 @@
 -- pg_basebackup progress bar, copy speed, estimated duration, estimated finish datetime
+-- PostgreSQL 13+
 
 -- Запуcкать под ролью postgres!!!
 
