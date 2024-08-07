@@ -1,5 +1,7 @@
 # pg_basebackup progress bar, copy speed, estimated duration, estimated finish datetime
 
+PostgreSQL 13+
+
 При копировании БД через [`pg_basebackup`](https://postgrespro.ru/docs/postgresql/14/app-pgbasebackup) SQL запрос [`pg_basebackup_progress_bar.sql`](pg_basebackup_progress_bar.sql) показывает:
 
 | Колонка | Пример значения | Описание | 
