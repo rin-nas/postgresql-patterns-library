@@ -130,7 +130,7 @@ from coalesce(
 \echo :white'Config loaded at: ':loaded_at' (':load_uptime' ago)':reset
 
 \if :pg_is_in_recovery
-    \echo :white'Role:             ':magenta'standby':reset' (':replication_lag' from ':primary_dsn')'
+    \echo :white'Role:             ':magenta'standby':reset' (lag ':replication_lag' from ':primary_dsn')'
 \else
     \echo :white'Role:             ':red'primary':reset' (':streaming_count' standby streaming)'
 \endif
