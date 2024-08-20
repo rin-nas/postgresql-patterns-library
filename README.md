@@ -2526,6 +2526,7 @@ select case when not pg_is_in_recovery() then null -- not standby
        current_setting('max_standby_archive_delay') as max_standby_archive_delay,
        current_setting('max_standby_streaming_delay') as max_standby_streaming_delay;
 ```
+При простое мастера без нагрузки запрос может выдавать некорректное значение с отставанием реплики. В таком случае нужно выполнить соответствующий запрос на мастере.
 
 ### Как узнать процент достижения своего максимального значения для последовательностей?
 
