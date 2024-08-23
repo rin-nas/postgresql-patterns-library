@@ -247,7 +247,7 @@ from coalesce(
     \set PROMPT1 :PROMPT1' ':red'primary':reset
 \endif
 
-\set PROMPT1 :PROMPT1' ':yellow'%n':cyan'@':orange'%`hostname`':cyan':':green'%>':blue'/%/.':current_schema
+\set PROMPT1 :PROMPT1' ':yellow'%n':cyan'@':orange'%m':cyan':':green'%>':blue'/%/.':current_schema
 \set PROMPT1 :PROMPT1'\n':reset'%x%# '
 
 \set PROMPT2 ''
