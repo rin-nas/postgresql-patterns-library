@@ -42,7 +42,7 @@
 
 with fs as (
     select distinct on (name) *
-    from pg_file_settings
+    from pg_file_settings --TODO: non postgres user can throw "ERROR: permission denied for view pg_file_settings"
     order by name, seqno desc
 )
 select -- pg_backend_pid(), -- if we're connecting through pgbouncer, then prompt's %p is not real, so get real PID
