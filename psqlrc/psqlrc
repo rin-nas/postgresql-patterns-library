@@ -48,6 +48,7 @@ with fs as (
 select -- pg_backend_pid(), -- if we're connecting through pgbouncer, then prompt's %p is not real, so get real PID
 
        pg_is_in_recovery(), -- primary or standby
+       current_schema(),
 
        pg_postmaster_start_time()::timestamptz(0) as started_at,
        pg_conf_load_time()::timestamptz(0)        as loaded_at,
@@ -246,7 +247,7 @@ from coalesce(
     \set PROMPT1 :PROMPT1' ':red'primary':reset
 \endif
 
-\set PROMPT1 :PROMPT1' ':yellow'%n':cyan'@':orange'%`hostname`':cyan':':green'%>':blue'/%/'
+\set PROMPT1 :PROMPT1' ':yellow'%n':cyan'@':orange'%`hostname`':cyan':':green'%>':blue'/%/.':current_schema
 \set PROMPT1 :PROMPT1'\n':reset'%x%# '
 
 \set PROMPT2 ''
