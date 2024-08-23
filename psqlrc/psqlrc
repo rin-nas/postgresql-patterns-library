@@ -227,7 +227,7 @@ from coalesce(
 
 /* psql escape codes:
 %M - full host + domain for db server, or [local] (if over Unix socket), or [local:/dir/name]
-%m - host name of the db server, truncated at the first dot, or [local] (if over Unix socket)
+%m - host name of the db server, truncated at the first dot, or [local] (if over Unix socket) -- do not use %m, because IP will be truncated!
 %> - port where db server is listening
 %n - database session user name (changes based on SET SESSION AUTHORIZATION)
 %/ - current database name
@@ -247,7 +247,7 @@ from coalesce(
     \set PROMPT1 :PROMPT1' ':red'primary':reset
 \endif
 
-\set PROMPT1 :PROMPT1' ':yellow'%n':cyan'@':orange'%m':cyan':':green'%>':blue'/%/.':current_schema
+\set PROMPT1 :PROMPT1' ':yellow'%n':cyan'@':orange'%M':cyan':':green'%>':blue'/%/.':current_schema
 \set PROMPT1 :PROMPT1'\n':reset'%x%# '
 
 \set PROMPT2 ''
