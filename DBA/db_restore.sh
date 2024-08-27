@@ -11,7 +11,7 @@ SCRIPT_DIR=$(dirname "$SCRIPT_FILE")
 bash -n "${SCRIPT_FILE}" || exit
  
 # если есть файл ~/.pgpass, то можно просто ввести Enter
-read -s -r -p "Enter password for postgres: " PGPASSWORD
+read -s -r -p "Enter password for user postgres: " PGPASSWORD
 echo
 export PGPASSWORD
  
