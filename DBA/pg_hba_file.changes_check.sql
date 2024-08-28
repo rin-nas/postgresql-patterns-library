@@ -17,3 +17,6 @@ from
     sf.modification::text,
     sf.change::text
   ) as s5(content);
+
+-- https://www.zabbix.com/ru/integrations/postgresql#postgresql_agent2
+GRANT EXECUTE ON FUNCTION pg_stat_file(text), pg_read_file(text) TO zbx_monitor;
