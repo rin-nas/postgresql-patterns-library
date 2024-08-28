@@ -1,7 +1,7 @@
 -- pg_basebackup progress bar, copy speed, estimated duration, estimated finish datetime
 -- PostgreSQL 13+
 
--- Запуcкать под ролью postgres!!!
+-- Запуcкать на мастере под ролью postgres!!!
 
 -- SET TIME ZONE '+3'; --MSK
 
