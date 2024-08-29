@@ -46,10 +46,9 @@
 
 ## Как установить
 
+* Требования к версиям: `psql 12+`, `PostgreSQL 12+`
 * Документация: https://postgrespro.ru/docs/postgresql/16/app-psql#APP-PSQL-FILES-PSQLRC
 * Файл с конфигурацией: [`psqlrc`](psqlrc)
-
-Протестировано в `psql 12+`.
 
 ## Ссылки по теме
 
