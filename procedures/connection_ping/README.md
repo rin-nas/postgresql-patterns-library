@@ -12,7 +12,7 @@
 sudo dnf -y install postgresql-14-14.5 postgresql-14-libs-14.5
   
 # создаём файл .pgpass, при необходимости
-nano ~/.pgpass
+nano ~/.pgpass && chmod 600 ~/.pgpass
  
 # передаём в application_name основной IP текущего сервера, т.к. запрос может проходить через прокси
 psql -q -X -U postgres -d "application_name='psql $(hostname -I | cut -f1 -d' ')'" \
