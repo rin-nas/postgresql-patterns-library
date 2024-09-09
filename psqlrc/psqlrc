@@ -71,10 +71,10 @@ select -- pg_backend_pid(), -- if we're connecting through pgbouncer, then promp
            nullif(extract(day    from r.lag), 0) || 'd',
            nullif(extract(hour   from r.lag), 0) || 'h',
            nullif(extract(minute from r.lag), 0) || 'm',
-           case when epoch <    1.0 then round(extract(second from r.lag)::numeric * 1000, 0) || 'ms'
-                when epoch <   10.0 then round(extract(second from r.lag)::numeric, 2) || 's'
-                when epoch <   60.0 then round(extract(second from r.lag)::numeric, 1) || 's'
-                when epoch < 3600.0 then round(extract(second from r.lag)::numeric, 0) || 's'
+           case when e.lag_epoch <    1.0 then round(extract(second from r.lag)::numeric * 1000, 0) || 'ms'
+                when e.lag_epoch <   10.0 then round(extract(second from r.lag)::numeric, 2) || 's'
+                when e.lag_epoch <   60.0 then round(extract(second from r.lag)::numeric, 1) || 's'
+                when e.lag_epoch < 3600.0 then round(extract(second from r.lag)::numeric, 0) || 's'
            end
        ), ''), '?') as replication_lag,
 
@@ -114,7 +114,9 @@ select -- pg_backend_pid(), -- if we're connecting through pgbouncer, then promp
                                       --when 'real'    then fs.setting::real not between s.min_val::real and s.max_val::real
                                       else false
                                     end
-       ) as is_config_file_setting_incorrect
+       ) as is_config_file_setting_incorrect,
+	   
+       rs.*
 
 from coalesce(
          case when not pg_is_in_recovery() then null -- not standby
@@ -122,9 +124,14 @@ from coalesce(
               when pg_last_wal_receive_lsn() = pg_last_wal_replay_lsn() then '0'::interval -- no lag
               else coalesce(now() - pg_last_xact_replay_timestamp(), '0'::interval)
          end
-     ) as r(lag),
+     ) as r(lag)
 
-     extract(epoch from r.lag) as e(epoch)
+cross join extract(epoch from r.lag) as e(lag_epoch)
+	 
+cross join (select count(*) as unused_repl_slots_count,
+                   string_agg(slot_name, ', ') as unused_repl_slots_names
+	        from pg_replication_slots 
+	        where not active) as rs
 \gset
 
 \echo :white'Started at:       ':started_at' (':start_uptime' ago)':reset
@@ -223,6 +230,11 @@ from coalesce(
                                --when 'real'    then fs.setting::real not between s.min_val::real and s.max_val::real
                                else false
                              end
+\endif
+
+\if :unused_repl_slots_count
+    \echo :yellow'Server has ':unused_repl_slots_count' unused (inactive) replication slots: ':unused_repl_slots_names'!':reset
+	\echo :yellow'Hint: WAL files are increasing, you can delete slots by command: select pg_drop_replication_slot({slot_name});':reset
 \endif
 
 /* psql escape codes:
