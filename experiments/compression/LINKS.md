@@ -42,3 +42,6 @@ of σ ’s, or 1 if there are no more σ ’s (again, no distance is 1);
 * http://compression.ru/book/part2/part2__2.htm LZW см. про скорость поиска следующего символа в таблице по хешу!
 * https://github.com/mikeleo03/LZW-Compressor_Backend/blob/main/src/algorithm/algorithm.js
 * https://ru.wikipedia.org/wiki/Алгоритм_Лемпеля_—_Зива_—_Велча
+
+## RLE
+* https://habr.com/ru/companies/kts/articles/831440/
