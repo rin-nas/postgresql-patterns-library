@@ -146,16 +146,16 @@ cross join (select count(*) as unused_repl_slots_count,
 \if :is_config_file_error
     \echo :red'Errors found in config file "':config_file'"':reset
 
-    with t as (
+    with fs as (
         select distinct on (name) *
         from pg_file_settings
         order by name, seqno desc
     )
-    select t.sourcefile, t.sourceline, t.name, t.setting, t.applied, t.error,
+    select fs.sourcefile, fs.sourceline, fs.name, fs.setting, fs.applied, fs.error,
            s.vartype, s.min_val, s.max_val, s.enumvals, s.extra_desc
-    from t
-    join pg_settings as s on lower(t.name) = lower(s.name)
-    where not t.applied and not s.pending_restart;
+    from rs
+    join pg_settings as s on lower(fs.name) = lower(s.name)
+    where not fs.applied and not s.pending_restart;
 \endif
 
 \if :is_hba_file_error
