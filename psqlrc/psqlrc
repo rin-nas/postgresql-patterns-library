@@ -186,6 +186,8 @@ cross join (select count(*) as unused_repl_slots_count,
 
 \if :is_pending_reload
     \echo :yellow'Server is pending to reload!':reset
+    \echo :yellow'Hint: use command: select pg_reload_conf();':reset
+
 
     with fs as (
        select distinct on (name) *
