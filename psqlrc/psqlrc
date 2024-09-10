@@ -153,7 +153,7 @@ cross join (select count(*) as unused_repl_slots_count,
     )
     select fs.sourcefile, fs.sourceline, fs.name, fs.setting, fs.applied, fs.error,
            s.vartype, s.min_val, s.max_val, s.enumvals, s.extra_desc
-    from rs
+    from fs
     join pg_settings as s on lower(fs.name) = lower(s.name)
     where not fs.applied and not s.pending_restart;
 \endif
