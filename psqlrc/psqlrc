@@ -130,8 +130,8 @@ cross join extract(epoch from r.lag) as e(lag_epoch)
 	 
 cross join (select count(*)                    as unused_repl_slots_count,
                    string_agg(slot_name, ', ') as unused_repl_slots_names
-	    from pg_replication_slots 
-	    where not active
+            from pg_replication_slots 
+            where not active
            ) as rs
 \gset
 
