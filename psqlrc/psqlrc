@@ -128,10 +128,11 @@ from coalesce(
 
 cross join extract(epoch from r.lag) as e(lag_epoch)
 	 
-cross join (select count(*) as unused_repl_slots_count,
+cross join (select count(*)                    as unused_repl_slots_count,
                    string_agg(slot_name, ', ') as unused_repl_slots_names
-	        from pg_replication_slots 
-	        where not active) as rs
+	    from pg_replication_slots 
+	    where not active
+           ) as rs
 \gset
 
 \echo :white'Started at:       ':started_at' (':start_uptime' ago)':reset
@@ -155,13 +156,17 @@ cross join (select count(*) as unused_repl_slots_count,
            s.vartype, s.min_val, s.max_val, s.enumvals, s.extra_desc
     from fs
     join pg_settings as s on lower(fs.name) = lower(s.name)
-    where not fs.applied and not s.pending_restart;
+    where not fs.applied and not s.pending_restart
+    order by fs.sourcefile, fs.sourceline;
 \endif
 
 \if :is_hba_file_error
     \echo :red'Errors found in hba file "':hba_file'"':reset
 
-    select * from pg_hba_file_rules where error is not null;
+    select * 
+    from pg_hba_file_rules 
+    where error is not null
+    order by line_number;
 \endif
 
 \if :is_pending_restart
@@ -181,7 +186,8 @@ cross join (select count(*) as unused_repl_slots_count,
     join pg_settings as s on lower(fs.name) = lower(s.name)
                          and lower(fs.setting) is distinct from lower(cs.setting)
                          and lower(fs.setting) is distinct from lower(s.setting)
-                         and s.pending_restart;
+                         and s.pending_restart
+    order by fs.sourcefile, fs.sourceline;
 \endif
 
 \if :is_pending_reload
@@ -204,7 +210,8 @@ cross join (select count(*) as unused_repl_slots_count,
                          and lower(fs.setting) is distinct from lower(cs.setting)
                          and lower(fs.setting) is distinct from lower(s.setting)
                          and not (s.setting = 'replica' and fs.setting = 'hot_standby')
-                         and fs.applied and not s.pending_restart;
+                         and fs.applied and not s.pending_restart
+    order by fs.sourcefile, fs.sourceline;
 \endif
 
 \if :is_config_file_setting_incorrect
@@ -232,11 +239,12 @@ cross join (select count(*) as unused_repl_slots_count,
                                --when 'real'    then fs.setting::real not between s.min_val::real and s.max_val::real
                                else false
                              end
+    order by fs.sourcefile, fs.sourceline;
 \endif
 
 \if :unused_repl_slots_count
     \echo :yellow'Server has ':unused_repl_slots_count' unused (inactive) replication slots: ':unused_repl_slots_names'!':reset
-	\echo :yellow'Hint: WAL files are increasing, you can delete slots by command: select pg_drop_replication_slot({slot_name});':reset
+    \echo :yellow'Hint: WAL files are increasing, you can delete slots by command: select pg_drop_replication_slot({slot_name});':reset
 \endif
 
 /* psql escape codes:
