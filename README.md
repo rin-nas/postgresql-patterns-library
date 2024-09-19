@@ -2554,6 +2554,7 @@ order by used_percent desc;
 Если PostgreSQL запущен:
 
 ```
+-- выявляем неактивные слоты репликации, которые уже не нужены
 SELECT *,
        pg_wal_lsn_diff(
           pg_current_wal_lsn(),
@@ -2562,7 +2563,10 @@ SELECT *,
 FROM pg_replication_slots
 ORDER BY restart_lsn;
 
+-- удяляем такие слоты репликации
 select pg_drop_replication_slot('slot_name');
+
+-- сохраняем контрольную точку, в этот момент ненужные WAL файлы будут удалены
 checkpoint;
 ```
 
