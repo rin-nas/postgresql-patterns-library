@@ -2560,3 +2560,5 @@ Latest checkpoint's REDO WAL file: 000000020001CD9E0000006F
 # /usr/pgsql-12/bin/pg_archivecleanup -n /var/lib/pgsql/12/data/pg_wal 000000020001CD9E0000006F # посмотреть, что будет удалено
 # /usr/pgsql-12/bin/pg_archivecleanup -d /var/lib/pgsql/12/data/pg_wal 000000020001CD9E0000006F # удалить
 ```
+
+См. [Почему мой `pg_wal` продолжает расти?](https://www.cybertec-postgresql.com/en/why-does-my-pg_wal-keep-growing/) (и как остановить рост?)
