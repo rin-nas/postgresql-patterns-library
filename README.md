@@ -2551,6 +2551,23 @@ order by used_percent desc;
 
 ### Как удалить неиспользуемые WAL файлы?
 
+Если PostgreSQL запущен:
+
+```
+SELECT *,
+       pg_wal_lsn_diff(
+          pg_current_wal_lsn(),
+          restart_lsn
+       ) AS bytes_behind
+FROM pg_replication_slots
+ORDER BY restart_lsn;
+
+select pg_drop_replication_slot('slot_name');
+checkpoint;
+```
+
+Если PostgreSQL уже не запускается из-за нехватки места на диске:
+
 ```bash
 # /usr/pgsql-12/bin/pg_controldata -D /var/lib/pgsql/12/data
 ...
