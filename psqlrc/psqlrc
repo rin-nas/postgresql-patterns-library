@@ -87,7 +87,11 @@ select -- pg_backend_pid(), -- if we're connecting through pgbouncer, then promp
 
        exists(select from pg_hba_file_rules where error is not null) as is_hba_file_error,
 
-       exists(select from pg_settings where pending_restart) as is_pending_restart,
+       exists(select
+              from pg_settings as s
+              where s.pending_restart
+                --and lower(s.setting) is distinct from '(disabled)'
+       ) as is_pending_restart,
 
        exists(
            select
@@ -97,6 +101,7 @@ select -- pg_backend_pid(), -- if we're connecting through pgbouncer, then promp
                                 and lower(fs.setting) is distinct from lower(cs.setting)
                                 and lower(fs.setting) is distinct from lower(s.setting)
                                 and not (s.setting = 'replica' and fs.setting = 'hot_standby')
+                                and lower(s.setting) is distinct from '(disabled)'
                                 and fs.applied and not s.pending_restart
        ) as is_pending_reload,
 
@@ -186,6 +191,7 @@ cross join (select count(*)                    as unused_repl_slots_count,
     join pg_settings as s on lower(fs.name) = lower(s.name)
                          and lower(fs.setting) is distinct from lower(cs.setting)
                          and lower(fs.setting) is distinct from lower(s.setting)
+                         --and lower(s.setting) is distinct from '(disabled)'
                          and s.pending_restart
     order by fs.sourcefile, fs.sourceline;
 \endif
@@ -210,6 +216,7 @@ cross join (select count(*)                    as unused_repl_slots_count,
                          and lower(fs.setting) is distinct from lower(cs.setting)
                          and lower(fs.setting) is distinct from lower(s.setting)
                          and not (s.setting = 'replica' and fs.setting = 'hot_standby')
+                         and lower(s.setting) is distinct from '(disabled)'
                          and fs.applied and not s.pending_restart
     order by fs.sourcefile, fs.sourceline;
 \endif
