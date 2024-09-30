@@ -2,6 +2,10 @@
 # https://habr.com/ru/company/ruvds/blog/325522/ - Bash documentation
   
 # https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html
+# set -e - прекращает выполнение скрипта, если команда завершилась ошибкой
+# set -u - прекращает выполнение скрипта, если встретилась несуществующая переменная
+# set -x - выводит выполняемые команды в stdout перед выполнением (только для отладки, а то замусоривает журнал!)
+# set -o pipefail - прекращает выполнение скрипта, даже если одна из частей пайпа завершилась ошибкой
 set -euo pipefail
   
 SCRIPT_FILE=$(readlink -f "$0")
