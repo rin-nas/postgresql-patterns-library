@@ -2553,7 +2553,7 @@ order by used_percent desc;
 
 Если PostgreSQL запущен:
 
-```
+```sql
 -- выявляем неактивные слоты репликации, которые уже не нужны
 SELECT *,
        pg_wal_lsn_diff(
