@@ -1,6 +1,6 @@
 # Инсталляция сервиса архивирования WAL файлов PostgreSQL
 
-Для архивирования WAL файлов в реальном времени применяется [pg_receivewal](https://postgrespro.ru/docs/postgresql/14/app-pgreceivewal), а не [archive_command](https://postgrespro.ru/docs/postgresql/14/runtime-config-wal#GUC-ARCHIVE-COMMAND).
+Для архивирования WAL файлов **в реальном времени** применяется [pg_receivewal](https://postgrespro.ru/docs/postgresql/14/app-pgreceivewal), а не [archive_command](https://postgrespro.ru/docs/postgresql/14/runtime-config-wal#GUC-ARCHIVE-COMMAND).
 Таки образом гарантируется, что ни одна транзакция не будет потеряна.
 
 **Инсталляция сервиса**
