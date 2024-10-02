@@ -17,3 +17,11 @@ sudo systemctl status pg_receivewal@14
 ```
 
 Файл [`/etc/systemd/system/pg_receivewal@.service`](pg_receivewal@.service)
+
+## Ссылки по теме
+
+1. https://postgrespro.ru/docs/postgresql/14/app-pgreceivewal
+1. https://www.cybertec-postgresql.com/en/never-lose-a-postgresql-transaction-with-pg_receivewal/
+1. https://postgrespro.ru/docs/postgresql/14/continuous-archiving#BACKUP-PITR-RECOVERY
+1. https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html
+1. https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html
