@@ -16,7 +16,7 @@ ExecCondition=/bin/bash -c "test f = $(psql --user=bkp_replicator --dbname=postg
 ExecStartPre=/usr/pgsql-%i/bin/pg_receivewal --verbose --user=bkp_replicator --slot=pg_receivewal --create-slot --if-not-exists
  
 # архивируем WAL файлы в реальном времени, появится ещё одна асинхронная реплика, которая никогда не догонит мастер (select * from pg_stat_replication;)
-ExecStart=/usr/pgsql-%i/bin/pg_receivewal --verbose --user=bkp_replicator --slot=pg_receivewal --directory=/mnt/backup_db/archive_wal --synchronous
+ExecStart=/usr/pgsql-%i/bin/pg_receivewal --verbose --user=bkp_replicator --slot=pg_receivewal --directory=/mnt/backup_db/archive_wal --synchronous --compress=9
  
 # удаляем слот репликации, если он существует и неактивен (не используется); активный слот удалить нельзя, будет ошибка
 ExecStopPost=echo "pg_receivewal: drop unused replication slot"
