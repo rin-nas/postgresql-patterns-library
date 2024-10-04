@@ -12,6 +12,7 @@ Group=postgres
 ExecCondition=echo "pg_receivewal: check if PostgreSQL is primary"
 ExecCondition=/bin/bash -c "test f = $(psql --user=bkp_replicator --dbname=postgres --quiet --no-psqlrc --pset=null=¤ --tuples-only --no-align --command='select pg_is_in_recovery()')"
  
+ExecStartPre=mkdir -p /mnt/backup_db/archive_wal
 # создаём слот, если его ещё не было (select * from pg_replication_slots;)
 ExecStartPre=/usr/pgsql-%i/bin/pg_receivewal --verbose --user=bkp_replicator --slot=pg_receivewal --create-slot --if-not-exists
  
