@@ -10,7 +10,7 @@ Group=postgres
  
 # архивировать WAL файлы будем только с мастера
 ExecCondition=echo "pg_receivewal: check if PostgreSQL is primary"
-ExecCondition=/bin/bash -c "test f = $(psql --user=bkp_replicator --dbname=postgres --quiet --no-psqlrc --pset=null=¤ --tuples-only --no-align --command='select pg_is_in_recovery()')"
+ExecCondition=/bin/bash -c "test f = $(psql --user=bkp_replicator --no-password --dbname=postgres --quiet --no-psqlrc --pset=null=¤ --tuples-only --no-align --command='select pg_is_in_recovery()')"
  
 # создаём папки, если их ещё не было
 ExecStartPre=mkdir -p /mnt/backup_db/archive_wal
@@ -26,7 +26,7 @@ ExecStart=/usr/pgsql-%i/bin/pg_receivewal --user=bkp_replicator --no-password --
  
 # удаляем слот репликации, если он существует и неактивен (не используется); активный слот удалить нельзя, будет ошибка
 ExecStopPost=echo "pg_receivewal: drop unused replication slot"
-ExecStopPost=psql --user=bkp_replicator --dbname=postgres --quiet --no-psqlrc --pset=null=¤ --tuples-only --no-align \
+ExecStopPost=psql --user=bkp_replicator --no-password --dbname=postgres --quiet --no-psqlrc --pset=null=¤ --tuples-only --no-align \
                   --command="select pg_drop_replication_slot(slot_name) from pg_replication_slots where slot_name='pg_receivewal' and not active"
  
 [Install]
