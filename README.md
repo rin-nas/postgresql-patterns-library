@@ -2088,17 +2088,18 @@ INNER JOIN pg_database as d ON d.oid = s.dbid
 INNER JOIN pg_authid as a ON a.oid = s.userid
 --Add CROSS JOIN LATERAL for PG14+
 CROSS JOIN LATERAL (
-    SELECT s.total_plan_time + s.total_exec_time AS total_time,
-           s.mean_plan_time + s.mean_exec_time AS mean_time,
-           s.stddev_plan_time + s.stddev_exec_time AS stddev_time
+    SELECT s.total_plan_time  + s.total_exec_time  AS total_time,
+           s.mean_plan_time   + s.mean_exec_time   AS mean_time,
+           s.stddev_plan_time + s.stddev_exec_time AS stddev_time,
+           s.max_plan_time    + s.max_exec_time    AS max_time
 ) AS t
 --WHERE query ~* '(^|\n)\s*\m(insert\s+into|update|delete|truncate)\M' --только DML запросы
 WHERE s.query !~* '(^|\n)\s*\m(insert\s+into|update|delete|truncate)\M' --исключая DML запросы
-ORDER BY t.total_time DESC -- самые долгие запросы по общему времени выполнения
---ORDER BY calls DESC      -- самые популярные по кол-ву
---ORDER BY mean_time DESC  -- самые медленные в среднем (total_time / calls)
---ORDER BY max_time DESC   -- самые медленные в пике
---ORDER BY rows DESC       -- больше всего возвращают строк
+ORDER BY t.total_time DESC  -- самые долгие запросы по общему времени выполнения
+--ORDER BY t.mean_time DESC -- самые медленные в среднем (total_time / calls)
+--ORDER BY t.max_time DESC  -- самые медленные в пике
+--ORDER BY s.calls DESC       -- самые популярные по кол-ву
+--ORDER BY s.rows DESC        -- больше всего возвращают строк
 LIMIT 100;
 ```
 
