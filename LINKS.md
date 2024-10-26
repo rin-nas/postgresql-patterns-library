@@ -98,6 +98,7 @@
   1. https://wiki.postgresql.org/wiki/Inlining_of_SQL_functions
   1. https://www.crunchydata.com/postgres-tips
   1. https://www.pro-open.de/MATCH_RECOGNIZE - "Emulating" MATCH_RECOGNIZE in PostgreSQL (вычисление пиковых значений на графике)
+  1. https://onecompiler.com/postgresql Sandbox
 
 # Databases
   1. [IP2Location™ LITE IP-COUNTRY Database](https://lite.ip2location.com/database/db1-ip-country)
