@@ -115,3 +115,6 @@ time (pg_restore --username=postgres --dbname=my_database_tmp --clean --if-exist
       > /dev/null)
 ```
 See also https://www.google.com/search?q=pg_restore+pg_dump+pv
+
+## Ссылки по теме
+* https://github.com/dimitri/pgcopydb/
