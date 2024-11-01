@@ -27,9 +27,6 @@ order by greatest(state_change_elapsed, query_elapsed, xact_elapsed) desc;
 EOF
 )
 
-FILE="pg_stat_activity_dump.$(date +%Y-%m-%d_%H%M%S).txt"
+FILE="pg_stat_activity_dump.$(date +%Y-%m-%d_%H%M%S).csv"
 
-echo "$SQL" \
-  | (sudo su - postgres --command="psql --quiet --no-psqlrc --pset=linestyle=unicode --pset=null=¤") > $FILE \
-  && echo "Dumped to file $FILE"
-  
+echo "$SQL" | psql --quiet --no-psqlrc --csv --pset=linestyle=unicode --pset=null=¤" > $FILE && echo "Dumped to file $FILE"
