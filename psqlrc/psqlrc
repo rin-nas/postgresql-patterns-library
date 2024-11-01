@@ -133,7 +133,8 @@ from coalesce(
 
 cross join extract(epoch from r.lag) as e(lag_epoch)
 	 
-cross join (select count(*)                    as unused_repl_slots_count,
+cross join (select count(*) > 0                as has_unused_repl_slot,
+                   count(*)                    as unused_repl_slots_count,
                    string_agg(slot_name, ', ') as unused_repl_slots_names
             from pg_replication_slots 
             where not active
@@ -249,7 +250,7 @@ cross join (select count(*)                    as unused_repl_slots_count,
     order by fs.sourcefile, fs.sourceline;
 \endif
 
-\if :unused_repl_slots_count
+\if :has_unused_repl_slot
     \echo :yellow'Server has ':unused_repl_slots_count' unused (inactive) replication slots: ':unused_repl_slots_names'!':reset
     \echo :yellow'Hint: WAL files are increasing, you can delete slots by command: select pg_drop_replication_slot({slot_name});':reset
 \endif
