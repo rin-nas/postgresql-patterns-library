@@ -252,7 +252,8 @@ cross join (select count(*) > 0                as has_unused_repl_slot,
 
 \if :has_unused_repl_slot
     \echo :yellow'Server has ':unused_repl_slots_count' unused (inactive) replication slots: ':unused_repl_slots_names'!':reset
-    \echo :yellow'Hint: WAL files are increasing, you can delete slots by command: select pg_drop_replication_slot({slot_name});':reset
+    \echo :yellow'Hint: WAL files probably increasing, you can delete slots by command: select pg_drop_replication_slot({slot_name});':reset
+    \echo :yellow'Hint: You cannot delete slots on synchronous standby':reset
 \endif
 
 /* psql escape codes:
