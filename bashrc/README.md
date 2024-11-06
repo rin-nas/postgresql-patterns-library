@@ -91,7 +91,7 @@ fi
 на
 ```bash
 REALUSER_NAME=$(who -m | cut -f1 -d' ')
-REALUSER_HOME=/home/cplext.ru/${REALUSER_NAME} #подправьте путь, при необходимости
+REALUSER_HOME=$(eval echo "~${REALUSER_NAME}")
 
 if [ -f $REALUSER_HOME/.bashrc ]; then
     . $REALUSER_HOME/.bashrc
