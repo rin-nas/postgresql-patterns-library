@@ -8,6 +8,10 @@ https://wiki.archlinux.org/title/Readline
 
 Create file `~/.inputrc` and restart terminal.
 
+```bash
+nano ~/.inputrc
+```
+
 Tested on `RHEL 8.9`.
 
 File  **~/.inputrc**
