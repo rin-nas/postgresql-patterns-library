@@ -22,8 +22,9 @@ ExecCondition=/bin/bash -c "test f = $(/usr/pgsql-%i/bin/psql --user=bkp_replica
 ExecStartPre=mkdir -p /mnt/backup_db/archive_wal
 ExecStartPre=chmod 700 /mnt/backup_db/archive_wal
  
-# удаляем *.partial файл, т.к. WAL файл на СУБД может уже отсутствовать и мы получим ошибку "unexpected termination of replication stream error requested wal segment ..."
-ExecStartPre=rm -f /mnt/backup_db/archive_wal/*.partial
+# удаляем *.partial файл, т.к. WAL файл на СУБД может уже отсутствовать и pg_receivewal вернёт ошибку:
+# "unexpected termination of replication stream: ERROR:  requested WAL segment 0000000B000041000000AC has already been removed"
+ExecStartPre=/bin/bash -c "rm -f /mnt/backup_db/archive_wal/*{partial,history}*"
  
 # создаём слот, если его ещё не было (select * from pg_replication_slots;)
 ExecStartPre=/usr/pgsql-%i/bin/pg_receivewal --user=bkp_replicator --no-password --no-loop --slot=pg_receivewal --create-slot --if-not-exists
@@ -35,7 +36,7 @@ ExecStopPost=echo "pg_receivewal: check PostgreSQL is ready"
 ExecStopPost=/usr/pgsql-%i/bin/pg_isready -q
  
 # удаляем слот репликации, если он существует и неактивен (не используется)
-# активный слот удалить нельзя, будет ошибка; слоты на синхронной реплике тоже удалить нельзя
+# активный слот удалить нельзя, будет ошибка; слоты на синхронной реплике, которые есть на мастере, тоже удалить нельзя
 ExecStopPost=echo "pg_receivewal: drop unused replication slot"
 ExecStopPost=/usr/pgsql-%i/bin/psql --user=bkp_replicator --no-password --dbname=postgres --quiet --no-psqlrc --pset=null=¤ --tuples-only --no-align \
                                     --command="select pg_drop_replication_slot(slot_name) from pg_replication_slots where slot_name='pg_receivewal' and not active"
