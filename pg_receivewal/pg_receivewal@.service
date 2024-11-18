@@ -7,6 +7,9 @@ Documentation=https://www.postgresql.org/docs/current/app-pgreceivewal.html
 Type=simple
 User=postgres
 Group=postgres
+# для корректной работы системы резервного копирования внутри папок /mnt/backup_db/{active_full,archive_wal}/ должна быть папка с названием БД
+# но в PostgreSQL можно сделать физическую резервную копию только для всего кластера, поэтому папка называется cluster
+Environment="ARCHIVE_DIR=/mnt/backup_db/archive_wal/cluster"
  
 ExecCondition=echo "pg_receivewal: check PostgreSQL is ready"
 ExecCondition=/usr/pgsql-%i/bin/pg_isready -q
@@ -19,18 +22,19 @@ ExecCondition=echo "pg_receivewal: check PostgreSQL is primary"
 ExecCondition=/bin/bash -c "test f = $(/usr/pgsql-%i/bin/psql --user=bkp_replicator --no-password --dbname=postgres --quiet --no-psqlrc --pset=null=¤ --tuples-only --no-align --command='select pg_is_in_recovery()')"
  
 # создаём папки, если их ещё не было
-ExecStartPre=mkdir -p /mnt/backup_db/archive_wal
-ExecStartPre=chmod 700 /mnt/backup_db/archive_wal
+ExecStartPre=mkdir -p ${ARCHIVE_DIR}
+ExecStartPre=chmod 700 ${ARCHIVE_DIR}
  
 # удаляем *.partial файл, т.к. WAL файл на СУБД может уже отсутствовать и pg_receivewal вернёт ошибку:
 # "unexpected termination of replication stream: ERROR:  requested WAL segment 0000000B000041000000AC has already been removed"
-ExecStartPre=/bin/bash -c "rm -f /mnt/backup_db/archive_wal/*{partial,history}*"
+ExecStartPre=/bin/bash -c "rm -f ${ARCHIVE_DIR}/*{partial,history}*"
  
 # создаём слот, если его ещё не было (select * from pg_replication_slots;)
 ExecStartPre=/usr/pgsql-%i/bin/pg_receivewal --user=bkp_replicator --no-password --no-loop --slot=pg_receivewal --create-slot --if-not-exists
  
 # архивируем WAL файлы в реальном времени, появится ещё одна асинхронная реплика, которая никогда не догонит мастер (select * from pg_stat_replication;)
-ExecStart=/usr/pgsql-%i/bin/pg_receivewal --user=bkp_replicator --no-password --no-loop --slot=pg_receivewal --directory=/mnt/backup_db/archive_wal --synchronous --compress=9
+ExecStart=/usr/pgsql-%i/bin/pg_receivewal --user=bkp_replicator --no-password --no-loop --slot=pg_receivewal \
+                                          --directory=${ARCHIVE_DIR} --synchronous --compress=9
  
 ExecStopPost=echo "pg_receivewal: check PostgreSQL is ready"
 ExecStopPost=/usr/pgsql-%i/bin/pg_isready -q
