@@ -1,0 +1,7 @@
+postgres ALL= NOPASSWD: /bin/systemctl restart pg_receivewal@14
+postgres ALL= NOPASSWD: /bin/systemctl start pg_receivewal@14
+postgres ALL= NOPASSWD: /bin/systemctl stop pg_receivewal@14
+ 
+postgres ALL= NOPASSWD: /bin/systemctl restart pg_receivewal@16
+postgres ALL= NOPASSWD: /bin/systemctl start pg_receivewal@16
+postgres ALL= NOPASSWD: /bin/systemctl stop pg_receivewal@16
