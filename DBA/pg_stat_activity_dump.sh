@@ -46,7 +46,8 @@ EOF
 
 FILE="$SCRIPT_DIR/pg_stat_activity_dump.$(date +%Y-%m-%d_%H%M%S).csv.xz"
 
-echo "$SQL" | psql --user=postgres --quiet --no-psqlrc --csv --pset=linestyle=unicode --pset=null=¤ | xz -c -9 -e > $FILE && echo "Dumped to file $FILE"
+echo "$SQL" | psql --user=postgres --quiet --no-psqlrc --csv --pset=linestyle=unicode --pset=null=¤ | xz -c -9 -e > $FILE
+echo "Dumped to file $FILE"
 
 # как посмотреть протоколы в консоли?
 # xz -dkc pg_stat_activity_dump.2024-11-01_124807.csv.xz | pspg --csv
