@@ -1,3 +1,20 @@
+#!/bin/bash
+
+# https://habr.com/ru/company/ruvds/blog/325522/ - Bash documentation
+
+# https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html
+# set -e - прекращает выполнение скрипта, если команда завершилась ошибкой
+# set -u - прекращает выполнение скрипта, если встретилась несуществующая переменная
+# set -x - выводит выполняемые команды в stdout перед выполнением (только для отладки, а то замусоривает журнал!)
+# set -o pipefail - прекращает выполнение скрипта, даже если одна из частей пайпа завершилась ошибкой
+set -euo pipefail
+
+SCRIPT_FILE=$(readlink -f "$0")
+SCRIPT_DIR=$(dirname "$SCRIPT_FILE")
+
+# Check syntax this file
+bash -n "${SCRIPT_FILE}" || exit
+
 SQL=$(cat <<EOF
 select e.*,
        pg_blocking_pids(pid),
@@ -27,9 +44,9 @@ order by greatest(state_change_elapsed, query_elapsed, xact_elapsed) desc;
 EOF
 )
 
-FILE="pg_stat_activity_dump.$(date +%Y-%m-%d_%H%M%S).csv.xz"
+FILE="$SCRIPT_DIR/pg_stat_activity_dump.$(date +%Y-%m-%d_%H%M%S).csv.xz"
 
-echo "$SQL" | psql --quiet --no-psqlrc --csv --pset=linestyle=unicode --pset=null=¤ | xz -c -9 -e > $FILE && echo "Dumped to file $FILE"
+echo "$SQL" | psql --user=postgres --quiet --no-psqlrc --csv --pset=linestyle=unicode --pset=null=¤ | xz -c -9 -e > $FILE && echo "Dumped to file $FILE"
 
 # как посмотреть протоколы в консоли?
 # xz -dkc pg_stat_activity_dump.2024-11-01_124807.csv.xz | pspg --csv
