@@ -1028,7 +1028,7 @@ birthday   | created_at
 
 ### Как вычислить дистанцию между 2-мя точками на Земле по её поверхности в километрах?
 
-Если есть модуль [earthdistance](https://postgrespro.ru/docs/postgresql/10/earthdistance), то `(point(lon1, lat1) <@> point(lon2, lat2)) * 1.609344 AS distance_km`.
+Если есть модуль [earthdistance](https://postgrespro.ru/docs/postgresql/16/earthdistance), то `(point(lon1, lat1) <@> point(lon2, lat2)) * 1.609344 AS distance_km`.
 Иначе `gc_dist(lat1, lon1, lat2, lon2) AS distance_km`, смотри [`gc_dist.sql`](functions/gc_dist.sql)
 
 ```sql
@@ -2236,7 +2236,7 @@ FROM pg_stat_bgwriter
 Этот код не даёт 100% гарантии, а только уменьшает количество заблокированных запросов.
 После того, как блокировка взята, другие запросы, могут встать в очередь, ожидая отпускания блокировки.
 
-Вначале каждой миграции, которая выполняется внутри транзакции, нужно изменить настройки конфигурации [`lock_timeout`](https://postgrespro.ru/docs/postgresql/10/runtime-config-client#GUC-LOCK-TIMEOUT) и [`statement_timeout`](https://postgrespro.ru/docs/postgresql/10/runtime-config-client#GUC-STATEMENT-TIMEOUT) и  [`idle_in_transaction_session_timeout`](https://postgrespro.ru/docs/postgresql/11/runtime-config-client#GUC-IDLE-IN-TRANSACTION-SESSION-TIMEOUT) командой [SET LOCAL](https://postgrespro.ru/docs/postgresql/10/sql-set).
+Вначале каждой миграции, которая выполняется внутри транзакции, нужно изменить настройки конфигурации [`lock_timeout`](https://postgrespro.ru/docs/postgresql/16/runtime-config-client#GUC-LOCK-TIMEOUT) и [`statement_timeout`](https://postgrespro.ru/docs/postgresql/16/runtime-config-client#GUC-STATEMENT-TIMEOUT) и [`idle_in_transaction_session_timeout`](https://postgrespro.ru/docs/postgresql/11/runtime-config-client#GUC-IDLE-IN-TRANSACTION-SESSION-TIMEOUT) командой [SET LOCAL](https://postgrespro.ru/docs/postgresql/16/sql-set).
 Действие SET LOCAL продолжается только до конца текущей транзакции, независимо от того, фиксируется она или нет. 
 При выполнении такой команды вне блока транзакции выдаётся предупреждение и больше ничего не происходит.
 
