@@ -2078,11 +2078,11 @@ order by installed_version is null, name
 create extension if not exists pg_stat_statements;
 
 SELECT
-    a.rolname,
+    a.rolname, d.datname,
+    round((t.total_time * 100 / sum(t.total_time) over())::numeric, 2) as total_time_percent,
     t.total_time / 1000 / 60 as total_time_minutes,
-    round((t.total_time * 100 / sum(t.total_time) over())::numeric, 2) as percent,
-    d.datname, left(s.query, 100), s.calls, t.mean_time, t.stddev_time, s.rows,
-    s.shared_blks_hit, s.shared_blks_read
+    s.calls, t.mean_time, t.stddev_time, s.rows,
+    s.shared_blks_hit, s.shared_blks_read, s.query
 FROM pg_stat_statements as s
 INNER JOIN pg_database as d ON d.oid = s.dbid
 INNER JOIN pg_authid as a ON a.oid = s.userid
