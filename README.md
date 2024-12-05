@@ -2081,7 +2081,7 @@ SELECT
     a.rolname,
     t.total_time / 1000 / 60 as total_time_minutes,
     round((t.total_time * 100 / sum(t.total_time) over())::numeric, 2) as percent,
-    d.datname, s.query, s.calls, t.mean_time, t.stddev_time, s.rows,
+    d.datname, left(s.query, 100), s.calls, t.mean_time, t.stddev_time, s.rows,
     s.shared_blks_hit, s.shared_blks_read
 FROM pg_stat_statements as s
 INNER JOIN pg_database as d ON d.oid = s.dbid
