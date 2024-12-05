@@ -49,6 +49,7 @@ select -- pg_backend_pid(), -- if we're connecting through pgbouncer, then promp
 
        pg_is_in_recovery(), -- primary or standby
        current_schema(),
+       current_schema() is not null as current_schema_exists,
 
        pg_postmaster_start_time()::timestamptz(0) as started_at,
        pg_conf_load_time()::timestamptz(0)        as loaded_at,
@@ -278,7 +279,12 @@ cross join (select count(*) > 0                as has_unused_repl_slot,
     \set PROMPT1 :PROMPT1' ':red'primary':reset
 \endif
 
-\set PROMPT1 :PROMPT1' ':yellow'%n':cyan'@':orange'%M':cyan':':green'%>':blue'/%/.':current_schema
+\set PROMPT1 :PROMPT1' ':yellow'%n':cyan'@':orange'%M':cyan':':green'%>':blue'/%/'
+
+\if :current_schema_exists
+    \set PROMPT1 :PROMPT1'.':current_schema
+\endif
+
 \set PROMPT1 :PROMPT1'\n':reset'%x%# '
 
 \set PROMPT2 ''
