@@ -12,7 +12,7 @@ $$
     --http://www.consultant.ru/cons/cgi/online.cgi?req=doc;base=LAW;n=179683
     select  octet_length(str) = 13
             and str !~ '\D'
-            and left((left(str, 12)::bigint % 11)::text, 1) = right(str, 1)
+            and right((left(str, 12)::bigint % 11)::text, 1) = right(str, 1)
 $$;
 
 comment on function public.is_ogrn(text) is 'Проверяет, что переданная строка является ОГРН (основной государственный регистрационный номер)';
