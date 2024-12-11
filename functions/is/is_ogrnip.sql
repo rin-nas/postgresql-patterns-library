@@ -12,7 +12,7 @@ $$
     --http://www.consultant.ru/cons/cgi/online.cgi?req=doc;base=LAW;n=179683
     select  octet_length(str) = 15
             and str !~ '\D'
-            and left((left(str, 14)::bigint % 13)::text, 1) = right(str, 1)
+            and right((left(str, 14)::bigint % 13)::text, 1) = right(str, 1)
 $$;
 
 comment on function public.is_ogrnip(text) is 'Проверяет, что переданная строка является ОГРНИП (основной государственный регистрационный номер индивидуального предпринимателя)';
