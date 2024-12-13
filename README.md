@@ -1853,13 +1853,13 @@ create unique index on table_name (cast(md5(lower(cast(column_name as text))) as
 select e.*,
        pg_blocking_pids(a.pid),
        -- a.*
-       a.usename, a.pid, a.state, a.wait_event, 
-       regexp_replace(
+       a.usename, a.pid, a.state, a.wait_event,
+       trim(regexp_replace(
          a.query, 
-         '\s*\m(FROM|CROSS|LEFT|RIGHT|INNER|OUTER|JOIN|WHERE|HAVING|ON|GROUP BY|ORDER BY|LIMIT|SELECT|UNION|INTERSECT|EXCEPT|CASE|WHEN|ELSE|END)\M',
+         '\s*\m(?<!\|)(FROM|NATURAL|(?:CROSS\s+|LEFT\s+|RIGHT\s+|INNER\s+)?(OUTER\s+)?JOIN|WHERE|HAVING|ON|USING|GROUP BY|ORDER BY|LIMIT|SELECT|UNION|INTERSECT|EXCEPT|CASE|WHEN|ELSE|END)(?!\|)\M',
          E'\n\\1',
          'gi'
-       ) as query_pretty
+       ), E'\n ') as query_pretty
        --, pg_cancel_backend(a.pid) -- Остановить все SQL запросы, работающие более 1 часа, сигналом SIGINT. Подключение к БД для процесса сохраняется.
        --, pg_terminate_backend(a.pid) -- Принудительно завершить работу всех процессов, работающих более 1 часа, сигналом SIGTERM, если не помогает SIGINT. Подключение к БД для процесса теряется.
 from pg_stat_activity as a
@@ -1873,8 +1873,8 @@ cross join lateral (
 ) as e
 where true
   and a.state_change is not null --исключаем запросы для которых нехватило прав доступа
-  --and a.query ~ 'WITH  base_fcu_table'
-  --and a.application_name ilike '%RINAT_TEST%'
+  --and a.query ~* '\mDELETE\M'
+  --and a.application_name ilike '%TEST%'
   --and a.state !~ '^idle\M' --idle, idle in transaction, idle in transaction (aborted)
   --and a.wait_event = 'ClientRead' --https://postgrespro.ru/docs/postgresql/12/monitoring-stats#WAIT-EVENT-TABLE
   --and (e.state_change_elapsed > interval '1 minutes' or xact_elapsed > interval '1 minutes')
