@@ -1851,27 +1851,34 @@ create unique index on table_name (cast(md5(lower(cast(column_name as text))) as
 
 ```sql
 select e.*,
-       pg_blocking_pids(pid),
-       a.*  
-       --, pg_cancel_backend(pid) -- Остановить все SQL запросы, работающие более 1 часа, сигналом SIGINT. Подключение к БД для процесса сохраняется.
-       --, pg_terminate_backend(pid) -- Принудительно завершить работу всех процессов, работающих более 1 часа, сигналом SIGTERM, если не помогает SIGINT. Подключение к БД для процесса теряется.
+       pg_blocking_pids(a.pid),
+       -- a.*
+       a.usename, a.pid, a.state, a.wait_event, 
+       regexp_replace(
+         a.query, 
+         '\s*\m(FROM|CROSS|LEFT|RIGHT|INNER|OUTER|JOIN|WHERE|HAVING|ON|GROUP BY|ORDER BY|LIMIT|SELECT|UNION|INTERSECT|EXCEPT|CASE|WHEN|ELSE|END)\M',
+         E'\n\\1',
+         'gi'
+       ) as query_pretty
+       --, pg_cancel_backend(a.pid) -- Остановить все SQL запросы, работающие более 1 часа, сигналом SIGINT. Подключение к БД для процесса сохраняется.
+       --, pg_terminate_backend(a.pid) -- Принудительно завершить работу всех процессов, работающих более 1 часа, сигналом SIGTERM, если не помогает SIGINT. Подключение к БД для процесса теряется.
 from pg_stat_activity as a
 cross join lateral (
-    select statement_timestamp() - xact_start as xact_elapsed,  --длительность транзакции или NULL, если транзакции нет
+    select statement_timestamp() - a.xact_start as xact_elapsed,  --длительность транзакции или NULL, если транзакции нет
            case when a.state ~ '^idle\M' --idle, idle in transaction, idle in transaction (aborted)
-                    then state_change - query_start
-                else statement_timestamp() - query_start
+                    then a.state_change - query_start
+                else statement_timestamp() - a.query_start
                end as query_elapsed, --длительность выполнения запроса всего
-           statement_timestamp() - state_change as state_change_elapsed --длительность после изменения состояния (поля state)
+           statement_timestamp() - a.state_change as state_change_elapsed --длительность после изменения состояния (поля state)
 ) as e
 where true
-  and state_change is not null --исключаем запросы для которых нехватило прав доступа
-  --and query ~ 'WITH  base_fcu_table'
-  --and application_name ilike '%RINAT_TEST%'
-  and state not in ('idle', 'idle in transaction', 'idle in transaction (aborted)')
-  --and wait_event = 'ClientRead' --https://postgrespro.ru/docs/postgresql/12/monitoring-stats#WAIT-EVENT-TABLE
-  --and (state_change_elapsed > interval '1 minutes' or xact_elapsed > interval '1 minutes')
-order by greatest(state_change_elapsed, query_elapsed, xact_elapsed) desc;
+  and a.state_change is not null --исключаем запросы для которых нехватило прав доступа
+  --and a.query ~ 'WITH  base_fcu_table'
+  --and a.application_name ilike '%RINAT_TEST%'
+  --and a.state !~ '^idle\M' --idle, idle in transaction, idle in transaction (aborted)
+  --and a.wait_event = 'ClientRead' --https://postgrespro.ru/docs/postgresql/12/monitoring-stats#WAIT-EVENT-TABLE
+  --and (e.state_change_elapsed > interval '1 minutes' or xact_elapsed > interval '1 minutes')
+order by greatest(e.state_change_elapsed, e.query_elapsed, e.xact_elapsed) desc;
 ```
 
 ### Как остановить или завершить работу процессов?
