@@ -44,6 +44,8 @@
 
 ![psqlrc.postgresql.conf.error_example.png](psqlrc.postgresql.conf.error_example.png)
 
+![psqlrc.pg_hba.conf.error_example.png](psqlrc.pg_hba.conf.error_example.png)
+
 Пример отображения предупреждений и замечаний
 
 ![psqlrc.pending_restart_reload.png](psqlrc.pending_restart_reload.png)
