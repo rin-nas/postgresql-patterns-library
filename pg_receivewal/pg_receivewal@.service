@@ -1,12 +1,27 @@
 [Unit]
 Description=PostgreSQL pg_receivewal service
 Documentation=https://www.postgresql.org/docs/current/app-pgreceivewal.html
+ 
+# в случае появления проблем автоматически перезапускаем сервис StartLimitBurst раз в течение StartLimitIntervalSec, потом сервис перезапускаться не будет
+# если сервис вручную запускаться не будет, выполните команду `systemctl reset-failed`
+StartLimitBurst=180
+StartLimitIntervalSec=4000
+ 
+# если сервис PostgreSQL будет запускаться или останавливаться, то этот сервис сделает так же
 # After=postgresql-%i.service
+# PartOf=postgresql-%i.service
+ 
+# если сервис Patroni (который управляет PostgreSQL) будет запускаться или останавливаться, то этот сервис сделает так же
+After=patroni.service
+PartOf=patroni.service
  
 [Service]
 Type=simple
 User=postgres
 Group=postgres
+# если сетевой диск, куда сохраняются WAL файлы, станет временно недоступен, то сервис остановится, поэтому его нужно перезапускать каждые RestartSec секунд
+Restart=on-failure
+RestartSec=20
 # для корректной работы системы резервного копирования внутри папок /mnt/backup_db/{active_full,archive_wal}/ должна быть папка с названием БД
 # но в PostgreSQL можно сделать физическую резервную копию только для всего кластера, поэтому папка называется cluster
 Environment="ARCHIVE_DIR=/mnt/backup_db/archive_wal/cluster"
