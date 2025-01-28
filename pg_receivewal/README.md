@@ -27,11 +27,6 @@
 sudo su - postgres -c "nano ~/.pgpass && chmod 600 ~/.pgpass" # в файле нужно сохранить пароль для пользователя bkp_replicator
 sudo nano /etc/systemd/system/pg_receivewal@.service
  
-# PostgreSQL v12
-sudo systemctl daemon-reload \
-  && sudo systemctl enable pg_receivewal@12 \
-  && sudo systemctl restart pg_receivewal@12
- 
 # PostgreSQL v14
 sudo systemctl daemon-reload \
   && sudo systemctl enable pg_receivewal@14 \
@@ -42,8 +37,6 @@ sudo systemctl daemon-reload \
   && sudo systemctl enable pg_receivewal@16 \
   && sudo systemctl restart pg_receivewal@16
  
- 
-sudo systemctl status pg_receivewal@12
 sudo systemctl status pg_receivewal@14
 sudo systemctl status pg_receivewal@16
 ```
