@@ -74,6 +74,12 @@ postgresql:
 * interprets several `%` prefixes as specifiers (escape `%` with `%%`)
 * parses `\` before some characters (escape `\` with `\\`)
 
+## Что осталось доделать в сервисе?
+
+1. Протестировать, что сервис перезагружается при перезагрузке Patroni / PostgreSQL.
+1. Протестировать, что Patroni / PostgreSQL не перезагружается при перезагрузке серсиса.
+1. Протестировать, что архивирование возобновляется при переезде мастера на другой узел.
+
 ## Ссылки по теме
 
 1. https://www.cybertec-postgresql.com/en/never-lose-a-postgresql-transaction-with-pg_receivewal/
