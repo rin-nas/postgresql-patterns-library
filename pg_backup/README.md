@@ -51,4 +51,5 @@ systemctl list-timers
 * [`/var/lib/pgsql/pg_backup.conf`](pg_backup.conf)
 
 ## Ссылки по теме
-* Непрерывное архивирование WAL файлов: [`archive_command`](archive_command.md), [`restore_command`](restore_command.md)
+* [PostgreSQL: архивирование WAL файлов (archive_command)](archive_command.md)
+* [PostgreSQL: восстановление WAL файлов (restore_command)](restore_command.md)
