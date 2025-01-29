@@ -1,4 +1,4 @@
-# PostgreSQL файл archive_command.sh
+# PostgreSQL: архивирование WAL файлов (archive_command)
 
 ## Введение
 
