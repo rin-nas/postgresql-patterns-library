@@ -1,4 +1,4 @@
-# PostgreSQL файл restore_command.sh
+# PostgreSQL: восстановление WAL файлов (restore_command)
 
 ## Введение
 
