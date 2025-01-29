@@ -49,3 +49,6 @@ systemctl list-timers
 * [`/etc/systemd/system/pg_backup.timer`](pg_backup.timer)
 * [`/var/lib/pgsql/pg_backup.sh`](pg_backup.sh)
 * [`/var/lib/pgsql/pg_backup.conf`](pg_backup.conf)
+
+## Ссылки по теме
+* Непрерывное архивирование WAL файлов: [`archive_command`](archive_command.md), [`restore_command`](restore_command.md)
