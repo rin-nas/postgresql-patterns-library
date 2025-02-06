@@ -1,6 +1,5 @@
---Inspired by https://hakibenita.com/future-proof-sql
-
---Documentation: https://postgrespro.ru/docs/postgresql/14/plpgsql-errors-and-messages
+--Inspired by https://hakibenita.com/future-proof-sql#assert-never-in-sql
+--Documentation: https://postgrespro.ru/docs/postgresql/17/plpgsql-errors-and-messages
 
 create or replace function public.raise_exception(
     value anyelement,
