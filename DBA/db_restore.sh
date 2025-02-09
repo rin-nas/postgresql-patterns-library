@@ -22,16 +22,16 @@ export PGPASSWORD
 LOG_DIR=/tmp
 ARCHIVE_DIR=/mnt/backup_db/active_full/tmp
  
-for dbname in my_db1 my_db2
+for DBNAME in my_db1 my_db2
 do
     time ( \
-        psql -U postgres -X -c "DROP DATABASE IF EXISTS ${dbname} WITH (FORCE)" -c "CREATE DATABASE ${dbname}" && \
-        pv "${ARCHIVE_DIR}/${dbname}.sql.zst" \
-            | zstd -dcq 2> "${LOG_DIR}/zstd.stderr.${dbname}.log" \
+        psql -U postgres -X -c "DROP DATABASE IF EXISTS ${DBNAME} WITH (FORCE)" -c "CREATE DATABASE ${DBNAME}" && \
+        pv "${ARCHIVE_DIR}/${DBNAME}.sql.zst" \
+            | zstd -dcq 2> "${LOG_DIR}/zstd.stderr.${DBNAME}.log" \
             | psql -U postgres -X \
-                   --dbname=${dbname} \
+                   --dbname=${DBNAME} \
                    --echo-errors \
-                   --log-file="${LOG_DIR}/psql.stdout.${dbname}.log" \
-                           2> "${LOG_DIR}/psql.stderr.${dbname}.log" \
+                   --log-file="${LOG_DIR}/psql.stdout.${DBNAME}.log" \
+                           2> "${LOG_DIR}/psql.stderr.${DBNAME}.log" \
     )
 done
