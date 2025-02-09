@@ -19,13 +19,13 @@ read -s -r -p "Enter password for user postgres: " PGPASSWORD
 echo
 export PGPASSWORD
  
-ARCHIVE_DIR=/mnt/backup_db/tmp
+ARCHIVE_DIR=/mnt/backup_db/active_full/tmp
  
-for dbname in my_db1 my_db2
+for DBNAME in my_db1 my_db2
 do
     time ( \
-        pg_dump --verbose --username=postgres --host=localhost --dbname=${dbname} \
-            | zstd --verbose --adapt -f -q -o ${ARCHIVE_DIR}/${dbname}.sql.zst \
+        pg_dump --verbose --username=postgres --host=localhost --dbname=${DBNAME} \
+            | zstd --verbose --adapt -f -q -o ${ARCHIVE_DIR}/${DBNAME}.sql.zst \
     )
 done
  
