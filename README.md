@@ -13,7 +13,7 @@
       1. [Как проверить СНИЛС на валидность?](#как-проверить-снилс-на-валидность)
       1. [Как проверить номер телефона на валидность?](#как-проверить-номер-телефона-на-валидность)
       1. [Как провалидировать значение поля, только если оно явно указано в UPDATE запросе?](#как-провалидировать-значение-поля-только-если-оно-явно-указано-в-update-запросе)
-   1. [Переезд из MySQL в PostgreSQL](#переезд-из-mysql-в-postgresql)
+   1. [Переезд из MySQL/MariaDB в PostgreSQL](#переезд-из-mysql-mariadb-в-postgresql)
       1. [Как сделать аналог функции `group_concat()` из MySQL](#как-сделать-аналог-функции-group_concat-из-mysql)
       1. [Как сделать аналог типа `set` из MySQL?](#как-сделать-аналог-типа-set-из-mysql)
       1. [Как сделать аналог функции `make_set()` из MySQL?](#как-сделать-аналог-функции-make_set-из-mysql)
@@ -250,7 +250,7 @@ CREATE TRIGGER person_email_check_update
     EXECUTE PROCEDURE person_email_check();
 ```
 
-### Переезд из MySQL в PostgreSQL
+### Переезд из MySQL/MariaDB в PostgreSQL
 
 >There isn’t anything MySQL can do that PostgreSQL can’t do.
 >However, there are things that PostgreSQL can do that MySQL can’t do.
