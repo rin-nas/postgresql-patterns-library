@@ -65,7 +65,7 @@ __prompt_command() {
 
     PS1+="${Cyan}@"
     PS1+="${Orange}\h" #host
-    PS1+="${Green}[$(hostname -I | xargs)] " # IP
+    PS1+="${Green}[$(hostname -I | xargs)] " # IP list
     PS1+="${Blue}\w" #directory
     PS1+="\n"
 
