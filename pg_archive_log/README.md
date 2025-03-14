@@ -24,3 +24,5 @@ systemctl list-timers
 ```
 
 **Файлы**
+1. [`/etc/systemd/system/pg_archive_log.timer`](pg_archive_log.timer)
+2. [`/etc/systemd/system/pg_archive_log.service`](pg_archive_log.service)
