@@ -828,6 +828,24 @@ ORDER BY name, duplicate_num
 ```
 
 ```sql
+-- удалить дубликаты по индексу
+DELETE FROM person 
+WHERE id IN (
+    SELECT id 
+    FROM (SELECT row_number() OVER (PARTITION BY name), id FROM person) x 
+    WHERE x.row_number > 1
+);
+
+-- удалить дубликаты без индекса
+DELETE FROM person
+WHERE (ctid, tableoid) = ANY(ARRAY(
+    SELECT (ctid, tableoid) 
+    FROM (SELECT row_number() OVER (PARTITION BY name), ctid FROM person) x 
+    WHERE x.row_number > 1
+));
+```
+
+```sql
 -- получить ID записей, имеющих дубликаты по полю lower(name)
 SELECT id_original, unnest(id_doubles) AS id_double
 FROM (
