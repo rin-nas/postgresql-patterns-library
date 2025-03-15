@@ -14,7 +14,7 @@ ExecStartPre=chmod 700 ${LOG_DIR}
 # удаляем файлы старше N дней
 ExecStartPre=find ${LOG_DIR} -maxdepth 1 -type f -mtime +30 -delete
  
-# архивируем несжатые файлы старше M дней (достаточно одного потока zstd, т.к. фалы относительно небольшие)
+# архивируем несжатые файлы старше M дней (достаточно одного потока zstd, т.к. файлы относительно небольшие)
 ExecStart=find ${LOG_DIR} -maxdepth 1 -type f -mtime +1 -size +100k ! -name "*.zst" -exec zstd -9 -q --rm {} \;
  
 [Install]
