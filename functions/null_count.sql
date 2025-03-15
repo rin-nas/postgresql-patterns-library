@@ -6,10 +6,9 @@ create or replace function public.null_count(variadic anyarray)
     security invoker
     language sql
     set search_path = ''
-
-AS $function$
+as $func$
     SELECT sum(CASE WHEN v IS NULL THEN 1 ELSE 0 END)::int FROM unnest($1) g(v);
-$function$
+$func$;
 
 /*
 --TEST

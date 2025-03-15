@@ -308,7 +308,7 @@ PostgreSQL умеет читать и писать CSV в файл на серв
 
 Область применения — массовое добавление и обновление записей в таблицах БД через SQL миграции БД и административные интерфейсы.
 
-[Выполнить SQL](http://sqlfiddle.postgrespro.ru/#!22/0/17354) или [Выполнить SQL](https://www.db-fiddle.com/f/eqsGTTqAmH1QoQ8LL63jM/1)
+[Выполнить SQL](https://www.db-fiddle.com/f/eqsGTTqAmH1QoQ8LL63jM/1)
 
 Запрос
 
