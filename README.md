@@ -1734,7 +1734,7 @@ end;
 $$;
 ```
 
-Если БД в SQL запросе упорно не хочет использовать индекс, хотя должна, то нужно проверить, что индекс небитый.
+Если СУБД в SQL запросе не хочет использовать индекс, хотя должна, то нужно проверить, что индекс небитый.
 
 Цель перестроения индекса - уменьшить занимаемый размер из-за [фрагментации](https://github.com/ioguix/pgsql-bloat-estimation). Команда REINDEX имеет опцию [CONCURRENTLY](https://www.postgresql.org/docs/12/sql-reindex.html), которая появилась только в PostgreSQL 12. В более ранних версиях можно сделать так (неблокирующая альтернатива команде REINDEX):
 
@@ -1746,16 +1746,26 @@ DROP INDEX CONCURRENTLY my_index;
 ALTER INDEX tmp_index RENAME TO my_index;
 
 -- для первичного ключа:
-CREATE UNIQUE INDEX CONCURRENTLY tmp_unique_index ON distributors (dist_id);
-ALTER TABLE table_name
-    DROP CONSTRAINT my_unique_index,
-    ADD CONSTRAINT my_unique_index PRIMARY KEY USING INDEX tmp_unique_index;
+-- учитываем случаи, когда на ограничение есть ссылающиеся записи по внешнему ключу из других таблиц
+CREATE UNIQUE INDEX CONCURRENTLY tab_pkey_idx2 ON tab(id);
+BEGIN;
+    ALTER TABLE tab 
+        DROP CONSTRAINT tab_pkey CASCADE,
+        ADD CONSTRAINT tab_pkey PRIMARY KEY USING INDEX tab_pkey_idx2;
+    ALTER TABLE second_tab
+        ADD CONSTRAINT second_tab_fkey FOREIGN KEY (tab_id) REFERENCES tab(id) NOT VALID;
+COMMIT;
 
--- для уникального индекса (если на ограничение есть ссылающиеся записи по внешнему ключу из других таблиц, то будет ошибка):
-CREATE UNIQUE INDEX CONCURRENTLY tmp_unique_index ON ...;
-ALTER TABLE table_name
-    DROP CONSTRAINT my_unique_index,
-    ADD CONSTRAINT my_unique_index UNIQUE USING INDEX tmp_unique_index;
+-- для уникального индекса:
+-- учитываем случаи, когда на ограничение есть ссылающиеся записи по внешнему ключу из других таблиц
+CREATE UNIQUE INDEX CONCURRENTLY tab_ukey_idx2 ON tab(id);
+BEGIN;
+    ALTER TABLE tab 
+        DROP CONSTRAINT tab_ukey CASCADE,
+        ADD CONSTRAINT tab_ukey UNIQUE USING INDEX tab_ukey_idx2;
+    ALTER TABLE second_tab
+        ADD CONSTRAINT second_tab_fkey FOREIGN KEY (tab_id) REFERENCES tab(id) NOT VALID;
+COMMIT;
 ```
 
 ### Как сделать составной уникальный индекс, где одно из полей может быть null?
