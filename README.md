@@ -146,7 +146,7 @@ WHERE email IS NOT NULL    -- skip NULL
         AND octet_length(email) BETWEEN 6 AND 320 -- https://en.wikipedia.org/wiki/Email_address
         AND email LIKE '_%@_%.__%'                -- rough, but quick check email syntax
         AND is_email(email)                       -- accurate, but slow check email syntax
-    )
+    );
 ```
 
 Функция [`is_email.sql`](functions/is/is_email.sql)
@@ -384,7 +384,7 @@ WHERE EXISTS(
           SELECT *
           FROM jsonb_to_recordset(t.column1) AS x(id int, created_at timestamp, name text)
           WHERE x.id IN (1, 3) AND x.created_at > '2000-01-01' AND name NOT LIKE 'P%'
-      )
+      );
 ```
 
 #### Как сравнить 2 JSON объекта и получить отличия?
@@ -567,7 +567,7 @@ ORDER BY
   is_leading DESC,
   LENGTH(name), 
   name
-LIMIT 100
+LIMIT 100;
 ```
 Функции [`quote_like.sql`](functions/quote_like.sql), [`quote_regexp.sql`](functions/quote_regexp.sql)
 
@@ -660,7 +660,7 @@ WITH paths_with_cycle(depth, path) AS (
  ORDER BY depth
 )
 SELECT DISTINCT path FROM paths_with_cycle
-WHERE depth = (SELECT MIN(depth) FROM paths_with_cycle)
+WHERE depth = (SELECT MIN(depth) FROM paths_with_cycle);
 ```
 
 #### Как защититься от циклических связей в графе?
@@ -674,7 +674,7 @@ SELECT ot1.name AS name_1, ot2.name as name_2, ot3.name as name_3, ot4.id as id
     FROM offer_trade ot4
     INNER JOIN offer_trade ot3 ON ot4.order_tree <@ ot3.order_tree AND nlevel(ot3.order_tree) = 3
     INNER JOIN offer_trade ot2 ON ot4.order_tree <@ ot2.order_tree AND nlevel(ot2.order_tree) = 2
-    INNER JOIN offer_trade ot1 ON ot4.order_tree <@ ot1.order_tree AND nlevel(ot1.order_tree) = 1
+    INNER JOIN offer_trade ot1 ON ot4.order_tree <@ ot1.order_tree AND nlevel(ot1.order_tree) = 1;
 ```
 
 ### Оптимизация выполнения запросов
@@ -824,7 +824,7 @@ WHERE EXISTS(SELECT
                    -- AND d.id > t.id -- только дубликаты
             )
 WINDOW w AS (PARTITION BY name ORDER BY id)
-ORDER BY name, duplicate_num
+ORDER BY name, duplicate_num;
 ```
 
 ```sql
@@ -877,7 +877,7 @@ FROM (
     GROUP BY kladr_id
     HAVING count(*) > 1
 ) AS t
-ORDER BY kladr_id, duplicate_num
+ORDER BY kladr_id, duplicate_num;
 ```
 
 ### Как получить длительность выполнения запроса в его результате?
@@ -903,7 +903,7 @@ WHERE is_publish_status = TRUE
   AND id > :id
   --AND use_parallel(id, :core_num, :core_max) -- если нужно распараллелить запрос по ядрам процессора
 ORDER BY id
-LIMIT 10000
+LIMIT 10000;
 ```
 
 Обязательное условие — для колонки id должен быть первичный или уникальный индекс и он должен использоваться в плане запроса. Значения id могут быть числовыми или текстовыми. Запрос выполняется в приложении в бесконечном цикле. На первой итерации для числового типа вместо `:id` подставляем `0` (или другое значение, меньше минимального в таблице); для текстового типа вместо `:id` подставляем пустое зачение (`''`). На второй и последующих итерациях вместо `:id` подставляем id из последней записи последнего результата запроса (это значение будет являться максимальным в рамках результата запроса). На каждой итерации цикла проверяем: если количество возвращёных записей меньше, чем указано в LIMIT, то цикл прерываем. Для распараллеливания запроса используйте функцию [`use_parallel.sql`](functions/use_parallel.sql).
@@ -980,7 +980,7 @@ CREATE UNIQUE INDEX {table}_{JiraTaskId}_uniq ON {table}_{JiraTaskId} (part, id)
 --далее можно последовательно или параллельно выполнять SQL запросы для каждого диапазона, например:
 select *
 from company as c
-where id in (select id from {table}_{JiraTaskId} where part = 0)
+where id in (select id from {table}_{JiraTaskId} where part = 0);
 ```
 
 ### Как выполнить следующий SQL запрос, если предыдущий не вернул результат?
@@ -994,7 +994,7 @@ SELECT * FROM r
 UNION ALL
 SELECT * FROM film
 WHERE length = 130
-AND NOT EXISTS (SELECT * FROM r)
+AND NOT EXISTS (SELECT * FROM r);
 ```
 
 ### Как развернуть запись в набор колонок?
@@ -1024,7 +1024,7 @@ FROM generate_series(1, 4) as t (x);
 ### Как получить возраст по дате рождения?
 
 ```sql
-SELECT EXTRACT(YEAR FROM age('1977-09-10'::date))
+SELECT EXTRACT(YEAR FROM age('1977-09-10'::date));
 ```
 
 ### Как получить дату или дату и время в формате ISO-8601?
@@ -1035,7 +1035,7 @@ SELECT trim(both '"' from to_json(birthday)::text),
        trim(both '"' from to_json(created_at)::text)
 FROM (
     SELECT '1977-10-09'::date AS birthday, now() AS created_at
-) AS t
+) AS t;
 ```
 
 Пример результата выполнения:
@@ -1095,7 +1095,7 @@ SELECT pg_size_pretty(SUM(OCTET_LENGTH(t::text) + 1))
 FROM (
     -- сюда нужно поместить ваш запрос, например:
     SELECT * FROM region LIMIT 50000
-) AS t
+) AS t;
 ```
 
 ### Почему запрос с подзапросом в NOT IN() возвращает 0 записей?
@@ -1294,7 +1294,7 @@ SELECT id,
        CAST(?s || '.' || id AS ltree) AS ltree_path,
        ?l
 FROM t
-RETURNING ltree_path
+RETURNING ltree_path;
 ```
 
 ### Как сделать несколько последующих запросов с полученным при вставке id из первого запроса?
@@ -1331,7 +1331,7 @@ WHERE u.id = 123
 SELECT col1, col2, updated_at
 --, md5(t::text) AS record_md5 -- если нет колонки updated_at, вычисляем хеш от данных всей записи
 FROM t 
-WHERE id = 123
+WHERE id = 123;
 ```
 
 После редактирования в GUI обновляем запись в БД:
@@ -1342,7 +1342,7 @@ SET col1 = 'val1',  col2 = 'val2', ...
 WHERE id = 123
 AND updated_at = '2019-11-08 00:58:33' -- сравниваем со значением из предыдущего SELECT запроса
 --AND md5(t::text) = '1BC29B36F623BA82AAF6724FD3B16718' -- если нет колонки updated_at, вычисляем хеш от данных всей записи и сравниваем со значением из предыдущего SELECT запроса
-RETURNING *
+RETURNING *;
 ```
 
 Если запрос вернул результат (одну строку), значит обновление было.
@@ -2208,10 +2208,10 @@ SELECT set_config('pg_trgm.word_similarity_threshold', 0.2::text, FALSE),
 
 [Источник](https://dataegret.ru/#_autovacuumWorkers)
 
-```
+```sql
 SELECT (clock_timestamp() - xact_start) AS ts_age,
 state, pid, query FROM pg_stat_activity
-WHERE query ilike '%autovacuum%' AND NOT pid=pg_backend_pid()
+WHERE query ilike '%autovacuum%' AND NOT pid=pg_backend_pid();
 ```
 
 ### Как узнать, почему время ответа от базы периодически падает?
@@ -2243,18 +2243,18 @@ checkpoint",
 round(buffers_checkpoint/(pages_per_mb*min_since_reset*60),2)
 "Checkpoint MBps"
 FROM (
-SELECT checkpoints_req,
-checkpoints_timed + checkpoints_req checkpoints,
-checkpoint_write_time,
-checkpoint_sync_time,
-buffers_checkpoint,
-buffers_checkpoint + buffers_clean + buffers_backend total_buffers,
-stats_reset,
-round(extract('epoch' from now() - stats_reset)/60)::numeric
-min_since_reset,
-(1024.0 * 1024 / (current_setting('block_size')::numeric))pages_per_mb
-FROM pg_stat_bgwriter
-) bg
+    SELECT checkpoints_req,
+    checkpoints_timed + checkpoints_req checkpoints,
+    checkpoint_write_time,
+    checkpoint_sync_time,
+    buffers_checkpoint,
+    buffers_checkpoint + buffers_clean + buffers_backend total_buffers,
+    stats_reset,
+    round(extract('epoch' from now() - stats_reset)/60)::numeric
+    min_since_reset,
+    (1024.0 * 1024 / (current_setting('block_size')::numeric))pages_per_mb
+    FROM pg_stat_bgwriter
+) bg;
 ```
 
 ### Как обезопасить приложение от тяжёлых миграций, приводящих к блокированию запросов?
@@ -2353,7 +2353,7 @@ left outer join table_io ti
   on ti.relname = ts.relname
 left outer join index_io ii
   on ii.relname = ts.relname
-order by ti.table_page_read desc, ii.idx_page_read desc
+order by ti.table_page_read desc, ii.idx_page_read desc;
 ```
 
 ### Как скопировать базу данных?
