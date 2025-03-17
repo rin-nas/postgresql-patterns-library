@@ -10,7 +10,7 @@ Systemd сервис, который запускается 1 раз в сутк
 ## Предусловия
 ```ini
 log_destination = 'csvlog' #опционально
-log_directory = '/var/log/postgresql/16' #папка /var/log должна быть в отдельном разделе ФС
+log_directory = '/var/log/postgresql/16' #для надёжности, папку /var/log лучше сделать в отдельном разделе ФС с квотой свободного места
 log_filename = 'postgresql-%Y-%m-%d.log'
 ```
 
