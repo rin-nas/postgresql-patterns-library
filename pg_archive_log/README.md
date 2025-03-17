@@ -14,7 +14,7 @@ Systemd сервис, который запускается 1 раз в сутк
 sudo nano /etc/systemd/system/pg_archive_log.timer && \
 sudo nano /etc/systemd/system/pg_archive_log.service
  
-# активируем
+# активируем и добавляем в автозагрузку
 sudo systemctl daemon-reload \
   && sudo systemctl enable pg_archive_log.timer \
   && sudo systemctl enable pg_archive_log
