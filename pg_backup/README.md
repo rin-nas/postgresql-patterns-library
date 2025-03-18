@@ -24,6 +24,7 @@ WAL файлы в резервную копию не копируются.
 sudo su - postgres -c "nano ~/.pgpass && chmod 600 ~/.pgpass" # в файле нужно сохранить пароль для пользователя bkp_replicator
 sudo su - postgres -c "nano ~/pg_backup.sh && chmod 700 ~/pg_backup.sh && bash -n ~/pg_backup.sh"
 sudo su - postgres -c "nano ~/pg_backup.conf && chmod 600 ~/pg_backup.conf && bash -n ~/pg_backup.conf"
+
 sudo nano /etc/systemd/system/pg_backup.service && \
 sudo nano /etc/systemd/system/pg_backup.timer
 
