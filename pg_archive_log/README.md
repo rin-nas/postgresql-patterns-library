@@ -22,9 +22,9 @@ sudo nano /etc/systemd/system/pg_archive_log.timer && \
 sudo nano /etc/systemd/system/pg_archive_log.service
  
 # активируем и добавляем в автозагрузку
-sudo systemctl daemon-reload \
-  && sudo systemctl enable pg_archive_log.timer \
-  && sudo systemctl enable pg_archive_log
+sudo systemctl daemon-reload  && \
+sudo systemctl enable pg_archive_log.timer && \
+sudo systemctl enable pg_archive_log
  
 # запускаем
 sudo systemctl start pg_archive_log.timer && \
