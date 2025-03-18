@@ -26,7 +26,8 @@ sudo su - postgres -c "nano ~/pg_backup.sh && chmod 700 ~/pg_backup.sh && bash -
 sudo su - postgres -c "nano ~/pg_backup.conf && chmod 600 ~/pg_backup.conf && bash -n ~/pg_backup.conf"
 sudo nano /etc/systemd/system/pg_backup.service \
   && sudo nano /etc/systemd/system/pg_backup.timer
- 
+
+# активируем и добавляем в автозагрузку
 sudo systemctl daemon-reload \
   && sudo systemctl enable pg_backup.timer \
   && sudo systemctl enable pg_backup
