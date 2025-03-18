@@ -24,20 +24,22 @@ WAL файлы в резервную копию не копируются.
 sudo su - postgres -c "nano ~/.pgpass && chmod 600 ~/.pgpass" # в файле нужно сохранить пароль для пользователя bkp_replicator
 sudo su - postgres -c "nano ~/pg_backup.sh && chmod 700 ~/pg_backup.sh && bash -n ~/pg_backup.sh"
 sudo su - postgres -c "nano ~/pg_backup.conf && chmod 600 ~/pg_backup.conf && bash -n ~/pg_backup.conf"
-sudo nano /etc/systemd/system/pg_backup.service \
-  && sudo nano /etc/systemd/system/pg_backup.timer
+sudo nano /etc/systemd/system/pg_backup.service && \
+sudo nano /etc/systemd/system/pg_backup.timer
 
 # активируем и добавляем в автозагрузку
-sudo systemctl daemon-reload \
-  && sudo systemctl enable pg_backup.timer \
-  && sudo systemctl enable pg_backup
- 
+sudo systemctl daemon-reload && \
+sudo systemctl enable pg_backup.timer && \
+sudo systemctl enable pg_backup
+
 # проверяем работоспособность (отладка)
 # time sudo su - postgres -c "~/pg_backup.sh"  # сделает резервную копию СУБД, выведет сообщения на экран
- 
+
+# запускаем
 sudo systemctl start pg_backup.timer && \
 sudo systemctl start pg_backup # сделает резервную копию СУБД только на мастере, НЕ выведет сообщения на экран
- 
+
+# проверяем статус
 sudo systemctl status pg_backup.timer && \
 sudo systemctl status pg_backup
  
