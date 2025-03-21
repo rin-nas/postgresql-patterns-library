@@ -72,7 +72,7 @@ mkdir -p ${BACKUP_DIR} ${WAL_DIR}
 # Для многопоточного режима лучше явно поставить степень сжатия.
 ZSTD_THREADS=$(echo "$(nproc) / 2.5 + 1" | bc)
 ${PG_BIN_DIR}/pg_basebackup --username=${PG_USERNAME} --no-password --wal-method=none --checkpoint=fast --format=tar --pgdata=- \
-  | zstd -q -T${ZSTD_THREADS} -5 -o ${FILENAME}.pg_basebackup.tar.zst
+  | ionice -c2 -n7 nice -n19 zstd -q -T${ZSTD_THREADS} -5 -o ${FILENAME}.pg_basebackup.tar.zst
 
 # создаём логический бэкап (deprecated)
 # ${PG_BIN_DIR}/pg_dumpall --username=${PG_USERNAME} --no-password | zstd -q -T${ZSTD_THREADS} -5 -o ${FILENAME}.sql.zst
