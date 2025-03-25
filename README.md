@@ -1177,6 +1177,18 @@ select max(x), count(x)
 from t
 ```
 
+[Fibonacci sequence](https://en.wikipedia.org/wiki/Fibonacci_sequence) numbers with recursive in PostgreSQL
+```
+with recursive r(a, b) as (
+    select 0::int, 1::int
+    union all
+    select b, a + b
+    from r
+    where b < 1000
+)
+select a from r;
+```
+
 ## Модификация пользовательских данных (DML)
 
 ### Как добавить или обновить записи одним запросом (UPSERT)?
