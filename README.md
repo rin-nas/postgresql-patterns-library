@@ -1178,7 +1178,7 @@ from t
 ```
 
 [Fibonacci sequence](https://en.wikipedia.org/wiki/Fibonacci_sequence) numbers with recursive in PostgreSQL
-```
+```sql
 with recursive r(a, b) as (
     select 0::int, 1::int
     union all
