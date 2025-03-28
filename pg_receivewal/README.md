@@ -10,7 +10,7 @@
 
 ℹ При архивировании WAL файлы сжимаются в формат `gzip` (≈ 66% от исходного размера, даже если включен параметр [wal_compression](https://postgrespro.ru/docs/postgresql/16/runtime-config-wal#GUC-WAL-COMPRESSION)). Это позволяет экономить место на сетевом диске и уменьшить нагрузку на ввод-вывод.
 
-⚠ Удаление неактуальных WAL файлов сделано в сервисе резервного копирования!
+⚠ Удаление неактуальных WAL файлов сделано в [сервисе резервного копирования](../pg_backup)!
 
 Преимущества сервиса:
 1. Архивирование WAL файлов в реальном времени. Гарантируется, что ни одна транзакция не будет потеряна.
@@ -60,7 +60,7 @@ postgresql:
     #on_stop:        /bin/bash -c 'sudo /bin/systemctl stop pg_receivewal@14'    # закомментировано, т.к. это сделано в настройках pg_receivewal@.service через PartOf=
 ```
 
-Файлы
+**Файлы**
 * [`/etc/systemd/system/pg_receivewal@.service`](pg_receivewal@.service)
 * [`/etc/sudoers.d/permit_pgreceivewal`](permit_pgreceivewal)
 
@@ -68,6 +68,16 @@ postgresql:
 * does not expand glob patterns like `*` (run command inside a shell)
 * interprets several `%` prefixes as specifiers (escape `%` with `%%`)
 * parses `\` before some characters (escape `\` with `\\`)
+
+## Вопросы и ответы
+
+### Сервис был временно остановлен. После его запуска продолжит ли он копирование WAL файлов с того места, где остановился?
+Да, если на сервере СУБД хватит WAL файлов для исключения «разрыва цепочки».
+
+Иначе нужно сделать так:
+1. в архивной папке удалить все WAL файлы
+1. запустить сервис
+1. сделать полную резервную копию СУБД
 
 ## Что осталось доделать в сервисе?
 
