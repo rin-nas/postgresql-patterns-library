@@ -60,7 +60,7 @@ postgresql:
     #on_stop:        /bin/bash -c 'sudo /bin/systemctl stop pg_receivewal@14'    # закомментировано, т.к. это сделано в настройках pg_receivewal@.service через PartOf=
 ```
 
-Файлы 
+Файлы
 * [`/etc/systemd/system/pg_receivewal@.service`](pg_receivewal@.service)
 * [`/etc/sudoers.d/permit_pgreceivewal`](permit_pgreceivewal)
 
