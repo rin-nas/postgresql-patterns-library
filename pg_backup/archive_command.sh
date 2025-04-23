@@ -25,5 +25,7 @@ STEP=3
 ZSTD_LEVEL=$(echo "(9 * ${STEP} - ${WAL_FILES_QUEUE}) / ${STEP}" | bc)
 test "$ZSTD_LEVEL" -lt 1 && ZSTD_LEVEL=1
 
-# архивируем файл (без -B1M используются не все ядра из-за небольшого размера файла)
-ionice -c2 -n7 nice -n19 zstd -q -f -${ZSTD_LEVEL} -T${ZSTD_THREADS} -B1M "$FILE_SRC" -o "$FILE_DST"
+# архивируем файл
+# в zstd без флага -B1M используются не все ядра (из-за небольшого размера файла?)
+# в zstd флаг -f использовать нельзя, т.к. если файл существует, то должна быть ошибка (защита от дурака от перезаписи нужного файла)
+ionice -c2 -n7 nice -n19 zstd -q -${ZSTD_LEVEL} -T${ZSTD_THREADS} -B1M "$FILE_SRC" -o "$FILE_DST"
