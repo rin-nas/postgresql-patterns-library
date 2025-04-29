@@ -167,7 +167,7 @@ WHERE email IS NOT NULL    -- skip NULL
 
 ##### ИНН
 Домены: [`inn.sql`](domains/inn.sql), [`inn10.sql`](domains/inn10.sql), [`inn12.sql`](domains/inn12.sql).
-Функции: [`is_inn.sql`](functions/is/is_inn.sql), [`is_inn10.sql`](functions/is/is_inn10.sql), [`is_inn12.sql`](functions/is/is_inn12.sql).
+Функции: [`is_inn10.sql`](functions/is/is_inn10.sql), [`is_inn12.sql`](functions/is/is_inn12.sql).
 
 ##### КПП
 Домен: [`kpp.sql`](domains/kpp.sql).
