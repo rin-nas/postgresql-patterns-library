@@ -1,0 +1,1 @@
+* [Интересные случаи использования JSON (Иван Панченко, Postgres Professional)](https://pgconf.ru/media/2020/02/04/%D0%98%D0%BD%D1%82%D0%B5%D1%80%D0%B5%D1%81%D0%BD%D1%8B%D0%B5%20%D1%81%D0%BB%D1%83%D1%87%D0%B0%D0%B8%20JSON.pdf)
