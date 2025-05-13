@@ -8,7 +8,7 @@ create or replace function public.unicode_unescape(text)
 as
 $func$
     -- input string - only as \uXXXX sequence
-    -- TODO validate format and return NULL for invalid strings?
+    -- TODO validate format and return NULL for invalid strings (see string_to_jsonb.sql)?
     select concat('"', $1, '"')::jsonb->>0;
 $func$;
 
