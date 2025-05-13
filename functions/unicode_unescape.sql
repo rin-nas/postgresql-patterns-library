@@ -7,6 +7,8 @@ create or replace function public.unicode_unescape(text)
     set search_path = ''
 as
 $func$
+    -- input string - only as \uXXXX sequence
+    -- TODO validate format and return NULL for invalid strings?
     select concat('"', $1, '"')::jsonb->>0;
 $func$;
 
