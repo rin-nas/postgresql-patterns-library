@@ -4,6 +4,7 @@ Description=PostgreSQL backup timer
 [Timer]
 Unit=pg_backup.service
 OnCalendar=*-*-* 23:55:00
+RandomizedDelaySec=3600
 Persistent=true
 
 [Install]
