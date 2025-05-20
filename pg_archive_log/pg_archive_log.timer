@@ -4,6 +4,7 @@ Description=PostgreSQL archive log timer
 [Timer]
 Unit=pg_archive_log.service
 OnCalendar=*-*-* 05:15:00
+RandomizedDelaySec=3600
 Persistent=true
  
 [Install]
