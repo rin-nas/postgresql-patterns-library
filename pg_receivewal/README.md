@@ -92,6 +92,7 @@ postgresql:
 
 1. https://www.cybertec-postgresql.com/en/never-lose-a-postgresql-transaction-with-pg_receivewal/
 1. SystemD
+   1. https://systemd-by-example.com/
    1. https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html
    1. https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html
    1. https://www.youtube.com/watch?v=4s3mi-16vgI
