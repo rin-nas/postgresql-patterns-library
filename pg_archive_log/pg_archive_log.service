@@ -19,7 +19,7 @@ ExecStartPre=find ${LOG_DIR} -maxdepth 1 -type f -mtime +2 -size 0 -delete
  
 # архивируем несжатые файлы старше M дней (достаточно одного потока zstd, т.к. файлы относительно небольшие)
 # не ставьте большой уровень компрессии, это приводит к большому потреблению CPU, а экономия на размере файла несущественная
-ExecStart=find ${LOG_DIR} -maxdepth 1 -type f -mtime +1 -size +100k ! -name "*.zst" -exec ionice -c2 -n7 -- nice -n19 -- zstd -9 -q --rm {} \;
+ExecStart=find ${LOG_DIR} -maxdepth 1 -type f -mtime +1 -size +100k ! -name "*.zst" -exec ionice -c2 -n7 -- nice -n19 -- zstd -9 -q --rm '{}' \;
  
 [Install]
 WantedBy=multi-user.target
