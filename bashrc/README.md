@@ -25,6 +25,8 @@
 ```bash
 # Last version and documentation: https://github.com/rin-nas/postgresql-patterns-library/tree/master/bashrc
 
+alias patronictl='patronictl -c /etc/patroni/patroni.yaml'
+
 export EDITOR=nano
 export HISTFILESIZE=5000
 export HISTCONTROL="ignoredups"
