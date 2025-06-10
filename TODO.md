@@ -733,7 +733,9 @@ FROM
 WHERE
   tbl.ctid = lc.ctid; -- поиск по физической позиции записи
 ```
-https://habr.com/ru/companies/tensor/articles/567514/
+https://habr.com/ru/companies/tensor/articles/567514/ - Борем deadlock при пакетных UPDATE
+https://dba.stackexchange.com/questions/323040/avoiding-deadlocks-when-locking-multiple-rows-without-using-nowait
+https://stackoverflow.com/questions/22775150/how-to-simulate-deadlock-in-postgresql
 
 # Finding skewed data in Postgres
 
