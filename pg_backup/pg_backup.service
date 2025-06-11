@@ -1,13 +1,12 @@
 [Unit]
 Description=PostgreSQL backup service
-
+ 
 [Service]
 User=postgres
 Group=postgres
-
-ExecCondition=echo "pg_backup: check if PostgreSQL is primary"
-ExecCondition=/bin/bash -c "test f = $(psql --user=bkp_replicator --no-password --dbname=postgres --quiet --no-psqlrc --pset=null=¤ --tuples-only --no-align --command='select pg_is_in_recovery()')"
+ 
+ExecCondition=/bin/bash /var/lib/pgsql/pg_backup.sh ExecCondition
 ExecStart=/bin/bash /var/lib/pgsql/pg_backup.sh
-
+ 
 [Install]
 WantedBy=multi-user.target
