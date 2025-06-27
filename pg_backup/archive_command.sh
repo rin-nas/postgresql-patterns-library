@@ -64,7 +64,7 @@ ZSTD_THREADS=$(echo "$(nproc) / 4 + 1" | bc)
 ARCHIVE_STATUS_DIR=$(dirname "$SRC_FILE")/archive_status
 WAL_FILES_QUEUE=$(find "$ARCHIVE_STATUS_DIR" -maxdepth 1 -type f -name "*.ready" -printf "." | wc --bytes)
  
-STEP=2
+STEP=3
 # чем больше WAL файлов в очереди, тем меньше степень сжатия (но больше скорость сжатия и размер сжатого файла)
 # не ставьте большой уровень компрессии, это приводит к большому потреблению CPU, а экономия на размере файла несущественная
 ZSTD_LEVEL=$(echo "(9 * ${STEP} - ${WAL_FILES_QUEUE}) / ${STEP}" | bc)
