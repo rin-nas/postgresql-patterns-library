@@ -29,8 +29,8 @@
 **Инсталляция сервиса**
 ```bash
 # создаём файлы
-sudo su - postgres -c "nano ~/.pgpass && chmod 600 ~/.pgpass" # в файле нужно сохранить пароль для пользователя bkp_replicator
-sudo nano /etc/systemd/system/pg_receivewal@.service
+sudo su - postgres -c "nano -c ~/.pgpass && chmod 600 ~/.pgpass" # в файле нужно сохранить пароль для пользователя bkp_replicator
+sudo nano -c /etc/systemd/system/pg_receivewal@.service
  
 # PostgreSQL v14
 sudo systemctl daemon-reload \
@@ -49,7 +49,7 @@ sudo systemctl status pg_receivewal@16
 **Интеграция с Patroni**
 ```bash
 # разрешаем перезапускать сервис под пользователем postgres без пароля
-sudo nano /etc/sudoers.d/permit_pgreceivewal
+sudo nano -c /etc/sudoers.d/permit_pgreceivewal
 sudo su postgres -c "sudo /bin/systemctl restart pg_receivewal@14" # тестируем перезапуск
  
 # редактируем конфигурацию Patroni
