@@ -42,6 +42,7 @@
   1. https://github.com/supabase/pg_jsonschema - PostgreSQL extension providing JSON Schema validation
   1. https://github.com/tembo-io/pgmq - Postgres Message Queue (PGMQ)
   1. https://github.com/benbjohnson/litestream - standalone disaster recovery tool for SQLite
+  1. https://github.com/ossc-db/pg_store_plans - Store execution plans like pg_stat_statements does for queries
 
 # StackOverflow
   1. https://stackoverflow.com/questions/7923237/return-pre-update-column-values-using-sql-only
