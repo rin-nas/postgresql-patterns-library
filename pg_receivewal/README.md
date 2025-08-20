@@ -5,7 +5,7 @@
 Для непрерывного архивирования [WAL файлов](https://postgrespro.ru/docs/postgresql/16/continuous-archiving) **в реальном времени** применяется [pg_receivewal](https://postgrespro.ru/docs/postgresql/16/app-pgreceivewal), а не [archive_command](https://postgrespro.ru/docs/postgresql/16/runtime-config-wal#GUC-ARCHIVE-COMMAND).
 
 > [!CAUTION]
-> При наличии синхронной реплики архивировать WAL файлов в реальном времени не требуется. Для кластеров СУБД используется не этот сервис, а штатная функциональность [archive_command](https://postgrespro.ru/docs/postgresql/16/runtime-config-wal#GUC-ARCHIVE-COMMAND), чтобы везде было единообразно, это упрощает сопровождение.
+> При наличии синхронной реплики архивировать WAL файлы в реальном времени не нужно. Для кластеров СУБД используется не этот сервис, а штатная функциональность [archive_command](https://postgrespro.ru/docs/postgresql/16/runtime-config-wal#GUC-ARCHIVE-COMMAND), чтобы везде было единообразно, это упрощает сопровождение.
 
 Сервис работает только с СУБД мастером, использует отдельный слот репликации и выглядит как ещё одна постоянно отстающая асинхронная реплика.
 
