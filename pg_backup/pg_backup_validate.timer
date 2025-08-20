@@ -1,0 +1,11 @@
+[Unit]
+Description=PostgreSQL backup validate timer
+ 
+[Timer]
+Unit=pg_backup_validate.service
+OnCalendar=Wed *-*-* 03:00:00
+RandomizedDelaySec=7200
+Persistent=true
+ 
+[Install]
+WantedBy=timers.target
