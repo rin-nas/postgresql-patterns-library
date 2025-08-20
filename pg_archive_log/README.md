@@ -34,7 +34,6 @@ sudo systemctl start pg_archive_log
 sudo systemctl status pg_archive_log.timer && \
 sudo systemctl status pg_archive_log
  
-# получаем список активных таймеров, для pg_archive_log.timer д.б. указана дата-время следующего запуска!
 # получаем список активных таймеров, д.б. указана дата-время следующего запуска!
 systemctl list-timers | grep -P 'NEXT|pg_archive_log'
 ```
