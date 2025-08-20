@@ -9,12 +9,12 @@ Environment="LOG_DIR=/var/log/postgresql/16"
  
 # создаём папки, если их ещё не было
 ExecStartPre=mkdir -p ${LOG_DIR}
-ExecStartPre=chmod 700 ${LOG_DIR}
+ExecStartPre=chmod 750 ${LOG_DIR}
  
 # удаляем файлы старше N дней
 ExecStartPre=find ${LOG_DIR} -maxdepth 1 -type f -mtime +30 -delete
-
-# удаляем файлы нулевой длины старше K дней
+ 
+# удаляем файлы нулевого размера старше K дней
 ExecStartPre=find ${LOG_DIR} -maxdepth 1 -type f -mtime +2 -size 0 -delete
  
 # архивируем несжатые файлы старше M дней (достаточно одного потока zstd, т.к. файлы относительно небольшие)
