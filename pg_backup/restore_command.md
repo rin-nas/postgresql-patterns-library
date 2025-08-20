@@ -1,4 +1,4 @@
-# PostgreSQL: восстановление WAL файлов (restore_command)
+# PostgreSQL: восстановление WAL файлов из архива (restore_command)
 
 ## Введение
 
