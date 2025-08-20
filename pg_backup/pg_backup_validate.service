@@ -1,0 +1,12 @@
+[Unit]
+Description=PostgreSQL backup validate service
+ 
+[Service]
+User=postgres
+Group=postgres
+ 
+ExecCondition=/bin/bash /var/lib/pgsql/pg_backup.sh ExecCondition standby
+ExecStart=/bin/bash /var/lib/pgsql/pg_backup.sh validate
+ 
+[Install]
+WantedBy=multi-user.target
