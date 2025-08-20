@@ -1,11 +1,11 @@
 [Unit]
 Description=PostgreSQL backup timer
-
+ 
 [Timer]
 Unit=pg_backup.service
-OnCalendar=*-*-* 23:55:00
-RandomizedDelaySec=3600
+OnCalendar=*-*-* 00:00:00
+RandomizedDelaySec=7200
 Persistent=true
-
+ 
 [Install]
 WantedBy=timers.target
