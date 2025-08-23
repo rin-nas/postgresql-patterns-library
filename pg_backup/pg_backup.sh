@@ -63,7 +63,7 @@ fi
 if test "${1:-}" = "ExecCondition"; then
   if ! (command -v patronictl &> /dev/null && command -v jq &> /dev/null); then
     # test ! -f "$PGDATA/standby.signal" # deprecated
-    PG_ROLE=$(psql --user=bkp_replicator --no-password --dbname=postgres --quiet --no-psqlrc --pset=null=¤ --tuples-only --no-align \
+    PG_ROLE=$(psql --user=$PG_USERNAME --no-password --dbname=postgres --quiet --no-psqlrc --pset=null=¤ --tuples-only --no-align \
                    --command="select case when pg_is_in_recovery() then 'standby' else 'primary' end")
     echo "pg_backup: candidate role is $PG_ROLE (checked by psql)"
     test ${2:='primary'} = "$PG_ROLE"
@@ -103,6 +103,19 @@ elif test "${1:-}" = "validate"; then
   test -z "$BACKUP_FILE" && echoerr "pg_backup validate: no backup archive file found in directory '$BACKUP_DIR'" && exit 1
   echo "pg_backup validate: archive file '$BACKUP_FILE' selected"
   
+  # определяем архиватор по расширению файла
+  BACKUP_FILE_EXT=$(echo "$BACKUP_FILE" | grep -oP '\.\K[a-z\d]+$') # compressed file type (zst, lz4)
+  if test "$BACKUP_FILE_EXT" = "zst"; then
+    COMPRESS_PROGRAM="unzstd"
+  elif test "$BACKUP_FILE_EXT" = "lz4"; then
+    COMPRESS_PROGRAM="unlz4"
+  else
+    echoerr "pg_backup validate: no compress program found"
+    exit 1
+  fi
+  LOG_FILE_PREFIX=$(dirname $BACKUP_FILE)/$(basename $BACKUP_FILE .tar.$BACKUP_FILE_EXT)
+  touch $LOG_FILE_PREFIX.validate-selected.log
+  
   PG_DATA_TEST_DIR=$(dirname $(dirname $BACKUP_DIR))/pgdata_validate
   echo "Создаём тестовую папку '$PG_DATA_TEST_DIR' для данных СУБД, удаляем старые данные (защита от предыдущего неудачного запуска скрипта)"
   test -d "$PG_DATA_TEST_DIR" && rm -r $PG_DATA_TEST_DIR && echo "pg_backup validate: old temporary directory '$PG_DATA_TEST_DIR' deleted"
@@ -116,16 +129,6 @@ elif test "${1:-}" = "validate"; then
     || (echoerr "pg_backup validate: directory '$PG_DATA_TEST_DIR' permission must be 750 or 700" && exit 1)
   
   echo "Распаковываем архив '$BACKUP_FILE' в папку '$PG_DATA_TEST_DIR'"
-  # определяем архиватор по расширению файла
-  BACKUP_FILE_EXT=$(echo "$BACKUP_FILE" | grep -oP '\.\K[a-z\d]+$') # compressed file type (zst, lz4)
-  if test "$BACKUP_FILE_EXT" = "zst"; then
-    COMPRESS_PROGRAM="unzstd"
-  elif test "$BACKUP_FILE_EXT" = "lz4"; then
-    COMPRESS_PROGRAM="unlz4"
-  else
-    echoerr "pg_backup validate: no compress program found"
-    exit 1
-  fi
   tar -xf $BACKUP_FILE --use-compress-program="$COMPRESS_PROGRAM" --directory=$PG_DATA_TEST_DIR
   
   BACKUP_BASE_DIR=$(echo "$BACKUP_FILE" | grep -qP '\.pg_basebackup/base\.tar\.[a-z\d]+$' && dirname "$BACKUP_FILE" || true)
@@ -150,11 +153,14 @@ elif test "${1:-}" = "validate"; then
   echo "pg_backup validate: archive file extracted to directory '$PG_DATA_TEST_DIR' (total size: $DIR_SIZE)"
   
   echo "Проверяем целостность копии кластера СУБД, сделанной программой pg_basebackup, по манифесту backup_manifest"
-  $PG_BIN_DIR/pg_verifybackup --no-parse-wal --exit-on-error --quiet $PG_DATA_TEST_DIR
+  $PG_BIN_DIR/pg_verifybackup --no-parse-wal --exit-on-error --quiet $PG_DATA_TEST_DIR &> $LOG_FILE_PREFIX.pg_verifybackup.log
   echo "pg_backup validate: '$PG_DATA_TEST_DIR' backup verify OK"
   
   echo "Удаляем старые и ненужные файлы (информация об удалённых файлах будет выведена)"
   rm -f -r -v $PG_DATA_TEST_DIR/*.{signal,backup,old} $PG_DATA_TEST_DIR/log/*
+  
+  echo "Разрешаем локальному пользователю postgres аутентифицироваться методом peer"
+  sed -i '1i local all postgres peer' $PG_DATA_TEST_DIR/pg_hba.conf # добавляем строчку в начало файла
   
   echo "(Ре)стартуем сервер СУБД в роли мастер (рестарт - это защита от предыдущего неудачного запуска скрипта)"
   touch $PG_DATA_TEST_DIR/recovery.signal
@@ -164,8 +170,13 @@ elif test "${1:-}" = "validate"; then
   echo "pg_backup validate: server started (port $PG_PORT)"
   
   echo "Проверяем подключение к СУБД"
-  psql --port=$PG_PORT --user=bkp_replicator --no-password --dbname=postgres --no-psqlrc --command='\conninfo'
+  psql --port=$PG_PORT --user=$PG_USERNAME --no-password --dbname=postgres --no-psqlrc --command='\conninfo'
   echo "pg_backup validate: server connection OK"
+  
+  echo "Проверяем логическую целостность таблиц и индексов (amcheck)"
+  $PG_BIN_DIR/pg_amcheck --port=$PG_PORT --username=postgres --no-password --database=* \
+                         --rootdescend --on-error-stop &> $LOG_FILE_PREFIX.pg_amcheck.log
+  echo "pg_backup validate: amcheck OK"
   
   echo "Останавливаем сервер СУБД"
   $PG_BIN_DIR/pg_ctl stop --pgdata=$PG_DATA_TEST_DIR --silent
@@ -178,10 +189,10 @@ elif test "${1:-}" = "validate"; then
   echo "pg_backup validate: no problems found in log files"
   
   echo "Проверяем контрольные суммы данных в кластере СУБД"
-  $PG_BIN_DIR/pg_checksums --check --pgdata=$PG_DATA_TEST_DIR
+  $PG_BIN_DIR/pg_checksums --check --pgdata=$PG_DATA_TEST_DIR &> $LOG_FILE_PREFIX.pg_checksums.log
   echo "pg_backup validate: '$PG_DATA_TEST_DIR' checksums OK"
   
-  LOG_FILE=$(dirname $BACKUP_FILE)/$(basename $BACKUP_FILE .tar.$BACKUP_FILE_EXT).validated.log
+  LOG_FILE=$LOG_FILE_PREFIX.pg_controldata.log
   echo "Сохраняем управляющую информацию кластера СУБД в файл '$LOG_FILE'"
   $PG_BIN_DIR/pg_controldata --pgdata=$PG_DATA_TEST_DIR &> $LOG_FILE
   
@@ -191,6 +202,9 @@ elif test "${1:-}" = "validate"; then
   
   TIME_END=$(date +%s) # время в Unixtime
   TIME_ELAPSED=$(elapsed $TIME_START $TIME_END)
+  LOG_FILE=$LOG_FILE_PREFIX.validate-success.log
+  echo "Total size: $DIR_SIZE" >> $LOG_FILE
+  echo "Validate duration: $TIME_ELAPSED (day:hh:mm:ss)" >> $LOG_FILE
   echosucc "pg_backup validate: success, duration: $TIME_ELAPSED (day:hh:mm:ss)"
   exit 0
 elif test -n "${1:-}"; then
@@ -209,7 +223,7 @@ mkdir -p ${BACKUP_DIR} ${WAL_DIR} # создаём директории, есл�
 # Это баланс между скоростью работы, размером сжатого файла, скоростью записи на сетевой диск с учётом его нагрузки другими процессами.
   
 echo 'Проверяем необходимость бекапирования WAL файлов (зависит от настройки параметра archive_mode и роли СУБД primary/standby)'
-IS_BACKUP_WAL=$(psql --user=bkp_replicator --no-password --dbname=postgres --quiet --no-psqlrc --pset=null=¤ --tuples-only --no-align \
+IS_BACKUP_WAL=$(psql --user=$PG_USERNAME --no-password --dbname=postgres --quiet --no-psqlrc --pset=null=¤ --tuples-only --no-align \
                      --command="select setting='off' or (pg_is_in_recovery() and setting='on') from pg_settings where name='archive_mode'")
   
 if test "$IS_BACKUP_WAL" = "f"; then
@@ -222,7 +236,7 @@ else
   LIBZSTD_VER=$(rpm -q libzstd | grep -oP '^libzstd-\K\d+\.\d+')
   test -z "$LIBZSTD_VER" && echoerr "pg_backup: cannot get libzstd version, it is installed?" && exit 1
   OPT_COMPRESS="server-zstd:level=1"
-  printf '%s\n' "1.5" "$LIBZSTD_VER" | sort -V -C && OPT_COMPRESS="server-zstd:level=5,workers=${ZSTD_THREADS}"
+  test $(echo "$LIBZSTD_VER >= 1.5" | bc -l) = 1 && OPT_COMPRESS="server-zstd:level=5,workers=${ZSTD_THREADS}"
   ${PG_BIN_DIR}/pg_basebackup --username=${PG_USERNAME} --no-password --compress=${OPT_COMPRESS} --checkpoint=fast --format=tar \
                               --pgdata=${BASE_NAME}.pg_basebackup
   zstd -q -T${ZSTD_THREADS} -5 --rm ${BASE_NAME}.pg_basebackup/pg_wal.tar
