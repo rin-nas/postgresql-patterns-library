@@ -15,3 +15,7 @@ nano ~/db_restore.sh && chmod +x ~/db_restore.sh
 ```
 
 Файл [`db_restore.sh`](db_restore.sh)
+
+## Ссылки по теме
+
+* https://github.com/dimitri/pgcopydb
