@@ -27,7 +27,7 @@
 или [`pg_receivewal`](https://postgrespro.ru/docs/postgresql/16/app-pgreceivewal).
 > 1. Следует учесть [ограничения создания резервной копии с реплики](https://postgrespro.ru/docs/postgresql/16/app-pgbasebackup)!
 
-## Настройка создания резервных копий СУБД
+## Инсталляция
 
 **Шаг 1. Выполнить на терминальном сервере Windows (PowerShell)**
 ```powershell
