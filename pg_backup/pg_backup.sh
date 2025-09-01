@@ -222,7 +222,9 @@ elif test "${1:-}" = "validate"; then
   echo "pg_backup validate: archive file extracted to directory '$PG_DATA_TEST_DIR' (total size: $DIR_SIZE)"
  
   echo "Проверяем целостность копии кластера СУБД, сделанной программой pg_basebackup, по манифесту backup_manifest"
-  $PG_BIN_DIR/pg_verifybackup --no-parse-wal --exit-on-error --quiet $PG_DATA_TEST_DIR &> $LOG_FILE_PREFIX.pg_verifybackup.log
+  $PG_BIN_DIR/pg_verifybackup --no-parse-wal --exit-on-error --quiet $PG_DATA_TEST_DIR \
+    1> $LOG_FILE_PREFIX.pg_verifybackup.stdout.log \
+    2> $LOG_FILE_PREFIX.pg_verifybackup.stderr.log
   echo "pg_backup validate: '$PG_DATA_TEST_DIR' backup verify OK"
  
   echo "Удаляем старые и ненужные файлы (информация об удалённых файлах будет выведена)"
@@ -240,13 +242,23 @@ elif test "${1:-}" = "validate"; then
   echo "pg_backup validate: server started (port $PG_PORT)"
  
   echo "Проверяем подключение к СУБД"
-  psql --port=$PG_PORT --user=$PG_USERNAME --no-password --dbname=postgres --no-psqlrc --command='\conninfo'
-  echo "pg_backup validate: server connection OK"
+  if ! psql --port=$PG_PORT --user=$PG_USERNAME --no-password --dbname=postgres --no-psqlrc --echo-errors --command='\conninfo' \
+            1> $LOG_FILE_PREFIX.psql.stdout.log \
+            2> $LOG_FILE_PREFIX.psql.stderr.log ; then
+    echowarn "pg_backup validate: server connection ERROR"
+  else
+    echo "pg_backup validate: server connection OK"
  
-  echo "Проверяем логическую целостность таблиц и индексов (amcheck)"
-  $PG_BIN_DIR/pg_amcheck --port=$PG_PORT --username=postgres --no-password --database=* \
-                         --rootdescend --on-error-stop &> $LOG_FILE_PREFIX.pg_amcheck.log
-  echo "pg_backup validate: amcheck OK"
+    echo "Проверяем логическую целостность таблиц и индексов (amcheck)"
+    if ! $PG_BIN_DIR/pg_amcheck --port=$PG_PORT --username=postgres --no-password --database=* \
+                                --rootdescend --on-error-stop \
+                                1> $LOG_FILE_PREFIX.pg_amcheck.stdout.log \
+                                2> $LOG_FILE_PREFIX.pg_amcheck.stderr.log ; then
+      echowarn "pg_backup validate: amcheck ERROR"
+    else
+      echo "pg_backup validate: amcheck OK"
+    fi
+  fi
  
   echo "Останавливаем сервер СУБД"
   $PG_BIN_DIR/pg_ctl stop --pgdata=$PG_DATA_TEST_DIR --silent
@@ -259,12 +271,15 @@ elif test "${1:-}" = "validate"; then
   echo "pg_backup validate: no problems found in log files"
  
   echo "Проверяем контрольные суммы данных в кластере СУБД"
-  $PG_BIN_DIR/pg_checksums --check --pgdata=$PG_DATA_TEST_DIR &> $LOG_FILE_PREFIX.pg_checksums.log
+  $PG_BIN_DIR/pg_checksums --check --pgdata=$PG_DATA_TEST_DIR \
+    1> $LOG_FILE_PREFIX.pg_checksums.stdout.log
+    2> $LOG_FILE_PREFIX.pg_checksums.stderr.log
   echo "pg_backup validate: '$PG_DATA_TEST_DIR' checksums OK"
  
-  LOG_FILE=$LOG_FILE_PREFIX.pg_controldata.log
-  echo "Сохраняем управляющую информацию кластера СУБД в файл '$LOG_FILE'"
-  $PG_BIN_DIR/pg_controldata --pgdata=$PG_DATA_TEST_DIR &> $LOG_FILE
+  echo "Сохраняем управляющую информацию кластера СУБД"
+  $PG_BIN_DIR/pg_controldata --pgdata=$PG_DATA_TEST_DIR \
+    1> $LOG_FILE_PREFIX.pg_controldata.stdout.log \
+    2> $LOG_FILE_PREFIX.pg_controldata.stderr.log
  
   echo "Удаляем папку '$PG_DATA_TEST_DIR', она больше не нужна"
   rm -r $PG_DATA_TEST_DIR
