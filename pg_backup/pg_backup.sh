@@ -11,7 +11,7 @@ set -euo pipefail
 SCRIPT_FILE=$(readlink -f "$0")
 SCRIPT_DIR=$(dirname "$SCRIPT_FILE")
  
-bash -n "${SCRIPT_FILE}" || exit # Check syntax this file
+bash -n "$SCRIPT_FILE" || exit # Check syntax this file
  
 # Colors
 Red='\e[1;31m'
@@ -26,10 +26,10 @@ White='\e[1;37m'
 Reset='\e[0m'
  
 # Colored messages
-echoerr()  { echo -e "${Red}$@${Reset}"    1>&2; }
-echowarn() { echo -e "${Yellow}$@${Reset}" 1>&2; }
-echoinfo() { echo -e "${White}$@${Reset}" ; }
-echosucc() { echo -e "${Green}$@${Reset}" ; }
+echoerr()  { echo -e "${Red}$@${Reset}"    1>&2; } # ошибки
+echowarn() { echo -e "${Yellow}$@${Reset}" 1>&2; } # предупреждения
+echoinfo() { echo -e "${White}$@${Reset}" ; }      # важные сообщения
+echosucc() { echo -e "${Green}$@${Reset}" ; }      # сообщения об успехе
  
 elapsed() {
   local time_start=$1 #time_start=$(date +%s)
@@ -49,16 +49,29 @@ ionice -c 2 -n 7 -p $$
 renice -n 19 -p $$
  
 source "$SCRIPT_DIR/pg_backup.conf" # include
+TIME_START=$(date +%s) # время в Unixtime
  
-PG_PASS_FILE="$SCRIPT_DIR/.pgpass"
-if test $(whoami) != "postgres"; then
-  echoerr "pg_backup: run script as user postgres, not $(whoami)!"
+# разные обязательные общие проверки при запуске скрипта
+if test "$(whoami)" != "postgres"; then
+  echoerr "pg_backup: run script as user 'postgres', not '$(whoami)'"
   exit 1
 elif ! grep -q -w "$PG_USERNAME" "$PG_PASS_FILE"; then
   echoerr "pg_backup: file '$PG_PASS_FILE' must contain record for user '$PG_USERNAME'"
   exit 1
 elif test "$GPG_PASSPHRASE" = "*censored*"; then
-  echoerr "pg_backup: change value of \$GPG_PASSPHRASE in '$SCRIPT_DIR/pg_backup.conf'!"
+  echoerr "pg_backup: change default value of GPG_PASSPHRASE in '$SCRIPT_DIR/pg_backup.conf'"
+  exit 1
+elif test ! -d "$BACKUP_DIR"; then
+  echoerr "pg_backup: directory '$BACKUP_DIR' does not exist"
+  exit 1
+elif test ! -d "$WAL_DIR"; then
+  echoerr "pg_backup: directory '$WAL_DIR' does not exist"
+  exit 1
+elif test ! -x "$PG_ARCHIVE_COMMAND_FILE"; then
+  echoerr "pg_backup: file '$PG_ARCHIVE_COMMAND_FILE' does not exist or user has not execute access"
+  exit 1
+elif test ! -x "$PG_RESTORE_COMMAND_FILE"; then
+  echoerr "pg_backup: file '$PG_RESTORE_COMMAND_FILE' does not exist or user has not execute access"
   exit 1
 fi
  
@@ -96,10 +109,9 @@ if test "${1:-}" = "ExecCondition"; then
   echo "pg_backup: perform will be from '$MEMBER' [$HOST] ($ROLE)"
   test $(hostname) = "$MEMBER"
   exit
+ 
 # восстанавливаем PostgreSQL из резервной копии
 elif test "${1:-}" = "restore"; then
-  TIME_START=$(date +%s) # время в Unixtime
- 
   # скрипт должен запускаться с тремя параметрами
   test "$#" -ne 3 && echoinfo "Usage: $0 restore SOURCE_BACKUP_FILE_OR_DIR TARGET_PG_DATA_DIR" && exit 2
  
@@ -109,23 +121,20 @@ elif test "${1:-}" = "restore"; then
   elif test -d "$BACKUP_FILE_OR_DIR"; then
     BACKUP_FILE=$(find $BACKUP_FILE_OR_DIR -maxdepth 1 -type f -name "base.tar.*" -printf "%p")
     test ! -f "$BACKUP_FILE" \
-      && echoerr "pg_backup restore: source backup archive file '$BACKUP_FILE_OR_DIR/base.tar.*' does not exist!" && exit 1
+      && echoerr "pg_backup restore: source backup archive file '$BACKUP_FILE_OR_DIR/base.tar.*' does not exist" && exit 1
   else
-    echoerr "pg_backup restore: source backup archive file/directory '$BACKUP_FILE_OR_DIR' does not exist!"
+    echoerr "pg_backup restore: source backup archive file/directory '$BACKUP_FILE_OR_DIR' does not exist"
     exit 1
   fi
  
   PG_DATA_DIR="$3"
-  test ! -d "$PG_DATA_DIR" && echoerr "pg_backup restore: target directory '$PG_DATA_DIR' does not exist!" && exit 1
+  test ! -d "$PG_DATA_DIR" && echoerr "pg_backup restore: target directory '$PG_DATA_DIR' does not exist" && exit 1
  
   # определяем архиватор по расширению файла
-  BACKUP_FILE_EXT=$(basename "$BACKUP_FILE" | grep -oP '\.\Ktar\..*$')
+  BACKUP_FILE_EXT=$(basename "$BACKUP_FILE" | grep -oP '\.\Ktar\..+$')
   ARCHIVE_TYPE=$(echo "$BACKUP_FILE_EXT" | cut -d. -f2)
-  if test "$ARCHIVE_TYPE" = "zst"; then
-    COMPRESS_PROGRAM="unzstd"
-  elif test "$ARCHIVE_TYPE" = "lz4"; then
-    COMPRESS_PROGRAM="unlz4"
-  else
+  COMPRESS_PROGRAM=$(echo "zst:unzstd,lz4:unlz4,gz:unpigz" | grep -oP "\b${ARCHIVE_TYPE}:\K[^,]+")
+  if test -z "$ARCHIVE_TYPE" || test -z "$COMPRESS_PROGRAM"; then
     echoerr "pg_backup validate: no compress program found"
     exit 1
   fi
@@ -145,7 +154,7 @@ elif test "${1:-}" = "restore"; then
   fi
  
   echo "Удаляем старые и ненужные файлы (информация об удалённых файлах будет выведена)"
-  rm -f -r -v $PG_DATA_DIR/*.{signal,{backup,old}{,.*}} $PG_DATA_DIR/log/*
+  rm -f -r -v $PG_DATA_DIR/{*.{signal,{backup,old}{,.*}},log/*}
  
   TIME_END=$(date +%s) # время в Unixtime
   TIME_ELAPSED=$(elapsed $TIME_START $TIME_END)
@@ -163,10 +172,9 @@ elif test "${1:-}" = "restore"; then
   fi
   echowarn "Донастройте postgresql.conf и запустите кластер СУБД!"
   exit 0
+ 
 # проверяем корректность и восстанавливаемость PostgreSQL из резервной копии
 elif test "${1:-}" = "validate"; then
-  TIME_START=$(date +%s) # время в Unixtime
- 
   echo "Получаем название предпоследнего или последнего файла с архивом резервной копии (сортировка по дате модификации)"
   BACKUP_FILE=$(find $BACKUP_DIR -maxdepth 2 -type f \( -name "*.pg_backup.tar.*" -o -path "*.pg_backup/base.tar.*" \) \
                 -printf "%T@ %p\n" | sort -n | tail -2 | head -1 | cut -d" " -f2)
@@ -174,16 +182,14 @@ elif test "${1:-}" = "validate"; then
   echo "pg_backup validate: archive file '$BACKUP_FILE' selected"
  
   # определяем архиватор по расширению файла
-  BACKUP_FILE_EXT=$(basename "$BACKUP_FILE" | grep -oP '\.\Ktar\..*$')
+  BACKUP_FILE_EXT=$(basename "$BACKUP_FILE" | grep -oP '\.\Ktar\..+$')
   ARCHIVE_TYPE=$(echo "$BACKUP_FILE_EXT" | cut -d. -f2)
-  if test "$ARCHIVE_TYPE" = "zst"; then
-    COMPRESS_PROGRAM="unzstd"
-  elif test "$ARCHIVE_TYPE" = "lz4"; then
-    COMPRESS_PROGRAM="unlz4"
-  else
+  COMPRESS_PROGRAM=$(echo "zst:unzstd,lz4:unlz4,gz:unpigz" | grep -oP "\b${ARCHIVE_TYPE}:\K[^,]+")
+  if test -z "$ARCHIVE_TYPE" || test -z "$COMPRESS_PROGRAM"; then
     echoerr "pg_backup validate: no compress program found"
     exit 1
   fi
+ 
   LOG_FILE_PREFIX=$(dirname $BACKUP_FILE)/$(basename $BACKUP_FILE .$BACKUP_FILE_EXT)
   touch $LOG_FILE_PREFIX.validate-selected.log
  
@@ -204,10 +210,7 @@ elif test "${1:-}" = "validate"; then
     | tar -xf - --use-compress-program="$COMPRESS_PROGRAM" --directory=$PG_DATA_TEST_DIR
  
   BACKUP_BASE_DIR=$(echo "$BACKUP_FILE" | grep -qP '\.pg_backup/base\.tar\.' && dirname "$BACKUP_FILE" || true)
-  if test -z "$BACKUP_BASE_DIR"; then
-    echo "Проверяем существование папки '$WAL_DIR', из неё могут быть прочитаны дополнительные WAL файлы"
-    test ! -d "$WAL_DIR" && echowarn "pg_backup validate: directory '$WAL_DIR' does not exist"
-  else
+  if test ! -z "$BACKUP_BASE_DIR"; then
     echo "Копируем '$BACKUP_BASE_DIR/backup_manifest' в папку '$PG_DATA_TEST_DIR'"
     cp $BACKUP_BASE_DIR/backup_manifest $PG_DATA_TEST_DIR
  
@@ -228,7 +231,7 @@ elif test "${1:-}" = "validate"; then
   echo "pg_backup validate: '$PG_DATA_TEST_DIR' backup verify OK"
  
   echo "Удаляем старые и ненужные файлы (информация об удалённых файлах будет выведена)"
-  rm -f -r -v $PG_DATA_TEST_DIR/*.{signal,{backup,old}{,.*}} $PG_DATA_TEST_DIR/log/*
+  rm -f -r -v $PG_DATA_TEST_DIR/{*.{signal,{backup,old}{,.*}},log/*}
  
   echo "Разрешаем локальному пользователю postgres аутентифицироваться методом peer"
   sed -i '1i local all postgres peer' $PG_DATA_TEST_DIR/pg_hba.conf # добавляем строчку в начало файла
@@ -236,45 +239,59 @@ elif test "${1:-}" = "validate"; then
   echo "(Ре)стартуем сервер СУБД в роли мастер (рестарт - это защита от предыдущего неудачного запуска скрипта)"
   touch $PG_DATA_TEST_DIR/recovery.signal
   PG_PORT=55432
-  $PG_BIN_DIR/pg_ctl restart --pgdata=$PG_DATA_TEST_DIR --silent \
+  $PG_BIN_DIR/pg_ctl restart --pgdata=$PG_DATA_TEST_DIR \
     --options="-p $PG_PORT -B 128MB --cluster_name=BACKUP_VALIDATE --archive_mode=off --log_directory=$PG_DATA_TEST_DIR/log" \
-    --options="--hba_file=$PG_DATA_TEST_DIR/pg_hba.conf --ident-file=$PG_DATA_TEST_DIR/pg_ident.conf"
-  echo "pg_backup validate: server started (port $PG_PORT)"
+    --options="--hba_file=$PG_DATA_TEST_DIR/pg_hba.conf --ident-file=$PG_DATA_TEST_DIR/pg_ident.conf" \
+    --options="--restore_command='$PG_RESTORE_COMMAND_FILE %f %p'" \
+    1> $LOG_FILE_PREFIX.pg_ctl.stdout.log \
+    2> $LOG_FILE_PREFIX.pg_ctl.stderr.log
+  echoinfo "pg_backup validate: server started (port $PG_PORT)"
  
-  echo "Проверяем подключение к СУБД"
-  if ! psql --port=$PG_PORT --user=$PG_USERNAME --no-password --dbname=postgres --no-psqlrc --echo-errors --command='\conninfo' \
-            1> $LOG_FILE_PREFIX.psql.stdout.log \
-            2> $LOG_FILE_PREFIX.psql.stderr.log ; then
-    echowarn "pg_backup validate: server connection ERROR"
+  # ВНИМАНИЕ! После старта тестовой СУБД завершать работу скрипта с ошибкой нельзя до остановки СУБД!
+ 
+  echo "Проверяем количество ошибок в контрольных суммах"
+  CHECKSUM_FAILURES=$(psql --port=$PG_PORT --user=$PG_USERNAME --no-password --dbname=postgres --quiet --no-psqlrc \
+                           --pset=null=¤ --tuples-only --no-align --command='select sum(checksum_failures) from pg_stat_database' \
+                        2> $LOG_FILE_PREFIX.psql.stderr.log) || true
+  if test -z "$CHECKSUM_FAILURES"; then
+    echowarn "pg_backup validate: connection ERROR"
+  elif test "$CHECKSUM_FAILURES" = "¤"; then
+    echowarn "pg_backup validate: data checksums disabled"
+  elif test "$CHECKSUM_FAILURES" -gt 0; then
+    echowarn "pg_backup validate: data checksum failures: $CHECKSUM_FAILURES"
   else
-    echo "pg_backup validate: server connection OK"
+    echo "pg_backup validate: data checksum failures: 0"
+  fi
  
-    echo "Проверяем логическую целостность таблиц и индексов (amcheck)"
-    if ! $PG_BIN_DIR/pg_amcheck --port=$PG_PORT --username=postgres --no-password --database=* \
-                                --rootdescend --on-error-stop \
-                                1> $LOG_FILE_PREFIX.pg_amcheck.stdout.log \
-                                2> $LOG_FILE_PREFIX.pg_amcheck.stderr.log ; then
-      echowarn "pg_backup validate: amcheck ERROR"
-    else
-      echo "pg_backup validate: amcheck OK"
-    fi
+  echo "Проверяем логическую целостность таблиц и индексов (amcheck)"
+  if $PG_BIN_DIR/pg_amcheck --port=$PG_PORT --username=postgres --no-password --database=* \
+                            --rootdescend --on-error-stop \
+                            1> $LOG_FILE_PREFIX.pg_amcheck.stdout.log \
+                            2> $LOG_FILE_PREFIX.pg_amcheck.stderr.log ; then
+    echo "pg_backup validate: amcheck OK"
+  else
+    echowarn "pg_backup validate: amcheck ERROR"
   fi
  
   echo "Останавливаем сервер СУБД"
-  $PG_BIN_DIR/pg_ctl stop --pgdata=$PG_DATA_TEST_DIR --silent
-  echo "pg_backup validate: server stopped"
+  $PG_BIN_DIR/pg_ctl stop --pgdata=$PG_DATA_TEST_DIR \
+    1> $LOG_FILE_PREFIX.pg_ctl.stdout.log \
+    2> $LOG_FILE_PREFIX.pg_ctl.stderr.log
+  echoinfo "pg_backup validate: server stopped (port $PG_PORT)"
  
   for LOG_FILE in $PG_DATA_TEST_DIR/log/*; do
     echo "Проверяем отсутствие ошибок в файле $LOG_FILE"
-    grep -P '\b(WARNING|ERROR|FATAL|PANIC)\b' $LOG_FILE && exit 1 || true
+    grep -P '\b(WARNING|ERROR|FATAL|PANIC)\b' $LOG_FILE && echoerr "pg_backup validate: problems found" && exit 1 || true
   done
   echo "pg_backup validate: no problems found in log files"
  
-  echo "Проверяем контрольные суммы данных в кластере СУБД"
-  $PG_BIN_DIR/pg_checksums --check --pgdata=$PG_DATA_TEST_DIR \
-    1> $LOG_FILE_PREFIX.pg_checksums.stdout.log
-    2> $LOG_FILE_PREFIX.pg_checksums.stderr.log
-  echo "pg_backup validate: '$PG_DATA_TEST_DIR' checksums OK"
+  if echo "$CHECKSUM_FAILURES" | grep -qP '^\d+$'; then
+    echo "Проверяем контрольные суммы данных в кластере СУБД"
+    $PG_BIN_DIR/pg_checksums --check --pgdata=$PG_DATA_TEST_DIR \
+      1> $LOG_FILE_PREFIX.pg_checksums.stdout.log \
+      2> $LOG_FILE_PREFIX.pg_checksums.stderr.log
+    echo "pg_backup validate: '$PG_DATA_TEST_DIR' checksums OK"
+  fi
  
   echo "Сохраняем управляющую информацию кластера СУБД"
   $PG_BIN_DIR/pg_controldata --pgdata=$PG_DATA_TEST_DIR \
@@ -292,6 +309,7 @@ elif test "${1:-}" = "validate"; then
   echo "Validate duration: $TIME_ELAPSED (day:hh:mm:ss)" >> $LOG_FILE
   echosucc "pg_backup validate: success, duration: $TIME_ELAPSED (day:hh:mm:ss)"
   exit 0
+ 
 elif test -n "${1:-}"; then
   echoerr "pg_backup: unknown first parameter '${1:-}'"
   exit 2
@@ -299,10 +317,8 @@ fi
  
 # -----------------------------------------------------------------------------------------------------------------------
 echoinfo "pg_backup: creating started"
-TIME_START=$(date +%s) # время в Unixtime
 BASE_NAME=${BACKUP_DIR}/$(date +%Y-%m-%d.%H%M%S).$(hostname).pg_backup
-ZSTD_THREADS=$(echo "$(nproc) / 2.5 + 1" | bc)
-mkdir -p ${BACKUP_DIR} ${WAL_DIR} # создаём директории, если их ещё нет
+COMPRESS_THREADS=$(echo "$(nproc) / 2.5 + 1" | bc)
  
 # Для многопоточного режима zstd используется степень сжатия 5, которая получена опытным путём.
 # Это баланс между скоростью работы, размером сжатого файла, скоростью записи на сетевой диск с учётом его нагрузки другими процессами.
@@ -316,16 +332,24 @@ IS_BACKUP_WAL=$(psql --user=$PG_USERNAME --no-password --dbname=postgres --quiet
  
 if test "$IS_BACKUP_WAL" = "f"; then
   echo 'Создаём физическую резервную копию (без WAL файлов)'
+  FILE="${BASE_NAME}.tar.zst.gpg"
   ${PG_BIN_DIR}/pg_basebackup --username=${PG_USERNAME} --no-password --wal-method=none --checkpoint=fast --format=tar --pgdata=- \
-    | zstd -q -T${ZSTD_THREADS} -5 \
-    | gpg -c --passphrase=${GPG_PASSPHRASE} --batch --compress-algo=none -o ${BASE_NAME}.tar.zst.gpg
+    | zstd -q -T${COMPRESS_THREADS} -5 \
+    | gpg -c --passphrase=${GPG_PASSPHRASE} --batch --compress-algo=none -o $FILE
+  SIZE=$(du -sh "$FILE" | grep -oP '^\S+')
+  echoinfo "Создан файл '$FILE' (size: $SIZE)"
 else
   echo 'Создаём физическую резервную копию (с WAL файлами)'
-  # в библиотеке libzstd многопоточность поддерживается с версии 1.5.0
-  LIBZSTD_VER=$(rpm -q libzstd | grep -oP '^libzstd-\K\d+\.\d+')
-  test -z "$LIBZSTD_VER" && echoerr "pg_backup: cannot get libzstd version, it is installed?" && exit 1
-  OPT_COMPRESS="server-zstd:level=1"
-  test $(echo "$LIBZSTD_VER >= 1.5" | bc -l) = 1 && OPT_COMPRESS="server-zstd:level=5,workers=${ZSTD_THREADS}"
+  PG_MAJOR_VER=$(echo "$PG_BIN_DIR" | grep -oP '\-\K\d+(?=/)')
+  if test "$PG_MAJOR_VER" -ge 15; then
+    # в библиотеке libzstd многопоточность поддерживается с версии 1.5.0
+    LIBZSTD_VER=$(rpm -q libzstd | grep -oP '^libzstd-\K\d+\.\d+')
+    test -z "$LIBZSTD_VER" && echoerr "pg_backup: cannot get libzstd version, it is installed?" && exit 1
+    OPT_COMPRESS="server-zstd:level=1"
+    test $(echo "$LIBZSTD_VER >= 1.5" | bc -l) = 1 && OPT_COMPRESS="server-zstd:level=5,workers=${COMPRESS_THREADS}"
+  else
+    OPT_COMPRESS=1 # gzip support only
+  fi
   ${PG_BIN_DIR}/pg_basebackup --username=${PG_USERNAME} --no-password --compress=${OPT_COMPRESS} --checkpoint=fast --format=tar \
                               --pgdata=${BASE_NAME}
  
@@ -333,20 +357,30 @@ else
   for FILE in $FILES; do
     if test -f "$FILE"; then
       echo "Сжимаем и шифруем '$FILE'"
-      zstd -c -q -T${ZSTD_THREADS} -5 $FILE | gpg -c --passphrase=${GPG_PASSPHRASE} --batch --compress-algo=none -o $FILE.zst.gpg
+      if test "$PG_MAJOR_VER" -ge 15; then
+         zstd -c -q -T${COMPRESS_THREADS} -5 $FILE | gpg -c --passphrase=${GPG_PASSPHRASE} --batch --compress-algo=none -o $FILE.zst.gpg
+      else
+         pigz -c -q -p ${COMPRESS_THREADS} -5 $FILE | gpg -c --passphrase=${GPG_PASSPHRASE} --batch --compress-algo=none -o $FILE.gz.gpg
+      fi
       rm -f $FILE
     elif test -f "$FILE.zst"; then
       echo "Шифруем '$FILE.zst'"
       gpg -c --passphrase=${GPG_PASSPHRASE} --batch --compress-algo=none $FILE.zst
       rm -f $FILE.zst
+    elif test -f "$FILE.gz"; then
+      echo "Шифруем '$FILE.gz'"
+      gpg -c --passphrase=${GPG_PASSPHRASE} --batch --compress-algo=none $FILE.gz
+      rm -f $FILE.gz
     else
-      echoerr "Файл '$FILE' или '$FILE.zst' не найден" && exit 1
+      echoerr "Файл '$FILE' или '$FILE.zst' или '$FILE.gz' не найден" && exit 1
     fi
   done
+  SIZE=$(du -sh "$BASE_NAME" | grep -oP '^\S+')
+  echoinfo "Создана папка '$BASE_NAME' (total size: $SIZE)"
 fi
  
 # создаём логическую резервную копию (deprecated)
-# ${PG_BIN_DIR}/pg_dumpall --username=${PG_USERNAME} --no-password | zstd -q -T${ZSTD_THREADS} -5 -o ${BASE_NAME}.sql.zst
+# ${PG_BIN_DIR}/pg_dumpall --username=${PG_USERNAME} --no-password | zstd -q -T${COMPRESS_THREADS} -5 -o ${BASE_NAME}.sql.zst
  
 TIME_END=$(date +%s) # время в Unixtime
 TIME_ELAPSED=$(elapsed $TIME_START $TIME_END)
@@ -364,16 +398,16 @@ WAL_OLD_FILE=$(find ${WAL_DIR} -maxdepth 1 -mtime +${BACKUP_AGE_DAYS} -type f ! 
                                ! -name "*.history" ! -name "*.history.*" -printf "%T@ %f\n" \
                | sort -n | tail -1 | cut -d" " -f2)
 if test -z "${WAL_OLD_FILE}"; then
-    echo "pg_backup: WAL old file is not found"
+  echowarn "pg_backup: WAL old file is not found"
 else
-    echo "pg_backup: WAL old file is ${WAL_OLD_FILE}"
-    WAL_OLD_FILE_EXT=$(echo "${WAL_OLD_FILE}" | grep -oP '\.[a-z\d]+$') # compressed files support (.gz, .zst, .lz4)
+  echo "pg_backup: WAL old file is ${WAL_OLD_FILE}"
+  WAL_OLD_FILE_EXT=$(echo "${WAL_OLD_FILE}" | grep -oP '\.[a-z\d]+$') # compressed files support (.gz, .zst, .lz4)
  
-    BEFORE_WAL_DIR_SIZE=$(du -sh "${WAL_DIR}" | grep -oP '^\S+')
-    ${PG_BIN_DIR}/pg_archivecleanup -x "${WAL_OLD_FILE_EXT}" "${WAL_DIR}" "${WAL_OLD_FILE}"
+  BEFORE_WAL_DIR_SIZE=$(du -sh "${WAL_DIR}" | grep -oP '^\S+')
+  ${PG_BIN_DIR}/pg_archivecleanup -x "${WAL_OLD_FILE_EXT}" "${WAL_DIR}" "${WAL_OLD_FILE}"
  
-    AFTER_WAL_DIR_SIZE=$(du -sh "${WAL_DIR}" | grep -oP '^\S+')
-    echo "pg_backup: WAL dir size reducing: ${BEFORE_WAL_DIR_SIZE} (before cleanup) -> ${AFTER_WAL_DIR_SIZE} (after cleanup)"
+  AFTER_WAL_DIR_SIZE=$(du -sh "${WAL_DIR}" | grep -oP '^\S+')
+  echo "pg_backup: WAL dir size reducing: ${BEFORE_WAL_DIR_SIZE} (before cleanup) -> ${AFTER_WAL_DIR_SIZE} (after cleanup)"
 fi
  
 echosucc "pg_backup: done"
