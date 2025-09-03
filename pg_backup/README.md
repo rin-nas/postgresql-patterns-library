@@ -9,7 +9,7 @@
 
 ## Требования
 * GNU/Linux
-* PostgreSQL ≥ v15
+* PostgreSQL ≥ v14
 * Bash ≥ 4.4
 
 ## Как это работает?
