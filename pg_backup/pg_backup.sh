@@ -11,9 +11,9 @@ set -euo pipefail
 SCRIPT_FILE=$(readlink -f "$0")
 SCRIPT_DIR=$(dirname "$SCRIPT_FILE")
  
-bash -n "$SCRIPT_FILE" || exit # Check syntax this file
+bash -n "$SCRIPT_FILE" || exit # check syntax this file
  
-# Colors
+# colors
 Red='\e[1;31m'
 Green='\e[0;32m'
 Yellow='\e[38;5;220m'
@@ -25,15 +25,16 @@ Gray='\e[0;37m'
 White='\e[1;37m'
 Reset='\e[0m'
  
-# Colored messages
+# colored messages
 echoerr()  { echo -e "${Red}$@${Reset}"    1>&2; } # ошибки
 echowarn() { echo -e "${Yellow}$@${Reset}" 1>&2; } # предупреждения
 echoinfo() { echo -e "${White}$@${Reset}" ; }      # важные сообщения
 echosucc() { echo -e "${Green}$@${Reset}" ; }      # сообщения об успехе
  
+# функция подсчитывает длительность (day:hh:mm:ss) между временными метками в Unixtime
 elapsed() {
-  local time_start=$1 #time_start=$(date +%s)
-  local time_end=$2  #time_end=$(date +%s)
+  local time_start=$1 # time_start=$(date +%s)
+  local time_end=$2   # time_end=$(date +%s)
   local dt=$(echo "$time_end - $time_start" | bc)
   local dd=$(echo "$dt/86400" | bc)
   local dt2=$(echo "$dt-86400*$dd" | bc)
@@ -41,7 +42,7 @@ elapsed() {
   local dt3=$(echo "$dt2-3600*$dh" | bc)
   local dm=$(echo "$dt3/60" | bc)
   local ds=$(echo "$dt3-60*$dm" | bc)
-  printf '%dd:%02d:%02d:%02d' $dd $dh $dm $ds #day:hh:mm:ss
+  printf '%dd:%02d:%02d:%02d' $dd $dh $dm $ds
 }
  
 # меняем приоритет этого процесса ($$ - это его pid) на минимальный (дочерние процессы наследуют значение приоритета родительского процесса)
@@ -79,7 +80,7 @@ fi
 if test "${1:-}" = "ExecCondition"; then
   if ! (command -v patronictl &> /dev/null && command -v jq &> /dev/null); then
     # test ! -f "$PGDATA/standby.signal" # deprecated
-    PG_ROLE=$(psql --user=$PG_USERNAME --no-password --dbname=postgres --quiet --no-psqlrc --pset=null=¤ --tuples-only --no-align \
+    PG_ROLE=$(psql --username=$PG_USERNAME --no-password --dbname=postgres --quiet --no-psqlrc --pset=null=¤ --tuples-only --no-align \
                    --command="select case when pg_is_in_recovery() then 'standby' else 'primary' end")
     echo "pg_backup: candidate role is $PG_ROLE (checked by psql)"
     test ${2:='primary'} = "$PG_ROLE"
@@ -111,6 +112,7 @@ if test "${1:-}" = "ExecCondition"; then
   exit
  
 # восстанавливаем PostgreSQL из резервной копии
+# на экране будет отображаться прогресс работы в процентах, скорость работы в мегабайтах/секунду, текущая и оставшаяся длительность работы
 elif test "${1:-}" = "restore"; then
   # скрипт должен запускаться с тремя параметрами
   test "$#" -ne 3 && echoinfo "Usage: $0 restore SOURCE_BACKUP_FILE_OR_DIR TARGET_PG_DATA_DIR" && exit 2
@@ -140,20 +142,21 @@ elif test "${1:-}" = "restore"; then
   fi
  
   echo "Расшифровываем и распаковываем архив '$BACKUP_FILE' в папку '$PG_DATA_DIR'"
-  pv -treb $BACKUP_FILE \
+  pv -trebp $BACKUP_FILE \
     | gpg --decrypt --passphrase=$GPG_PASSPHRASE --batch \
     | tar -xf - --use-compress-program="$COMPRESS_PROGRAM" --directory=$PG_DATA_DIR
  
   if test -d "$BACKUP_FILE_OR_DIR"; then
-    FILE="$BACKUP_FILE_OR_DIR/pg_wal.$BACKUP_FILE_EXT"
-    test ! -f "$FILE" && echoerr "Файл '$FILE' не найден" && exit 1
-    echo "Расшифровываем и распаковываем архив '$FILE' в папку '$PG_DATA_DIR/pg_wal'"
-    pv -treb $FILE \
+    WAL_FILE="$BACKUP_FILE_OR_DIR/pg_wal.$BACKUP_FILE_EXT"
+    test ! -f "$WAL_FILE" && echoerr "Файл '$WAL_FILE' не найден" && exit 1
+    echo "Расшифровываем и распаковываем архив '$WAL_FILE' в папку '$PG_DATA_DIR/pg_wal'"
+    pv -trebp $WAL_FILE \
       | gpg --decrypt --passphrase=$GPG_PASSPHRASE --batch \
       | tar -xf - --use-compress-program="$COMPRESS_PROGRAM" --directory=$PG_DATA_DIR/pg_wal
   fi
  
   echo "Удаляем старые и ненужные файлы (информация об удалённых файлах будет выведена)"
+  # https://www.google.com/search?q=Linux+curly+brace+expansion+documentation
   rm -f -r -v $PG_DATA_DIR/{*.{signal,{backup,old}{,.*}},log/*}
  
   TIME_END=$(date +%s) # время в Unixtime
@@ -231,6 +234,7 @@ elif test "${1:-}" = "validate"; then
   echo "pg_backup validate: '$PG_DATA_TEST_DIR' backup verify OK"
  
   echo "Удаляем старые и ненужные файлы (информация об удалённых файлах будет выведена)"
+  # https://www.google.com/search?q=Linux+curly+brace+expansion+documentation
   rm -f -r -v $PG_DATA_TEST_DIR/{*.{signal,{backup,old}{,.*}},log/*}
  
   echo "Разрешаем локальному пользователю postgres аутентифицироваться методом peer"
@@ -250,7 +254,7 @@ elif test "${1:-}" = "validate"; then
   # ВНИМАНИЕ! После старта тестовой СУБД завершать работу скрипта с ошибкой нельзя до остановки СУБД!
  
   echo "Проверяем количество ошибок в контрольных суммах"
-  CHECKSUM_FAILURES=$(psql --port=$PG_PORT --user=$PG_USERNAME --no-password --dbname=postgres --quiet --no-psqlrc \
+  CHECKSUM_FAILURES=$(psql --port=$PG_PORT --username=postgres --no-password --dbname=postgres --quiet --no-psqlrc \
                            --pset=null=¤ --tuples-only --no-align --command='select sum(checksum_failures) from pg_stat_database' \
                         2> $LOG_FILE_PREFIX.psql.stderr.log) || true
   if test -z "$CHECKSUM_FAILURES"; then
@@ -264,10 +268,9 @@ elif test "${1:-}" = "validate"; then
   fi
  
   echo "Проверяем логическую целостность таблиц и индексов (amcheck)"
-  if $PG_BIN_DIR/pg_amcheck --port=$PG_PORT --username=postgres --no-password --database=* \
-                            --rootdescend --on-error-stop \
-                            1> $LOG_FILE_PREFIX.pg_amcheck.stdout.log \
-                            2> $LOG_FILE_PREFIX.pg_amcheck.stderr.log ; then
+  if $PG_BIN_DIR/pg_amcheck --port=$PG_PORT --username=postgres --no-password --database=* --rootdescend --on-error-stop \
+                         1> $LOG_FILE_PREFIX.pg_amcheck.stdout.log \
+                         2> $LOG_FILE_PREFIX.pg_amcheck.stderr.log ; then
     echo "pg_backup validate: amcheck OK"
   else
     echowarn "pg_backup validate: amcheck ERROR"
@@ -305,7 +308,7 @@ elif test "${1:-}" = "validate"; then
   TIME_END=$(date +%s) # время в Unixtime
   TIME_ELAPSED=$(elapsed $TIME_START $TIME_END)
   LOG_FILE=$LOG_FILE_PREFIX.validate-success.log
-  echo "Total size: $DIR_SIZE" >> $LOG_FILE
+  echo "Total size: $DIR_SIZE" > $LOG_FILE
   echo "Validate duration: $TIME_ELAPSED (day:hh:mm:ss)" >> $LOG_FILE
   echosucc "pg_backup validate: success, duration: $TIME_ELAPSED (day:hh:mm:ss)"
   exit 0
@@ -320,12 +323,14 @@ echoinfo "pg_backup: creating started"
 BASE_NAME=${BACKUP_DIR}/$(date +%Y-%m-%d.%H%M%S).$(hostname).pg_backup
 COMPRESS_THREADS=$(echo "$(nproc) / 2.5 + 1" | bc)
  
-# Для многопоточного режима zstd используется степень сжатия 5, которая получена опытным путём.
-# Это баланс между скоростью работы, размером сжатого файла, скоростью записи на сетевой диск с учётом его нагрузки другими процессами.
+# для многопоточного режима используется максимальная степень сжатия 5, которая получена опытным путём
+# это баланс между скоростью работы, размером сжатого файла, скоростью записи на сетевой диск, с учётом нагрузки другими процессами
+COMPRESS_LEVEL=$COMPRESS_THREADS
+test "$COMPRESS_LEVEL" -gt 5 && $COMPRESS_LEVEL=5
  
 echo 'Проверяем необходимость бекапирования WAL файлов'
 # зависит от текущего дня, настройки параметра archive_mode и роли СУБД primary/standby
-IS_BACKUP_WAL=$(psql --user=$PG_USERNAME --no-password --dbname=postgres --quiet --no-psqlrc --pset=null=¤ --tuples-only --no-align \
+IS_BACKUP_WAL=$(psql --username=$PG_USERNAME --no-password --dbname=postgres --quiet --no-psqlrc --pset=null=¤ --tuples-only --no-align \
                      --command="select extract(doy from now())%${BACKUP_WAL_DOY_DIVIDER}=0
                                        or setting='off' or (pg_is_in_recovery() and setting='on')
                                   from pg_settings where name='archive_mode'")
@@ -334,7 +339,7 @@ if test "$IS_BACKUP_WAL" = "f"; then
   echo 'Создаём физическую резервную копию (без WAL файлов)'
   FILE="${BASE_NAME}.tar.zst.gpg"
   ${PG_BIN_DIR}/pg_basebackup --username=${PG_USERNAME} --no-password --wal-method=none --checkpoint=fast --format=tar --pgdata=- \
-    | zstd -q -T${COMPRESS_THREADS} -5 \
+    | zstd -q -T${COMPRESS_THREADS} -${COMPRESS_LEVEL} \
     | gpg -c --passphrase=${GPG_PASSPHRASE} --batch --compress-algo=none -o $FILE
   SIZE=$(du -sh "$FILE" | grep -oP '^\S+')
   echoinfo "Создан файл '$FILE' (size: $SIZE)"
@@ -346,7 +351,7 @@ else
     LIBZSTD_VER=$(rpm -q libzstd | grep -oP '^libzstd-\K\d+\.\d+')
     test -z "$LIBZSTD_VER" && echoerr "pg_backup: cannot get libzstd version, it is installed?" && exit 1
     OPT_COMPRESS="server-zstd:level=1"
-    test $(echo "$LIBZSTD_VER >= 1.5" | bc -l) = 1 && OPT_COMPRESS="server-zstd:level=5,workers=${COMPRESS_THREADS}"
+    test $(echo "$LIBZSTD_VER >= 1.5" | bc -l) = 1 && OPT_COMPRESS="server-zstd:level=${COMPRESS_LEVEL},workers=${COMPRESS_THREADS}"
   else
     OPT_COMPRESS=1 # gzip support only
   fi
@@ -358,9 +363,11 @@ else
     if test -f "$FILE"; then
       echo "Сжимаем и шифруем '$FILE'"
       if test "$PG_MAJOR_VER" -ge 15; then
-         zstd -c -q -T${COMPRESS_THREADS} -5 $FILE | gpg -c --passphrase=${GPG_PASSPHRASE} --batch --compress-algo=none -o $FILE.zst.gpg
+         zstd -c -q -T${COMPRESS_THREADS} -${COMPRESS_LEVEL} $FILE \
+           | gpg -c --passphrase=${GPG_PASSPHRASE} --batch --compress-algo=none -o $FILE.zst.gpg
       else
-         pigz -c -q -p ${COMPRESS_THREADS} -5 $FILE | gpg -c --passphrase=${GPG_PASSPHRASE} --batch --compress-algo=none -o $FILE.gz.gpg
+         pigz -c -q -p ${COMPRESS_THREADS} -${COMPRESS_LEVEL} $FILE \
+           | gpg -c --passphrase=${GPG_PASSPHRASE} --batch --compress-algo=none -o $FILE.gz.gpg
       fi
       rm -f $FILE
     elif test -f "$FILE.zst"; then
@@ -380,7 +387,7 @@ else
 fi
  
 # создаём логическую резервную копию (deprecated)
-# ${PG_BIN_DIR}/pg_dumpall --username=${PG_USERNAME} --no-password | zstd -q -T${COMPRESS_THREADS} -5 -o ${BASE_NAME}.sql.zst
+# ${PG_BIN_DIR}/pg_dumpall --username=${PG_USERNAME} --no-password | zstd -q -T${COMPRESS_THREADS} -${COMPRESS_LEVEL} -o ${BASE_NAME}.sql.zst
  
 TIME_END=$(date +%s) # время в Unixtime
 TIME_ELAPSED=$(elapsed $TIME_START $TIME_END)
