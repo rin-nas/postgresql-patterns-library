@@ -68,20 +68,26 @@ cd ~postgres
  
 # создаём файлы (1)
 nano -c .pgpass # в файле нужно сохранить пароль для пользователя bkp_replicator
-(cp --update $HOME_DIR/pg_install/pg_backup.sh   . || nano -c pg_backup.sh) && \
-(cp --update $HOME_DIR/pg_install/pg_backup.conf . || nano -c pg_backup.conf) && \
-(cp --update $HOME_DIR/pg_install/archive_command.sh . || nano -c archive_command.sh) && \
-(cp --update $HOME_DIR/pg_install/restore_command.sh . || nano -c restore_command.sh)
+(cp --update --backup $HOME_DIR/pg_install/pg_backup.sh   . || nano -c pg_backup.sh) && \
+(cp --update --backup $HOME_DIR/pg_install/pg_backup.conf . || nano -c pg_backup.conf) && \
+(cp --update --backup $HOME_DIR/pg_install/archive_command.sh . || nano -c archive_command.sh) && \
+(cp --update --backup $HOME_DIR/pg_install/restore_command.sh . || nano -c restore_command.sh)
 # выставляем нужные права и владельца
 chmod 600 .pgpass pg_backup.conf && \
 chmod 700 {pg_backup,{archive,restore}_command}.sh && \
 chown postgres:postgres .pgpass {pg_backup,{archive,restore}_command}.sh pg_backup.conf
  
+# проверяем работоспособность (отладка), выводим сообщения на экран
+sudo -i -u postgres -- ./pg_backup.sh ExecCondition  # будем ли создавать или проверять резервную копию с текущего сервера СУБД (см. код возврата)?
+sudo -i -u postgres -- ./pg_backup.sh                # создаст резервную копию текущего сервера СУБД
+sudo -i -u postgres -- ./pg_backup.sh validate       # проверит корректность и восстанавливаемость резервной копии СУБД
+sudo -i -u postgres -- ./pg_backup.sh restore SOURCE_BACKUP_FILE_OR_DIR TARGET_PG_DATA_DIR  # восстановит резервную копию СУБД
+ 
 # создаём файлы (2)
-(cp --update $HOME_DIR/pg_install/pg_backup.timer   /etc/systemd/system || nano -c /etc/systemd/system/pg_backup.timer) && \
-(cp --update $HOME_DIR/pg_install/pg_backup.service /etc/systemd/system || nano -c /etc/systemd/system/pg_backup.service) && \
-(cp --update $HOME_DIR/pg_install/pg_backup_validate.timer   /etc/systemd/system || nano -c /etc/systemd/system/pg_backup_validate.timer) && \
-(cp --update $HOME_DIR/pg_install/pg_backup_validate.service /etc/systemd/system || nano -c /etc/systemd/system/pg_backup_validate.service) && \
+(cp --update --backup $HOME_DIR/pg_install/pg_backup.timer   /etc/systemd/system || nano -c /etc/systemd/system/pg_backup.timer) && \
+(cp --update --backup $HOME_DIR/pg_install/pg_backup.service /etc/systemd/system || nano -c /etc/systemd/system/pg_backup.service) && \
+(cp --update --backup $HOME_DIR/pg_install/pg_backup_validate.timer   /etc/systemd/system || nano -c /etc/systemd/system/pg_backup_validate.timer) && \
+(cp --update --backup $HOME_DIR/pg_install/pg_backup_validate.service /etc/systemd/system || nano -c /etc/systemd/system/pg_backup_validate.service) && \
 systemctl daemon-reload # активируем
  
 # добавляем в автозагрузку
@@ -89,12 +95,6 @@ systemctl enable pg_backup.timer && \
 systemctl enable pg_backup.service && \
 systemctl enable pg_backup_validate.timer && \
 systemctl enable pg_backup_validate.service
- 
-# проверяем работоспособность (отладка), выводим сообщения на экран
-sudo -i -u postgres -- ./pg_backup.sh ExecCondition  # будем ли создавать или проверять резервную копию с текущего сервера СУБД (см. код возврата)?
-sudo -i -u postgres -- ./pg_backup.sh                # создаст резервную копию текущего сервера СУБД
-sudo -i -u postgres -- ./pg_backup.sh validate       # проверит корректность и восстанавливаемость резервной копии СУБД
-sudo -i -u postgres -- ./pg_backup.sh restore SOURCE_BACKUP_FILE_OR_DIR TARGET_PG_DATA_DIR  # восстановит резервную копию СУБД
  
 # запускаем; сделает резервную копию СУБД, если условие ExecCondition выполнится (НЕ выведет сообщения на экран)
 systemctl start pg_backup.timer && \
