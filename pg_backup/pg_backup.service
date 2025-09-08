@@ -6,7 +6,7 @@ User=postgres
 Group=postgres
  
 ExecCondition=/bin/bash /var/lib/pgsql/pg_backup.sh ExecCondition
-ExecStart=/bin/bash /var/lib/pgsql/pg_backup.sh
+ExecStart=/bin/bash /var/lib/pgsql/pg_backup.sh create
  
 [Install]
 WantedBy=multi-user.target
