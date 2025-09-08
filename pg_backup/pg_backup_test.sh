@@ -59,6 +59,9 @@ BACKUP_DIR="/mnt/backup_db/active_full/cluster"
 TEMP_DIR="$BACKUP_DIR/pg_backup_test"
 CONF_FILE="$SCRIPT_DIR/pg_backup.conf"
  
+echohead "Запускаем pg_backup.sh без параметров"
+sudo -i -u postgres -- ./pg_backup.sh || true
+
 for BACKUP_WAL_DOY_DIVIDER in 1 999; do
   for FLAG in 0 1; do
  
