@@ -28,8 +28,9 @@ Reset='\e[0m'
 # colored messages
 echoerr()  { echo -e "${Red}$@${Reset}"    1>&2; } # ошибки
 echowarn() { echo -e "${Yellow}$@${Reset}" 1>&2; } # предупреждения
-echoinfo() { echo -e "${White}$@${Reset}" ; }      # важные сообщения
-echosucc() { echo -e "${Green}$@${Reset}" ; }      # сообщения об успехе
+echohead() { echo -e "${Blue}$@${Reset}"  ; } # заголовок или этап
+echoinfo() { echo -e "${White}$@${Reset}" ; } # важные сообщения
+echosucc() { echo -e "${Green}$@${Reset}" ; } # сообщения об успехе
  
 # функция подсчитывает длительность (day:hh:mm:ss) между временными метками в Unixtime
 elapsed() {
@@ -59,8 +60,14 @@ if test "$(whoami)" != "postgres"; then
 elif ! grep -q -w "$PG_USERNAME" "$PG_PASS_FILE"; then
   echoerr "pg_backup: file '$PG_PASS_FILE' must contain record for user '$PG_USERNAME'"
   exit 1
-elif test "$GPG_PASSPHRASE" = "*censored*"; then
-  echoerr "pg_backup: change default value of GPG_PASSPHRASE in '$SCRIPT_DIR/pg_backup.conf'"
+elif ! (echo "$PG_AMCHECK_VALIDATE" | grep -qoP '^[01]$'); then
+  echoerr "pg_backup: '$SCRIPT_DIR/pg_backup.conf': incorrect value of PG_AMCHECK_VALIDATE, expected 0 or 1"
+  exit 1
+elif ! (echo "$GPG_ENCRYPT" | grep -qoP '^[01]$'); then
+  echoerr "pg_backup: '$SCRIPT_DIR/pg_backup.conf': incorrect value of GPG_PASSPHRASE, expected 0 or 1"
+  exit 1
+elif test "$GPG_ENCRYPT" = 1 && test "$GPG_PASSPHRASE" = "*censored*"; then
+  echoerr "pg_backup: '$SCRIPT_DIR/pg_backup.conf': change default value of GPG_PASSPHRASE"
   exit 1
 elif test ! -d "$BACKUP_DIR"; then
   echoerr "pg_backup: directory '$BACKUP_DIR' does not exist"
@@ -121,7 +128,7 @@ elif test "${1:-}" = "restore"; then
   if test -f "$BACKUP_FILE_OR_DIR"; then
     BACKUP_FILE="$BACKUP_FILE_OR_DIR"
   elif test -d "$BACKUP_FILE_OR_DIR"; then
-    BACKUP_FILE=$(find $BACKUP_FILE_OR_DIR -maxdepth 1 -type f -name "base.tar.*" -printf "%p")
+    BACKUP_FILE=$(find $BACKUP_FILE_OR_DIR -maxdepth 1 -type f -name "base.tar.*" ! -name "*.log" -printf "%p")
     test ! -f "$BACKUP_FILE" \
       && echoerr "pg_backup restore: source backup archive file '$BACKUP_FILE_OR_DIR/base.tar.*' does not exist" && exit 1
   else
@@ -141,23 +148,34 @@ elif test "${1:-}" = "restore"; then
     exit 1
   fi
  
-  echo "Расшифровываем и распаковываем архив '$BACKUP_FILE' в папку '$PG_DATA_DIR'"
+  if test "$GPG_ENCRYPT" = 0; then
+    echo "Распаковываем архив '$BACKUP_FILE' в папку '$PG_DATA_DIR'"
+    GPG_COMMAND="cat"
+  else
+    echo "Расшифровываем и распаковываем архив '$BACKUP_FILE' в папку '$PG_DATA_DIR'"
+    GPG_COMMAND="gpg --decrypt --passphrase=$GPG_PASSPHRASE --batch"
+  fi
+  # посмотреть прогресс выполнения процесса pv: sudo pv -d PID
   pv -trebp $BACKUP_FILE \
-    | gpg --decrypt --passphrase=$GPG_PASSPHRASE --batch \
+    | $GPG_COMMAND \
     | tar -xf - --use-compress-program="$COMPRESS_PROGRAM" --directory=$PG_DATA_DIR
  
   if test -d "$BACKUP_FILE_OR_DIR"; then
     WAL_FILE="$BACKUP_FILE_OR_DIR/pg_wal.$BACKUP_FILE_EXT"
     test ! -f "$WAL_FILE" && echoerr "Файл '$WAL_FILE' не найден" && exit 1
-    echo "Расшифровываем и распаковываем архив '$WAL_FILE' в папку '$PG_DATA_DIR/pg_wal'"
+    if test "$GPG_ENCRYPT" = 0; then
+      echo "Распаковываем архив '$WAL_FILE' в папку '$PG_DATA_DIR/pg_wal'"
+    else
+      echo "Расшифровываем и распаковываем архив '$WAL_FILE' в папку '$PG_DATA_DIR/pg_wal'"
+    fi
     pv -trebp $WAL_FILE \
-      | gpg --decrypt --passphrase=$GPG_PASSPHRASE --batch \
+      | $GPG_COMMAND \
       | tar -xf - --use-compress-program="$COMPRESS_PROGRAM" --directory=$PG_DATA_DIR/pg_wal
   fi
  
   echo "Удаляем старые и ненужные файлы (информация об удалённых файлах будет выведена)"
   # https://www.google.com/search?q=Linux+curly+brace+expansion+documentation
-  rm -f -r -v $PG_DATA_DIR/{*.{signal,{backup,old}{,.*}},log/*}
+  rm -f -r -v $PG_DATA_DIR/{*.{signal,{backup,old}{,.*}},log/*,*~}
  
   TIME_END=$(date +%s) # время в Unixtime
   TIME_ELAPSED=$(elapsed $TIME_START $TIME_END)
@@ -180,7 +198,7 @@ elif test "${1:-}" = "restore"; then
 elif test "${1:-}" = "validate"; then
   echo "Получаем название предпоследнего или последнего файла с архивом резервной копии (сортировка по дате модификации)"
   BACKUP_FILE=$(find $BACKUP_DIR -maxdepth 2 -type f \( -name "*.pg_backup.tar.*" -o -path "*.pg_backup/base.tar.*" \) \
-                -printf "%T@ %p\n" | sort -n | tail -2 | head -1 | cut -d" " -f2)
+                ! -name "*.log" -printf "%T@ %p\n" | sort -n | tail -2 | head -1 | cut -d" " -f2)
   test -z "$BACKUP_FILE" && echoerr "pg_backup validate: no backup archive file found in directory '$BACKUP_DIR'" && exit 1
   echo "pg_backup validate: archive file '$BACKUP_FILE' selected"
  
@@ -208,20 +226,36 @@ elif test "${1:-}" = "validate"; then
   stat -c "%a" $PG_DATA_TEST_DIR | grep -qP '^7[05]0$' \
     || (echoerr "pg_backup validate: directory '$PG_DATA_TEST_DIR' permission must be 750 or 700" && exit 1)
  
-  echo "Расшифровываем и распаковываем архив '$BACKUP_FILE' в папку '$PG_DATA_TEST_DIR'"
-  gpg --decrypt --passphrase=$GPG_PASSPHRASE --batch $BACKUP_FILE \
-    | tar -xf - --use-compress-program="$COMPRESS_PROGRAM" --directory=$PG_DATA_TEST_DIR
+  if test "$GPG_ENCRYPT" = 0; then
+    echo "Распаковываем архив '$BACKUP_FILE' в папку '$PG_DATA_TEST_DIR'"
+    tar -xf $BACKUP_FILE --use-compress-program="$COMPRESS_PROGRAM" --directory=$PG_DATA_TEST_DIR \
+      2> $LOG_FILE_PREFIX.tar.stderr.log
+  else
+    echo "Расшифровываем и распаковываем архив '$BACKUP_FILE' в папку '$PG_DATA_TEST_DIR'"
+    gpg --decrypt --passphrase=$GPG_PASSPHRASE --batch $BACKUP_FILE \
+      2> $LOG_FILE_PREFIX.gpg.stderr.log \
+      | tar -xf - --use-compress-program="$COMPRESS_PROGRAM" --directory=$PG_DATA_TEST_DIR \
+          2> $LOG_FILE_PREFIX.tar.stderr.log
+  fi
  
   BACKUP_BASE_DIR=$(echo "$BACKUP_FILE" | grep -qP '\.pg_backup/base\.tar\.' && dirname "$BACKUP_FILE" || true)
   if test ! -z "$BACKUP_BASE_DIR"; then
     echo "Копируем '$BACKUP_BASE_DIR/backup_manifest' в папку '$PG_DATA_TEST_DIR'"
     cp $BACKUP_BASE_DIR/backup_manifest $PG_DATA_TEST_DIR
  
-    FILE="$BACKUP_BASE_DIR/pg_wal.$BACKUP_FILE_EXT"
-    test ! -f "$FILE" && echoerr "Файл '$FILE' не найден" && exit 1
-    echo "Расшифровываем и распаковываем архив '$FILE' в папку '$PG_DATA_TEST_DIR/pg_wal'"
-    gpg --decrypt --passphrase=$GPG_PASSPHRASE --batch $FILE \
-      | tar -xf - --use-compress-program="$COMPRESS_PROGRAM" --directory=$PG_DATA_TEST_DIR/pg_wal
+    WAL_FILE="$BACKUP_BASE_DIR/pg_wal.$BACKUP_FILE_EXT"
+    test ! -f "$WAL_FILE" && echoerr "Файл '$WAL_FILE' не найден" && exit 1
+    if test "$GPG_ENCRYPT" = 0; then
+      echo "Распаковываем архив '$WAL_FILE' в папку '$PG_DATA_TEST_DIR/pg_wal'"
+      tar -xf $WAL_FILE --use-compress-program="$COMPRESS_PROGRAM" --directory=$PG_DATA_TEST_DIR/pg_wal \
+        2> $LOG_FILE_PREFIX.tar.stderr.log
+    else
+      echo "Расшифровываем и распаковываем архив '$WAL_FILE' в папку '$PG_DATA_TEST_DIR/pg_wal'"
+      gpg --decrypt --passphrase=$GPG_PASSPHRASE --batch $WAL_FILE \
+        2> $LOG_FILE_PREFIX.gpg.stderr.log \
+        | tar -xf - --use-compress-program="$COMPRESS_PROGRAM" --directory=$PG_DATA_TEST_DIR/pg_wal \
+          2> $LOG_FILE_PREFIX.tar.stderr.log
+    fi
   fi
  
   DIR_SIZE=$(du -sh "$PG_DATA_TEST_DIR" | grep -oP '^\S+')
@@ -235,7 +269,7 @@ elif test "${1:-}" = "validate"; then
  
   echo "Удаляем старые и ненужные файлы (информация об удалённых файлах будет выведена)"
   # https://www.google.com/search?q=Linux+curly+brace+expansion+documentation
-  rm -f -r -v $PG_DATA_TEST_DIR/{*.{signal,{backup,old}{,.*}},log/*}
+  rm -f -r -v $PG_DATA_TEST_DIR/{*.{signal,{backup,old}{,.*}},log/*,*~}
  
   echo "Разрешаем локальному пользователю postgres аутентифицироваться методом peer"
   sed -i '1i local all postgres peer' $PG_DATA_TEST_DIR/pg_hba.conf # добавляем строчку в начало файла
@@ -267,13 +301,17 @@ elif test "${1:-}" = "validate"; then
     echo "pg_backup validate: data checksum failures: 0"
   fi
  
-  echo "Проверяем логическую целостность таблиц и индексов (amcheck)"
-  if $PG_BIN_DIR/pg_amcheck --port=$PG_PORT --username=postgres --no-password --database=* --rootdescend --on-error-stop \
-                         1> $LOG_FILE_PREFIX.pg_amcheck.stdout.log \
-                         2> $LOG_FILE_PREFIX.pg_amcheck.stderr.log ; then
-    echo "pg_backup validate: amcheck OK"
+  if test "$PG_AMCHECK_VALIDATE" = 0; then
+    echowarn "Проверка логической целостности таблиц и индексов (amcheck) отключена"
   else
-    echowarn "pg_backup validate: amcheck ERROR"
+    echo "Проверяем логическую целостность таблиц и индексов (amcheck)"
+    if $PG_BIN_DIR/pg_amcheck --port=$PG_PORT --username=postgres --no-password --database=* --rootdescend --on-error-stop \
+                           1> $LOG_FILE_PREFIX.pg_amcheck.stdout.log \
+                           2> $LOG_FILE_PREFIX.pg_amcheck.stderr.log ; then
+      echo "pg_backup validate: amcheck OK"
+    else
+      echowarn "pg_backup validate: amcheck ERROR"
+    fi
   fi
  
   echo "Останавливаем сервер СУБД"
@@ -313,8 +351,9 @@ elif test "${1:-}" = "validate"; then
   echosucc "pg_backup validate: success, duration: $TIME_ELAPSED (day:hh:mm:ss)"
   exit 0
  
-elif test -n "${1:-}"; then
-  echoerr "pg_backup: unknown first parameter '${1:-}'"
+elif test "${1:-}" != "create"; then
+  echoinfo "Usage: $0 COMMAND"
+  echo "COMMAND - one of: create, validate, restore"
   exit 2
 fi
  
@@ -323,7 +362,7 @@ echoinfo "pg_backup: creating started"
 BASE_NAME=${BACKUP_DIR}/$(date +%Y-%m-%d.%H%M%S).$(hostname).pg_backup
 COMPRESS_THREADS=$(echo "$(nproc) / 2.5 + 1" | bc)
  
-# для многопоточного режима используется максимальная степень сжатия 5, которая получена опытным путём
+# для многопоточного режима используется максимальная степень сжатия 5, которая была получена опытным путём
 # это баланс между скоростью работы, размером сжатого файла, скоростью записи на сетевой диск, с учётом нагрузки другими процессами
 COMPRESS_LEVEL=$COMPRESS_THREADS
 test "$COMPRESS_LEVEL" -gt 5 && $COMPRESS_LEVEL=5
@@ -337,47 +376,66 @@ IS_BACKUP_WAL=$(psql --username=$PG_USERNAME --no-password --dbname=postgres --q
  
 if test "$IS_BACKUP_WAL" = "f"; then
   echo 'Создаём физическую резервную копию (без WAL файлов)'
-  FILE="${BASE_NAME}.tar.zst.gpg"
-  ${PG_BIN_DIR}/pg_basebackup --username=${PG_USERNAME} --no-password --wal-method=none --checkpoint=fast --format=tar --pgdata=- \
-    | zstd -q -T${COMPRESS_THREADS} -${COMPRESS_LEVEL} \
-    | gpg -c --passphrase=${GPG_PASSPHRASE} --batch --compress-algo=none -o $FILE
+  COMMAND="${PG_BIN_DIR}/pg_basebackup --username=${PG_USERNAME} --no-password --wal-method=none --checkpoint=fast --format=tar --pgdata=-"
+  if test "$GPG_ENCRYPT" = 0; then
+    FILE="${BASE_NAME}.tar.zst"
+    ($COMMAND | zstd -q -T${COMPRESS_THREADS} -${COMPRESS_LEVEL} -o $FILE) 2> $BASE_NAME.stderr.log
+  else
+    FILE="${BASE_NAME}.tar.zst.gpg"
+    ($COMMAND | zstd -q -T${COMPRESS_THREADS} -${COMPRESS_LEVEL} \
+              | gpg -c --passphrase=${GPG_PASSPHRASE} --batch --compress-algo=none -o $FILE) 2> $BASE_NAME.stderr.log
+  fi
   SIZE=$(du -sh "$FILE" | grep -oP '^\S+')
   echoinfo "Создан файл '$FILE' (size: $SIZE)"
 else
   echo 'Создаём физическую резервную копию (с WAL файлами)'
   PG_MAJOR_VER=$(echo "$PG_BIN_DIR" | grep -oP '\-\K\d+(?=/)')
+  OPT_COMPRESS=1 # gzip support only
   if test "$PG_MAJOR_VER" -ge 15; then
     # в библиотеке libzstd многопоточность поддерживается с версии 1.5.0
     LIBZSTD_VER=$(rpm -q libzstd | grep -oP '^libzstd-\K\d+\.\d+')
     test -z "$LIBZSTD_VER" && echoerr "pg_backup: cannot get libzstd version, it is installed?" && exit 1
     OPT_COMPRESS="server-zstd:level=1"
     test $(echo "$LIBZSTD_VER >= 1.5" | bc -l) = 1 && OPT_COMPRESS="server-zstd:level=${COMPRESS_LEVEL},workers=${COMPRESS_THREADS}"
-  else
-    OPT_COMPRESS=1 # gzip support only
   fi
+  mkdir -p ${BASE_NAME}
   ${PG_BIN_DIR}/pg_basebackup --username=${PG_USERNAME} --no-password --compress=${OPT_COMPRESS} --checkpoint=fast --format=tar \
-                              --pgdata=${BASE_NAME}
+                              --pgdata=${BASE_NAME} \
+                           2> $BASE_NAME.stderr.log
  
   FILES="${BASE_NAME}/base.tar ${BASE_NAME}/pg_wal.tar"
   for FILE in $FILES; do
     if test -f "$FILE"; then
-      echo "Сжимаем и шифруем '$FILE'"
-      if test "$PG_MAJOR_VER" -ge 15; then
-         zstd -c -q -T${COMPRESS_THREADS} -${COMPRESS_LEVEL} $FILE \
-           | gpg -c --passphrase=${GPG_PASSPHRASE} --batch --compress-algo=none -o $FILE.zst.gpg
+      if test "$GPG_ENCRYPT" = 0; then
+        echo "Сжимаем '$FILE'"
+        if test "$PG_MAJOR_VER" -ge 15; then
+          zstd -c -q -T${COMPRESS_THREADS} -${COMPRESS_LEVEL} $FILE -o $FILE.zst 2> $BASE_NAME.stderr.log
+        else
+          pigz -c -q -p ${COMPRESS_THREADS} -${COMPRESS_LEVEL} -o $FILE.gz 2> $BASE_NAME.stderr.log
+        fi
       else
-         pigz -c -q -p ${COMPRESS_THREADS} -${COMPRESS_LEVEL} $FILE \
-           | gpg -c --passphrase=${GPG_PASSPHRASE} --batch --compress-algo=none -o $FILE.gz.gpg
+        echo "Сжимаем и шифруем '$FILE'"
+        if test "$PG_MAJOR_VER" -ge 15; then
+          (zstd -c -q -T${COMPRESS_THREADS} -${COMPRESS_LEVEL} $FILE \
+             | gpg -c --passphrase=${GPG_PASSPHRASE} --batch --compress-algo=none -o $FILE.zst.gpg) 2> $BASE_NAME.stderr.log
+        else
+          (pigz -c -q -p ${COMPRESS_THREADS} -${COMPRESS_LEVEL} $FILE \
+             | gpg -c --passphrase=${GPG_PASSPHRASE} --batch --compress-algo=none -o $FILE.gz.gpg) 2> $BASE_NAME.stderr.log
+        fi
       fi
       rm -f $FILE
     elif test -f "$FILE.zst"; then
-      echo "Шифруем '$FILE.zst'"
-      gpg -c --passphrase=${GPG_PASSPHRASE} --batch --compress-algo=none $FILE.zst
-      rm -f $FILE.zst
+      if test "$GPG_ENCRYPT" = 1; then
+        echo "Шифруем '$FILE.zst'"
+        gpg -c --passphrase=${GPG_PASSPHRASE} --batch --compress-algo=none $FILE.zst 2> $BASE_NAME.stderr.log
+        rm -f $FILE.zst
+      fi
     elif test -f "$FILE.gz"; then
-      echo "Шифруем '$FILE.gz'"
-      gpg -c --passphrase=${GPG_PASSPHRASE} --batch --compress-algo=none $FILE.gz
-      rm -f $FILE.gz
+      if test "$GPG_ENCRYPT" = 1; then
+        echo "Шифруем '$FILE.gz'"
+        gpg -c --passphrase=${GPG_PASSPHRASE} --batch --compress-algo=none $FILE.gz 2> $BASE_NAME.stderr.log
+        rm -f $FILE.gz
+      fi
     else
       echoerr "Файл '$FILE' или '$FILE.zst' или '$FILE.gz' не найден" && exit 1
     fi
@@ -392,29 +450,32 @@ fi
 TIME_END=$(date +%s) # время в Unixtime
 TIME_ELAPSED=$(elapsed $TIME_START $TIME_END)
  
-echosucc "pg_backup: created successfully, duration: $TIME_ELAPSED (day:hh:mm:ss)"
+echosucc "pg_backup: created, duration: $TIME_ELAPSED (day:hh:mm:ss)"
  
 # -----------------------------------------------------------------------------------------------------------------------
 # удаляем архивные резервные копии старше N дней (папки и файлы рекурсивно)
 echo "pg_backup: deleting backup files older than ${BACKUP_AGE_DAYS} days"
 find ${BACKUP_DIR} -mindepth 1 -mtime +${BACKUP_AGE_DAYS} -delete
+echosucc "pg_backup: old backup files deleted"
  
+# -----------------------------------------------------------------------------------------------------------------------
 # удаляем архивные WAL файлы старше N дней (сортировка по дате модификации)
 echo "pg_backup: detect oldest kept WAL file for ${BACKUP_AGE_DAYS} days"
 WAL_OLD_FILE=$(find ${WAL_DIR} -maxdepth 1 -mtime +${BACKUP_AGE_DAYS} -type f ! -size 0 \
                                ! -name "*.history" ! -name "*.history.*" -printf "%T@ %f\n" \
                | sort -n | tail -1 | cut -d" " -f2)
 if test -z "${WAL_OLD_FILE}"; then
-  echowarn "pg_backup: WAL old file is not found"
+  echowarn "pg_backup: old WAL file is not found"
 else
   echo "pg_backup: WAL old file is ${WAL_OLD_FILE}"
   WAL_OLD_FILE_EXT=$(echo "${WAL_OLD_FILE}" | grep -oP '\.[a-z\d]+$') # compressed files support (.gz, .zst, .lz4)
  
   BEFORE_WAL_DIR_SIZE=$(du -sh "${WAL_DIR}" | grep -oP '^\S+')
-  ${PG_BIN_DIR}/pg_archivecleanup -x "${WAL_OLD_FILE_EXT}" "${WAL_DIR}" "${WAL_OLD_FILE}"
+  ${PG_BIN_DIR}/pg_archivecleanup -x "${WAL_OLD_FILE_EXT}" "${WAL_DIR}" "${WAL_OLD_FILE}" 2> ${WAL_DIR}/pg_archivecleanup.stderr.log
  
   AFTER_WAL_DIR_SIZE=$(du -sh "${WAL_DIR}" | grep -oP '^\S+')
   echo "pg_backup: WAL dir size reducing: ${BEFORE_WAL_DIR_SIZE} (before cleanup) -> ${AFTER_WAL_DIR_SIZE} (after cleanup)"
+  echosucc "pg_backup: old WAL files deleted"
 fi
  
-echosucc "pg_backup: done"
+exit 0
