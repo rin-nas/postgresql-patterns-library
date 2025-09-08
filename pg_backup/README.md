@@ -58,7 +58,7 @@ foreach ($db_host in $db_hosts) {
 }
 ```
 
-**Шаг 2. Выполнить на каждом сервере СУБД Linux (Bash)**
+**Шаг 2. Выполнить на каждом сервере СУБД Linux (Bash) - создаём файлы**
 ```bash
 sudo -i
  
@@ -79,7 +79,7 @@ chown postgres:postgres .pgpass {pg_backup,{archive,restore}_command}.sh pg_back
  
 # проверяем работоспособность (отладка), выводим сообщения на экран
 sudo -i -u postgres -- ./pg_backup.sh ExecCondition  # будем ли создавать или проверять резервную копию с текущего сервера СУБД (см. код возврата)?
-sudo -i -u postgres -- ./pg_backup.sh                # создаст резервную копию текущего сервера СУБД
+sudo -i -u postgres -- ./pg_backup.sh create         # создаст резервную копию текущего сервера СУБД
 sudo -i -u postgres -- ./pg_backup.sh validate       # проверит корректность и восстанавливаемость резервной копии СУБД
 sudo -i -u postgres -- ./pg_backup.sh restore SOURCE_BACKUP_FILE_OR_DIR TARGET_PG_DATA_DIR  # восстановит резервную копию СУБД
  
@@ -89,24 +89,37 @@ sudo -i -u postgres -- ./pg_backup.sh restore SOURCE_BACKUP_FILE_OR_DIR TARGET_P
 (cp --update --backup $HOME_DIR/pg_install/pg_backup_validate.timer   /etc/systemd/system || nano -c /etc/systemd/system/pg_backup_validate.timer) && \
 (cp --update --backup $HOME_DIR/pg_install/pg_backup_validate.service /etc/systemd/system || nano -c /etc/systemd/system/pg_backup_validate.service) && \
 systemctl daemon-reload # активируем
- 
+```
+
+**Шаг 3. Выполнить на каждом сервере СУБД Linux (Bash) - запускаем pg_backup**
+```bash
 # добавляем в автозагрузку
 systemctl enable pg_backup.timer && \
-systemctl enable pg_backup.service && \
-systemctl enable pg_backup_validate.timer && \
-systemctl enable pg_backup_validate.service
+systemctl enable pg_backup.service
  
-# запускаем; сделает резервную копию СУБД, если условие ExecCondition выполнится (НЕ выведет сообщения на экран)
+# запускаем; сделает резервную копию СУБД, если условие ExecCondition выполнится
 systemctl start pg_backup.timer && \
-systemctl start pg_backup.service && \
-systemctl start pg_backup_validate.timer && \
-systemctl start pg_backup_validate.service
+systemctl start pg_backup.service
  
-# проверяем статус (1)
+# проверяем статус
 systemctl status pg_backup.timer && \
 systemctl status pg_backup.service
  
-# проверяем статус (2)
+# получаем список активных таймеров, д.б. указана дата-время следующего запуска!
+systemctl list-timers | grep -P 'NEXT|pg_backup'
+```
+
+**Шаг 4. Выполнить на каждом сервере СУБД Linux (Bash) - запускаем pg_backup_validate**
+```bash
+# добавляем в автозагрузку
+systemctl enable pg_backup_validate.timer && \
+systemctl enable pg_backup_validate.service
+ 
+# запускаем; проверит корректность и восстанавливаемость резервной копии СУБД, если условие ExecCondition выполнится
+systemctl start pg_backup_validate.timer && \
+systemctl start pg_backup_validate.service
+ 
+# проверяем статус
 systemctl status pg_backup_validate.timer && \
 systemctl status pg_backup_validate.service
  
@@ -115,14 +128,15 @@ systemctl list-timers | grep -P 'NEXT|pg_backup'
 ```
 
 Файлы
-* [`/etc/systemd/system/pg_backup.timer`](pg_backup.timer)
-* [`/etc/systemd/system/pg_backup.service`](pg_backup.service)
-* [`/etc/systemd/system/pg_backup_validate.timer`](pg_backup_validate.timer)
-* [`/etc/systemd/system/pg_backup_validate.service`](pg_backup_validate.service)
-* [`/var/lib/pgsql/pg_backup.sh`](pg_backup.sh)
-* [`/var/lib/pgsql/pg_backup.conf`](pg_backup.conf)
-* [`/var/lib/pgsql/archive_command.sh`](archive_command.sh)
-* [`/var/lib/pgsql/restore_command.sh`](restore_command.sh)
+1. [`/etc/systemd/system/pg_backup.timer`](pg_backup.timer)
+1. [`/etc/systemd/system/pg_backup.service`](pg_backup.service)
+1. [`/etc/systemd/system/pg_backup_validate.timer`](pg_backup_validate.timer)
+1. [`/etc/systemd/system/pg_backup_validate.service`](pg_backup_validate.service)
+1. [`/var/lib/pgsql/pg_backup.sh`](pg_backup.sh)
+1. [`/var/lib/pgsql/pg_backup_test.sh`](pg_backup_test.sh)
+1. [`/var/lib/pgsql/pg_backup.conf`](pg_backup.conf)
+1. [`/var/lib/pgsql/archive_command.sh`](archive_command.sh)
+1. [`/var/lib/pgsql/restore_command.sh`](restore_command.sh)
 
 ## Ссылки по теме
 * [PostgreSQL: копирование WAL файлов в архив (archive_command)](archive_command.md)
