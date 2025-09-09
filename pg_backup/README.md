@@ -33,6 +33,15 @@
 или [`pg_receivewal`](https://postgrespro.ru/docs/postgresql/16/app-pgreceivewal).
 > 1. Следует учесть [ограничения создания резервной копии с реплики](https://postgrespro.ru/docs/postgresql/16/app-pgbasebackup)!
 
+Валидация — это выполнение команд с самым низким приоритетом и только на реплике (при её наличии):
+1. дешифрование и распаковка архива с бекапом во временную папку
+1. проверка файлов СУБД через pg_verifybackup
+1. запуск СУБД (на отдельном порту)
+1. проверка СУБД через pg_amcheck (опционально)
+1. остановка СУБД
+1. проверка СУБД через pg_checksums
+1. сохранение артефактов рядом с бекапом и удаление временной папки
+
 ## Инсталляция
 
 **Шаг 1. Выполнить на терминальном сервере Windows (PowerShell)**
@@ -91,7 +100,7 @@ sudo -i -u postgres -- ./pg_backup.sh restore SOURCE_BACKUP_FILE_OR_DIR TARGET_P
 systemctl daemon-reload # активируем
 ```
 
-**Шаг 3. Выполнить на каждом сервере СУБД Linux (Bash) - запускаем pg_backup**
+**Шаг 3. Выполнить на каждом сервере СУБД Linux (Bash) - запускаем сервис создания бекапов**
 ```bash
 # добавляем в автозагрузку
 systemctl enable pg_backup.timer && \
@@ -109,7 +118,7 @@ systemctl status pg_backup.service
 systemctl list-timers | grep -P 'NEXT|pg_backup'
 ```
 
-**Шаг 4. Выполнить на каждом сервере СУБД Linux (Bash) - запускаем pg_backup_validate**
+**Шаг 4. Выполнить на каждом сервере СУБД Linux (Bash) - запускаем сервис валидации бекапов**
 ```bash
 # добавляем в автозагрузку
 systemctl enable pg_backup_validate.timer && \
