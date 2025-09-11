@@ -91,7 +91,7 @@ if test "${1:-}" = "ExecCondition"; then
     PG_ROLE=$(psql --username=$PG_USERNAME --no-password --dbname=postgres --quiet --no-psqlrc --pset=null=¤ --tuples-only --no-align \
                    --command="select case when pg_is_in_recovery() then 'standby' else 'primary' end")
     echo "pg_backup: candidate role is $PG_ROLE (checked by psql)"
-    test ${2:='primary'} = "$PG_ROLE"
+    test ${2:-primary} = "$PG_ROLE"
     exit
   fi
  
@@ -366,14 +366,14 @@ COMPRESS_THREADS=$(echo "$(nproc) / 2.5 + 1" | bc)
 # для многопоточного режима используется максимальная степень сжатия 5, которая была получена опытным путём
 # это баланс между скоростью работы, размером сжатого файла, скоростью записи на сетевой диск, с учётом нагрузки другими процессами
 COMPRESS_LEVEL=$COMPRESS_THREADS
-test "$COMPRESS_LEVEL" -gt 5 && $COMPRESS_LEVEL=5
+test "$COMPRESS_LEVEL" -gt 5 && COMPRESS_LEVEL=5
  
 echo 'Проверяем необходимость бекапирования WAL файлов'
 # зависит от текущего дня, настройки параметра archive_mode и роли СУБД primary/standby
 IS_BACKUP_WAL=$(psql --username=$PG_USERNAME --no-password --dbname=postgres --quiet --no-psqlrc --pset=null=¤ --tuples-only --no-align \
-                     --command="select extract(doy from now())%${BACKUP_WAL_DOY_DIVIDER}=0
-                                       or setting='off' or (pg_is_in_recovery() and setting='on')
-                                  from pg_settings where name='archive_mode'")
+                     --command="select extract(doy from now())::int % ${BACKUP_WAL_DOY_DIVIDER} = 0 --cast to int for Postgres v12
+                                       or setting = 'off' or (pg_is_in_recovery() and setting = 'on')
+                                  from pg_settings where name = 'archive_mode'")
  
 if test "$IS_BACKUP_WAL" = "f"; then
   echo 'Создаём физическую резервную копию (без WAL файлов)'
