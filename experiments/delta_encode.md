@@ -1,5 +1,8 @@
 # Эксперимент по дельта-кодированию числовых массивов в PostgreSQL
 
+> [!NOTE]
+> Актуальность — ноябрь 2023.
+
 ```sql
 drop table if exists test.delta;
 
