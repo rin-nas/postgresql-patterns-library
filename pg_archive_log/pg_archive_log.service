@@ -19,11 +19,11 @@ ExecStartPre=find ${LOG_DIR} -maxdepth 1 -type f -mtime +1 -size 0 -delete
  
 # архивируем несжатые файлы старше M дней (достаточно одного потока, т.к. файлы относительно небольшие)
 # выбирайте, что для вас больше подходит (zstd или bzip3):
-# ExecStart=find ${LOG_DIR} -maxdepth 1 -type f -mtime +1 -size +100k ! -name '*.zst' ! -name '*.bz3' -exec ionice -c2 -n7 -- nice -n19 -- zstd -9 -q --rm '{}' \;
+# ExecStart=find ${LOG_DIR} -maxdepth 1 -type f -mtime +1 ! -name '*.zst' ! -name '*.bz3' -exec ionice -c2 -n7 -- nice -n19 -- zstd -9 -q --rm '{}' \;
 # bzip3 ≥ v1.5.0:
-# ExecStart=find ${LOG_DIR} -maxdepth 1 -type f -mtime +1 -size +100k ! -name '*.zst' ! -name '*.bz3' -exec ionice -c2 -n7 -- nice -n19 -- bzip3 -b8 --rm '{}' \;
+# ExecStart=find ${LOG_DIR} -maxdepth 1 -type f -mtime +1 ! -name '*.zst' ! -name '*.bz3' -exec ionice -c2 -n7 -- nice -n19 -- bzip3 -b8 --rm '{}' \;
 # bzip3 < v1.5.0:
-ExecStart=find ${LOG_DIR} -maxdepth 1 -type f -mtime +1 -size +100k ! -name '*.zst' ! -name '*.bz3' -exec ionice -c2 -n7 -- nice -n19 -- bzip3 -b8 '{}' \; -exec rm -f '{}' \;
+ExecStart=find ${LOG_DIR} -maxdepth 1 -type f -mtime +1 ! -name '*.zst' ! -name '*.bz3' -exec ionice -c2 -n7 -- nice -n19 -- bzip3 -b8 '{}' \; -exec rm -f '{}' \;
  
 [Install]
 WantedBy=multi-user.target
