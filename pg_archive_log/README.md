@@ -66,3 +66,12 @@ systemctl list-timers | grep -P 'NEXT|pg_archive_log'
 | `bzip3 -b16` | 1,471,514	|  62%	|  2.71	|  39,424	| 1.91	| 101,636	| 2 |
 | `bzip3 -b64` | 1,412,929	|  59%	|  2.98	| 149,040	| 2.12	| 396,484	| — |
 | `xz -9`      | 2,057,736	|  86%	| 18,34	| 629,832	| 0.38	|  16,510	| — |
+
+### Версии ПО
+
+| Program	| Version |
+| -------	| ------- |
+| [zstd](https://github.com/facebook/zstd)	 | 1.4.4 |
+| bzip2	                                    | 1.0.6 |
+| [bzip3](https://github.com/iczelia/bzip3)	| 1.3.1 |
+| xz, liblzma	                              | 5.2.4 |
