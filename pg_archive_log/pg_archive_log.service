@@ -11,18 +11,19 @@ Environment="LOG_DIR=/var/log/postgresql/16"
 ExecStartPre=mkdir -p ${LOG_DIR}
 ExecStartPre=chmod 750 ${LOG_DIR}
  
-# удаляем файлы старше N дней
+# удаляем файлы старше N дней (в промышленной среде поставьте 180 или 90, в тестовой 7)
 ExecStartPre=find ${LOG_DIR} -maxdepth 1 -type f -mtime +90 -delete
  
 # удаляем файлы нулевого размера старше K дней
 ExecStartPre=find ${LOG_DIR} -maxdepth 1 -type f -mtime +1 -size 0 -delete
  
 # архивируем несжатые файлы старше M дней (достаточно одного потока, т.к. файлы относительно небольшие)
-# выбирайте, что для вас важнее, скорость работы или размер файла:
-#   'zstd -9' быстрее в 12 раз, но больше размер файла на 13%, чем 'xz -9'
-#   'xz -9' быстрее в 3.5 раза, но больше размер файла на 14%, чем 'zstd -19'
-# ExecStart=find ${LOG_DIR} -maxdepth 1 -type f -mtime +0 -size +100k ! -name "*.zst" ! -name "*.xz" -exec ionice -c2 -n7 -- nice -n19 -- zstd -9 -q --rm '{}' \;
-ExecStart=find ${LOG_DIR} -maxdepth 1 -type f -mtime +0 -size +100k ! -name "*.zst" ! -name "*.xz" -exec ionice -c2 -n7 -- nice -n19 -- xz -9 '{}' \;
+# выбирайте, что для вас больше подходит (zstd или bzip3):
+# ExecStart=find ${LOG_DIR} -maxdepth 1 -type f -mtime +1 -size +100k ! -name '*.zst' ! -name '*.bz3' -exec ionice -c2 -n7 -- nice -n19 -- zstd -9 -q --rm '{}' \;
+# bzip3 ≥ v1.5.0:
+# ExecStart=find ${LOG_DIR} -maxdepth 1 -type f -mtime +1 -size +100k ! -name '*.zst' ! -name '*.bz3' -exec ionice -c2 -n7 -- nice -n19 -- bzip3 -b8 --rm '{}' \;
+# bzip3 < v1.5.0:
+ExecStart=find ${LOG_DIR} -maxdepth 1 -type f -mtime +1 -size +100k ! -name '*.zst' ! -name '*.bz3' -exec ionice -c2 -n7 -- nice -n19 -- bzip3 -b8 '{}' \; -exec rm -f '{}' \;
  
 [Install]
 WantedBy=multi-user.target
