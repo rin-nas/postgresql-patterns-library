@@ -22,9 +22,9 @@ ExecStartPre=find ${LOG_DIR} -maxdepth 1 -type f -mtime +1 -size 0 -delete
 # ExecStart=find ${LOG_DIR} -maxdepth 1 -type f -mtime +1 ! -size 0 ! -name '*.zst' ! -name '*.xz' ! -name '*.bz3' -exec ionice -c2 -n7 -- nice -n19 -- zstd -9 -q --rm '{}' \;
 # ExecStart=find ${LOG_DIR} -maxdepth 1 -type f -mtime +0 ! -size 0 ! -name '*.zst' ! -name '*.xz' ! -name '*.bz3' -exec ionice -c2 -n7 -- nice -n19 -- xz -2 '{}' \;
 # bzip3 ≥ v1.5.0:
-# ExecStart=find ${LOG_DIR} -maxdepth 1 -type f -mtime +1 ! -size 0 ! -name '*.zst' ! -name '*.xz' ! -name '*.bz3' -exec ionice -c2 -n7 -- nice -n19 -- bzip3 -b8 --rm '{}' \;
+# ExecStart=find ${LOG_DIR} -maxdepth 1 -type f -mtime +1 ! -size 0 ! -name '*.zst' ! -name '*.xz' ! -name '*.bz3' -exec ionice -c2 -n7 -- nice -n19 -- bzip3 -b16 --rm '{}' \;
 # bzip3 < v1.5.0:
-ExecStart=find ${LOG_DIR} -maxdepth 1 -type f -mtime +1 ! -size 0 ! -name '*.zst' ! -name '*.xz' ! -name '*.bz3' -exec ionice -c2 -n7 -- nice -n19 -- bzip3 -b8 '{}' \; -exec rm -f '{}' \;
+ExecStart=find ${LOG_DIR} -maxdepth 1 -type f -mtime +1 ! -size 0 ! -name '*.zst' ! -name '*.xz' ! -name '*.bz3' -exec ionice -c2 -n7 -- nice -n19 -- bzip3 -b16 '{}' \; -exec rm -f '{}' \;
  
 [Install]
 WantedBy=multi-user.target
