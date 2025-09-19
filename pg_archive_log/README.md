@@ -25,7 +25,7 @@ log_filename = 'postgresql-%Y-%m-%d.log'
 
 ```bash
 # устанавливаем архиваторы
-sudo dnf -y install zstd bzip3
+sudo dnf -y install zstd xz bzip3
 
 # создаём файлы
 sudo nano /etc/systemd/system/pg_archive_log.timer && \
