@@ -52,7 +52,7 @@ systemctl list-timers | grep -P 'NEXT|pg_archive_log'
 1. [`/etc/systemd/system/pg_archive_log.timer`](pg_archive_log.timer)
 2. [`/etc/systemd/system/pg_archive_log.service`](pg_archive_log.service)
 
-## Тестирование сжатия
+## Тестирование сжатия и распаковки
 
 Для замеров длительности выполнения и потребления памяти использовалась команда `/usr/bin/time -v COMMAND`.\
 Сжатие и распаковка в один поток. Распаковка в `/dev/null`.
