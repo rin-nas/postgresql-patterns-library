@@ -90,9 +90,9 @@ systemctl list-timers | grep -P 'NEXT|pg_archive_log'
 
 ### Версии ПО
 
-| Program	| Version |
-| -------	| ------- |
-| [zstd](https://github.com/facebook/zstd)	 | 1.4.4 |
-| bzip2	                                    | 1.0.6 |
-| [bzip3](https://github.com/iczelia/bzip3)	| 1.3.1 |
-| xz, liblzma	                              | 5.2.4 |
+| Program	| Version | Для каких целей лучше всего подходит для PostgreSQL |
+| :---	| :--- | :--- |
+| [zstd](https://github.com/facebook/zstd)	 | 1.4.4 | Создание и восстановление резервных копий, архивирование WAL файлов |
+| bzip2	                                    | 1.0.6 | — |
+| [bzip3](https://github.com/iczelia/bzip3)	| 1.3.1 | Архивирование log файлов |
+| xz, liblzma	                              | 5.2.4 | — |
