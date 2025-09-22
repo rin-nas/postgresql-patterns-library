@@ -193,6 +193,7 @@ elif test "${1:-}" = "restore"; then
     exit 1
   fi
   echowarn "Донастройте postgresql.conf и запустите кластер СУБД!"
+  echowarn "После старта СУБД дождитесь наката всех WAL файлов. Проверить завершение можно запросом select pg_is_in_recovery()"
   exit 0
  
 # проверяем корректность и восстанавливаемость PostgreSQL из резервной копии
@@ -229,14 +230,15 @@ elif test "${1:-}" = "validate"; then
  
   if test "$GPG_ENCRYPT" = 0; then
     echo "Распаковываем архив '$BACKUP_FILE' в папку '$PG_DATA_TEST_DIR'"
-    tar -xf $BACKUP_FILE --use-compress-program="$COMPRESS_PROGRAM" --directory=$PG_DATA_TEST_DIR \
-      2> $LOG_FILE_PREFIX.tar.stderr.log
+    # посмотреть прогресс выполнения процесса pv: sudo pv -d PID
+    pv $BACKUP_FILE \
+      | tar -xf - --use-compress-program="$COMPRESS_PROGRAM" --directory=$PG_DATA_TEST_DIR 2> $LOG_FILE_PREFIX.tar.stderr.log
   else
     echo "Расшифровываем и распаковываем архив '$BACKUP_FILE' в папку '$PG_DATA_TEST_DIR'"
-    gpg --decrypt --passphrase=$GPG_PASSPHRASE --batch $BACKUP_FILE \
-      2> $LOG_FILE_PREFIX.gpg.stderr.log \
-      | tar -xf - --use-compress-program="$COMPRESS_PROGRAM" --directory=$PG_DATA_TEST_DIR \
-          2> $LOG_FILE_PREFIX.tar.stderr.log
+    # посмотреть прогресс выполнения процесса pv: sudo pv -d PID
+    pv $BACKUP_FILE \
+      | gpg --decrypt --passphrase=$GPG_PASSPHRASE --batch 2> $LOG_FILE_PREFIX.gpg.stderr.log \
+      | tar -xf - --use-compress-program="$COMPRESS_PROGRAM" --directory=$PG_DATA_TEST_DIR 2> $LOG_FILE_PREFIX.tar.stderr.log
   fi
  
   BACKUP_BASE_DIR=$(echo "$BACKUP_FILE" | grep -qP '\.pg_backup/base\.tar\.' && dirname "$BACKUP_FILE" || true)
@@ -248,12 +250,14 @@ elif test "${1:-}" = "validate"; then
     test ! -f "$WAL_FILE" && echoerr "Файл '$WAL_FILE' не найден" && exit 1
     if test "$GPG_ENCRYPT" = 0; then
       echo "Распаковываем архив '$WAL_FILE' в папку '$PG_DATA_TEST_DIR/pg_wal'"
-      tar -xf $WAL_FILE --use-compress-program="$COMPRESS_PROGRAM" --directory=$PG_DATA_TEST_DIR/pg_wal \
-        2> $LOG_FILE_PREFIX.tar.stderr.log
+      pv $WAL_FILE \
+        | tar -xf - --use-compress-program="$COMPRESS_PROGRAM" --directory=$PG_DATA_TEST_DIR/pg_wal \
+          2> $LOG_FILE_PREFIX.tar.stderr.log
     else
       echo "Расшифровываем и распаковываем архив '$WAL_FILE' в папку '$PG_DATA_TEST_DIR/pg_wal'"
-      gpg --decrypt --passphrase=$GPG_PASSPHRASE --batch $WAL_FILE \
-        2> $LOG_FILE_PREFIX.gpg.stderr.log \
+      pv $WAL_FILE \
+        | gpg --decrypt --passphrase=$GPG_PASSPHRASE --batch \
+          2> $LOG_FILE_PREFIX.gpg.stderr.log \
         | tar -xf - --use-compress-program="$COMPRESS_PROGRAM" --directory=$PG_DATA_TEST_DIR/pg_wal \
           2> $LOG_FILE_PREFIX.tar.stderr.log
     fi
@@ -288,6 +292,16 @@ elif test "${1:-}" = "validate"; then
  
   # ВНИМАНИЕ! После старта тестовой СУБД завершать работу скрипта с ошибкой нельзя до остановки СУБД!
  
+  echo "Ждём, пока накатятся WAL файлы"
+  while true; do
+    PG_IS_IN_RECOVERY=$(psql --port=$PG_PORT --username=postgres --no-password --dbname=postgres --quiet --no-psqlrc \
+                             --pset=null=¤ --tuples-only --no-align --command="select pg_is_in_recovery()")
+    test -z "$PG_IS_IN_RECOVERY" && echowarn "pg_backup validate: get in recovery status error" && break
+    test "$PG_IS_IN_RECOVERY" = "f" && echo && break
+    sleep 1
+    # echo -n "." # debug only
+  done
+ 
   echo "Проверяем количество ошибок в контрольных суммах"
   CHECKSUM_FAILURES=$(psql --port=$PG_PORT --username=postgres --no-password --dbname=postgres --quiet --no-psqlrc \
                            --pset=null=¤ --tuples-only --no-align --command='select sum(checksum_failures) from pg_stat_database' \
@@ -321,9 +335,10 @@ elif test "${1:-}" = "validate"; then
     2> $LOG_FILE_PREFIX.pg_ctl.stderr.log
   echoinfo "pg_backup validate: server stopped (port $PG_PORT)"
  
+  BAD_WORDS_RE="\b(WARNING|ERROR|FATAL|PANIC|ignored?|(fail|(?<!might be )corrupt|unexpect)(ed)?)\b"
   for LOG_FILE in $PG_DATA_TEST_DIR/log/*; do
-    echo "Проверяем отсутствие ошибок в файле $LOG_FILE"
-    grep -P '\b(WARNING|ERROR|FATAL|PANIC)\b' $LOG_FILE && echoerr "pg_backup validate: problems found" && exit 1 || true
+    echo "Проверяем отсутствие ошибок '$BAD_WORDS_RE' в файле '$LOG_FILE'"
+    grep -i -P "$BAD_WORDS_RE" $LOG_FILE && echoerr "pg_backup validate: problems found in log file '$LOG_FILE'" && exit 1 || true
   done
   echo "pg_backup validate: no problems found in log files"
  
@@ -364,7 +379,7 @@ BASE_NAME=${BACKUP_DIR}/$(date +%Y-%m-%d.%H%M%S).$(hostname).pg_backup
 COMPRESS_THREADS=$(echo "$(nproc) / 2.5 + 1" | bc)
  
 # для многопоточного режима используется максимальная степень сжатия 5, которая была получена опытным путём
-# это баланс между скоростью работы, размером сжатого файла, скоростью записи на сетевой диск, с учётом нагрузки другими процессами
+# это баланс между потреблением CPU и памяти, размером сжатого файла, скоростью записи на сетевой диск, с учётом нагрузки другими процессами
 COMPRESS_LEVEL=$COMPRESS_THREADS
 test "$COMPRESS_LEVEL" -gt 5 && COMPRESS_LEVEL=5
  
@@ -469,7 +484,7 @@ if test -z "${WAL_OLD_FILE}"; then
   echowarn "pg_backup: old WAL file is not found"
 else
   echo "pg_backup: WAL old file is ${WAL_OLD_FILE}"
-  WAL_OLD_FILE_EXT=$(echo "${WAL_OLD_FILE}" | grep -oP '\.[a-z\d]+$') # compressed files support (.gz, .zst, .lz4)
+  WAL_OLD_FILE_EXT=$(echo "${WAL_OLD_FILE}" | grep -oP '\.[^.]+$') # compressed files support (.gz, .zst, .lz4)
  
   BEFORE_WAL_DIR_SIZE=$(du -sh "${WAL_DIR}" | grep -oP '^\S+')
   ${PG_BIN_DIR}/pg_archivecleanup -x "${WAL_OLD_FILE_EXT}" "${WAL_DIR}" "${WAL_OLD_FILE}" 2> ${WAL_DIR}/pg_archivecleanup.stderr.log
