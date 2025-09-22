@@ -8,9 +8,11 @@
 1. Восстановление резервной копии СУБД
 
 ## Требования
-* GNU/Linux
-* PostgreSQL ≥ v12
-* Bash ≥ 4.4
+* ОС: GNU/Linux (протестировано на RHEL 8.10)
+* PostgreSQL ≥ v12: psql, pg_basebackup, pg_verifybackup, pg_checksums, pg_ctl
+* Шифрование/дешифрование: gpg
+* Сжатие: zstd, pigz; распаковка: zstd, pigz, lz4
+* Прочее: bash ≥ v4.4, pv; опционально: patronictl, jq
 
 ## Как это работает?
 
