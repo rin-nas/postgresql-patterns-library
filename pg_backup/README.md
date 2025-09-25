@@ -150,5 +150,6 @@ systemctl list-timers | grep -P 'NEXT|pg_backup'
 1. [`/var/lib/pgsql/restore_command.sh`](restore_command.sh)
 
 ## Ссылки по теме
+* [Монтирование сетевой папки /mnt/backup_db (на примере)](mount_example.md)
 * [PostgreSQL: копирование WAL файлов в архив (archive_command)](archive_command.md)
 * [PostgreSQL: восстановление WAL файлов из архива (restore_command)](restore_command.md)
