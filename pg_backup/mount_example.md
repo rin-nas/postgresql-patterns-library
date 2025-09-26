@@ -14,7 +14,7 @@ root@srv3 ~ $ df -H
 root@srv3 ~ $ cat ~/.smbclient
 username=srv_bpk_ek
 password=*censored*
-domain=cplsb.ru
+domain=some.com
  
 # копируем строку из файла в буфер обмена 2
 root@srv3 ~ $ cat /etc/fstab
