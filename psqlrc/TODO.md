@@ -1,5 +1,7 @@
 # TODO list
 
+Ошмётки в консоли https://bolknote.ru/all/oshmyotki-v-konsoli/
+
 Get some ideas from
    * https://github.com/zalando/pg_view
    * https://github.com/lesovsky/pgcenter/tree/master/internal/query ; https://habr.com/ru/articles/494162/
