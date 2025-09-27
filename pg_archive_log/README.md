@@ -57,7 +57,7 @@ systemctl list-timers | grep -P 'NEXT|pg_archive_log'
 Для замеров длительности выполнения и потребления памяти использовалась команда `/usr/bin/time -v COMMAND`.\
 Сжатие и распаковка в один поток. Распаковка в `/dev/null`.
 
-Хост `sc-inf-db-te12`, тестовый файл: `postgresql-2025-09-14.csv` **186,311,281 байт**.
+Хост `db-te12`, тестовый файл: `postgresql-2025-09-14.csv` **186,311,281 байт**.
 
 | Program and compression level | Compression size (bytes)	| Compression size (%)	| Compression duration (s)	| Compression memory (KB)	| Decompression duration (s)	| Decompression memory (KB)	| Rating place |
 | :--- | ---:	| ---:	| ---:	| ---:	| ---:	| ---:	| ---: |
@@ -73,7 +73,7 @@ systemctl list-timers | grep -P 'NEXT|pg_archive_log'
 | `xz -4`      | 2,233,640	                | 91%	                   | $\color{#f00}{7.20}$	 | $\color{#090}{46,392}$	 | $\color{#090}{0.33}$	| $\color{#090}{6,584}$	  | 4 |
 | `xz -9`      | 2,057,736	                | 86%	                   | $\color{#f00}{18.34}$	| $\color{#f00}{629,832}$	| $\color{#090}{0.38}$	| $\color{#090}{16,510}$	 | — |
 
-Хост `sc-ek-db-pr33`, тестовый файл: `postgresql-2025-09-16.csv` **12,670,480 байт**.
+Хост `db-pr33`, тестовый файл: `postgresql-2025-09-16.csv` **12,670,480 байт**.
 
 | Program and compression level | Compression size (bytes)	| Compression size (%)	| Compression duration (s)	| Compression memory (KB)	| Decompression duration (s)	| Decompression memory (KB)	| Rating place |
 | :--- | ---:	| ---:	| ---:	| ---:	| ---:	| ---:	| ---: |
