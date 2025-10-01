@@ -153,3 +153,9 @@ systemctl list-timers | grep -P 'NEXT|pg_backup'
 * [Монтирование сетевой папки /mnt/backup_db (на примере)](mount_example.md)
 * [PostgreSQL: копирование WAL файлов в архив (archive_command)](archive_command.md)
 * [PostgreSQL: восстановление WAL файлов из архива (restore_command)](restore_command.md)
+* Systemd
+  * https://systemd-by-example.com/
+  * Google: [crontab+vs+systemd+timer](https://www.google.com/search?q=crontab+vs+systemd+timer)
+  * [Stop using cron! Systemd Timers Explained](https://coady.tech/systemd-timer-vs-cron/)
+* https://www.dmosk.ru/miniinstruktions.php?mini=linux-cifs
+* https://chmod-calculator.com/
