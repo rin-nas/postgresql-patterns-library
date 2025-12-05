@@ -17,10 +17,12 @@
       1. [Как сделать аналог функции `group_concat()` из MySQL](#как-сделать-аналог-функции-group_concat-из-mysql)
       1. [Как сделать аналог типа `set` из MySQL?](#как-сделать-аналог-типа-set-из-mysql)
       1. [Как сделать аналог функции `make_set()` из MySQL?](#как-сделать-аналог-функции-make_set-из-mysql)
+   1. [Файлы](файлы)
+      1. [Как загрузить в таблицу большой файл-архив в формате `csv.xz`?](#как-загрузить-в-таблицу-большой-файл-архив-в-формате-csvxz)
+      1. [Шпаргалка по выгрузке загрузке CSV файлов в PostgreSQL](#шпаргалка-по-выгрузке-загрузке-csv-файлов-в-postgresql)
    1. [Строки](#строки)
       1. [Как транслитерировать русские буквы на английские?](#как-транслитерировать-русские-буквы-на-английские)
       1. [Как распарсить CSV строку в таблицу?](#как-распарсить-csv-строку-в-таблицу)
-      1. [Как загрузить в таблицу большой файл-архив в формате `csv.xz`?](#как-загрузить-в-таблицу-большой-файл-архив-в-формате-csvxz)
       1. [Как определить пол по ФИО (фамилии, имени, отчеству) на русском языке?](#как-определить-пол-по-фио-фамилии-имени-отчеству-на-русском-языке)
       1. [Как заквотировать строку для использования в регулярном выражении?](#как-заквотировать-строку-для-использования-в-регулярном-выражении)
       1. [Как заквотировать строку для использования в операторе LIKE?](#как-заквотировать-строку-для-использования-в-операторе-like)
@@ -291,6 +293,45 @@ from unnest(string_to_array('a,b,c,d', ',')) with ordinality as s(name, num)
 where 10 & (1 << (num::int-1)) > 0;
 ```
 
+### Файлы
+
+#### Как загрузить в таблицу большой файл-архив в формате `csv.xz`?
+
+Воспользуйтесь утилитой [`psql`](https://postgrespro.ru/docs/postgresql/18/app-psql).
+Особенность мета-команды [`\copy`](https://postgrespro.ru/docs/postgresql/18/app-psql#APP-PSQL-META-COMMANDS-COPY) в том, что она читает файл из ***локальной файловой системы*** и пересылает его на сервер на вход SQL команде [`COPY`](https://postgrespro.ru/docs/postgresql/18/sql-copy).
+
+```sql
+\copy test.regions from program 'xzcat regions.csv.xz' with (format csv, header false);
+```
+
+#### Шпаргалка по выгрузке загрузке CSV файлов в PostgreSQL
+
+```sql
+-- выгрузка таблицы в CSV в поток
+COPY public.events TO STDOUT WITH (FORMAT csv, HEADER true);
+ 
+-- загрузка из CSV из потока
+COPY public.events FROM STDIN WITH (FORMAT csv, HEADER true);
+ 
+-- загрузка из файла на сервере (нужны права)
+COPY public.events FROM '/var/lib/postgresql/import.csv' WITH (FORMAT csv, HEADER true);
+ 
+-- через внешнюю программу (распаковка на лету)
+COPY public.events FROM PROGRAM 'gzip -dc /data/import.csv.gz' WITH (FORMAT csv, HEADER true);
+ 
+-- выгрузка результата запроса, не всей таблицы
+COPY (
+  SELECT id, payload, created_at
+  FROM public.events
+  WHERE created_at >= DATE '2025-01-01'
+) TO STDOUT WITH (FORMAT csv, HEADER true);
+```
+
+```bash
+# экспорт настроек СУБД в CSV
+psql -U postgres -qX --csv -c 'table pg_catalog.pg_settings' > /tmp/pg_settings.csv
+```
+
 ### Строки
 
 #### Как [транслитерировать](https://ru.wikipedia.org/wiki/%D0%A2%D1%80%D0%B0%D0%BD%D1%81%D0%BB%D0%B8%D1%82%D0%B5%D1%80%D0%B0%D1%86%D0%B8%D1%8F) русские буквы на английские?
@@ -347,16 +388,6 @@ id|kladr_id|name
 729|2401600000000|Край Красноярский| Район Иланский
 765|2700700000000|Край Хабаровский| Район Вяземский
 765|\<null>|\<null>
-
-#### Как загрузить в таблицу большой файл-архив в формате `csv.xz`?
-
-Воспользуйтесь утилитой [`psql`](https://postgrespro.ru/docs/postgresql/14/app-psql).
-Особенность мета-команды [`\copy`](https://postgrespro.ru/docs/postgresql/14/app-psql#APP-PSQL-META-COMMANDS-COPY) в том, что она читает файл из ***локальной файловой системы*** и пересылает его на сервер на вход SQL команде [`COPY`](https://postgrespro.ru/docs/postgresql/14/sql-copy).
-
-```sql
-\copy test.regions from program 'xzcat regions.csv.xz' with (format csv, header false);
-```
-
 
 #### Как определить пол по ФИО (фамилии, имени, отчеству) на русском языке?
 
