@@ -2706,11 +2706,18 @@ DROP ROLE role_name;
 
 ### Как сравнить конфигурации двух СУБД?
 
+Выполнить в bash
 ```bash
 # экспорт настроек СУБД в CSV файл
 psql -U postgres -qX --csv -c 'table pg_catalog.pg_settings' > /tmp/pg_settings.csv
 ```
+Или выполнить в psql
+```sql
+-- экспорт настроек СУБД в CSV файл
+\copy (table pg_catalog.pg_settings) to '/tmp/pg_settings.csv' with (format csv, header true);
+```
 
+Выполнить в psql
 ```sql
 create database test;
 \connect test;
