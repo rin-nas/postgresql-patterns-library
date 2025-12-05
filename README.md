@@ -127,8 +127,9 @@
    1. [Как узнать, какие самые частые действия в таблице совершаются?](#как-узнать-какие-самые-частые-действия-в-таблице-совершаются)
    1. [Как узнать отставание реплик?](#как-узнать-отставание-реплик)
    1. [Как узнать процент достижения своего максимального значения для последовательностей?](#как-узнать-процент-достижения-своего-максимального-значения-для-последовательностей)
-   1. [Как удалить неиспользуемые WAL файлы?](#как-удалить-неиспользуемые-WAL-файлы)
+   1. [Как удалить неиспользуемые WAL файлы?](#как-удалить-неиспользуемые-wal-файлы)
    1. [Как удалить роль, которая имеет принадлежащие ей объекты?](#как-удалить-роль-которая-имеет-принадлежащие-ей-объекты)
+   1. [Как сравнить конфигурации двух СУБД](#как-сравнить-конфигурации-двух-субд)
 
 ## Получение пользовательских данных
 
@@ -325,11 +326,6 @@ COPY (
   FROM public.events
   WHERE created_at >= DATE '2025-01-01'
 ) TO STDOUT WITH (FORMAT csv, HEADER true);
-```
-
-```bash
-# экспорт настроек СУБД в CSV
-psql -U postgres -qX --csv -c 'table pg_catalog.pg_settings' > /tmp/pg_settings.csv
 ```
 
 ### Строки
@@ -2707,4 +2703,47 @@ REASSIGN OWNED BY old_role TO new_role;
  
 -- удалите роль (её можно удалить только если она не имеет привилегий или связей с объектами БД)
 DROP ROLE role_name;
+```
+
+#### Как сравнить конфигурации двух СУБД
+
+```bash
+# экспорт настроек СУБД в CSV файл
+psql -U postgres -qX --csv -c 'table pg_catalog.pg_settings' > /tmp/pg_settings.csv
+```
+
+```sql
+create database test;
+\connect test;
+ 
+drop table if exists public.pg_settings;
+ 
+create table public.pg_settings (like pg_catalog.pg_settings);
+ 
+-- импорт настроек СУБД из CSV файла (с ФС сервера, на котором запущен psql)
+\copy public.pg_settings from '/tmp/pg_settings.csv' with (format csv, header true);
+ 
+WITH s AS (
+    SELECT
+        CASE
+            WHEN t1.name IS NULL THEN 't2'
+            WHEN t2.name IS NULL THEN 't1'
+            ELSE 'both'
+        END AS diff_type,
+        COALESCE(t1.name, t2.name) AS name,
+        LEFT(COALESCE(t1.setting, '¤'), 50) AS t1_setting,
+        LEFT(COALESCE(t2.setting, '¤'), 50) AS t2_setting
+    FROM
+        pg_catalog.pg_settings t1
+    FULL OUTER JOIN
+        public.pg_settings t2 ON t1.name = t2.name
+    WHERE
+        t1.setting IS DISTINCT FROM t2.setting
+    ORDER BY 1, 2
+)
+select
+  row_number() over () as "#", *
+from s
+--where name ~ 'temp_file_limit'
+;
 ```
