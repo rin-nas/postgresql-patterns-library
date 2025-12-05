@@ -2719,18 +2719,9 @@ psql -U postgres -qX --csv -c 'table pg_catalog.pg_settings' > /tmp/pg_settings.
 
 **Сравниваем текущие настройки СУБД с настройками из CVS файла**
 
-Выполнить в `psql`
+Файл `/tmp/pg_settings_diff.sql`
+
 ```sql
-create database test;
-\connect test;
- 
-drop table if exists public.pg_settings;
- 
-create table public.pg_settings (like pg_catalog.pg_settings);
- 
--- импорт настроек СУБД из CSV файла (с ФС сервера, на котором запущен psql)
-\copy public.pg_settings from '/tmp/pg_settings.csv' with (format csv, header true);
- 
 WITH s AS (
     SELECT
         CASE
@@ -2739,8 +2730,8 @@ WITH s AS (
             ELSE 'both'
         END AS diff_type,
         COALESCE(t1.name, t2.name) AS name,
-        LEFT(COALESCE(t1.setting, '¤'), 50) AS t1_setting,
-        LEFT(COALESCE(t2.setting, '¤'), 50) AS t2_setting
+        LEFT(COALESCE(t1.setting, '¤'), 1000) AS t1_setting,
+        LEFT(COALESCE(t2.setting, '¤'), 1000) AS t2_setting
     FROM
         pg_catalog.pg_settings t1
     FULL OUTER JOIN
@@ -2754,4 +2745,27 @@ select
 from s
 --where name ~ 'temp_file_limit'
 ;
+```
+
+Выполнить в `psql`
+```sql
+--create database if not exists test;
+SELECT 'CREATE DATABASE test' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'test')\gexec
+
+\connect test;
+ 
+drop table if exists public.pg_settings;
+ 
+create table public.pg_settings (like pg_catalog.pg_settings);
+ 
+-- импорт настроек СУБД из CSV файла (с ФС сервера, на котором запущен psql)
+\copy public.pg_settings from '/tmp/pg_settings.csv' with (format csv, header true);
+ 
+\include /tmp/pg_settings_diff.sql
+```
+
+Выполнить в `bash`
+```bash
+# Выгрузить отличия в конфигураций СУБД в CSV файл
+psql -U postgres -qX --csv -d test -f /tmp/pg_settings_diff.sql > /tmp/pg_settings_diff.csv
 ```
