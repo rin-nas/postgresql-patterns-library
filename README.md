@@ -18,7 +18,8 @@
       1. [Как сделать аналог типа `set` из MySQL?](#как-сделать-аналог-типа-set-из-mysql)
       1. [Как сделать аналог функции `make_set()` из MySQL?](#как-сделать-аналог-функции-make_set-из-mysql)
    1. [Файлы](файлы)
-      1. [Как загрузить в таблицу большой файл-архив в формате `csv.xz`?](#как-загрузить-в-таблицу-большой-файл-архив-в-формате-csvxz)
+      1. [Как выгрузить результат SELECT запроса в `csv` файл?](#как-выгрузить-результат-select-запроса-в-csv-файл)
+      1. [Как загрузить в таблицу данные из `csv` файла?](#как-загрузить-в-таблицу-данные-из-csv-файла)
       1. [Шпаргалка по выгрузке загрузке CSV файлов в PostgreSQL](#шпаргалка-по-выгрузке-загрузке-csv-файлов-в-postgresql)
    1. [Строки](#строки)
       1. [Как транслитерировать русские буквы на английские?](#как-транслитерировать-русские-буквы-на-английские)
@@ -117,8 +118,6 @@
    1. [Как обезопасить приложение от тяжёлых миграций, приводящих к блокированию запросов?](#как-обезопасить-приложение-от-тяжёлых-миграций-приводящих-к-блокированию-запросов)
    1. [Simple index checking](#simple-index-checking)
    1. [Как скопировать базу данных?](#как-скопировать-базу-данных)
-   1. [Как выгрузить таблицы из БД?](#как-выгрузить-таблицы-из-бд)
-   1. [Как выгрузить результат SELECT запроса в CSV?](#как-выгрузить-результат-select-запроса-в-csv) 
    1. [Как проверить синтаксис SQL кода без его выполнения?](#как-проверить-синтаксис-sql-кода-без-его-выполнения)
    1. [Как откатить часть транзакции внутри функции или процедуры?](#как-откатить-часть-транзакции-внутри-функции-или-процедуры)
    1. [Как терминировать долгие простаивающие без дела подключения к БД?](#как-терминировать-долгие-простаивающие-без-дела-подключения-к-бд)
@@ -296,12 +295,40 @@ where 10 & (1 << (num::int-1)) > 0;
 
 ### Файлы
 
-#### Как загрузить в таблицу большой файл-архив в формате `csv.xz`?
+### Как выгрузить результат SELECT запроса в `csv` файл?
+
+Файл `select.sql`
+```sql
+copy (
+    select id, send_date::timestamp(0), message
+    from my_table
+    where send_date > now() - interval '2 month'
+    --limit 100
+) to stdout (format csv, header false);
+```
+
+```bash
+# без сжатия
+sudo su - postgres -c "psql -qX --csv --file=select.sql" > select.csv
+sudo su - postgres -c "psql -qX --csv -c 'select * from pg_stat_activity'" > select.csv
+
+# с сжатием (размер файла больше, но работает быстрее)
+cat select.sql | psql -U postgres -qX --dbname=my_database | zstd -19 -T8 -o select.csv.zst
+
+# с сжатием (размер файла меньше, но работает медленнее)
+cat select.sql | psql -U postgres -qX --dbname=my_database | xz -zc9 --threads=8 > select.csv.xz
+```
+
+#### Как загрузить в таблицу данные из `csv` файла?
 
 Воспользуйтесь утилитой [`psql`](https://postgrespro.ru/docs/postgresql/18/app-psql).
 Особенность мета-команды [`\copy`](https://postgrespro.ru/docs/postgresql/18/app-psql#APP-PSQL-META-COMMANDS-COPY) в том, что она читает файл из ***локальной файловой системы*** и пересылает его на сервер на вход SQL команде [`COPY`](https://postgrespro.ru/docs/postgresql/18/sql-copy).
 
 ```sql
+# без сжатия
+\copy test.regions from '/tmp/regions.csv' with (format csv, header false);
+
+# с сжатием
 \copy test.regions from program 'xzcat regions.csv.xz' with (format csv, header false);
 ```
 
@@ -2459,34 +2486,6 @@ Cжимаем:
 Одной командой:
 `pg_dump -U postgres --db=my_database --table=public.my_table1 --table=public.my_table2 | zstd -19 -T8 -o my_tables.sql.zst`
 
-### Как выгрузить результат SELECT запроса в CSV?
-
-Файл `select.sql`
-```sql
-copy (
-    select id, send_date::timestamp(0), message
-    from my_table
-    where send_date > now() - interval '2 month'
-    --limit 100
-) to stdout (format csv, header false);
-```
-
-```bash
-cat select.sql | psql -U postgres --dbname=my_database | zstd -19 -T8 -o select.csv.zst
-```
-
-или (лучше сжимает, но значительно медленнее работает)
-```bash
-cat select.sql | psql -U postgres --dbname=my_database | xz -zc9 --threads=8 > select.csv.xz
-```
-
-Ещё один способ:
-```bash
-sudo su - postgres -c "psql -qX --csv -c 'select * from pg_stat_activity'" > select.csv
-# или
-sudo su - postgres -c "psql -qX --csv --file=select.sql" > select.csv
-```
-
 ### Как проверить синтаксис SQL кода без его выполнения?
 
 Готовая функция: [`is_sql.sql`](functions/is/is_sql.sql)
@@ -2705,7 +2704,7 @@ REASSIGN OWNED BY old_role TO new_role;
 DROP ROLE role_name;
 ```
 
-#### Как сравнить конфигурации двух СУБД
+### Как сравнить конфигурации двух СУБД
 
 ```bash
 # экспорт настроек СУБД в CSV файл
