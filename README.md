@@ -2769,3 +2769,11 @@ create table public.pg_settings (like pg_catalog.pg_settings);
 # Выгрузить отличия в конфигураций СУБД в CSV файл
 psql -U postgres -qX --csv -d test -f /tmp/pg_settings_diff.sql > /tmp/pg_settings_diff.csv
 ```
+
+**Колонки таблицы:**
+1. diff_type – тип отличия (both - настройка установлена в обоих конфигах, иначе только t1 или только t2)
+1. name – название настройки
+1. t1_setting – значения в текущей СУБД
+1. t2_setting – значения в СУБД у заказчика (из `/tmp/pg_settings.csv`)
+
+Если в t1_setting или t2_setting указано "¤", то такой настройки в конфиге СУБД не существовало
