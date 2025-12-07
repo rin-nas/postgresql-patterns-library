@@ -2766,7 +2766,7 @@ create table public.pg_settings (like pg_catalog.pg_settings);
 
 Выполнить в `bash`
 ```bash
-# Выгрузить отличия в конфигураций СУБД в CSV файл
+# Выгрузить отличия в конфигурациях СУБД в CSV файл
 psql -U postgres -qX --csv -d test -f /tmp/pg_settings_diff.sql > /tmp/pg_settings_diff.csv
 ```
 
