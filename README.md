@@ -2734,7 +2734,7 @@ WITH s AS (
         LEFT(COALESCE(t2.setting, '¤'), 1000) AS t2_setting
     FROM
         pg_catalog.pg_settings t1
-    FULL OUTER JOIN
+    FULL JOIN
         public.pg_settings t2 ON t1.name = t2.name
     WHERE
         t1.setting IS DISTINCT FROM t2.setting
