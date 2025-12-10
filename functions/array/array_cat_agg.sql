@@ -1,6 +1,14 @@
+-- PostgreSQL < 13
 CREATE AGGREGATE public.array_cat_agg(anyarray) (
     SFUNC     = array_cat
    ,STYPE     = anyarray
+   ,INITCOND  = '{}'
+);
+
+-- PostgreSQL 13+
+CREATE AGGREGATE public.array_cat_agg(anycompatiblearray) (
+    SFUNC     = array_cat
+   ,STYPE     = anycompatiblearray
    ,INITCOND  = '{}'
 );
 
