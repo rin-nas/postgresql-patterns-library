@@ -8,6 +8,8 @@ Get some ideas from
 
 Show current_user `SELECT SESSION_USER, CURRENT_USER;` (after `SET ROLE rolename`)
 
+Checksum failures: `select sum(checksum_failures) from pg_stat_database`
+
 Show overall info on `psql` start
 1. Standby count by status
 1. Activity count by status, total currently used, total available, used precent (mark red if > 90%)
