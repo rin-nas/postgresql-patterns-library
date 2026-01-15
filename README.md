@@ -2710,7 +2710,7 @@ DROP ROLE role_name;
 
 Выполнить в `bash`
 ```bash
-psql -U postgres -qX --csv -c 'table pg_catalog.pg_settings' > /tmp/pg_settings.csv
+psql -U postgres -qX --csv --pset=null=¤ -c 'table pg_catalog.pg_settings' > /tmp/pg_settings.csv
 ```
 Или выполнить в `psql`
 ```sql
