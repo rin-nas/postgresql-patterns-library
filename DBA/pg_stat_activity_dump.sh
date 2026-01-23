@@ -54,3 +54,4 @@ echo "Dumped to file $FILE"
 
 # как посмотреть протоколы в консоли?
 # xz -dkc pg_stat_activity_dump.2024-11-01_124807.csv.xz | pspg --csv
+# xz -dkc pg_stat_activity_dump.2024-11-01_124807.csv.xz | column -s, -t < somefile.csv | less -#2 -N -S
