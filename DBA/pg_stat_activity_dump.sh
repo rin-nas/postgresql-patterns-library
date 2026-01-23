@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Скрипт на текущем хосте подключается к СУБД под пользователем postgres, 
+# выгружает список текущих процессов в файл в формате CSV (в папку, откуда был запущен скрипт) и сжимает его через XZ.
+
 # https://habr.com/ru/company/ruvds/blog/325522/ - Bash documentation
 
 # https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html
