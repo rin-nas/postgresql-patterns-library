@@ -153,6 +153,7 @@ systemctl list-timers | grep -P 'NEXT|pg_backup'
 * [Монтирование сетевой папки /mnt/backup_db (на примере)](mount_example.md)
 * [PostgreSQL: копирование WAL файлов в архив (archive_command)](archive_command.md)
 * [PostgreSQL: восстановление WAL файлов из архива (restore_command)](restore_command.md)
+* [Восстановление PostgreSQL из резервной копии (инструкция)](restore_from_backup.md)
 * Systemd
   * https://systemd-by-example.com/
   * Хабр: [Systemd: полное руководство для админов + примеры](https://habr.com/ru/articles/942760/)
