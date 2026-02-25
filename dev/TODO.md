@@ -364,7 +364,7 @@ where tbl.relname = 'cts__cdr'
   and not att.attisdropped;
 ```
 
-# Лайвхак по добыванию свободного места в БД
+# Хитрость по добыванию свободного места в БД
 
 Имеется таблица
 ```sql
@@ -431,7 +431,7 @@ where created_at < now() - interval '1 year'
     or is_auto_generated is not null);
 ```
 
-# Улучшаем сжатие TOAST (лайвхак)
+# Улучшаем сжатие TOAST (хитрость)
 
 ```
 -- смотрим, как сжимаются данные в механизме TOAST
