@@ -1249,7 +1249,7 @@ select a from r;
 ### Как добавить или обновить записи одним запросом (UPSERT)?
 
 * См. [INSERT ... ON CONFLICT DO NOTHING/UPDATE](https://habr.com/post/264281/) (Habr)
-* Элегантная [реализация на PL/pgSQL](https://postgrespro.ru/docs/postgresql/12/plpgsql-control-structures#PLPGSQL-UPSERT-EXAMPLE) из официальной документации PostgreSQL
+* Элегантная [реализация на PL/pgSQL](https://postgrespro.ru/docs/postgresql/18/plpgsql-control-structures#PLPGSQL-UPSERT-EXAMPLE) из официальной документации PostgreSQL
 
 ### Как сделать `INSERT ... ON CONFLICT ...` без увеличения последовательности для дубликатов?
 
@@ -1296,6 +1296,8 @@ returning id;
 
 table t1_id_seq; -- "last_value" is 3
 ```
+
+См. так же [find or insert using a single query](https://gitlab.com/postgres-ai/postgresql-consulting/postgres-howtos/-/blob/main/0036_find-or-insert_using_a_single_query.md)
 
 ### Как ускорить добавление строк через `INSERT ... VALUES ...`?
 
