@@ -69,8 +69,7 @@
   1. https://tapoueh.org/blog/2018/05/postgresql-data-types-point/ (см. запрос с итоговыми суммами и диаграммами внизу)
   1. [задача параллельной многопроцессной обработки очереди](https://web.archive.org/web/20200204001129/http://dklab.ru/chicken/nablas/53.html), обсуждение на [форуме](https://web.archive.org/web/20131203125446/https://www.sql.ru/forum/681777/obsuzhdaem-blokirovki-pg-try-advisory-lock)
   1. https://pgday.ru/files/pgmaster14/max.boguk.query.optimization.pdf (оптимизация запросов)
-  1. https://pgday.ru/presentation/232/5964945ea4142.pdf Учим слона танцевать
-рок-н-ролл (оптимизация запросов)
+  1. https://pgday.ru/presentation/232/5964945ea4142.pdf Учим слона танцевать рок-н-ролл (оптимизация запросов)
   1. http://tatiyants.com/how-to-navigate-json-trees-in-postgres-using-recursive-ctes/
   1. https://wiki.postgresql.org/wiki/Category:Performance_Snippets
   1. https://wiki.postgresql.org/wiki/Index_Maintenance
@@ -97,18 +96,21 @@
   1. YouTube: [Advanced SQL](https://www.youtube.com/playlist?list=PL1XF9qjV8kH12PTd1WfsKeUQU6e83ldfc) — Chapter #07 — [Video #57 — PL/SQL use case: spreadsheet evaluation](https://www.youtube.com/watch?v=s49M6oeqkok&list=PL1XF9qjV8kH12PTd1WfsKeUQU6e83ldfc&index=57&ab_channel=DatabaseSystemsResearchGroupatUT%C3%BCbingen)
   1. https://hakibenita.com/sql-anomaly-detection Simple Anomaly Detection Using Plain SQL (Детектирование аномалий)
   1. https://wiki.postgresql.org/wiki/Inlining_of_SQL_functions
-  1. https://www.crunchydata.com/postgres-tips
   1. https://www.pro-open.de/MATCH_RECOGNIZE - "Emulating" MATCH_RECOGNIZE in PostgreSQL (вычисление пиковых значений на графике)
-  1. https://onecompiler.com/postgresql Sandbox / Песочница
+  1. https://www.crunchydata.com/postgres-tips
+  1. https://gitlab.com/postgres-ai/postgresql-consulting/postgres-howtos
 
 # Databases
   1. [IP2Location™ LITE IP-COUNTRY Database](https://lite.ip2location.com/database/db1-ip-country)
   1. [Реестр российской системы и плана нумерации телефонных номеров по областям](https://opendata.digital.gov.ru/registry/numeric/) 
 
-# Сервисы для выполнения SQL (песочница)
-  1. http://sqlfiddle.postgrespro.ru/
-  1. https://dbfiddle.uk/
-  1. https://www.db-fiddle.com/
+# Он-лайн сервисы
+  1. http://sqlfiddle.postgrespro.ru/ - выполнение SQL (песочница)
+  1. https://dbfiddle.uk/ - выполнение SQL (песочница)
+  1. https://www.db-fiddle.com/ - выполнение SQL (песочница)
+  1. https://onecompiler.com/postgresql - выполнение SQL (песочница)
+  1. https://pganalyze.com/format - форматирование SQL
+  1. https://www.mockaroo.com/ - Random Data Generator and API Mocking Tool | JSON / CSV / SQL / Excel
 
 # Отображение табличных данных из JSON в HTML
   1. https://github.com/grid-js/gridjs
