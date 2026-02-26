@@ -95,10 +95,17 @@
   1. https://begriffs.com/pdf/dec2frac.pdf
   1. YouTube: [Advanced SQL](https://www.youtube.com/playlist?list=PL1XF9qjV8kH12PTd1WfsKeUQU6e83ldfc) — Chapter #07 — [Video #57 — PL/SQL use case: spreadsheet evaluation](https://www.youtube.com/watch?v=s49M6oeqkok&list=PL1XF9qjV8kH12PTd1WfsKeUQU6e83ldfc&index=57&ab_channel=DatabaseSystemsResearchGroupatUT%C3%BCbingen)
   1. https://hakibenita.com/sql-anomaly-detection Simple Anomaly Detection Using Plain SQL (Детектирование аномалий)
+  1. https://hakibenita.com/postgresql-unknown-features
+  1. https://hakibenita.com/postgresql-unused-index-size#utilizing-partial-indexes
   1. https://wiki.postgresql.org/wiki/Inlining_of_SQL_functions
   1. https://www.pro-open.de/MATCH_RECOGNIZE - "Emulating" MATCH_RECOGNIZE in PostgreSQL (вычисление пиковых значений на графике)
   1. https://www.crunchydata.com/postgres-tips
   1. https://gitlab.com/postgres-ai/postgresql-consulting/postgres-howtos
+  1. https://sqitch.org/docs/manual/sqitchtutorial/
+  1. https://eax.me/2023/2023-10-09-pgvector.html Практический пример использования pgvector
+  1. https://www.dmosk.ru/miniinstruktions.php?mini=postgresql-replication Настройка потоковой репликации PostgreSQL
+  1. https://aiven.io/developer/solving-the-knapsack-problem-in-postgresql Задача о рюкзаке
+  1. https://chat.mistral.ai/chat
 
 # Databases
   1. [IP2Location™ LITE IP-COUNTRY Database](https://lite.ip2location.com/database/db1-ip-country)
