@@ -101,7 +101,7 @@
   1. https://www.pro-open.de/MATCH_RECOGNIZE - "Emulating" MATCH_RECOGNIZE in PostgreSQL (вычисление пиковых значений на графике)
   1. https://www.crunchydata.com/postgres-tips
   1. https://gitlab.com/postgres-ai/postgresql-consulting/postgres-howtos
-  1. https://sqitch.org/docs/manual/sqitchtutorial/
+  1. https://sqitch.org/docs/manual/sqitchtutorial/ change management on PostgreSQL
   1. https://eax.me/2023/2023-10-09-pgvector.html Практический пример использования pgvector
   1. https://www.dmosk.ru/miniinstruktions.php?mini=postgresql-replication Настройка потоковой репликации PostgreSQL
   1. https://aiven.io/developer/solving-the-knapsack-problem-in-postgresql Задача о рюкзаке
