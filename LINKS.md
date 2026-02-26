@@ -10,6 +10,8 @@
   1. https://m.habr.com/ru/company/otus/blog/472364/ - PostgreSQL и настройки согласованности записи для каждого конкретного соединения
   1. https://m.habr.com/ru/post/481556/ - Очередь задач в PostgreSQL
   1. https://m.habr.com/ru/post/483014/ - Очереди сообщений в PostgreSQL с использованием PgQ
+  1. https://habr.com/ru/companies/nexign/articles/930790/ - Как мы научили PostgreSQL автоматически создавать партиции: опыт Nexign Nord
+  1. https://habr.com/ru/companies/postgrespro/articles/919552/ - Как мы внедрили векторный поиск в Postgres Pro
 
 # GitHub
   1. https://github.com/dverite/postgresql-functions
@@ -43,6 +45,7 @@
   1. https://github.com/tembo-io/pgmq - Postgres Message Queue (PGMQ)
   1. https://github.com/benbjohnson/litestream - standalone disaster recovery tool for SQLite
   1. https://github.com/ossc-db/pg_store_plans - Store execution plans like pg_stat_statements does for queries
+  1. https://github.com/dalibo/ldap2pg
 
 # StackOverflow
   1. https://stackoverflow.com/questions/7923237/return-pre-update-column-values-using-sql-only
@@ -100,12 +103,16 @@
   1. https://wiki.postgresql.org/wiki/Inlining_of_SQL_functions
   1. https://www.pro-open.de/MATCH_RECOGNIZE - "Emulating" MATCH_RECOGNIZE in PostgreSQL (вычисление пиковых значений на графике)
   1. https://www.crunchydata.com/postgres-tips
+  1. https://www.crunchydata.com/blog/topic/fun-with-sql
   1. https://gitlab.com/postgres-ai/postgresql-consulting/postgres-howtos
   1. https://sqitch.org/docs/manual/sqitchtutorial/ change management on PostgreSQL
   1. https://eax.me/2023/2023-10-09-pgvector.html Практический пример использования pgvector
   1. https://www.dmosk.ru/miniinstruktions.php?mini=postgresql-replication Настройка потоковой репликации PostgreSQL
   1. https://aiven.io/developer/solving-the-knapsack-problem-in-postgresql Задача о рюкзаке
   1. https://chat.mistral.ai/chat
+  1. https://pgbarman.org/
+  1. https://pgbackrest.org/, https://www.crunchydata.com/blog/pgbackrest-performing-backups-on-a-standby-cluster
+  1. https://www.calculator.net/password-generator.html
 
 # Databases
   1. [IP2Location™ LITE IP-COUNTRY Database](https://lite.ip2location.com/database/db1-ip-country)
