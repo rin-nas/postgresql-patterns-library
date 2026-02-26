@@ -97,4 +97,7 @@ select gender_by_name(pg_catalog.concat('',       e'\n', 'Анна', e'\n', ''))
 
 ## Ссылки по теме
 
-1. http://ceur-ws.org/Vol-2754/paper3.pdf (TODO почитать)
+1. http://ceur-ws.org/Vol-2754/paper3.pdf - Damegender: Writing and Comparing Gender Detection Tools
+1. https://github.com/davidam/damegender
+1. https://github.com/lead-ratings/gender-guesser
+1. https://habr.com/ru/articles/431866/ - Заблуждения программистов об именах — с примерами
