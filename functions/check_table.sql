@@ -1,10 +1,3 @@
-/*
-Invalid page in block XXX of relation YYY
-
-Source:
-  * https://bolknote.ru/all/invalid-page-in-block-xxx-of-relation-yyy/
-  * https://bolknote.ru/all/invalid-page-i-tost/
-*/
 CREATE OR REPLACE FUNCTION check_table(table_name TEXT)
 RETURNS void AS $$
 DECLARE
