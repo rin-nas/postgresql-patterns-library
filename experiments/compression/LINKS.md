@@ -1,8 +1,12 @@
 # Links
 
+## Теория
 * [Data Compression The Complete Reference 3rd Ed - David Salomon](https://doc.lagout.org/Others/Information%20Theory/Compression/Data%20Compression%20The%20Complete%20Reference%203rd%20Ed%20-%20David%20Salomon.pdf)
 * http://compression.ru/download/rev_univ.html
 * https://www.researchgate.net/figure/Schematic-representation-of-an-S9-word-encoding-the-group-of-integers-98-112-117-and_fig1_325408300 S9 inegers pack
+
+## PostgreSQL
+* https://github.com/grahamedgecombe/pgzstd
 
 ## Arithmetic, range, ANS
 
