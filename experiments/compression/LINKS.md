@@ -7,6 +7,7 @@
 
 ## PostgreSQL
 * https://github.com/grahamedgecombe/pgzstd
+* https://github.com/johto/pgbrotli
 
 ## Arithmetic, range, ANS
 
