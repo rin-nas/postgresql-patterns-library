@@ -274,17 +274,21 @@ Of course, you can make function from this query to hide implementation and get 
 
 # Как очень быстро избавиться от bloat в маленьких таблицах, но очень интенсивных по записи
 
-В таблицах, где записей < 10000, есть очень быстрый способ "огнетушителя" избавиться от bloat. Проверил на прод БД. Всё работает отлично.
+Имеется очень быстрый способ "огнетушителя" избавиться от bloat в таблицах, где записей < 10000. Проверил на прод БД. Всё работает отлично.
 
 ```sql
 DO $$
     BEGIN
-        SET LOCAL lock_timeout TO '3s'; -- Максимальное время блокирования других SQL запросов (простоя веб-сайта) во время миграции. Если будет превышено, то транзакция откатится.
-        IF pg_try_advisory_xact_lock('service__workers'::regclass::oid::bigint) THEN -- запрещаем этот код выполняться параллельно (блокировка действует до конца транзакции)
-            LOCK TABLE service__workers IN SHARE MODE; -- защищаем таблицу от параллельного изменения данных, при этом читать из таблицы можно (блокировка действует до конца транзакции)
-            CREATE TEMPORARY TABLE service__workers__tmp ON COMMIT DROP AS SELECT * FROM service__workers;
-            TRUNCATE service__workers; -- немедленно высвобождаем место ОС
-            INSERT INTO service__workers SELECT * FROM service__workers__tmp;
+        SET LOCAL lock_timeout TO '3s'; -- Максимальная длительность ожидания получения блокировки объекта СУБД SQL запросами в этой транзакции. Если будет превышено, то транзакция откатится.
+        SET LOCAL statement_timeout TO '5s'; -- Максимальная длительность выполнения SQL запроса в этой транзакции. Нельзя, чтобы эта транзакция заблокировала другие слишком долго. Если будет превышено, то транзакция откатится.
+        IF pg_try_advisory_xact_lock('table_name'::regclass::oid::bigint) THEN -- Запрещаем этот код выполняться параллельно. Блокировка действует до конца транзакции.
+            LOCK TABLE table_name IN ACCESS EXCLUSIVE; -- ACCESS EXCLUSIVE гарантирует, что кроме транзакции, получившей эту блокировку, никакая другая транзакция не может обращаться к таблице каким-либо способом.
+            CREATE TEMPORARY TABLE table_name__tmp ON COMMIT DROP AS SELECT * FROM table_name;
+            TRUNCATE table_name; -- Немедленно высвобождаем занятое место ОС.
+                                 -- TRUNCATE запрашивает блокировку ACCESS EXCLUSIVE.
+                                 -- TRUNCATE небезопасна с точки зрения MVCC. После опустошения таблицы она будет выглядеть пустой для параллельных транзакций, если они работают со снимком, полученным до опустошения.
+                                 -- Поэтому в LOCK TABLE применяется режим блокировки ACCESS EXCLUSIVE.
+            INSERT INTO table_name SELECT * FROM table_name__tmp;
         END IF;
     END;
 $$;
