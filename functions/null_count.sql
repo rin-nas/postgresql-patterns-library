@@ -7,7 +7,7 @@ create or replace function public.null_count(variadic anyarray)
     language sql
     set search_path = ''
 as $func$
-    SELECT sum(CASE WHEN v IS NULL THEN 1 ELSE 0 END)::int FROM unnest($1) g(v);
+    SELECT COUNT(*)::int FROM unnest($1) g(v) WHERE g.v IS NULL;
 $func$;
 
 /*
