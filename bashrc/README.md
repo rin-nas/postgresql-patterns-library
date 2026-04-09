@@ -87,8 +87,10 @@ __prompt_command() {
 
 Замените 
 ```bash
-if [ -f ~/.bashrc ]; then
+if [ "$BASH" ]; then
+  if [ -f ~/.bashrc ]; then
     . ~/.bashrc
+  fi
 fi
 ```
 
