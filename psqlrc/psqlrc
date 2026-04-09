@@ -257,17 +257,25 @@ cross join (select count(*) > 0                as has_unused_repl_slot,
     \echo :yellow'Hint: You cannot delete slots on synchronous standby':reset
 \endif
 
-/* psql escape codes:
-%M - full host + domain for db server, or [local] (if over Unix socket), or [local:/dir/name]
-%m - host name of the db server, truncated at the first dot, or [local] (if over Unix socket) -- do not use %m, because IP will be truncated!
-%> - port where db server is listening
-%n - database session user name (changes based on SET SESSION AUTHORIZATION)
-%/ - current database name
-%~ - like %/ but the output is ~ if the database is the default
-%# - # if user is superuser, else > (changes based on SET SESSION AUTHORIZATION)
-%R - in prompt 1: = (normal), ^ (single-line mode), ! (disconnected)
-%R - in prompt 2: - (more input expected), * (in a comment), ' or " or $ (inside a string)
-%x - Transaction status: an empty string when not in a transaction block, or * when in a transaction block, or ! when in a failed transaction block, or ? when the transaction state is indeterminate (for example, because there is no connection).
+/* psql escape codes from https://www.postgresql.org/docs/current/app-psql.html :
+%M The full host name (with domain name) of the database server, or [local] if the connection is over a Unix domain socket, or [local:/dir/name], if the Unix domain socket is not at the compiled in default location.
+%m The host name of the database server, truncated at the first dot, or [local] if the connection is over a Unix domain socket.
+%> The port number at which the database server is listening.
+%n The database session user name. (The expansion of this value might change during a database session as the result of the command SET SESSION AUTHORIZATION.)
+%s The name of the service.
+%/ The name of the current database.
+%~ Like %/, but the output is ~ (tilde) if the database is your default database.
+%# If the session user is a database superuser, then a #, otherwise a >. (The expansion of this value might change during a database session as the result of the command SET SESSION AUTHORIZATION.)
+%p The process ID of the backend currently connected to.
+%P Pipeline status: off when not in a pipeline, on when in an ongoing pipeline or abort when in an aborted pipeline.
+%R In prompt 1: = (normal), ^ (single-line mode), ! (disconnected)
+%R In prompt 2: - (more input expected), * (in a comment), ' or " or $ (inside a string)
+%x Transaction status: an empty string when not in a transaction block, or * when in a transaction block, or ! when in a failed transaction block, or ? when the transaction state is indeterminate (for example, because there is no connection).
+%l The line number inside the current statement, starting from 1.
+%digits The character with the indicated octal code is substituted.
+%:name: The value of the psql variable name. See Variables, above, for details.
+%`command` The output of command, similar to ordinary “back-tick” substitution.
+%w Whitespace of the same width as the most recent output of PROMPT1. This can be used as a PROMPT2 setting, so that multi-line statements are aligned with the first line, but there is no visible secondary prompt.
 */
 
 \set PROMPT1 '\n':cyan'%`date --rfc-3339=seconds`'
