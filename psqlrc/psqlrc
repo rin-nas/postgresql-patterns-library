@@ -5,16 +5,18 @@
 
 -- Colors: https://misc.flogisoft.com/bash/tip_colors_and_formatting
 -- Colors: https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit
-\set red     '%[%033[1;31m%]'
-\set green   '%[%033[0;32m%]'
-\set yellow  '%[%033[38;5;220m%]'
-\set blue    '%[%033[38;5;39m%]'
-\set orange  '%[%033[38;5;214m%]'
-\set magenta '%[%033[0;35m%]'
-\set cyan    '%[%033[0;36m%]'
-\set gray    '%[%033[0;37m%]'
-\set white   '%[%033[1;37m%]'
-\set reset   '%[%033[0m%]'
+
+-- Colors for \echo
+\set red     '\033[1;31m'
+\set green   '\033[0;32m'
+\set yellow  '\033[38;5;220m'
+\set blue    '\033[38;5;39m'
+\set orange  '\033[38;5;214m'
+\set magenta '\033[0;35m'
+\set cyan    '\033[0;36m'
+\set gray    '\033[0;37m'
+\set white   '\033[1;37m'
+\set reset   '\033[0m'
 
 \set ON_ERROR_STOP on
 \set ON_ERROR_ROLLBACK interactive
@@ -287,6 +289,18 @@ cross join (select count(*) > 0                as has_unused_repl_slot,
 %w Whitespace of the same width as the most recent output of PROMPT1. This can be used as a PROMPT2 setting, so that multi-line statements are aligned with the first line, but there is no visible secondary prompt.
 */
 
+-- Colors for PROMPT
+\set red     '%[%033[1;31m%]'
+\set green   '%[%033[0;32m%]'
+\set yellow  '%[%033[38;5;220m%]'
+\set blue    '%[%033[38;5;39m%]'
+\set orange  '%[%033[38;5;214m%]'
+\set magenta '%[%033[0;35m%]'
+\set cyan    '%[%033[0;36m%]'
+\set gray    '%[%033[0;37m%]'
+\set white   '%[%033[1;37m%]'
+\set reset   '%[%033[0m%]'
+
 \set PROMPT1 '\n':cyan'%`date --rfc-3339=seconds`'
 \set PROMPT1 :PROMPT1' ':reset'':db_version
 
@@ -311,7 +325,7 @@ cross join (select count(*) > 0                as has_unused_repl_slot,
     \pset expanded off
     \setenv PAGER 'pspg --reprint-on-exit --blackwhite'
 \else
-    \echo :white'Using alternative psql pager called "pspg" is highly recommended (but not required): https://github.com/okbob/pspg':reset
+    \echo 'Using alternative psql pager called "pspg" is highly recommended (but not required): https://github.com/okbob/pspg'
 \endif
 
 -- Show query execution time
