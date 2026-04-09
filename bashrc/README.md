@@ -20,7 +20,7 @@
 
 Добавьте код ниже в конец файла `~/.bashrc` и перезапустите терминал.
 
-Протестировано в `RHEL 8.9`.
+Протестировано в `RHEL 8.9`, должно работать со всеми совместимыми ОС Linux типа `Fedora`, `RedOS` и др.
 
 ```bash
 # Last version and documentation: https://github.com/rin-nas/postgresql-patterns-library/tree/master/bashrc
