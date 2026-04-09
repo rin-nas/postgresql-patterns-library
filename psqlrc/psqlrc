@@ -297,7 +297,7 @@ cross join (select count(*) > 0                as has_unused_repl_slot,
 
 \set PROMPT2 ''
 
-\if `command -v pspg &> /dev/null && echo 1 || echo 0`
+\if `command -v pspg > /dev/null && echo 1 || echo 0`
     \echo '"pspg" pager is used'
     \pset expanded off
     \setenv PAGER 'pspg --reprint-on-exit --blackwhite'
