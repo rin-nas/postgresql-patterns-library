@@ -78,6 +78,10 @@ __prompt_command() {
     else
         PS1+="${Green}\\$ ${Reset}"
     fi
+    
+    # https://askubuntu.com/questions/636944/how-to-change-the-title-of-the-current-terminal-tab-using-only-the-command-line
+    TITLE="\u@\h:\w"
+    PS1+="\e]2;${TITLE}\a"
 }
 ```
 
