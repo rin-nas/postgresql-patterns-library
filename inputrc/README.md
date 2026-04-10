@@ -2,7 +2,13 @@
 
 ## Documentation
 
-Добавляет удобство в терминал.
+`.inputrc` — это конфигурационный файл библиотеки [Readline](https://wiki.archlinux.org/title/Readline), 
+используемый `Bash` и другими оболочками для настройки поведения клавиатуры и редактирования командной строки.
+Позволяет сопоставлять клавиши на функции.
+
+Глобальные настройки хранятся в `/etc/inputrc`, а пользовательские — в `~/.inputrc`.
+
+Конфигурация ниже добавляет удобство в терминал.
 В командной строке можно быстро дополнять **частично введённую команду** из истории ранее выполненных команд, если на клавиатуре нажимать клавиши со стрелками вверх-вниз.
 
 См. так же https://wiki.archlinux.org/title/Readline
@@ -19,6 +25,9 @@ Tested on `RHEL 8.9`.
 
 File  **~/.inputrc**
 ```bash
+# First, include any system-wide bindings and variable assignments
+$include /etc/inputrc
+
 # Use Home/End keyboard keys to navigate current line (same as CTRL+A or E), listing all variants for those keys here
 "\e[1~": beginning-of-line          # Home
 "\e[H": beginning-of-line           # Home
