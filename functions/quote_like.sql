@@ -1,4 +1,4 @@
-create function public.quote_like(text)
+create or replace function public.quote_like(text)
     returns text
     immutable
     returns null on null input

@@ -1,4 +1,4 @@
-CREATE FUNCTION public.tables_diff(t1 regclass, t2 regclass)
+CREATE OR REPLACE FUNCTION public.tables_diff(t1 regclass, t2 regclass)
     returns table(
         "+/-" text,
         line text

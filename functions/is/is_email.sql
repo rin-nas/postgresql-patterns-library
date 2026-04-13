@@ -1,4 +1,4 @@
-create function public.is_email(email text)
+create or replace function public.is_email(email text)
     returns boolean
     parallel safe
     language sql

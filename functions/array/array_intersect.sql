@@ -1,4 +1,4 @@
-create function public.array_intersect(anyarray, anyarray)
+create or replace function public.array_intersect(anyarray, anyarray)
     returns anyarray
     immutable
     strict -- returns null if any parameter is null

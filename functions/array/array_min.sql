@@ -1,4 +1,4 @@
-CREATE FUNCTION public.array_min(anyarray)
+CREATE OR REPLACE FUNCTION public.array_min(anyarray)
     returns anyelement
     immutable
     strict -- returns null if any parameter is null
