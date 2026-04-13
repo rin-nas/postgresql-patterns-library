@@ -4,11 +4,6 @@ create function public.quote_regexp(text)
     immutable
     returns null on null input
     parallel safe -- Postgres 10 or later
-    language plpgsql
+    language sql
     set search_path = ''
-as
-$$
-BEGIN
-    RETURN REGEXP_REPLACE($1, '([[\](){}.+*^$|\\?-])', '\\\1', 'g');
-END;
-$$;
+return regexp_replace($1, '([[\](){}.+*^$|\\?-])', '\\\1', 'g');
