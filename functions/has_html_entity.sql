@@ -2,7 +2,7 @@ create or replace function public.has_html_entity(str text)
     returns boolean
     immutable
     returns null on null input
-    parallel safe -- Postgres 10 or later
+    parallel safe
     language sql
     set search_path = ''
     cost 3
@@ -36,7 +36,7 @@ create or replace function public.has_html_entity(data json)
     returns boolean
     immutable
     returns null on null input
-    parallel safe -- Postgres 10 or later
+    parallel safe
     language sql
     set search_path = ''
     cost 3
@@ -52,7 +52,7 @@ create or replace function public.has_html_entity(data jsonb)
     returns boolean
     immutable
     returns null on null input
-    parallel safe -- Postgres 10 or later
+    parallel safe
     language sql
     set search_path = ''
     cost 3

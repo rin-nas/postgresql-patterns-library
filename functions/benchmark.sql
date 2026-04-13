@@ -2,7 +2,7 @@ CREATE OR REPLACE FUNCTION public.benchmark(loop_count int, sql_expr text)
     returns interval
     volatile --!!!
     returns null on null input -- = strict
-    parallel unsafe --!!! -- Postgres 10 or later
+    parallel unsafe --!!!
     security invoker
     language plpgsql
     set search_path = ''
@@ -29,7 +29,7 @@ CREATE OR REPLACE FUNCTION public.benchmark(timeout interval, sql_expr text)
     returns int
     volatile --!!!
     returns null on null input -- = strict
-    parallel unsafe --!!! -- Postgres 10 or later
+    parallel unsafe --!!!
     security invoker
     language plpgsql
     set search_path = ''

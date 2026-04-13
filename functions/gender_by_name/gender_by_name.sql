@@ -5,7 +5,7 @@ create or replace function depers.gender_by_name(
 ) returns depers.gender
     immutable
     strict -- returns null if any parameter is null
-    parallel safe -- Postgres 10 or later
+    parallel safe
     language sql
     set search_path = ''
 as

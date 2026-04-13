@@ -2,7 +2,7 @@ CREATE OR REPLACE FUNCTION public.fib_neg_seq(total int)
     returns setof int
     immutable
     strict -- returns null if any parameter is null
-    parallel safe -- Postgres 10 or later
+    parallel safe
     security invoker
     language plpgsql
     set search_path = ''

@@ -6,7 +6,7 @@ create or replace function public.jsonb_unnest_recursive_distinct(data jsonb[])
     )
     immutable
     returns null on null input -- = strict
-    parallel safe -- Postgres 10 or later
+    parallel safe
     security invoker
     language sql
     set search_path = ''

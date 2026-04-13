@@ -4,7 +4,7 @@ CREATE OR REPLACE FUNCTION public.sha256(bytea)
     returns text
     immutable
     returns null on null input
-    parallel safe -- postgres 10 or later
+    parallel safe
     language sql
     set search_path = ''
 AS $func$

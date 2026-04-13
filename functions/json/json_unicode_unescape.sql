@@ -2,7 +2,7 @@ create or replace function public.json_unicode_unescape(json)
     returns json
     immutable
     returns null on null input
-    parallel safe -- Postgres 10 or later
+    parallel safe
     language sql
     set search_path = ''
 as

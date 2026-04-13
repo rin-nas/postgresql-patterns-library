@@ -2,7 +2,7 @@ create or replace function public.entropy(s text)
     returns numeric
     immutable
     strict -- returns null if any parameter is null
-    parallel safe -- Postgres 10 or later
+    parallel safe
     security invoker
     language sql
     set search_path = ''
@@ -36,7 +36,7 @@ create or replace function public.entropy(data bytea)
     returns numeric
     immutable
     strict -- returns null if any parameter is null
-    parallel safe -- Postgres 10 or later
+    parallel safe
     security invoker
     language sql
     set search_path = ''

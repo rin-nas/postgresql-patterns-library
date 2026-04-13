@@ -62,7 +62,7 @@ create or replace function public.ts_replace(
     returns tsvector
     stable
     strict -- returns null if any parameter is null
-    parallel safe -- Postgres 10 or later
+    parallel safe
     language plpgsql
     set search_path = ''
     cost 1

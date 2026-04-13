@@ -2,7 +2,7 @@ CREATE OR REPLACE FUNCTION public.sort(anyarray)
     returns anyarray
     immutable
     strict -- returns null if any parameter is null
-    parallel safe -- Postgres 10 or later
+    parallel safe
     security invoker
     language sql
     set search_path = ''

@@ -6,7 +6,7 @@ create or replace function db_audit.grep_ip(str text)
     returns table (order_num int, "all" text, addr inet, port int, mask int)
     stable
     returns null on null input
-    parallel safe -- Postgres 10 or later
+    parallel safe
     language sql
     set search_path = ''
 as $func$

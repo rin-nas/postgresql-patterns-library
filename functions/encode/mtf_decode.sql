@@ -2,7 +2,7 @@ create or replace function public.mtf_decode(a int[])
     returns int[]
     immutable
     strict -- returns null if any parameter is null
-    parallel safe -- Postgres 10 or later
+    parallel safe
     security invoker
     language plpgsql
     set search_path = ''

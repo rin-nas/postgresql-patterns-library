@@ -3,7 +3,7 @@ create or replace function public.iuliia_translate(str text, rules jsonb)
     returns text
     immutable
     strict -- returns null if any parameter is null
-    parallel safe -- Postgres 10 or later
+    parallel safe
     security invoker
     language plpgsql
     set search_path = ''
@@ -61,7 +61,7 @@ create or replace function public.iuliia_translate_mosmetro(str text)
     returns text
     immutable
     strict -- returns null if any parameter is null
-    parallel safe -- Postgres 10 or later
+    parallel safe
     security invoker
     language sql
     set search_path = ''
@@ -188,7 +188,7 @@ create or replace function public.iuliia_translate_wikipedia(str text)
     returns text
     immutable
     strict -- returns null if any parameter is null
-    parallel safe -- Postgres 10 or later
+    parallel safe
     security invoker
     language sql
     set search_path = ''

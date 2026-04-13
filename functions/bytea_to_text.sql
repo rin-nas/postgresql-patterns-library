@@ -2,7 +2,7 @@ create or replace function public.bytea_to_text(bytea)
     returns text 
     immutable
     strict -- returns null if any parameter is null
-    parallel safe -- Postgres 10 or later
+    parallel safe
     security invoker
     language sql
     set search_path = ''

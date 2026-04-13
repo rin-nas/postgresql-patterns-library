@@ -2,7 +2,7 @@ create or replace function public.mask_name(text)
     returns text
     immutable
     returns null on null input
-    parallel safe -- postgres 10 or later
+    parallel safe
     language sql
     set search_path = ''
 as $func$

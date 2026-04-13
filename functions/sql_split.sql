@@ -8,7 +8,7 @@ create or replace function public.sql_split(
     returns text[]
     immutable
     returns null on null input
-    parallel safe -- postgres 10 or later
+    parallel safe
     language plpgsql
     set search_path = ''
     cost 10

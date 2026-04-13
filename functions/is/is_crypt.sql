@@ -5,7 +5,7 @@ create or replace function public.is_crypt(str text)
     returns boolean
     immutable
     returns null on null input
-    parallel safe -- Postgres 10 or later
+    parallel safe
     language sql
     set search_path = ''
     cost 5

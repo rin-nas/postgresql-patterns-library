@@ -12,7 +12,7 @@ create or replace function public.replace_pairs(
     returns text
     immutable
     returns null on null input
-    parallel safe -- postgres 10 or later
+    parallel safe
     language plpgsql
     set search_path = ''
     cost 3

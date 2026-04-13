@@ -6,7 +6,7 @@ create or replace function public.column_description(
     returns text
     volatile --COMMENT is not allowed in a non-volatile function
     --returns null on null input
-    parallel safe -- Postgres 10 or later
+    parallel safe
     language plpgsql
     set search_path = ''
 as

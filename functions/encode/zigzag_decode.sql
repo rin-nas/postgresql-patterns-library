@@ -2,7 +2,7 @@ create or replace function public.zigzag_decode(n int)
     returns int
     immutable
     strict -- returns null if any parameter is null
-    parallel safe -- Postgres 10 or later
+    parallel safe
     security invoker
     language sql
     set search_path = ''
@@ -43,7 +43,7 @@ create or replace function public.zigzag_decode(a int[], delta int default 0)
     returns int[]
     immutable
     strict -- returns null if any parameter is null
-    parallel safe -- Postgres 10 or later
+    parallel safe
     security invoker
     language plpgsql
     set search_path = ''

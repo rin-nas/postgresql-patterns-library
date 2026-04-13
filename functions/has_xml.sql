@@ -1,7 +1,7 @@
 create or replace function public.has_xml(str text) returns boolean
     immutable
     strict -- returns null if any parameter is null
-    parallel safe -- Postgres 10 or later
+    parallel safe
     language plpgsql
     set search_path = ''
     cost 2
