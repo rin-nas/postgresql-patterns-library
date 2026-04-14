@@ -5,14 +5,13 @@ create or replace function public.delta_encode(a int[])
     parallel safe -- Postgres 10+
     language sql
     set search_path = ''
-as
-$func$
+begin atomic
     select array(
         select coalesce(a.v - lag(a.v) over (order by a.o), a.v)
         from unnest(delta_encode.a) with ordinality as a(v,o)
         order by a.o
-    )
-$func$;
+    );
+end;
 
 comment on function public.delta_encode(a int[]) is 'https://en.wikipedia.org/wiki/Delta_encoding';
 

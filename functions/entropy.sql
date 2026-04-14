@@ -6,7 +6,7 @@ create or replace function public.entropy(s text)
     security invoker
     language sql
     set search_path = ''
-as $func$
+begin atomic
     with t(freq) as (
         select count(*) * 1.0 / l.l
         from unnest(string_to_array(entropy.s, null)) as s(char)
@@ -14,8 +14,8 @@ as $func$
         group by s.char, l.l
     )
     select -1 * sum(t.freq * log(2, t.freq))
-    from t
-$func$;
+    from t;
+end;
 
 comment on function public.entropy(s text) is $$
 Calculates Shannon entropy.
@@ -40,7 +40,7 @@ create or replace function public.entropy(data bytea)
     security invoker
     language sql
     set search_path = ''
-as $func$
+begin atomic
     with t(freq) as (
         select count(*) * 1.0 / l.l
         from octet_length(entropy.data) as l(l)
@@ -49,8 +49,8 @@ as $func$
         group by s.code, l.l
     )
     select -1 * sum(t.freq * log(2, t.freq))
-    from t
-$func$;
+    from t;
+end;
 
 
 -- TEST

@@ -35,6 +35,7 @@ create or replace function public.phone_serialize(
     --returns null on null input
     parallel safe
     language sql
+    set search_path = ''
 return
     concat_ws('', country_code::text, separator, area_code, separator, local_number);
 

@@ -6,7 +6,7 @@ create or replace function public.fib_unpack(data bytea)
     security invoker
     language sql
     set search_path = ''
-as $func$
+begin atomic
     with recursive r (b, bits) as (
         select substring(d.bits, 1, p.pos),
                substring(d.bits, p.pos + 2)
@@ -28,7 +28,7 @@ as $func$
         from r,
              coalesce(array(select t.n from public.fib_seq(47) as t(n) offset 2)) as f(seq) --1 2 3 5 8 13 21...
     );
-$func$;
+end;
 
 comment on function public.fib_unpack(data bytea) is 'Unpacks bytea to integers by Fibonacci decoding algorithm';
 

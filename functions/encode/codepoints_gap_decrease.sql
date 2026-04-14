@@ -6,7 +6,7 @@ create or replace function public.codepoints_gap_decrease(a int[])
     security invoker
     language sql
     set search_path = ''
-as $func$
+begin atomic
     select array(
         with u (e) as (
             select unnest(codepoints_gap_decrease.a)
@@ -28,7 +28,7 @@ as $func$
         from u
         cross join gap
     );
-$func$;
+end;
 
 comment on function public.codepoints_gap_decrease(a int[]) is $$
     Используется для улучшения сжатия последовательности юникод кодов универсальными кодами.

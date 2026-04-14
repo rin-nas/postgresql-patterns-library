@@ -10,13 +10,12 @@ create or replace function public.hex_to_bigint(hexval text)
     parallel safe
     language sql
     set search_path = ''
-as
-$$
-select bit_or(get_byte(
-                      decode(lpad(hexval, 32, '0'), 'hex')
-                  , g)::int8 << ((15 - g) * 8))
-from generate_series(0, 15) as g
-$$;
+begin atomic
+    select bit_or(get_byte(
+                          decode(lpad(hexval, 32, '0'), 'hex')
+                      , g)::int8 << ((15 - g) * 8))
+    from generate_series(0, 15) as g;
+end;
 
 -- TEST
 do $$

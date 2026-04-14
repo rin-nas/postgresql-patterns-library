@@ -6,12 +6,12 @@ create or replace function public.string_from_codepoints(a int[])
     security invoker
     language sql
     set search_path = ''
-AS $func$
+begin atomic
     select array_to_string(array(
         select chr(t.code)
         from unnest(string_from_codepoints.a) as t(code)
     ), '');
-$func$;
+end;
 
 comment on function public.string_from_codepoints(a int[]) is 'Converts unicode codepoints to string';
 

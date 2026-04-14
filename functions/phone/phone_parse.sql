@@ -29,8 +29,7 @@ create or replace function public.phone_parse(
     language sql
     set search_path = ''
     cost 10
-as
-$$
+begin atomic
 with t as (
     -- грубая проверка проверка синтаксиса и нормализация номера телефона
     select array_to_string((string_to_array(n, ' '))[1:3], ' ') ||
@@ -101,7 +100,7 @@ where octet_length(replace(t.n, ' ', ''))
       and (allow_national_prefixes or p[4] is null)
       and (allow_spare_codes       or p[5] is null)
       and (not begins_special_spare_code or p[1] is not null);
-$$;
+end;
 
 comment on function public.phone_parse(
     phone text,

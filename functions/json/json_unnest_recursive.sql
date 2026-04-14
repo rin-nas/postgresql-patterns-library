@@ -10,7 +10,7 @@ create or replace function public.json_unnest_recursive(data json)
     security invoker
     language sql
     set search_path = ''
-AS $func$
+begin atomic
     --explain (analyse)
     with recursive r (path, value, member_of) as
     (
@@ -44,7 +44,7 @@ AS $func$
     select r.*
     from r
     where json_typeof(r.value) not in ('object', 'array');
-$func$;
+end;
 
 comment on function public.json_unnest_recursive(data json) is 'Recursive parse nested JSON (arrays and objects), returns keys and its values';
 

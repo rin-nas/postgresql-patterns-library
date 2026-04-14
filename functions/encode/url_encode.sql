@@ -6,18 +6,18 @@ create or replace function public.url_encode(text)
     strict -- returns null if any parameter is null
     language sql
     set search_path = ''
-as $$
-select
-    string_agg(
-            case
-                when octet_length(s.char) > 1 or s.char !~ '[0-9a-zA-Z:/@._?#-]+'
-                then regexp_replace(upper(substring(s.char::bytea::text, 3)), '(..)', E'%\\1', 'g')
-                else s.char
-            end,
-            ''
-        )
-from unnest(string_to_array($1, null)) as s(char);
-$$;
+begin atomic
+    select
+        string_agg(
+                case
+                    when octet_length(s.char) > 1 or s.char !~ '[0-9a-zA-Z:/@._?#-]+'
+                    then regexp_replace(upper(substring(s.char::bytea::text, 3)), '(..)', E'%\\1', 'g')
+                    else s.char
+                end,
+                ''
+            )
+    from unnest(string_to_array($1, null)) as s(char);
+end;
 
 --TEST
 do $$

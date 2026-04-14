@@ -17,8 +17,7 @@ create or replace function public.phone_unserialize(
     parallel safe
     language plpgsql
     set search_path = ''
-as
-$$
+as $$
 declare
     parts text[] not null default array[]::text[];
 begin
@@ -104,13 +103,13 @@ create or replace function public.phone_unserialize(
     --returns null on null input
     parallel safe
     language sql
-as
-$$
+    set search_path = ''
+begin atomic
     select u.country_code::int, u.area_code, u.local_number
-    from phone_unserialize(phone,
+    from public.phone_unserialize(phone,
                                   country_code_example::text, area_code_example, local_number_example,
                                   separator) as u;
-$$;
+end;
 
 comment on function public.phone_unserialize(
     phone text,

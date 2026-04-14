@@ -481,7 +481,7 @@ create or replace function audit.primary_key_columns(entity_oid oid)
     stable
     security definer
     language sql
-as $$
+begin atomic
     -- Looks up the names of a table's primary key columns
     select
         coalesce(
@@ -496,7 +496,7 @@ as $$
     where
         indrelid = $1
         and indisprimary
-$$;
+end;
 ```
 # Find indexes with a high ratio of NULL values
 

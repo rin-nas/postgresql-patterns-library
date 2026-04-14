@@ -49,7 +49,7 @@ create or replace function public.bic_encode(a int[])
     security invoker
     language sql
     set search_path = ''
-as $func$
+begin atomic
 
     with t as (
         select bic_encode.a[ : c.c - 1] as s,
@@ -76,8 +76,7 @@ as $func$
     from b,
          t,
          coalesce(array(select t.n from public.fib_seq(47) as t(n) offset 2)) as f(seq); --1 2 3 5 8 13 21...
-    ;
-$func$;
+end;
 
 comment on function public.bic_encode(a int[]) is $$
     Binary Interpolative Code (BIC) algorithm invented by Moffat and Stuiver

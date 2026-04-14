@@ -6,13 +6,13 @@ create or replace function public.string_to_codepoints(s text)
     security invoker
     language sql
     set search_path = ''
-AS $func$
+begin atomic
     select array(
         select ascii(t.c)
         from unnest(string_to_array(string_to_codepoints.s, null)) as t(c)
         where t.c != ''
     );
-$func$;
+end;
 
 comment on function public.string_to_codepoints(s text) is 'Converts each string character to unicode codepoints';
 

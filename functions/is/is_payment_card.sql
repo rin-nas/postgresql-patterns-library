@@ -2,28 +2,29 @@
 --https://en.wikipedia.org/wiki/Payment_card_number
 --Most credit cards use the Luhn algorithm to validate their numbers. It is a simple checksum that helps detect single digit typos and adjacent digit transposition errors. 
 
-CREATE OR REPLACE FUNCTION public.is_payment_card(smallint[]) RETURNS boolean
-    IMMUTABLE
-    LANGUAGE SQL
+create or replace function public.is_payment_card(smallint[])
+    returns boolean
+    immutable
+    language sql
     set search_path = ''
-AS $$
-  SELECT SUM(
-    CASE WHEN (pos % 2 = 0) THEN
-      2*digit - (CASE WHEN digit < 5 THEN 0 ELSE 9 END)
-    ELSE
-      digit
-    END
-  ) % 10 = 0
-  FROM
-    unnest(ARRAY( -- loop over digit/position
-      SELECT $1[i] -- ... which we read backward
-      FROM generate_subscripts($1,1) AS s(i)
-      ORDER BY i DESC
+begin atomic
+  select sum(
+             case when (pos % 2 = 0) then
+               2*digit - (case when digit < 5 then 0 else 9 end)
+             else
+               digit
+             end
+         ) % 10 = 0
+  from
+    unnest(array( -- loop over digit/position
+      select $1[i] -- ... which we read backward
+      from generate_subscripts($1,1) as s(i)
+      order by i desc
     )
-  ) WITH ordinality AS t (digit, pos)
-$$;
+  ) with ordinality as t (digit, pos);
+end;
 
-CREATE DOMAIN cc_number AS smallint[] CHECK ( is_valid_cc(VALUE) );
+-- CREATE DOMAIN payment_card AS smallint[] CHECK ( public.is_payment_card(VALUE) );
 
 /* alternately, store as text for user friendliness
 

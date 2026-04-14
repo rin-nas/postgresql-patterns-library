@@ -23,38 +23,37 @@ create or replace function public.path_parse(
     language sql
     set search_path = ''
     cost 5
-as
-$$
-select coalesce(case when left(m[1], 1) = '/' then '/' else '' end, '') as root,
-       coalesce(case when m[1] = '/' then '/' else rtrim(m[1], '\/') end, '') as dir,
-       coalesce(m[2], '') as base,
-       coalesce(m[3], '') as name,
-       coalesce(m[4], '') as ext
-from regexp_match(
-             path,
-             $regexp$
-                   ^
-                   ( #1 dir
-                     (?:[^":;*?<>|])*
-                     [\\/]
-                   )?
-                   ( #2 base
-                     ( #3 name
-                       \.?
-                       (?:
-                         (?!\.[^.":;*?<>|\\/]+$)
-                         [^":;*?<>|\\/]
-                       )*
-                     )
-                     (\. #4 ext
-                       [^.":;*?<>|\\/]+
-                     )?
-                   )
-                   $
-               $regexp$,
-             'x'
-         ) as m;
-$$;
+begin atomic
+    select coalesce(case when left(m[1], 1) = '/' then '/' else '' end, '') as root,
+           coalesce(case when m[1] = '/' then '/' else rtrim(m[1], '\/') end, '') as dir,
+           coalesce(m[2], '') as base,
+           coalesce(m[3], '') as name,
+           coalesce(m[4], '') as ext
+    from regexp_match(
+                 path,
+                 $regexp$
+                       ^
+                       ( #1 dir
+                         (?:[^":;*?<>|])*
+                         [\\/]
+                       )?
+                       ( #2 base
+                         ( #3 name
+                           \.?
+                           (?:
+                             (?!\.[^.":;*?<>|\\/]+$)
+                             [^":;*?<>|\\/]
+                           )*
+                         )
+                         (\. #4 ext
+                           [^.":;*?<>|\\/]+
+                         )?
+                       )
+                       $
+                   $regexp$,
+                 'x'
+             ) as m;
+end;
 
 -- TEST
 do $$

@@ -9,8 +9,7 @@ create or replace function public.is_view_column(
     parallel safe
     language sql
     set search_path = ''
-as
-$$
+begin atomic
     select exists (
         select n.nspname as schema_name,
                c.relname as table_name,
@@ -23,7 +22,7 @@ $$
                               and a.attname = is_view_column.column_name
         where n.nspname = is_view_column.schema_name
     );
-$$;
+end;
 
 comment on function public.is_view_column(
     schema_name pg_catalog.name,

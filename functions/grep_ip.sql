@@ -5,7 +5,7 @@ create or replace function public.grep_ip(str text)
     parallel safe
     language sql
     set search_path = ''
-as $func$
+begin atomic
     select (row_number() over ())::int as order_num,
         m[1] as all,
         array_to_string(m[2:5], '.')::inet as addr,
@@ -28,7 +28,7 @@ as $func$
                      where e::int > 255)
       and (m[6] is null or m[6]::int between 1 and 65535)
       and (m[7] is null or m[7]::int < 33);
-$func$;
+end;
 
 comment on function public.grep_ip(str text) is $$
     Захватывает из строки все существующие IP адреса.

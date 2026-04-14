@@ -17,24 +17,23 @@ create or replace function public.phone_format_record(
     parallel safe
     language sql
     set search_path = ''
-as
-$$;
-select
-    case when country_code_example is null or country_code_example = '' then country_code_example
-         else phone_format(in_country_code, country_code_example) end as country_code,
+begin atomic
+    select
+        case when country_code_example is null or country_code_example = '' then country_code_example
+             else public.phone_format(in_country_code, country_code_example) end as country_code,
 
-    left(case when area_code_example is null or area_code_example = '' then area_code_example
-              when area_code_example ~ '^\+\d|^\d+\D+\d' then phone_format(concat_ws('', in_country_code, in_area_code), area_code_example)
-              else phone_format(in_area_code, area_code_example) end,
-         32) as area_code,
+        left(case when area_code_example is null or area_code_example = '' then area_code_example
+                  when area_code_example ~ '^\+\d|^\d+\D+\d' then public.phone_format(concat_ws('', in_country_code, in_area_code), area_code_example)
+                  else public.phone_format(in_area_code, area_code_example) end,
+             32) as area_code,
 
-    left(phone_format(
-            concat_ws('',
-                      case when area_code_example is null or area_code_example = '' then in_area_code else '' end,
-                      in_local_number),
-            local_number_example
-        ), 32) as local_number;
-$$;
+        left(phone_format(
+                concat_ws('',
+                          case when area_code_example is null or area_code_example = '' then in_area_code else '' end,
+                          in_local_number),
+                local_number_example
+            ), 32) as local_number;
+end;
 
 comment on function public.phone_format_record(
     in_country_code text,
@@ -70,12 +69,12 @@ create or replace function public.phone_format_record(
     --returns null on null input
     parallel safe
     language sql
-as
-$$;
+    set search_path = ''
+begin atomic
     select t.country_code::int, t.area_code, t.local_number
     from public.phone_format_record(in_country_code::text, in_area_code, in_local_number,
                                     country_code_example::text, area_code_example, local_number_example) as t;
-$$;
+end;
 
 comment on function public.phone_format_record(
     in_country_code int,
@@ -111,12 +110,12 @@ create or replace function public.phone_format_record(
     --returns null on null input
     parallel safe
     language sql
-as
-$$;
+    set search_path = ''
+begin atomic
     select t.*
     from public.phone_format_record(in_country_code::text, in_area_code, in_local_number,
                                     country_code_example, area_code_example, local_number_example) as t;
-$$;
+end;
 
 
 comment on function public.phone_format_record(
@@ -153,12 +152,12 @@ create or replace function public.phone_format_record(
     --returns null on null input
     parallel safe
     language sql
-as
-$$;
+    set search_path = ''
+begin atomic
     select t.country_code::int, t.area_code, t.local_number
     from public.phone_format_record(in_country_code, in_area_code, in_local_number,
                                     country_code_example::text, area_code_example, local_number_example) as t;
-$$;
+end;
 
 comment on function public.phone_format_record(
     in_country_code text,

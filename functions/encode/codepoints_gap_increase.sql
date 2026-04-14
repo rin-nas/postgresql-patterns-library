@@ -6,14 +6,14 @@ create or replace function public.codepoints_gap_increase(a int[])
     security invoker
     language sql
     set search_path = ''
-as $func$
+begin atomic
     select array(
         select case when u.e > a[1] then u.e + a[2] - 1
                     else u.e
                end
         from unnest(a[3:]) as u(e)
     );
-$func$;
+end;
 
 comment on function public.codepoints_gap_increase(a int[]) is 'Функция, обратная к codepoints_gap_decrease(a int[])';
 

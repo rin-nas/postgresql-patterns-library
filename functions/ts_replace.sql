@@ -10,8 +10,7 @@ create or replace function public.ts_replace(
     language sql
     set search_path = ''
     cost 1
-as
-$function$
+begin atomic
     with s as (
         select case when lexeme = str_from then str_to
                     else lexeme
@@ -32,7 +31,7 @@ $function$
         from s
         group by new_lexeme
     ), ' ')::tsvector;
-$function$;
+end;
 
 comment on function public.ts_replace(vector tsvector, str_from text, str_to text) is 'Заменяет заданную лексему в векторе';
 

@@ -12,15 +12,14 @@ create or replace function public.email_parse(
     language sql
     set search_path = ''
     cost 5
-as
-$$
+begin atomic
     -- https://en.wikipedia.org/wiki/Email_address
     select t[1] as username, t[2] as domain
     from regexp_match(email, '^(.+)@([^@\s]+)$', '') as t
     where octet_length(email) between 6 and 320
       and position('@' in email) > 1 --speed improves
       and octet_length(t[1]) <= 64 and octet_length(t[2]) <= 255;
-$$;
+end;
 
 -- TEST
 do $$

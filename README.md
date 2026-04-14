@@ -216,7 +216,7 @@ WHERE email IS NOT NULL    -- skip NULL
 
 #### Как провалидировать значение поля, только если оно явно указано в UPDATE запросе?
 
-Ограничения [`CHECK()`](https://postgrespro.ru/docs/postgresql/12/ddl-constraints#DDL-CONSTRAINTS-CHECK-CONSTRAINTS) для каждого поля таблицы срабатывают каждый раз при добавлении или обновлении записи таблицы. При добавлении записи всё логично — значение нужно проверить, даже если это значение по-умолчанию. Однако, в запросе на обновление даных даже неважно, изменилось значение поля на самом деле или нет (ну почему [так сделано](test/check_constraint_stupid_demo.sql)?). Если в `CHECK` проверка ресурсоёмая, то она может существенно замедлить обновление большого количества записей в таблице. Пример ресурсоёмкой проверки — валидация синтаксиса email функцией [`is_email()`](functions/is/is_email.sql).
+Ограничения [`CHECK()`](https://postgrespro.ru/docs/postgresql/current/ddl-constraints#DDL-CONSTRAINTS-CHECK-CONSTRAINTS) для каждого поля таблицы срабатывают каждый раз при добавлении или обновлении записи таблицы. При добавлении записи всё логично — значение нужно проверить, даже если это значение по-умолчанию. Однако, в запросе на обновление даных даже неважно, изменилось значение поля на самом деле или нет (ну почему [так сделано](test/check_constraint_stupid_demo.sql)?). Если в `CHECK` проверка ресурсоёмая, то она может существенно замедлить обновление большого количества записей в таблице. Пример ресурсоёмкой проверки — валидация синтаксиса email функцией [`is_email()`](functions/is/is_email.sql).
 
 Обойти данную проблему можно с использованием триггеров. 
 Предположим, есть таблица `person` с колонкой `email`.
@@ -469,31 +469,22 @@ inner join unnest(array[4, 5, 6, 7, 8]) a3 on a1 = a3; -- {4,5}
 
 #### Как получить уникальные элементы массива или отсортировать их?
 
-Для `int[]` лучше воспользоваться готовыми функциями `uniq()` и `sort()` из модуля [intarray](https://postgrespro.ru/docs/postgresql/12/intarray).
+Для `int[]` лучше воспользоваться готовыми функциями `uniq()` и `sort()` из модуля [intarray](https://postgrespro.ru/docs/postgresql/current/intarray).
 
-```sql
--- способ 1
-SELECT ARRAY_AGG(DISTINCT a ORDER BY a) FROM UNNEST(ARRAY[1,2,3,2,1]) t(a); -- {1,2,3}
-
--- способ 2
-SELECT ARRAY(SELECT DISTINCT UNNEST(ARRAY[1,2,3,2,1]) ORDER BY 1); -- {1,2,3}
-
--- готовая функция
-CREATE FUNCTION array_unique(anyarray) RETURNS anyarray AS $$
-SELECT array_agg(DISTINCT x ORDER BY x) FROM unnest($1) t(x);
-$$ LANGUAGE SQL IMMUTABLE;
-```
+Смотри функции [`array_unique.sql`](functions/array/array_unique.sql)
+             и [`array_unique_stable.sql`](functions/array/array_unique_stable.sql) 
 
 #### Как получить отличающиеся элементы двух массивов?
 
-Смотри [`array_diff.sql`](functions/array/array_diff.sql)
+Смотри функцию [`array_diff.sql`](functions/array/array_diff.sql)
 
 #### Как сделать внешний ключ на элементы массива?
 
 Нельзя использовать колонку-массив для хранения элементов, значения которых ссылаются на значения колонки из другой таблицы по внешнему ключу (FK). Это не соответствует [первой нормальной форме](https://ru.wikipedia.org/wiki/%D0%9F%D0%B5%D1%80%D0%B2%D0%B0%D1%8F_%D0%BD%D0%BE%D1%80%D0%BC%D0%B0%D0%BB%D1%8C%D0%BD%D0%B0%D1%8F_%D1%84%D0%BE%D1%80%D0%BC%D0%B0) в реляционной модели данных. Необходимо использовать дополнительную таблицу в отношении "один ко многим". Так же в этом случае для поддержки целостности данных по внешним ключам и исключению дубликатов доступны штатные механизмы.
 
 Однако, технически это возможно. Ниже пример проверки значений массива без триггеров. Протестировано на PostgreSQL 10.5.
-Т.к. FK для массивов делать нельзя, код функции годится как шаблон для разработки сложных ограничений для проверки элементов массива (например [ltree](https://postgrespro.ru/docs/postgrespro/12/ltree)).
+Т.к. FK для массивов делать нельзя, код функции годится как шаблон для разработки сложных ограничений для проверки элементов массива 
+(например [ltree](https://postgrespro.ru/docs/postgrespro/current/ltree)).
 
 ```sql
 create schema if not exists test;
@@ -543,7 +534,7 @@ insert into test.t2 (id, t1_ids) values (default, array[1,2,3]); --ok
 insert into test.t2 (id, t1_ids) values (default, array[1,2,3,555]); --error
 ```
 
-Пример добавления ограничения для типа поля [ltree](https://postgrespro.ru/docs/postgrespro/12/ltree):
+Пример добавления ограничения для типа поля [ltree](https://postgrespro.ru/docs/postgrespro/current/ltree):
 ```sql
 alter table region
     add constraint region_tree_path_ids_check
@@ -1503,7 +1494,7 @@ begin
     
     if (select count(*) from order o where o.client_id = new.client_id) > 5 then
         /*
-        https://postgrespro.ru/docs/postgresql/14/errcodes-appendix - это коды ошибок в БД
+        https://postgrespro.ru/docs/postgresql/current/errcodes-appendix - это коды ошибок в БД
         БД умеет кидать ошибки с произвольными кодами, поэтому для 23U01 получается так:
         23 - это класс, U - user defined, 01 - порядковый номер
         Польза таких кодов ошибок в том, что по ним можно быстро найти проблемное место в программном коде приложения.
@@ -1693,7 +1684,7 @@ ALTER TABLE group
             REFERENCES company (id)
             ON UPDATE CASCADE
             ON DELETE CASCADE
-        NOT VALID; -- https://postgrespro.ru/docs/postgresql/12/sql-altertable#SQL-ALTERTABLE-NOTES
+        NOT VALID; -- https://postgrespro.ru/docs/postgresql/current/sql-altertable#SQL-ALTERTABLE-NOTES
 
 ALTER TABLE group
     VALIDATE CONSTRAINT group_company_id_fk;
@@ -1772,7 +1763,7 @@ from {schema}.{table};
 
 ### Как создать или пересоздать индекс в существующей таблице без её блокирования?
 
-Создание или удаление индекса без блокировки обеспечивается конкурентным режимом и флагом [`CONCURRENTLY`](https://postgrespro.ru/docs/postgresql/12/sql-createindex#SQL-CREATEINDEX-CONCURRENTLY). Но у этого способа есть несущественные недостатки:
+Создание или удаление индекса без блокировки обеспечивается конкурентным режимом и флагом [`CONCURRENTLY`](https://postgrespro.ru/docs/postgresql/current/sql-createindex#SQL-CREATEINDEX-CONCURRENTLY). Но у этого способа есть несущественные недостатки:
 1. Индекс создаётся/удаляется дольше (2 сканирования таблицы вместо одного).
 1. Запускать эти запросы нужно НЕ в транзакции, а вручную последовательно. 
 1. В случае неудачи построения индекса или его принудительного терминирования будет создан "нерабочий/битый" индекс. В этом случае его нужно удалить и создать заново.
@@ -1821,7 +1812,7 @@ $$;
 
 Если СУБД в SQL запросе не хочет использовать индекс, хотя должна, то нужно проверить, что индекс небитый.
 
-Цель перестроения индекса - уменьшить занимаемый размер из-за [фрагментации](https://github.com/ioguix/pgsql-bloat-estimation). Команда REINDEX имеет опцию [CONCURRENTLY](https://www.postgresql.org/docs/12/sql-reindex.html), которая появилась только в PostgreSQL 12. В более ранних версиях можно сделать так (неблокирующая альтернатива команде REINDEX):
+Цель перестроения индекса - уменьшить занимаемый размер из-за [фрагментации](https://github.com/ioguix/pgsql-bloat-estimation). Команда REINDEX имеет опцию [CONCURRENTLY](https://www.postgresql.org/docs/current/sql-reindex.html), которая появилась только в PostgreSQL 12. В более ранних версиях можно сделать так (неблокирующая альтернатива команде REINDEX):
 
 
 ```sql
@@ -1993,7 +1984,7 @@ where true
   --and a.query ~* '\mDELETE\M'
   --and a.application_name ilike '%TEST%'
   --and a.state !~ '^idle\M' --idle, idle in transaction, idle in transaction (aborted)
-  --and a.wait_event = 'ClientRead' --https://postgrespro.ru/docs/postgresql/12/monitoring-stats#WAIT-EVENT-TABLE
+  --and a.wait_event = 'ClientRead' --https://postgrespro.ru/docs/postgresql/current/monitoring-stats#WAIT-EVENT-TABLE
   --and (e.state_change_elapsed > interval '1 minutes' or xact_elapsed > interval '1 minutes')
 order by greatest(e.state_change_elapsed, e.query_elapsed, e.xact_elapsed) desc;
 ```
@@ -2357,7 +2348,10 @@ FROM (
 Этот код не даёт 100% гарантии, а только уменьшает количество заблокированных запросов.
 После того, как блокировка взята, другие запросы, могут встать в очередь, ожидая отпускания блокировки.
 
-Вначале каждой миграции, которая выполняется внутри транзакции, нужно изменить настройки конфигурации [`lock_timeout`](https://postgrespro.ru/docs/postgresql/16/runtime-config-client#GUC-LOCK-TIMEOUT) и [`statement_timeout`](https://postgrespro.ru/docs/postgresql/16/runtime-config-client#GUC-STATEMENT-TIMEOUT) и [`idle_in_transaction_session_timeout`](https://postgrespro.ru/docs/postgresql/11/runtime-config-client#GUC-IDLE-IN-TRANSACTION-SESSION-TIMEOUT) командой [SET LOCAL](https://postgrespro.ru/docs/postgresql/16/sql-set).
+Вначале каждой миграции, которая выполняется внутри транзакции, нужно изменить настройки конфигурации 
+[`lock_timeout`](https://postgrespro.ru/docs/postgresql/current/runtime-config-client#GUC-LOCK-TIMEOUT) и 
+[`statement_timeout`](https://postgrespro.ru/docs/postgresql/current/runtime-config-client#GUC-STATEMENT-TIMEOUT) и 
+[`idle_in_transaction_session_timeout`](https://postgrespro.ru/docs/postgresql/11/runtime-config-client#GUC-IDLE-IN-TRANSACTION-SESSION-TIMEOUT) командой [SET LOCAL](https://postgrespro.ru/docs/postgresql/current/sql-set).
 Действие SET LOCAL продолжается только до конца текущей транзакции, независимо от того, фиксируется она или нет. 
 При выполнении такой команды вне блока транзакции выдаётся предупреждение и больше ничего не происходит.
 
@@ -2667,11 +2661,11 @@ checkpoint;
 Если PostgreSQL уже не запускается из-за нехватки места на диске:
 
 ```bash
-# /usr/pgsql-12/bin/pg_controldata -D /var/lib/pgsql/12/data | grep "Latest checkpoint's REDO WAL file" | cut -d: -f2 | tr -d " "
+# /usr/pgsql-12/bin/pg_controldata -D /var/lib/pgsql/18/data | grep "Latest checkpoint's REDO WAL file" | cut -d: -f2 | tr -d " "
 000000020001CD9E0000006F
 
-# /usr/pgsql-12/bin/pg_archivecleanup -n /var/lib/pgsql/12/data/pg_wal 000000020001CD9E0000006F # посмотреть, что будет удалено
-# /usr/pgsql-12/bin/pg_archivecleanup -d /var/lib/pgsql/12/data/pg_wal 000000020001CD9E0000006F # удалить
+# /usr/pgsql-12/bin/pg_archivecleanup -n /var/lib/pgsql/18/data/pg_wal 000000020001CD9E0000006F # посмотреть, что будет удалено
+# /usr/pgsql-12/bin/pg_archivecleanup -d /var/lib/pgsql/18/data/pg_wal 000000020001CD9E0000006F # удалить
 
 ```
 

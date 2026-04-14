@@ -6,7 +6,7 @@ create or replace function public.bit_from_bytea(data bytea)
     security invoker
     language sql
     set search_path = ''
-as $func$
+begin atomic
     select public.bit_agg(
                get_byte(
                    substring(bit_from_bytea.data from g.i for 1),
@@ -14,7 +14,7 @@ as $func$
                )::bit(8)
            )
     from generate_series(1, octet_length(bit_from_bytea.data)) as g(i);
-$func$;
+end;
 
 comment on function public.bit_from_bytea(data bytea) is 'Converts bytea to bit varying type';
 

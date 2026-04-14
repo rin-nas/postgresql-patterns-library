@@ -6,7 +6,7 @@ create or replace function public.fib_pack(a int[])
     security invoker
     language sql
     set search_path = ''
-as $func$
+begin atomic
     select coalesce(
                public.bit_to_bytea(
                    public.bit_agg(
@@ -19,7 +19,7 @@ as $func$
            )
     from unnest(a) as u(dec),
          coalesce(array(select t.n from public.fib_seq(47) as t(n) offset 2)) as f(seq); --1 2 3 5 8 13 21...
-$func$;
+end;
 
 comment on function public.fib_pack(a int[]) is 'Packs integers (with values > 0) by Fibonacci encoding algorithm to bytea';
 

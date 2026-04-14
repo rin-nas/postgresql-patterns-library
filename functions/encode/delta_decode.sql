@@ -5,14 +5,13 @@ create or replace function public.delta_decode(a int[])
     parallel safe -- Postgres 10+
     language sql
     set search_path = ''
-as
-$func$
+begin atomic
     select array(
         select sum(a.v) over (order by a.o rows between unbounded preceding and current row)
         from unnest(delta_decode.a) with ordinality as a(v, o)
         order by a.o
-    )
-$func$;
+    );
+end;
 
 comment on function public.delta_decode(a int[]) is 'https://en.wikipedia.org/wiki/Delta_encoding';
 

@@ -10,7 +10,7 @@ create or replace function public.jsonb_unnest_recursive_distinct(data jsonb[])
     security invoker
     language sql
     set search_path = ''
-as $func$
+begin atomic
     --explain (analyse)
     with recursive r (path, value, member_of) as
     (
@@ -44,7 +44,7 @@ as $func$
     select r.*
     from r
     where jsonb_typeof(r.value) not in ('object', 'array');
-$func$;
+end;
 
 comment on function public.jsonb_unnest_recursive_distinct(arr_data jsonb[])
     is 'Recursive parse nested JSONs (arrays and objects), returns distinct keys and its values';

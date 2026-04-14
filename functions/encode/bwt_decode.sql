@@ -6,7 +6,7 @@ create or replace function public.bwt_decode(s text, eob char)
     security invoker
     language sql
     set search_path = ''
-as $func$
+begin atomic
 
     --https://youtu.be/meKCBruvPZ0?t=1110
     --http://guanine.evolbio.mpg.de/cgi-bin/bwt/bwt.cgi.pl
@@ -35,10 +35,11 @@ as $func$
                    offset 1 --without eob
                ), '') as s
     )
-    select case when octet_length(o.s) + octet_length(bwt_decode.eob) = octet_length(bwt_decode.s) then o.s end
-    from o
+    select case when octet_length(o.s) + octet_length(bwt_decode.eob) = octet_length(bwt_decode.s) then o.s
+           end
+    from o;
 
-$func$;
+end;
 
 comment on function public.bwt_decode(s text, eob char) is $$
     https://en.wikipedia.org/wiki/Burrows%E2%80%93Wheeler_transform
