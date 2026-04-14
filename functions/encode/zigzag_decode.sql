@@ -6,9 +6,8 @@ create or replace function public.zigzag_decode(n int)
     security invoker
     language sql
     set search_path = ''
-as $func$
-    select (n >> 1) # - (n & 1);
-$func$;
+return
+    (n >> 1) # - (n & 1);
 
 comment on function public.zigzag_decode(n int) is $$
     Converts a zigzag-encoded unsigned integer to signed integer.

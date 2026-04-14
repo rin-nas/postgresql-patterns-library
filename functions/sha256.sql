@@ -1,14 +1,13 @@
 -- The function needs the pgcrypto package
 
-CREATE OR REPLACE FUNCTION public.sha256(bytea)
+create or replace function public.sha256(bytea)
     returns text
     immutable
     returns null on null input
     parallel safe
     language sql
     set search_path = ''
-AS $func$
-    SELECT ENCODE(digest($1, 'sha256'), 'hex')
-$func$;
+return
+    encode(digest($1, 'sha256'), 'hex');
 
-COMMENT ON FUNCTION public.sha256(bytea) IS 'Returns a SHA254 hash for the given string.';
+comment on function public.sha256(bytea) IS 'Returns a SHA254 hash for the given string.';

@@ -40,14 +40,12 @@ create or replace function public.is_view_column(
     parallel safe
     language sql
     set search_path = ''
-as
-$$
-    select public.is_view_column(
+return
+    public.is_view_column(
         is_view_column.r.schema::pg_catalog.name,
         is_view_column.r.view::pg_catalog.name,
         is_view_column.r.column
     );
-$$;
 
 comment on function public.is_view_column(
     r public.view_column_type

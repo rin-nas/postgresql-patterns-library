@@ -6,14 +6,12 @@ create or replace function public.is_ogrn(str text)
     language sql
     set search_path = ''
     cost 2
-as
-$$
+return
     --https://ru.wikipedia.org/wiki/Основной_государственный_регистрационный_номер
     --http://www.consultant.ru/cons/cgi/online.cgi?req=doc;base=LAW;n=179683
-    select  octet_length(str) = 13
-            and str !~ '\D'
-            and right((left(str, 12)::bigint % 11)::text, 1) = right(str, 1)
-$$;
+    octet_length(str) = 13
+    and str !~ '\D'
+    and right((left(str, 12)::bigint % 11)::text, 1) = right(str, 1);
 
 comment on function public.is_ogrn(text) is 'Проверяет, что переданная строка является ОГРН (основной государственный регистрационный номер)';
 

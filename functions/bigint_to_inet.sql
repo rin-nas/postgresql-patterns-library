@@ -6,6 +6,6 @@ create or replace function public.bigint_to_inet(bigint)
     security invoker
     language sql
     set search_path = ''
-as $func$
-    select (($1>>24&255)||'.'||($1>>16&255)||'.'||($1>>8&255)||'.'||($1>>0&255))::inet;
-$func$;
+return
+    concat_ws('.', ($1>>24&255), ($1>>16&255), ($1>>8&255), ($1>>0&255))::inet;
+

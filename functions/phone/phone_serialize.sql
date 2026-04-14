@@ -11,10 +11,8 @@ create or replace function public.phone_serialize(
     parallel safe
     language sql
     set search_path = ''
-as
-$$
-    select concat_ws('', country_code, separator, area_code, separator, local_number);
-$$;
+return
+    concat_ws('', country_code, separator, area_code, separator, local_number);
 
 comment on function public.phone_serialize(
     country_code text,
@@ -37,10 +35,8 @@ create or replace function public.phone_serialize(
     --returns null on null input
     parallel safe
     language sql
-as
-$$
-    select public.phone_serialize(country_code::text, area_code, local_number);
-$$;
+return
+    concat_ws('', country_code::text, separator, area_code, separator, local_number);
 
 comment on function public.phone_serialize(
     country_code int,

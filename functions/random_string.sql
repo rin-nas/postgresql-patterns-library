@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION public.random_string(
+create or replace function public.random_string(
     len integer,
     chars varchar(255) default 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
 )
@@ -10,8 +10,8 @@ CREATE OR REPLACE FUNCTION public.random_string(
     returns null on null input
     security invoker
     set search_path=''
-AS $$
-    SELECT array_to_string(array(
+as $$
+    select array_to_string(array(
         select substr(chars,((random()*(length(chars)-1)+1)::integer),1)
         from generate_series(1, len)
     ), '');

@@ -6,9 +6,8 @@ create or replace function public.array_add(a int[], n int)
     security invoker
     language sql
     set search_path = ''
-as $$
-    select array(select x + n from unnest(a) t(x));
-$$;
+return
+    array(select x + n from unnest(a) t(x));
 
 comment on function public.array_add(a int[], n int) is 'Add value to each element of an array';
 

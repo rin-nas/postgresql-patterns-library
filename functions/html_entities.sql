@@ -5,11 +5,11 @@ create or replace function public.html_entities()
     parallel safe
     language sql
     set search_path = ''
-as $func$
+return
     -- Last Updated 24 April 2023
     -- https://html.spec.whatwg.org/multipage/named-characters.html
     -- https://html.spec.whatwg.org/entities.json
-    select $${
+$${
   "&AElig": { "codepoints": [198], "characters": "\u00C6" },
   "&AElig;": { "codepoints": [198], "characters": "\u00C6" },
   "&AMP": { "codepoints": [38], "characters": "\u0026" },
@@ -2242,8 +2242,6 @@ as $func$
   "&zwj;": { "codepoints": [8205], "characters": "\u200D" },
   "&zwnj;": { "codepoints": [8204], "characters": "\u200C" }
 }$$::jsonb;
-
-$func$;
 
 comment on function public.html_entities() is 'Returns HTML entities as https://html.spec.whatwg.org/entities.json';
 

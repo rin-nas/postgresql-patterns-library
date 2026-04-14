@@ -106,14 +106,12 @@ create or replace function public.phone_normalize(
     parallel safe
     language sql
     set search_path = ''
-as
-$$
-    select public.phone_normalize(
-                   nullif(trim(country_code), '')::int,
-                   area_code,
-                   local_number
-               )
-$$;
+return
+    public.phone_normalize(
+        nullif(trim(country_code), '')::int,
+        area_code,
+        local_number
+    );
 
 create or replace function public.phone_normalize(
     phone text
@@ -124,18 +122,15 @@ create or replace function public.phone_normalize(
     parallel safe
     language sql
     set search_path = ''
-as
-$$
-    select
-        case when --speed improves: номер телефона в международном формате E.164 ?
-                  left(phone, 1) = '+'
-                  and octet_length(phone)
-                      between 1/*+*/ + 8 --https://stackoverflow.com/questions/14894899/what-is-the-minimum-length-of-a-valid-international-phone-number
-                      and 1/*+*/ + 15  --https://en.wikipedia.org/wiki/E.164 and https://en.wikipedia.org/wiki/Telephone_numbering_plan)
-                  and phone ~ '^\+\d+$' then phone
-             else public.phone_normalize(null, null, phone)
-        end;
-$$;
+return
+    case when --speed improves: номер телефона в международном формате E.164 ?
+              left(phone, 1) = '+'
+              and octet_length(phone)
+                  between 1/*+*/ + 8 --https://stackoverflow.com/questions/14894899/what-is-the-minimum-length-of-a-valid-international-phone-number
+                  and 1/*+*/ + 15  --https://en.wikipedia.org/wiki/E.164 and https://en.wikipedia.org/wiki/Telephone_numbering_plan)
+              and phone ~ '^\+\d+$' then phone
+         else public.phone_normalize(null, null, phone)
+    end;
 
 
 --TEST

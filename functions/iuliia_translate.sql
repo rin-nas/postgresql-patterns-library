@@ -65,9 +65,8 @@ create or replace function public.iuliia_translate_mosmetro(str text)
     security invoker
     language sql
     set search_path = ''
-as
-$$
-select public.iuliia_translate(
+return
+public.iuliia_translate(
     str,
     -- https://github.com/nalgeon/iuliia/blob/master/mosmetro.json
     '{
@@ -173,7 +172,6 @@ select public.iuliia_translate(
   ]
 }'::jsonb
 );
-$$;
 
 comment on function public.iuliia_translate_mosmetro(str text)
     is 'Транслитерация текста с правилами транслитерации Мосметро, см. github.com/nalgeon/iuliia/blob/master/mosmetro.json';
@@ -192,9 +190,8 @@ create or replace function public.iuliia_translate_wikipedia(str text)
     security invoker
     language sql
     set search_path = ''
-as
-$$
-select public.iuliia_translate(
+return
+public.iuliia_translate(
    str,
    -- https://github.com/nalgeon/iuliia/blob/master/wikipedia.json
    '{
@@ -293,7 +290,6 @@ select public.iuliia_translate(
      ]
    }'::jsonb
 );
-$$;
 
 -- public.iuliia_translate_mosmetro() tests
 DO $$

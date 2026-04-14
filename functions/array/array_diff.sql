@@ -15,11 +15,14 @@ as $$
     );
 $$;
 
-comment on function public.array_diff(anyarray, anyarray) is 'Compares first array against second array. Returns the values in first array that are not present second array.';
+comment on function public.array_diff(anyarray, anyarray)
+  is 'Compares first array against second array. Returns the values in first array that are not present second array.';
 
 --TEST
 do $$
 begin
+    -- поведение одинаковое с одноимённой функцией на PHP
+    assert public.array_diff(array[2, 4, 7, 8], array[1, 2, 3, 4, 5]) = array[7,8];
     assert public.array_diff(array[8,2,2,null,3,1,3,4,7,5,null], array[3,5,3,5]) = array[8,2,2,null,1,4,7,null];
     assert public.array_diff(array[8,2,2,null,3,1,3,4,7,5,null], array[]::int[]) = array[8,2,2,null,3,1,3,4,7,5,null];
     assert public.array_diff(array[]::int[], array[3,5,3,5]) = array[]::int[];

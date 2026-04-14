@@ -486,21 +486,7 @@ $$ LANGUAGE SQL IMMUTABLE;
 
 #### Как получить отличающиеся элементы двух массивов?
 
-```sql
-create or replace function array_diff(anyarray, anyarray)
-    returns anyarray
-    language sql
-as $$
-select array(
-    select *
-    from (select unnest($1) as element) t
-    where element not in (select unnest($2))
-);
-$$;
-
--- поведение одинаковое с одноимённой функцией на PHP
-select array_diff(array[2, 4, 7, 8], array[1, 2, 3, 4, 5]); -- {7,8}
-```
+Смотри [`array_diff.sql`](functions/array/array_diff.sql)
 
 #### Как сделать внешний ключ на элементы массива?
 

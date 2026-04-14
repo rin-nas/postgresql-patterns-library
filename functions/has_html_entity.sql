@@ -6,9 +6,8 @@ create or replace function public.has_html_entity(str text)
     language sql
     set search_path = ''
     cost 3
-as
-$$
-select position('&' in str) > 0 --speed improves
+return
+       position('&' in str) > 0 --speed improves
        and regexp_match(
             str,
             -- https://stackoverflow.com/questions/15532252/why-is-reg-being-rendered-as-without-the-bounding-semicolon
@@ -26,8 +25,7 @@ select position('&' in str) > 0 --speed improves
                       |  x[\da-fA-F]+ #hex
                     ) ;
             ))
-            $regexp$, 'x') is not null
-$$;
+            $regexp$, 'x') is not null;
 
 comment on function public.has_html_entity(text) is 'Проверяет, что переданная строка содержит HTML сущность';
 
@@ -40,10 +38,8 @@ create or replace function public.has_html_entity(data json)
     language sql
     set search_path = ''
     cost 3
-as
-$$
-    select public.has_html_entity(data::text);
-$$;
+return
+    public.has_html_entity(data::text);
 
 comment on function public.has_html_entity(json) is 'Проверяет, что JSON содержит HTML сущность';
 
@@ -56,10 +52,8 @@ create or replace function public.has_html_entity(data jsonb)
     language sql
     set search_path = ''
     cost 3
-as
-$$
-    select public.has_html_entity(data::text);
-$$;
+return
+    public.has_html_entity(data::text);
 
 comment on function public.has_html_entity(jsonb) is 'Проверяет, что JSONB содержит HTML сущность';
 

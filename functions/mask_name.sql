@@ -5,9 +5,8 @@ create or replace function public.mask_name(text)
     parallel safe
     language sql
     set search_path = ''
-as $func$
-    select rpad(upper(left($1, 1)), char_length($1), '*');
-$func$;
+return
+    rpad(upper(left($1, 1)), char_length($1), '*');
 
 comment on function public.mask_name(text) is
     'Маскирует имя пользователя (имя, фамилию, отчество). Оставляет первую букву в верхнем регистре, остальные заменяет на звёздочку';

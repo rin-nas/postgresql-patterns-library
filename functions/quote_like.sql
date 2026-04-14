@@ -5,7 +5,8 @@ create or replace function public.quote_like(text)
     parallel safe
     language sql
     set search_path = ''
-return replace(replace(replace($1
-                               , '\', '\\') -- must come first!
-                               , '_', '\_')
-                               , '%', '\%');
+return
+    replace(replace(replace($1
+                            , '\', '\\') -- must come first!
+                            , '_', '\_')
+                            , '%', '\%');

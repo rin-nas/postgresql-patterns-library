@@ -6,4 +6,5 @@ create or replace function public.quote_regexp(text)
     parallel safe
     language sql
     set search_path = ''
-return regexp_replace($1, '([[\](){}.+*^$|\\?-])', '\\\1', 'g');
+return
+    regexp_replace($1, '([[\](){}.+*^$|\\?-])', '\\\1', 'g');

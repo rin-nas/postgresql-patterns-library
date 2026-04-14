@@ -40,14 +40,12 @@ create or replace function public.is_table_column(
     parallel safe
     language sql
     set search_path = ''
-as
-$$
-    select public.is_table_column(
+return
+    public.is_table_column(
         is_table_column.r.schema::pg_catalog.name,
         is_table_column.r.table::pg_catalog.name,
         is_table_column.r.column
     );
-$$;
 
 comment on function public.is_table_column(
     r public.table_column_type

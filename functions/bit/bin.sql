@@ -76,8 +76,7 @@ create or replace function public.bin(n int, length int)
     security invoker
     language sql
     set search_path = ''
-AS $func$
-select
+return
     case length
         when 1 then n::bit(1)
         when 2 then n::bit(2)
@@ -111,8 +110,7 @@ select
         when 30 then n::bit(30)
         when 31 then n::bit(31)
         when 32 then n::bit(32)
-    end
-$func$;
+    end;
 
 comment on function public.bin(n int, length int) is 'Convert from an integer into a bit representation with fixed length';
 

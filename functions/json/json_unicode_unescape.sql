@@ -5,10 +5,8 @@ create or replace function public.json_unicode_unescape(json)
     parallel safe
     language sql
     set search_path = ''
-as
-$func$
-    select $1::jsonb::json;
-$func$;
+return
+    $1::jsonb::json;
 
 comment on function public.json_unicode_unescape(json) is $$
     Evaluate escaped Unicode characters in the argument.

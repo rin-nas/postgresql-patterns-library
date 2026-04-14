@@ -6,9 +6,7 @@ create or replace function public.is_bik(str text)
     language sql
     set search_path = ''
     cost 5
-as
-$$
-select
+return
     octet_length(str) = 9
     and regexp_match(
         str,
@@ -19,8 +17,7 @@ select
            [012]
            \d{8}
           $
-        $regexp$, 'x') is not null
-$$;
+        $regexp$, 'x') is not null;
 
 comment on function public.is_bik(text) is 'Проверяет, что переданная строка является БИК (Банковский Идентификационный Код)';
 

@@ -6,10 +6,9 @@ create or replace function public.is_email(email text)
     immutable
     returns null on null input
     cost 10
-as
-$$
+return
 -- https://regex101.com/r/Q4dsL5/14
-select regexp_match(email, $regexp$
+regexp_match(email, $regexp$
 ^
 #(?<![-!#$%&'*+/=?^_`{|}~@."\]\\a-zA-Zа-яА-ЯёЁ\d]) #граница начала email для захвата в тексте (здесь не используется)
 (?:
@@ -61,7 +60,6 @@ select regexp_match(email, $regexp$
 $
 $regexp$, 'sx') is not null;
 
-$$;
 
 comment on function public.is_email(email text) is $$
 Проверяет email по спецификации https://en.wikipedia.org/wiki/Email_address с небольшими отклонениями.

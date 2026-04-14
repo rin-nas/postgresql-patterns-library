@@ -10,10 +10,9 @@ create or replace function public.sql_comments_remove(
     language sql
     set search_path = ''
     cost 2
-as
-$function$
+return
     --https://postgrespro.ru/docs/postgresql/12/sql-syntax-lexical
-    select regexp_replace(sql, $regexp$
+    regexp_replace(sql, $regexp$
         (?:
              --[^\r\n]*?                    #singe-line comment
           |  /\*                            #multi-line comment (can be nested)
@@ -51,8 +50,6 @@ $function$
              )
         )
     $regexp$, ' \1\2\3\4', 'xg');
-
-$function$;
 
 comment on function public.sql_comments_remove(sql text) is $$
     Удаляет из SQL запроса однострочные и многострочные комментарии (заменяет их на пробел)

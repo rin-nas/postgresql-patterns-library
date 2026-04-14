@@ -6,9 +6,7 @@ create or replace function public.is_kpp(str text)
     language sql
     set search_path = ''
     cost 5
-as
-$$
-select
+return
     octet_length(str) = 9
     and regexp_match(
         str,
@@ -21,8 +19,7 @@ select
            [0-9]{3}    #XXX – порядковый номер постановки на учет в территориальном налоговом органе (цифры показывают, сколько раз организация вставала на учет по данной причине)
           $
         $regexp$, 'x') is not null
-    and str !~ '^([1-9])\1+$'
-$$;
+    and str !~ '^([1-9])\1+$';
 
 comment on function public.is_kpp(text) is 'Проверяет, что переданная строка является КПП (код причины постановки на учёт)';
 

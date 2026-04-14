@@ -6,9 +6,8 @@ create or replace function public.zigzag_encode(n int)
     security invoker
     language sql
     set search_path = ''
-as $func$
-    select (n << 1) # (n >> 31);
-$func$;
+return
+    (n << 1) # (n >> 31);
 
 comment on function public.zigzag_encode(n int) is $$
     Zigzag encoding takes a signed integer and encodes it as an unsigned integer.

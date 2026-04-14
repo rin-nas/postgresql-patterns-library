@@ -6,12 +6,11 @@ create or replace function public.fib_code_bin(n int)
     security invoker
     language sql
     set search_path = ''
-as $func$
-    select public.bin(
-               public.bit_reverse(n) << 1 | 1, --add bit 1 to end
-               bit_length(public.bin(n)) + 1
-           )
-$func$;
+return
+    public.bin(
+        public.bit_reverse(n) << 1 | 1, --add bit 1 to end
+        bit_length(public.bin(n)) + 1
+    );
 
 comment on function public.fib_code_bin(n int) is $$
     Converts Fibonacci integer type to universal code as bit type.

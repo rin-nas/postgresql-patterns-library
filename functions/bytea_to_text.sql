@@ -6,9 +6,8 @@ create or replace function public.bytea_to_text(bytea)
     security invoker
     language sql
     set search_path = ''
-as $func$ 
-    select convert_from($1, current_setting('server_encoding'));
-$func$;
+return
+    convert_from($1, current_setting('server_encoding'));
 
 comment on function public.bytea_to_text(bytea) is 'Converts bytea to text';
 

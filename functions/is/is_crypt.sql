@@ -9,9 +9,7 @@ create or replace function public.is_crypt(str text)
     language sql
     set search_path = ''
     cost 5
-as
-$$
-select
+return
     case when octet_length(str) between (5+22) and 118 --speed improves
          then regexp_match(
             str,
@@ -32,7 +30,6 @@ select
             $regexp$, 'x') is not null
          else false
     end;
-$$;
 
 comment on function public.is_crypt(text) is 'Проверяет, что переданная строка является результатом Linux функции crypt';
 

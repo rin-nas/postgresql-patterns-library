@@ -5,12 +5,10 @@ create or replace function public.unicode_unescape(text)
     parallel safe
     language sql
     set search_path = ''
-as
-$func$
+return
     -- input string - only as \uXXXX sequence
     -- TODO validate format by regexp and return NULL for invalid strings?
-    select concat('"', $1, '"')::jsonb->>0;
-$func$;
+    concat('"', $1, '"')::jsonb->>0;
 
 comment on function public.unicode_unescape(text) is $$
     Evaluate escaped Unicode characters in the argument.

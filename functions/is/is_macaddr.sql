@@ -6,9 +6,7 @@ create or replace function public.is_macaddr(str text)
     language sql
     set search_path = ''
     cost 5
-as
-$$
-select
+return
     octet_length(str) in (17, --08:00:2b:01:02:03
                           23) --08:00:2b:01:02:03:04:05
     and regexp_match(
@@ -22,8 +20,7 @@ select
            (?:(?:[\da-fA-F]{2}\1){2})?
            [\da-fA-F]{2}
           $
-        $regexp$, 'x') is not null
-$$;
+        $regexp$, 'x') is not null;
 
 comment on function public.is_macaddr(text) is 'Проверяет, что переданная строка является MAC адресом устройства';
 
