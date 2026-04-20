@@ -30,7 +30,7 @@ cross join lateral (
            case when a.state ~ '^idle\M' --idle, idle in transaction, idle in transaction (aborted)
                     then state_change - query_start
                 else statement_timestamp() - query_start
-               end as query_elapsed, --длительность выполнения запроса всего
+           end as query_elapsed, --длительность выполнения запроса всего
            statement_timestamp() - state_change as state_change_elapsed --длительность после изменения состояния (поля state)
 ) as e
 where true
