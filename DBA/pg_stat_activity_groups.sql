@@ -9,6 +9,7 @@ with a as (
         count(*) as count
     from pg_stat_activity as a
     group by a.backend_type, a.datname, a.state, a.usename, a.wait_event_type, a.wait_event
+    order by a.backend_type, a.datname, a.state, a.usename, a.wait_event_type, a.wait_event
 )
 --select * from a; -- для отладки
 select
