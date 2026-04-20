@@ -14,9 +14,7 @@ with a as (
 --select * from a; -- для отладки
 select
     a.*,
-    --q.*,
 
-    --t.*
     q."max_query_elapsed.duration",
     t."max_xact_elapsed.duration",
 
