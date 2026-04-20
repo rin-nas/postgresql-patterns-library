@@ -15,5 +15,5 @@ WHERE ...;
  
 CREATE UNIQUE INDEX {table}_{JiraTaskId}_uniq_id ON {table}_{JiraTaskId} (id);
  
---SELECT * FROM {table}_{JiraTaskId} ORDER BY id LIMIT 100; -- для отладки
+--SELECT * FROM {table}_{JiraTaskId} ORDER BY id LIMIT 100; -- for debug
  

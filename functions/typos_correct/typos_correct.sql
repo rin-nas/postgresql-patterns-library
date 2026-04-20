@@ -73,7 +73,7 @@ begin atomic
                 AS is_mistake
             FROM unnest((SELECT words_from FROM vars)) WITH ORDINALITY AS q(word_from, word_num)
         )
-        -- SELECT * FROM words_from; -- для отладки
+        -- SELECT * FROM words_from; -- for debug
         , result AS (
             SELECT *,
                to_jsonb(ARRAY((
@@ -110,7 +110,7 @@ begin atomic
                                 word_similarity_rank DESC,
                                 similarity_rank DESC
                        LIMIT 3
-                       --LIMIT 10 -- для отладки
+                       --LIMIT 10 -- for debug
                        )
                        SELECT to_jsonb(tt.*) FROM (
                           SELECT *,
@@ -122,7 +122,7 @@ begin atomic
                                      next_levenshtein_rank3_delta > 0.03) AS can_correct
                           FROM t
                           LIMIT 3
-                          --LIMIT 10 -- для отладки
+                          --LIMIT 10 -- for debug
                        ) AS tt
             ))) AS json
         FROM words AS q

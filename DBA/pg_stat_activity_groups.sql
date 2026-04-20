@@ -11,7 +11,7 @@ with a as (
     group by a.backend_type, a.datname, a.state, a.usename, a.wait_event_type, a.wait_event
     order by a.backend_type, a.datname, a.state, a.usename, a.wait_event_type, a.wait_event
 )
---select * from a; -- для отладки
+--select * from a; -- for debug
 select
     a.*,
 
