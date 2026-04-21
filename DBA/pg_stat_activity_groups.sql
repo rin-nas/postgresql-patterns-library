@@ -1,15 +1,15 @@
 with a as (
     select
-        a.backend_type,
-        a.datname,
-        a.state,
-        a.usename,
-        a.wait_event_type,
-        a.wait_event,
+        backend_type,
+        datname,
+        state,
+        usename,
+        wait_event_type,
+        wait_event,
         count(*) as count
-    from pg_stat_activity as a
-    group by a.backend_type, a.datname, a.state, a.usename, a.wait_event_type, a.wait_event
-    order by a.backend_type, a.datname, a.state, a.usename, a.wait_event_type, a.wait_event
+    from pg_stat_activity
+    group by backend_type, datname, state, usename, wait_event_type, wait_event
+    order by backend_type, datname, state, usename, wait_event_type, wait_event
 )
 --select * from a; -- for debug
 select
