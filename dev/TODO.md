@@ -909,3 +909,42 @@ AND (n.nspname !~ '^pg_toast' and nspname like 'pg_temp%')
 ORDER BY pg_relation_size(n.nspname ||'.'|| c.relname) DESC;
 ```
 Быстро проверить содержимое папки `pgsql_tmp`: `[PostgreSQL datadir]/base/pgsql_tmp/`
+
+# Buffer cache hit ratio
+
+Для всей СУБД
+
+```sql
+SELECT 
+    datname, 
+    100 * blks_hit / (blks_hit + blks_read) AS cache_hit_ratio
+FROM 
+    pg_stat_database
+WHERE 
+    (blks_hit + blks_read) > 0;
+```
+
+или (PostgreSQL 16+)
+
+```sql
+SELECT 
+  sum(hits) / (sum(hits) + sum(reads)) * 100 as cache_hit_ratio
+FROM 
+  pg_stat_io;
+```
+
+Для конкретных таблиц
+
+```sql
+SELECT 
+    relname, 
+    heap_blks_hit, 
+    heap_blks_read,
+    100 * heap_blks_hit / (heap_blks_hit + heap_blks_read) AS hit_ratio
+FROM 
+    pg_statio_user_tables
+WHERE 
+    (heap_blks_hit + heap_blks_read) > 0
+ORDER BY 
+    hit_ratio ASC;
+```
