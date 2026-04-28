@@ -39,7 +39,7 @@
 
 \pset pager always
 \pset expanded auto
-\setenv PAGER 'less -iMFXSx4R'
+\setenv PSQL_PAGER 'less -iMFXSx4R'
 
 \set whoami 'SELECT current_user, session_user;'
 
@@ -324,7 +324,7 @@ cross join (select count(*) > 0                as has_unused_repl_slot,
 \if `command -v pspg > /dev/null && echo 1 || echo 0`
     \echo '"pspg" pager is used'
     \pset expanded off
-    \setenv PAGER 'pspg --reprint-on-exit --blackwhite'
+    \setenv PSQL_PAGER 'pspg --reprint-on-exit --blackwhite'
 \else
     \echo 'Using alternative psql pager called "pspg" is highly recommended (but not required): https://github.com/okbob/pspg'
 \endif
