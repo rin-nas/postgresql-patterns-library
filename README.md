@@ -2585,7 +2585,8 @@ $ crontab -l
 
 ### Как узнать отставание реплик?
 
-На мастере:
+На узле-источнике (мастере или каскадной реплике):
+
 ```sql
 SELECT
     client_addr,
@@ -2605,7 +2606,8 @@ SELECT
 FROM pg_stat_replication;
 ```
 
-На реплике:
+На узле-приёмнике (на конечной реплике):
+
 ```sql
 select case when not pg_is_in_recovery() then null -- not standby
             when not exists(select from pg_stat_wal_receiver where status = 'streaming') then null -- primary lost
