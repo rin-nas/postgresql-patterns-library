@@ -24,3 +24,5 @@ COMMENT ON VIEW pg_role_members IS 'Role membership tree';
 
 -- посмотреть список привилегий для текущей БД
 -- SELECT * FROM information_schema.table_privileges
+
+-- см. так же команду psql -c '\drgS'
