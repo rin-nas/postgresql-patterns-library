@@ -8,11 +8,11 @@ StartLimitBurst=180
 StartLimitIntervalSec=4000
  
 # если сервис PostgreSQL будет запускаться или останавливаться, то этот сервис сделает так же
-# After=postgresql-%i.service
+# Before=postgresql-%i.service
 # PartOf=postgresql-%i.service
  
 # если сервис Patroni (который управляет PostgreSQL) будет запускаться или останавливаться, то этот сервис сделает так же
-After=patroni.service
+Before=patroni.service
 PartOf=patroni.service
  
 [Service]
