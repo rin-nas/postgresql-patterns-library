@@ -72,10 +72,11 @@ ZSTD_THREADS=$(echo "$(nproc) / 4 + 1" | bc)
 ARCHIVE_STATUS_DIR=$(dirname "$SRC_FILE")/archive_status
 WAL_FILES_QUEUE=$(find "$ARCHIVE_STATUS_DIR" -maxdepth 1 -type f -name "*.ready" -printf "." | wc --bytes)
  
-STEP=3
+# как быстро будет уменьшаться уровень компрессии
+ZSTD_LEVEL_STEP=3
 # не ставьте большой уровень компрессии, это приводит к большому потреблению CPU и памяти, а экономия на размере файла несущественная!
 ZSTD_MAX_LEVEL=9
-ZSTD_LEVEL=$(echo "(${ZSTD_MAX_LEVEL} * ${STEP} - ${WAL_FILES_QUEUE}) / ${STEP}" | bc)
+ZSTD_LEVEL=$(echo "(${ZSTD_MAX_LEVEL} * ${ZSTD_LEVEL_STEP} - ${WAL_FILES_QUEUE}) / ${ZSTD_LEVEL_STEP}" | bc)
 test "$ZSTD_LEVEL" -lt 1 && ZSTD_LEVEL=1
  
 # архивируем WAL файл
