@@ -6,7 +6,9 @@ Get some ideas from
 
 Show current_user `SELECT SESSION_USER, CURRENT_USER;` (after `SET ROLE rolename`)
 
-Checksum failures: `select sum(checksum_failures) from pg_stat_database`
+Checksum failures: `select sum(checksum_failures) from pg_stat_database`.
+
+Cascade replica.
 
 Show overall info on `psql` start
 1. Standby count by status
