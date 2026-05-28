@@ -8,7 +8,7 @@
     \setenv PSQL_PAGER 'pspg --reprint-on-exit --blackwhite'
 \endif
 
--- отображение рамок в таблицах
+-- отображение в таблицах рамок с непрерывными линиями
 \pset linestyle unicode
 
 -- отображение значения NULL
