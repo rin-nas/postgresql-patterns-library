@@ -1,0 +1,12 @@
+-- приглашение командной строки
+\set PROMPT1 '\n%`date --rfc-3339=seconds` %n@%M:%>/%/\n%x%# '
+
+-- пейджер
+-- \setenv PSQL_PAGER 'less -iMFXSx4R'
+\setenv PSQL_PAGER 'pspg --reprint-on-exit --blackwhite'
+
+-- отображение рамок в таблицах
+\pset linestyle unicode
+
+-- отображение значения NULL
+\pset null '¤'
