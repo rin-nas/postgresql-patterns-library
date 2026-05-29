@@ -46,26 +46,37 @@ SELECT
 
       -- example: PostgreSQL 18.3 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 13.3.1 20250418 (RED SOFT 13.3.1-3), 64-bit
       version()
-    ), ' on .+', '') as db_version,
+    ), '(?<=\d\.\d) (on |\().+', '') as db_version,
 
-    CASE
-      WHEN s.sender=0 AND r.receiver=0 THEN 'primary standalone'       -- мастер автономный (без реплик)
-      WHEN s.sender>0 AND r.receiver=0 THEN 'primary with replica(s)'  -- мастер с одной или несколькими репликами
-      WHEN s.sender=0 AND r.receiver>0 THEN 'replica final'   -- реплика конечная
-      WHEN s.sender>0 AND r.receiver>0 THEN 'replica cascade' -- реплика промежуточная
-    END AS server_role
+    p.is_primary,
+    CASE WHEN p.is_primary THEN 'primary' ELSE 'replica' END AS server_role,
+
+    coalesce((select string_agg(concat(coalesce(client_hostname, client_addr::text, '¤'), ':', client_port), ', ' order by backend_start) 
+                from pg_stat_replication), '') as wal_send_to,
+    (SELECT COUNT(*) FROM pg_stat_replication) as wal_send_count,
+
+    coalesce((select concat(sender_host, ':', sender_port) from pg_stat_wal_receiver limit 1), '') as wal_receive_from,
+    (SELECT COUNT(*) FROM pg_stat_wal_receiver) as wal_receive_count
+
 FROM
-    (SELECT COUNT(*) AS sender FROM pg_stat_replication) s,
-    (SELECT COUNT(*) AS receiver FROM pg_stat_wal_receiver) r
+    COALESCE(CASE
+      WHEN current_setting('is_superuser')::bool THEN pg_stat_file(current_setting('data_directory') || '/standby.signal', true) IS NULL
+      ELSE NOT pg_is_in_recovery()
+    END) AS p (is_primary)
 \gset
 
 -- настраиваем приглашение командной строки
 -- YYYY-MM-DD HH:MM:SS+HH:MM db_version user@host:port/database
 \set PROMPT1 '\n%`date --rfc-3339=seconds`  ':db_version'  %n@%M:%>/%/\n%R%x%# '
 
-\echo 'Server role:      ':server_role
 \echo 'Started at:       ':started_at' (':start_uptime' ago)'
 \echo 'Config loaded at: ':loaded_at' (':load_uptime' ago)'
+\echo 'Server role:      ':server_role
+\if :is_primary
+\else
+    \echo 'WAL receive (':wal_receive_count'):  ':wal_receive_from
+\endif
+\echo 'WAL send (':wal_send_count'):     ':wal_send_to
 
 -- включаем отображение длительности выполнения запроса
 \timing on
