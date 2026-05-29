@@ -50,7 +50,7 @@ SELECT
     ), '(?<=\d\.\d+) (on |\().+', '') as db_version,
 
     p.is_primary,
-    CASE WHEN p.is_primary THEN 'primary' ELSE 'replica' END AS server_role,
+    CASE WHEN p.is_primary THEN 'primary' ELSE 'replica' END as server_role,
 
     coalesce((select string_agg(concat(coalesce(client_hostname, client_addr::text, '¤'), ':', client_port), ', ' order by backend_start) 
                 from pg_stat_replication), '') as wal_send_to,
