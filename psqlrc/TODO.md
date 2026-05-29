@@ -24,10 +24,10 @@ For a more detailed status, you can use a query that checks both sender and rece
 ```sql
 SELECT DISTINCT
   CASE
-    WHEN b.sender=0 AND c.receiver=0 THEN 'Standalone'
-    WHEN b.sender>0 AND c.receiver=0 THEN 'Primary'
-    WHEN b.sender=0 AND c.receiver>0 THEN 'Replica'
-    WHEN b.sender>0 AND c.receiver>0 THEN 'Primary+Replica'
+    WHEN b.sender=0 AND c.receiver=0 THEN 'standalone'
+    WHEN b.sender>0 AND c.receiver=0 THEN 'primary'
+    WHEN b.sender=0 AND c.receiver>0 THEN 'replica (final)'
+    WHEN b.sender>0 AND c.receiver>0 THEN 'replica (cascade)'
   END AS pgrole
 FROM 
   (SELECT COUNT(*) AS sender FROM pg_stat_replication) b,
