@@ -49,10 +49,10 @@ SELECT
     ), ' on .+', '') as db_version,
 
     CASE
-      WHEN s.sender=0 AND r.receiver=0 THEN 'standalone'        -- автономный (только мастер без реплик)
-      WHEN s.sender>0 AND r.receiver=0 THEN 'primary'           -- мастер
-      WHEN s.sender=0 AND r.receiver>0 THEN 'replica (final)'   -- конечная реплика
-      WHEN s.sender>0 AND r.receiver>0 THEN 'replica (cascade)' -- промежуточная реплика
+      WHEN s.sender=0 AND r.receiver=0 THEN 'primary standalone'       -- мастер автономный (без реплик)
+      WHEN s.sender>0 AND r.receiver=0 THEN 'primary with replica(s)'  -- мастер с одной или несколькими репликами
+      WHEN s.sender=0 AND r.receiver>0 THEN 'replica final'   -- реплика конечная
+      WHEN s.sender>0 AND r.receiver>0 THEN 'replica cascade' -- реплика промежуточная
     END AS server_role
 FROM
     (SELECT COUNT(*) AS sender FROM pg_stat_replication) s,
