@@ -17,7 +17,7 @@
 
 ![psqlrc primary](psqlrc.shardman.primary.png)
 
-### Пример для `.psql.simple`
+## Пример для `.psql.simple`
 
 ```
 [postgres@rmukhtarov-redos1 ~]$ psql demo --no-psqlrc
@@ -49,14 +49,15 @@ demo=#
 
 ```
 [postgres@rmukhtarov-redos1 ~]$ psql demo
-Server role:      primary standalone
-Started at:       2026-05-28 19:11:54+03 (21:46:56 ago)
-Config loaded at: 2026-05-29 15:34:16+03 (01:24:34 ago)
+Started at:       2026-05-28 19:11:54+03 (1 day 03:03:17 ago)
+Config loaded at: 2026-05-29 15:34:16+03 (06:40:55 ago)
+Server role:      primary
+WAL send (0):     
 psql (18.3, server 17.9)
 Type "help" for help.
 
 
-2026-05-29 16:58:49+03:00  Postgres Pro (enterprise) 17.9.2  postgres@[local]:5432/demo
+2026-05-29 22:15:11+03:00  Postgres Pro (enterprise) 17.9.2  postgres@[local]:5432/demo
 =# \d+
                                                              List of relations
   Schema  │         Name          │   Type   │  Owner   │ Persistence │ Access method │    Size    │              Description               
@@ -78,8 +79,37 @@ Type "help" for help.
 (14 rows)
 
 
-2026-05-29 16:58:51+03:00  Postgres Pro (enterprise) 17.9.2  postgres@[local]:5432/demo
+2026-05-29 22:15:13+03:00  Postgres Pro (enterprise) 17.9.2  postgres@[local]:5432/demo
 =# 
+```
+
+```
+student:~$ psql -p 5432
+Started at:       2026-05-29 19:45:59+03 (02:32:28 ago)
+Config loaded at: 2026-05-29 22:05:34+03 (00:12:53 ago)
+Server role:      primary
+WAL send (1):     ¤:-1
+psql (16.11 (Ubuntu 16.11-1.pgdg24.04+1))
+Type "help" for help.
+
+
+2026-05-29 22:18:26+03:00  PostgreSQL 16.11  student@[local]:5432/student
+=# 
+```
+
+```
+student:~$ psql -p 5433
+Started at:       2026-05-29 20:23:32+03 (01:52:56 ago)
+Config loaded at: 2026-05-29 20:23:32+03 (01:52:56 ago)
+Server role:      replica
+WAL receive (1):  /var/run/postgresql:5432
+WAL send (0):     
+psql (16.11 (Ubuntu 16.11-1.pgdg24.04+1))
+Type "help" for help.
+
+
+2026-05-29 22:16:27+03:00  PostgreSQL 16.11  student@[local]:5433/student
+=#
 ```
 
 ## Что отображается при запуске `psql`
