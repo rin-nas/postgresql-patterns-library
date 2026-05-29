@@ -34,7 +34,7 @@
 -- отображаем значения NULL
 \pset null '¤'
 
-SELECT 
+SELECT
     pg_postmaster_start_time()::timestamptz(0) as started_at,
     pg_conf_load_time()::timestamptz(0)        as loaded_at,
     now()::timestamptz(0) - pg_postmaster_start_time()::timestamptz(0) as start_uptime,
@@ -63,9 +63,9 @@ FROM
 -- YYYY-MM-DD HH:MM:SS+HH:MM db_version user@host:port/database
 \set PROMPT1 '\n%`date --rfc-3339=seconds`  ':db_version'  %n@%M:%>/%/\n%R%x%# '
 
+\echo 'Server role:      ':server_role
 \echo 'Started at:       ':started_at' (':start_uptime' ago)'
 \echo 'Config loaded at: ':loaded_at' (':load_uptime' ago)'
-\echo 'Server role:      ':server_role
 
 -- включаем отображение длительности выполнения запроса
 \timing on
