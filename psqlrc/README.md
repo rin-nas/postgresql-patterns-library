@@ -20,6 +20,34 @@
 ### Пример для `.psql.simple`
 
 ```
+[postgres@rmukhtarov-redos1 ~]$ psql demo --no-psqlrc
+psql (18.3, server 17.9)
+Type "help" for help.
+
+demo=# \d+
+                                                             List of relations
+  Schema  |         Name          |   Type   |  Owner   | Persistence | Access method |    Size    |              Description               
+----------+-----------------------+----------+----------+-------------+---------------+------------+----------------------------------------
+ bookings | airplanes             | view     | postgres | permanent   |               | 0 bytes    | Airplanes
+ bookings | airplanes_data        | table    | postgres | permanent   | heap          | 16 kB      | Airplanes (internal multilingual data)
+ bookings | airports              | view     | postgres | permanent   |               | 0 bytes    | Airports
+ bookings | airports_data         | table    | postgres | permanent   | heap          | 1288 kB    | Airports (internal multilingual data)
+ bookings | axedemo_flights       | view     | postgres | permanent   |               | 0 bytes    | 
+ bookings | boarding_passes       | table    | postgres | permanent   | heap          | 839 MB     | Boarding passes
+ bookings | bookings              | table    | postgres | permanent   | heap          | 246 MB     | Bookings
+ bookings | flights               | table    | postgres | permanent   | heap          | 5928 kB    | Flights
+ bookings | flights_flight_id_seq | sequence | postgres | permanent   |               | 8192 bytes | 
+ bookings | routes                | table    | postgres | permanent   | heap          | 552 kB     | Routes
+ bookings | seats                 | table    | postgres | permanent   | heap          | 120 kB     | Seats
+ bookings | segments              | table    | postgres | permanent   | heap          | 933 MB     | Flight segment (leg)
+ bookings | tickets               | table    | postgres | permanent   | heap          | 876 MB     | Tickets
+ bookings | timetable             | view     | postgres | permanent   |               | 0 bytes    | Detailed info about flights
+(14 rows)
+
+demo=# 
+```
+
+```
 [postgres@rmukhtarov-redos1 ~]$ psql demo
 Server role:      standalone
 Started at:       2026-05-28 19:11:54+03 (21:46:56 ago)
