@@ -2,13 +2,15 @@
 -- \set QUIET on
 
 -- приглашение командной строки
-\set PROMPT1 '\n%`date --rfc-3339=seconds` %n@%M:%>/%/\n%x%# '
+-- YYYY-MM-DD HH:MM:SS+HH:MM user@host:port/database
+\set PROMPT1 '\n%`date --rfc-3339=seconds` %n@%M:%>/%/\n%R%x%# '
 
--- пейджер
+-- пейджер (если результат запроса не помещается на экране, он пропускается через эту программу)
 \setenv PSQL_PAGER 'less -iMFXSx4R'
 \if `command -v pspg > /dev/null && echo 1 || echo 0`
     \pset expanded off
     \setenv PSQL_PAGER 'pspg --reprint-on-exit --blackwhite'
+    \setenv PSQL_WATCH_PAGER 'pspg --reprint-on-exit --blackwhite --stream'
 \endif
 
 -- отображение в таблицах рамок с непрерывными линиями
