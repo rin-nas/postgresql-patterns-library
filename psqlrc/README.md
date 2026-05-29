@@ -49,7 +49,7 @@ demo=#
 
 ```
 [postgres@rmukhtarov-redos1 ~]$ psql demo
-Server role:      standalone
+Server role:      primary standalone
 Started at:       2026-05-28 19:11:54+03 (21:46:56 ago)
 Config loaded at: 2026-05-29 15:34:16+03 (01:24:34 ago)
 psql (18.3, server 17.9)
