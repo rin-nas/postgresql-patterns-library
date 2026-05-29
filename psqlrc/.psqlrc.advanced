@@ -318,7 +318,7 @@ cross join (select count(*) > 0                as has_unused_repl_slot,
     \set PROMPT1 :PROMPT1'.':current_schema
 \endif
 
-\set PROMPT1 :PROMPT1'\n':reset'%x%# '
+\set PROMPT1 :PROMPT1'\n':reset'%R%x%# '
 
 \set PROMPT2 ''
 
@@ -326,6 +326,7 @@ cross join (select count(*) > 0                as has_unused_repl_slot,
     \echo '"pspg" pager is used'
     \pset expanded off
     \setenv PSQL_PAGER 'pspg --reprint-on-exit --blackwhite'
+    \setenv PSQL_WATCH_PAGER 'pspg --reprint-on-exit --blackwhite --stream'
 \else
     \echo 'Using alternative psql pager called "pspg" is highly recommended (but not required): https://github.com/okbob/pspg'
 \endif
