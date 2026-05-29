@@ -63,8 +63,8 @@
 
 * Требования к версиям: `psql 12+`, `PostgreSQL 12+`
 * Документация: https://postgrespro.ru/docs/postgresql/current/app-psql#APP-PSQL-FILES-PSQLRC
-* Файл с продвинутой конфигурацией: [`psqlrc`](psqlrc.advanced)
-* Файл с простой конфигурацией: [`psqlrc`](psqlrc.simple)
+* Файл с продвинутой конфигурацией: [`.psqlrc`](psqlrc.advanced)
+* Файл с простой конфигурацией: [`.psqlrc`](psqlrc.simple)
 
 ```bash
 nano ~/.psqlrc
