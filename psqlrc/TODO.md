@@ -28,7 +28,7 @@ SELECT DISTINCT
     WHEN s.sender>0 AND r.receiver=0 THEN 'primary'
     WHEN s.sender=0 AND r.receiver>0 THEN 'replica (final)'
     WHEN s.sender>0 AND r.receiver>0 THEN 'replica (cascade)'
-  END AS pgrole
+  END AS pg_role
 FROM 
   (SELECT COUNT(*) AS sender FROM pg_stat_replication) s,
   (SELECT COUNT(*) AS receiver FROM pg_stat_wal_receiver) r;
