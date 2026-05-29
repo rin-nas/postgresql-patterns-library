@@ -70,7 +70,7 @@ select -- pg_backend_pid(), -- if we're connecting through pgbouncer, then promp
          -- example: PostgreSQL 18.3 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 13.3.1 20250418 (RED SOFT 13.3.1-3), 64-bit
          -- example: PostgreSQL 16.11 (Ubuntu 16.11-1.pgdg24.04+1) on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04) 13.3.0, 64-bit
          version()
-       ), '(?<=\d\.\d+) (on |\().+', '') as db_version,
+       ), '(?<=\d\.\d+) (on |\().+', '') as pg_version,
 
        (select count(*) from pg_stat_replication where state = 'streaming') as streaming_count,
 
@@ -305,7 +305,7 @@ cross join (select count(*) > 0                as has_unused_repl_slot,
 \set reset   '%[%033[0m%]'
 
 \set PROMPT1 '\n':cyan'%`date --rfc-3339=seconds`'
-\set PROMPT1 :PROMPT1' ':reset'':db_version
+\set PROMPT1 :PROMPT1' ':reset'':pg_version
 
 \if :pg_is_in_recovery
     \set PROMPT1 :PROMPT1' ':magenta'standby':reset
