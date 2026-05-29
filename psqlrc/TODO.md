@@ -17,19 +17,3 @@ Show overall info on `psql` start
    * `select count(*), pg_size_pretty(sum(pg_database_size(datname))) from pg_database;`
 1. Databases total used space in percent (mark red if > 90%).
 1. Start and load uptime - mark yellow if < 1d or if > 1y ?
-
-## Advanced Role Detection
-
-For a more detailed status, you can use a query that checks both sender and receiver statuses to distinguish between standalone, primary, and cascading replicas:
-```sql
-SELECT DISTINCT
-  CASE
-    WHEN s.sender=0 AND r.receiver=0 THEN 'standalone'
-    WHEN s.sender>0 AND r.receiver=0 THEN 'primary'
-    WHEN s.sender=0 AND r.receiver>0 THEN 'replica (final)'
-    WHEN s.sender>0 AND r.receiver>0 THEN 'replica (cascade)'
-  END AS pg_role
-FROM 
-  (SELECT COUNT(*) AS sender FROM pg_stat_replication) s,
-  (SELECT COUNT(*) AS receiver FROM pg_stat_wal_receiver) r;
-```
