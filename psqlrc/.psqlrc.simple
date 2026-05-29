@@ -46,7 +46,7 @@ SELECT
 
       -- example: PostgreSQL 18.3 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 13.3.1 20250418 (RED SOFT 13.3.1-3), 64-bit
       version()
-    ), '(?<=\d\.\d) (on |\().+', '') as db_version,
+    ), '(?<=\d\.\d+) (on |\().+', '') as db_version,
 
     p.is_primary,
     CASE WHEN p.is_primary THEN 'primary' ELSE 'replica' END AS server_role,
