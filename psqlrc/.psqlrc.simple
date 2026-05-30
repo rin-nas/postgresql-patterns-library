@@ -50,7 +50,7 @@ SELECT
     ), '(?<=\d\.\d+) (on |\().+', '') as pg_version,
 
     p.is_primary,
-    CASE WHEN p.is_primary THEN 'primary' ELSE 'replica' END as server_role,
+    CASE WHEN p.is_primary THEN 'primary' ELSE 'replica' END as pg_role,
 
     coalesce((select string_agg(concat(coalesce(client_hostname, client_addr::text, '¤'), ':', client_port), ', ' order by backend_start) 
                 from pg_stat_replication), '') as wal_send_to,
@@ -72,7 +72,7 @@ FROM
 
 \echo 'Started at:       ':started_at' (':start_uptime' ago)'
 \echo 'Config loaded at: ':loaded_at' (':load_uptime' ago)'
-\echo 'Server role:      ':server_role
+\echo 'Server role:      ':pg_role
 \if :is_primary
 \else
     \echo 'WAL receive (':wal_receive_count'):  ':wal_receive_from
