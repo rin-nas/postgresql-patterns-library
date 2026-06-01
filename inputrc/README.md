@@ -79,4 +79,4 @@ $endif
 ## Links
 
 * [Convenient colored command line prompt in `bash`](../bashrc)
-* [Convenient colored command line prompt in `psql`](../psqlrc)
+* [Convenient colored command line prompt in `psql`](../psqlrc.advanced)
