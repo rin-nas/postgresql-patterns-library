@@ -61,7 +61,7 @@ SELECT
 
 FROM
     COALESCE(CASE
-      WHEN has_function_privilege(current_user, 'pg_stat_file(text, bool)', 'EXECUTE')
+      WHEN has_function_privilege('pg_stat_file(text, bool)', 'EXECUTE')
            THEN pg_stat_file(current_setting('data_directory') || '/standby.signal', true) IS NULL
       ELSE NOT pg_is_in_recovery()
     END) AS p (is_primary)
