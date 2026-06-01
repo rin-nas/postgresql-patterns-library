@@ -19,6 +19,7 @@
 
 ## Пример для `.psql.simple`
 
+Без применения `.psqlrc`
 ```
 [postgres@rmukhtarov-redos1 ~]$ psql demo --no-psqlrc
 psql (18.3, server 17.9)
@@ -47,6 +48,7 @@ demo=# \d+
 demo=# 
 ```
 
+С применением `.psqlrc`
 ```
 [postgres@rmukhtarov-redos1 ~]$ psql demo
 Started at:       2026-05-28 19:11:54+03 (1 day 03:03:17 ago)
@@ -83,6 +85,7 @@ Type "help" for help.
 =# 
 ```
 
+С применением `.psqlrc`, мастер
 ```
 student:~$ psql -p 5432
 Started at:       2026-05-29 19:45:59+03 (02:32:28 ago)
@@ -97,6 +100,7 @@ Type "help" for help.
 =# 
 ```
 
+С применением `.psqlrc`, реплика
 ```
 student:~$ psql -p 5433
 Started at:       2026-05-29 20:23:32+03 (01:52:56 ago)
