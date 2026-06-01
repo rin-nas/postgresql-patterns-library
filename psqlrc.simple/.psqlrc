@@ -61,7 +61,8 @@ SELECT
 
 FROM
     COALESCE(CASE
-      WHEN current_setting('is_superuser')::bool THEN pg_stat_file(current_setting('data_directory') || '/standby.signal', true) IS NULL
+      WHEN has_function_privilege(current_user, 'pg_stat_file(text, bool)', 'EXECUTE')
+           THEN pg_stat_file(current_setting('data_directory') || '/standby.signal', true) IS NULL
       ELSE NOT pg_is_in_recovery()
     END) AS p (is_primary)
 \gset
