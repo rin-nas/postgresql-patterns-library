@@ -57,9 +57,10 @@ SELECT
     (SELECT COUNT(*) FROM pg_stat_wal_receiver) as wal_receive_count
 \gset
 
--- настраиваем приглашение командной строки
+-- настраиваем приглашения командной строки
 -- YYYY-MM-DD HH:MM:SS+HH:MM  pg_version  user@host:port/database
 \set PROMPT1 '\n%`date --rfc-3339=seconds`  ':pg_version'  %n@%M:%>/%/\n%R%x%# '
+\set PROMPT2 '%R%x%# '
 
 \if :{?data_directory}
 \else
