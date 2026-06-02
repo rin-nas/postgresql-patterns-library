@@ -8,7 +8,7 @@
 
 1. дата и время, когда был запущен сервер (и сколько времени прошло)
 1. дата и время, когда в последний раз сервер загружал файлы конфигурации (и сколько времени прошло)
-1. директория с данными 
+1. директория с данными
 1. роль сервера: основной (мастер) `primary` или резервный (реплика) `replica`
 1. названия серверов с портами, откуда принимаются WAL файлы и куда передаются
 
@@ -70,6 +70,7 @@ demo=#
 [postgres@rmukhtarov-redos1 ~]$ psql demo
 Started at:       2026-05-28 19:11:54+03 (1 day 03:03:17 ago)
 Config loaded at: 2026-05-29 15:34:16+03 (06:40:55 ago)
+Data directory:   /var/lib/pgpro/ent-17/data
 Server role:      primary
 WAL send (0):     
 psql (18.3, server 17.9)
@@ -108,6 +109,7 @@ Type "help" for help.
 student:~$ psql -p 5432
 Started at:       2026-05-29 19:45:59+03 (02:32:28 ago)
 Config loaded at: 2026-05-29 22:05:34+03 (00:12:53 ago)
+Data directory:   /var/lib/postgresql/16/main
 Server role:      primary
 WAL send (1):     ¤:-1
 psql (16.11 (Ubuntu 16.11-1.pgdg24.04+1))
@@ -124,6 +126,7 @@ Type "help" for help.
 student:~$ psql -p 5433
 Started at:       2026-05-29 20:23:32+03 (01:52:56 ago)
 Config loaded at: 2026-05-29 20:23:32+03 (01:52:56 ago)
+Data directory:   /var/lib/postgresql/16/replica
 Server role:      replica
 WAL receive (1):  /var/run/postgresql:5432
 WAL send (0):     

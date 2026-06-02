@@ -16,10 +16,6 @@
 -- не добавляем в историю строки, которые в ней уже есть
 \set HISTCONTROL ignoredups
 
--- настраиваем приглашение командной строки
--- YYYY-MM-DD HH:MM:SS+HH:MM user@host:port/database
--- \set PROMPT1 '\n%`date --rfc-3339=seconds` %n@%M:%>/%/\n%R%x%# '
-
 -- пейджер (если результат запроса не помещается на экране, он пропускается через эту программу)
 \setenv PSQL_PAGER 'less -iMFXSx4R'
 \if `command -v pspg > /dev/null && echo 1 || echo 0`
@@ -36,6 +32,8 @@
 
 SELECT
     pg_backend_pid(),
+    pg_is_in_recovery(),
+    (select setting from pg_settings where name = 'data_directory' limit 1) as data_directory,
 
     pg_postmaster_start_time()::timestamptz(0) as started_at,
     pg_conf_load_time()::timestamptz(0)        as loaded_at,
@@ -63,9 +61,24 @@ SELECT
 -- YYYY-MM-DD HH:MM:SS+HH:MM  pg_version  user@host:port/database
 \set PROMPT1 '\n%`date --rfc-3339=seconds`  ':pg_version'  %n@%M:%>/%/\n%R%x%# '
 
--- определяем роль СУБД - мастер или реплика (применять SQL функцию pg_is_in_recovery() не всегда корректно)
-\set data_directory `ps -p $(ps -p :pg_backend_pid -o ppid=) -o cmd= | grep -o -P -- ' -D \K.*'`
-\set is_primary `test -f :data_directory/standby.signal && echo 0 || echo 1`
+\if :{?data_directory}
+\else
+    -- если прав доступа не хватило, то пробуем получить data_directory альтернативным способом
+    \set data_directory `ps -p $(ps -p :pg_backend_pid -o ppid=) -o cmd= | grep -o -P -- ' -D \K[^ ]+'`
+\endif
+
+-- определяем роль СУБД - мастер или реплика
+\if `test -r :data_directory && test -x :data_directory && echo 1 || echo 0`
+    -- если прав доступа хватило
+    \set is_primary `test -f :data_directory/standby.signal && echo 0 || echo 1`
+\endif
+
+\if :{?is_primary}
+\else
+    -- если прав доступа не хватило, получаем is_primary альтернативным способом
+    -- но определять роль СУБД через SQL функцию pg_is_in_recovery() не всегда корректно
+    \set is_primary `test :pg_is_in_recovery = f && echo 1 || echo 0`
+\endif
 
 -- выводим информационные сообщения
 \echo 'Started at:       ':started_at' (':start_uptime' ago)'
