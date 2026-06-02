@@ -18,7 +18,7 @@
 
 -- настраиваем приглашение командной строки
 -- YYYY-MM-DD HH:MM:SS+HH:MM user@host:port/database
-\set PROMPT1 '\n%`date --rfc-3339=seconds` %n@%M:%>/%/\n%R%x%# '
+-- \set PROMPT1 '\n%`date --rfc-3339=seconds` %n@%M:%>/%/\n%R%x%# '
 
 -- пейджер (если результат запроса не помещается на экране, он пропускается через эту программу)
 \setenv PSQL_PAGER 'less -iMFXSx4R'
@@ -35,6 +35,8 @@
 \pset null '¤'
 
 SELECT
+    pg_backend_pid(),
+
     pg_postmaster_start_time()::timestamptz(0) as started_at,
     pg_conf_load_time()::timestamptz(0)        as loaded_at,
     now()::timestamptz(0) - pg_postmaster_start_time()::timestamptz(0) as start_uptime,
@@ -49,33 +51,30 @@ SELECT
       version()
     ), '(?<=\d\.\d+) (on |\().+', '') as pg_version,
 
-    p.is_primary,
-    CASE WHEN p.is_primary THEN 'primary' ELSE 'replica' END as pg_role,
-
-    coalesce((select string_agg(concat(coalesce(client_hostname, client_addr::text, '¤'), ':', client_port), ', ' order by backend_start) 
+    coalesce((select string_agg(concat(coalesce(client_hostname, client_addr::text, '¤'), ':', client_port), ', ' order by backend_start)
                 from pg_stat_replication), '') as wal_send_to,
     (SELECT COUNT(*) FROM pg_stat_replication) as wal_send_count,
 
     coalesce((select concat(sender_host, ':', sender_port) from pg_stat_wal_receiver limit 1), '') as wal_receive_from,
     (SELECT COUNT(*) FROM pg_stat_wal_receiver) as wal_receive_count
-
-FROM
-    COALESCE(CASE
-      WHEN has_function_privilege('pg_stat_file(text, bool)', 'EXECUTE')
-           THEN pg_stat_file(current_setting('data_directory') || '/standby.signal', true) IS NULL
-      ELSE NOT pg_is_in_recovery()
-    END) AS p (is_primary)
 \gset
 
 -- настраиваем приглашение командной строки
 -- YYYY-MM-DD HH:MM:SS+HH:MM  pg_version  user@host:port/database
 \set PROMPT1 '\n%`date --rfc-3339=seconds`  ':pg_version'  %n@%M:%>/%/\n%R%x%# '
 
+-- определяем роль СУБД - мастер или реплика (применять SQL функцию pg_is_in_recovery() не всегда корректно)
+\set data_directory `ps -p $(ps -p :pg_backend_pid -o ppid=) -o cmd= | grep -o -P -- ' -D \K.*'`
+\set is_primary `test -f :data_directory/standby.signal && echo 0 || echo 1`
+
+-- выводим информационные сообщения
 \echo 'Started at:       ':started_at' (':start_uptime' ago)'
 \echo 'Config loaded at: ':loaded_at' (':load_uptime' ago)'
-\echo 'Server role:      ':pg_role
+\echo 'Data directory:   ':data_directory
 \if :is_primary
+    \echo 'Server role:      primary'
 \else
+    \echo 'Server role:      replica'
     \echo 'WAL receive (':wal_receive_count'):  ':wal_receive_from
 \endif
 \echo 'WAL send (':wal_send_count'):     ':wal_send_to
