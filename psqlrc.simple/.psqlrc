@@ -58,9 +58,9 @@ SELECT
 \gset
 
 -- настраиваем приглашения командной строки
--- YYYY-MM-DD HH:MM:SS+HH:MM  pg_version  user@host:port/database
-\set PROMPT1 '\n%`date --rfc-3339=seconds`  ':pg_version'  %n@%M:%>/%/\n%R%x%# '
 \set PROMPT2 '%R%x%# '
+-- YYYY-MM-DD HH:MM:SS+HH:MM  pg_version  user@host:port/database
+\set PROMPT1 '\n%`date --rfc-3339=seconds`  ':pg_version'  %n@%M:%>/%/\n':PROMPT2
 
 \if :{?data_directory}
 \else
