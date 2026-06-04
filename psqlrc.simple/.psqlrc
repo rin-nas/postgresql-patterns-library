@@ -77,6 +77,7 @@ SELECT
     coalesce((SELECT concat(coalesce(slot_name, fallback_application_name, '¤'),
                            '  ', sender_user, '@', sender_host, ':', sender_port,
                            '  ', status, -- starting/stopped/stopping/streaming
+                           '  ', case when pg_is_in_recovery() then pg_get_wal_replay_pause_state() end,
                            '  ', regexp_replace(to_char(total_lag_interval,
                                                         'FMDD"d "FMHH24"h "FMMI"m "FMSS"s "FMMS"ms"'),
                                                 '^0+d (0+h (0+m (0+s 0*(?!ms))?)?)?', ''),
