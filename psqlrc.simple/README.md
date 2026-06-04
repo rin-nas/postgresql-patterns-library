@@ -35,41 +35,30 @@ nano ~/.psqlrc
 
 ## Примеры
 
-### Без применения `.psqlrc`
+### Aвтономная СУБД
+
+#### Без применения `.psqlrc` 
 
 ```
-[postgres@rmukhtarov-redos1 ~]$ psql demo --no-psqlrc
+postgres@rmukhtarov-redos1 root]$ psql demo --no-psqlrc
 psql (18.3, server 17.9)
 Type "help" for help.
 
 demo=# \d+
-                                                             List of relations
-  Schema  |         Name          |   Type   |  Owner   | Persistence | Access method |    Size    |              Description               
-----------+-----------------------+----------+----------+-------------+---------------+------------+----------------------------------------
- bookings | airplanes             | view     | postgres | permanent   |               | 0 bytes    | Airplanes
- bookings | airplanes_data        | table    | postgres | permanent   | heap          | 16 kB      | Airplanes (internal multilingual data)
- bookings | airports              | view     | postgres | permanent   |               | 0 bytes    | Airports
- bookings | airports_data         | table    | postgres | permanent   | heap          | 1288 kB    | Airports (internal multilingual data)
- bookings | axedemo_flights       | view     | postgres | permanent   |               | 0 bytes    | 
- bookings | boarding_passes       | table    | postgres | permanent   | heap          | 839 MB     | Boarding passes
- bookings | bookings              | table    | postgres | permanent   | heap          | 246 MB     | Bookings
- bookings | flights               | table    | postgres | permanent   | heap          | 5928 kB    | Flights
- bookings | flights_flight_id_seq | sequence | postgres | permanent   |               | 8192 bytes | 
- bookings | routes                | table    | postgres | permanent   | heap          | 552 kB     | Routes
- bookings | seats                 | table    | postgres | permanent   | heap          | 120 kB     | Seats
- bookings | segments              | table    | postgres | permanent   | heap          | 933 MB     | Flight segment (leg)
- bookings | tickets               | table    | postgres | permanent   | heap          | 876 MB     | Tickets
- bookings | timetable             | view     | postgres | permanent   |               | 0 bytes    | Detailed info about flights
-(14 rows)
+                                    List of relations
+ Schema |   Name   | Type  |  Owner   | Persistence | Access method | Size  | Description 
+--------+----------+-------+----------+-------------+---------------+-------+-------------
+ public | my_table | table | postgres | permanent   | heap          | 16 kB | 
+(1 row)
 
-demo=# 
+demo=#  
 ```
 
-### С применением `.psqlrc`
+#### С применением `.psqlrc`
 ```
-[postgres@rmukhtarov-redos1 ~]$ psql demo
-Started at:       2026-05-28 19:11:54+03 (1 day 03:03:17 ago)
-Config loaded at: 2026-05-29 15:34:16+03 (06:40:55 ago)
+postgres@rmukhtarov-redos1 root]$ psql demo
+Started at:       2026-06-03 16:57:18+03 (1 day 07:08:25 ago)
+Config loaded at: 2026-06-05 00:01:06+03 (00:04:37 ago)
 Data directory:   /var/lib/pgpro/ent-17/data
 Server role:      primary
 WAL send (0):     
@@ -77,65 +66,54 @@ psql (18.3, server 17.9)
 Type "help" for help.
 
 
-2026-05-29 22:15:11+03:00  Postgres Pro (enterprise) 17.9.2  postgres@[local]:5432/demo
+2026-06-05 00:05:43+03:00  Postgres Pro (enterprise) 17.9.2  postgres@[local]:5432/demo
 =# \d+
-                                                             List of relations
-  Schema  │         Name          │   Type   │  Owner   │ Persistence │ Access method │    Size    │              Description               
-──────────┼───────────────────────┼──────────┼──────────┼─────────────┼───────────────┼────────────┼────────────────────────────────────────
- bookings │ airplanes             │ view     │ postgres │ permanent   │ ¤             │ 0 bytes    │ Airplanes
- bookings │ airplanes_data        │ table    │ postgres │ permanent   │ heap          │ 16 kB      │ Airplanes (internal multilingual data)
- bookings │ airports              │ view     │ postgres │ permanent   │ ¤             │ 0 bytes    │ Airports
- bookings │ airports_data         │ table    │ postgres │ permanent   │ heap          │ 1288 kB    │ Airports (internal multilingual data)
- bookings │ axedemo_flights       │ view     │ postgres │ permanent   │ ¤             │ 0 bytes    │ ¤
- bookings │ boarding_passes       │ table    │ postgres │ permanent   │ heap          │ 839 MB     │ Boarding passes
- bookings │ bookings              │ table    │ postgres │ permanent   │ heap          │ 246 MB     │ Bookings
- bookings │ flights               │ table    │ postgres │ permanent   │ heap          │ 5928 kB    │ Flights
- bookings │ flights_flight_id_seq │ sequence │ postgres │ permanent   │ ¤             │ 8192 bytes │ ¤
- bookings │ routes                │ table    │ postgres │ permanent   │ heap          │ 552 kB     │ Routes
- bookings │ seats                 │ table    │ postgres │ permanent   │ heap          │ 120 kB     │ Seats
- bookings │ segments              │ table    │ postgres │ permanent   │ heap          │ 933 MB     │ Flight segment (leg)
- bookings │ tickets               │ table    │ postgres │ permanent   │ heap          │ 876 MB     │ Tickets
- bookings │ timetable             │ view     │ postgres │ permanent   │ ¤             │ 0 bytes    │ Detailed info about flights
-(14 rows)
+                                    List of relations
+ Schema │   Name   │ Type  │  Owner   │ Persistence │ Access method │ Size  │ Description 
+────────┼──────────┼───────┼──────────┼─────────────┼───────────────┼───────┼─────────────
+ public │ my_table │ table │ postgres │ permanent   │ heap          │ 16 kB │ ¤
+(1 row)
 
 
-2026-05-29 22:15:13+03:00  Postgres Pro (enterprise) 17.9.2  postgres@[local]:5432/demo
+2026-06-05 00:05:53+03:00  Postgres Pro (enterprise) 17.9.2  postgres@[local]:5432/demo
 =# 
 ```
 
-### С применением `.psqlrc`, мастер
+### Кластерная СУБД
+
+#### С применением `.psqlrc`, мастер
 
 ```
-student:~$ psql -p 5432
-Started at:       2026-05-29 19:45:59+03 (02:32:28 ago)
-Config loaded at: 2026-05-29 22:05:34+03 (00:12:53 ago)
-Data directory:   /var/lib/postgresql/16/main
+postgres@sdm18-1:~$ psql
+Started at:       2026-05-06 10:36:04+00 (29 days 10:32:52 ago)
+Config loaded at: 2026-05-06 10:36:17+00 (29 days 10:32:39 ago)
+Data directory:   /pgdata/keeper-sdm18-test-shard-1-1/postgres
 Server role:      primary
-WAL send (1):     ¤:-1
-psql (16.11 (Ubuntu 16.11-1.pgdg24.04+1))
+WAL send (1):     biha_node_2  biha_replication_user@192.168.22.141:57560  physical persistent  quorum streaming  0ms  0 bytes
+psql (18.3)
 Type "help" for help.
 
 
-2026-05-29 22:18:26+03:00  PostgreSQL 16.11  student@[local]:5432/student
+2026-06-05 00:08:55+03:00  Postgres Pro (shardman) 18.3.3  postgres@[local]:5432/postgres
 =# 
 ```
 
-### С применением `.psqlrc`, реплика
+#### С применением `.psqlrc`, реплика
 
 ```
-student:~$ psql -p 5433
-Started at:       2026-05-29 20:23:32+03 (01:52:56 ago)
-Config loaded at: 2026-05-29 20:23:32+03 (01:52:56 ago)
-Data directory:   /var/lib/postgresql/16/replica
+postgres@sdm18-4:~$ psql
+Started at:       2026-05-06 10:36:16+00 (29 days 10:33:23 ago)
+Config loaded at: 2026-05-06 10:36:23+00 (29 days 10:33:16 ago)
+Data directory:   /pgdata/keeper-sdm18-test-shard-1-2/postgres
 Server role:      replica
-WAL receive (1):  /var/run/postgresql:5432
+WAL receive (1):  biha_node_2  biha_replication_user@sdm18-1:5432  streaming  0ms  0 bytes
 WAL send (0):     
-psql (16.11 (Ubuntu 16.11-1.pgdg24.04+1))
+psql (18.3)
 Type "help" for help.
 
 
-2026-05-29 22:16:27+03:00  PostgreSQL 16.11  student@[local]:5433/student
-=#
+2026-06-05 00:09:38+03:00  Postgres Pro (shardman) 18.3.3  postgres@[local]:5432/postgres
+=# 
 ```
 
 ## Ссылки по теме
