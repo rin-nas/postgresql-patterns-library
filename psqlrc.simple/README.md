@@ -102,17 +102,17 @@ Type "help" for help.
 
 ```
 postgres@sdm18-4:~$ psql
-Started at:       2026-05-06 10:36:16+00 (29 days 10:33:23 ago)
-Config loaded at: 2026-05-06 10:36:23+00 (29 days 10:33:16 ago)
+Started at:       2026-05-06 10:36:16+00 (29 days 10:44:26 ago)
+Config loaded at: 2026-05-06 10:36:23+00 (29 days 10:44:19 ago)
 Data directory:   /pgdata/keeper-sdm18-test-shard-1-2/postgres
 Server role:      replica
-WAL receive (1):  biha_node_2  biha_replication_user@sdm18-1:5432  streaming  0ms  0 bytes
+WAL receive (1):  biha_node_2  biha_replication_user@sdm18-1:5432  streaming  1s 620ms  48 bytes
 WAL send (0):     
 psql (18.3)
 Type "help" for help.
 
 
-2026-06-05 00:09:38+03:00  Postgres Pro (shardman) 18.3.3  postgres@[local]:5432/postgres
+2026-06-05 00:20:42+03:00  Postgres Pro (shardman) 18.3.3  postgres@[local]:5432/postgres
 =# 
 ```
 
