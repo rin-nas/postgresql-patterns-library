@@ -49,39 +49,49 @@ SELECT
       version()
     ), '(?<=\d\.\d+) (on |\().+', '') as pg_version,
 
-    coalesce((SELECT string_agg(concat(s.slot_name,
-                                       '  ', r.usename, '@', coalesce(r.client_hostname, host(r.client_addr), '¤'), ':', r.client_port, concat_ws('/', '', s.database),
-                                       '  ', s.slot_type, -- physical/logical
+    coalesce((SELECT string_agg(concat(coalesce(s.slot_name, r.application_name, '¤'),
+                                       '  ', r.usename,
+                                             '@',
+                                             coalesce(r.client_hostname,
+                                                      host(r.client_addr),
+                                                      (select setting from pg_settings where name = 'unix_socket_directories' limit 1),
+                                                      '[socket]'),
+                                             ':',
+                                             r.client_port,
+                                             concat_ws('/', '', s.database),
+                                       '  ', coalesce(s.slot_type, '¤'), -- physical/logical
                                        ' ', case when s.temporary then 'temporary' else 'persistent' end,
                                        '  ', r.sync_state, -- async/potential/sync/quorum
                                        ' ', r.state,       -- startup/catchup/streaming/backup/stopping
-                                       '  ', regexp_replace(to_char(r.replay_lag,
+                                       '  ', regexp_replace(to_char(coalesce(r.replay_lag, '0'::interval),
                                                                     'FMDD"d "FMHH24"h "FMMI"m "FMSS"s "FMMS"ms"'),
                                                             '^0+d (0+h (0+m (0+s 0*(?!ms))?)?)?', ''), -- total_lag_interval
                                        '  ', pg_size_pretty(pg_current_wal_lsn() - r.replay_lsn) -- total_lag_bytes
                                       ),
                                 e'\n                  ' order by r.backend_start)
               FROM pg_stat_replication AS r
-              JOIN pg_replication_slots AS s ON r.pid = s.active_pid
+              LEFT JOIN pg_replication_slots AS s ON r.pid = s.active_pid
              ), '') as wal_send_to,
     (SELECT COUNT(*) FROM pg_stat_replication) as wal_send_count,
 
-    coalesce((SELECT concat(slot_name,
-                           '  ', sender_host, ':', sender_port,
+    coalesce((SELECT concat(coalesce(slot_name, fallback_application_name, '¤'),
+                           '  ', sender_user, '@', sender_host, ':', sender_port,
                            '  ', status, -- starting/stopped/stopping/streaming
-                           '  ', regexp_replace(to_char(a.total_lag_interval,
+                           '  ', regexp_replace(to_char(total_lag_interval,
                                                         'FMDD"d "FMHH24"h "FMMI"m "FMSS"s "FMMS"ms"'),
                                                 '^0+d (0+h (0+m (0+s 0*(?!ms))?)?)?', ''),
-                           '  ', pg_size_pretty(b.total_lag_bytes)
+                           '  ', pg_size_pretty(total_lag_bytes)
                            )
               FROM pg_stat_wal_receiver,
+                   coalesce((regexp_match(conninfo, '\muser=([^ ]+)'))[1]) AS s (sender_user),
+                   coalesce((regexp_match(conninfo, '\mfallback_application_name=([^ ]+)'))[1]) AS f (fallback_application_name),
                    coalesce(case when status != 'streaming' then null
                                  when latest_end_lsn = pg_last_wal_replay_lsn() then '0'::interval
                                  else now() - latest_end_time
-                            end) as a (total_lag_interval),
+                            end) AS a (total_lag_interval),
                    coalesce(case when status != 'streaming' then null
                                  else latest_end_lsn - pg_last_wal_replay_lsn()
-                            end) as b (total_lag_bytes)
+                            end) AS b (total_lag_bytes)
               LIMIT 1
              ), '') as wal_receive_from,
     (SELECT COUNT(*) FROM pg_stat_wal_receiver) as wal_receive_count
