@@ -49,11 +49,41 @@ SELECT
       version()
     ), '(?<=\d\.\d+) (on |\().+', '') as pg_version,
 
-    coalesce((select string_agg(concat(coalesce(client_hostname, client_addr::text, '¤'), ':', client_port), ', ' order by backend_start)
-                from pg_stat_replication), '') as wal_send_to,
+    coalesce((SELECT string_agg(concat(s.slot_name,
+                                       '  ', r.usename, '@', coalesce(r.client_hostname, host(r.client_addr), '¤'), ':', r.client_port, concat_ws('/', '', s.database),
+                                       '  ', s.slot_type, -- physical/logical
+                                       ' ', case when s.temporary then 'temporary' else 'persistent' end,
+                                       '  ', r.sync_state, -- async/potential/sync/quorum
+                                       ' ', r.state,       -- startup/catchup/streaming/backup/stopping
+                                       '  ', regexp_replace(to_char(r.replay_lag,
+                                                                    'FMDD"d "FMHH24"h "FMMI"m "FMSS"s "FMMS"ms"'),
+                                                            '^0+d (0+h (0+m (0+s 0*(?!ms))?)?)?', ''), -- total_lag_interval
+                                       '  ', pg_size_pretty(pg_current_wal_lsn() - r.replay_lsn) -- total_lag_bytes
+                                      ),
+                                e'\n                  ' order by r.backend_start)
+              FROM pg_stat_replication AS r
+              JOIN pg_replication_slots AS s ON r.pid = s.active_pid
+             ), '') as wal_send_to,
     (SELECT COUNT(*) FROM pg_stat_replication) as wal_send_count,
 
-    coalesce((select concat(sender_host, ':', sender_port) from pg_stat_wal_receiver limit 1), '') as wal_receive_from,
+    coalesce((SELECT concat(slot_name,
+                           '  ', sender_host, ':', sender_port,
+                           '  ', status, -- starting/stopped/stopping/streaming
+                           '  ', regexp_replace(to_char(a.total_lag_interval,
+                                                        'FMDD"d "FMHH24"h "FMMI"m "FMSS"s "FMMS"ms"'),
+                                                '^0+d (0+h (0+m (0+s 0*(?!ms))?)?)?', ''),
+                           '  ', pg_size_pretty(b.total_lag_bytes)
+                           )
+              FROM pg_stat_wal_receiver,
+                   coalesce(case when status != 'streaming' then null
+                                 when latest_end_lsn = pg_last_wal_replay_lsn() then '0'::interval
+                                 else now() - latest_end_time
+                            end) as a (total_lag_interval),
+                   coalesce(case when status != 'streaming' then null
+                                 else latest_end_lsn - pg_last_wal_replay_lsn()
+                            end) as b (total_lag_bytes)
+              LIMIT 1
+             ), '') as wal_receive_from,
     (SELECT COUNT(*) FROM pg_stat_wal_receiver) as wal_receive_count
 \gset
 
