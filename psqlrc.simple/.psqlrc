@@ -94,7 +94,25 @@ SELECT
                             end) AS b (total_lag_bytes)
               LIMIT 1
              ), '') as wal_receive_from,
-    (SELECT COUNT(*) FROM pg_stat_wal_receiver) as wal_receive_count
+    (SELECT COUNT(*) FROM pg_stat_wal_receiver) as wal_receive_count,
+
+    -- именованные SQL запросы для быстрого доступа:
+    'SELECT current_user, session_user, current_schemas(true) \gx' as "W",
+
+    $sql$
+        select
+            backend_type,
+            datname,
+            state,
+            usename,
+            wait_event_type,
+            wait_event,
+            count(*) as count
+        from pg_stat_activity
+        group by backend_type, datname, state, usename, wait_event_type, wait_event
+        order by backend_type, datname, state, usename, wait_event_type, wait_event;
+    $sql$ as "SAG"
+
 \gset
 
 -- настраиваем приглашения командной строки
