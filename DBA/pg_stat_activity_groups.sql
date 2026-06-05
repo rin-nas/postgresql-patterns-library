@@ -6,7 +6,11 @@ with a as (
         usename,
         wait_event_type,
         wait_event,
-        count(*) as count
+        count(*) as count,
+        concat_ws('/',
+          count(*) filter (where state_change < now() - interval '1 minute'),
+          count(*) filter (where state_change < now() - interval '1 hour')
+        ) as "state changed > 1m/1h ago"
     from pg_stat_activity
     group by backend_type, datname, state, usename, wait_event_type, wait_event
     order by backend_type, datname, state, usename, wait_event_type, wait_event
