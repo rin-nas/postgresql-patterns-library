@@ -74,10 +74,11 @@ SELECT
                                        ' ', case when s.temporary then 'temporary' else 'persistent' end,
                                        '  ', r.sync_state, -- async/potential/sync/quorum
                                        ' ', r.state,       -- startup/catchup/streaming/backup/stopping
-                                       '  ', regexp_replace(to_char(coalesce(r.replay_lag, '0'::interval),
+                                       '  (lag: ', regexp_replace(to_char(coalesce(r.replay_lag, '0'::interval),
                                                                     'FMDD"d "FMHH24"h "FMMI"m "FMSS"s "FMMS"ms"'),
                                                             '^0+d (0+h (0+m (0+s 0*(?!ms))?)?)?', ''), -- total_lag_interval
-                                       '  ', pg_size_pretty(pg_current_wal_lsn() - r.replay_lsn) -- total_lag_bytes
+                                       ', ', pg_size_pretty(pg_current_wal_lsn() - r.replay_lsn), -- total_lag_bytes
+                                       ')'
                                       ),
                                 e'\n                  ' order by r.backend_start)
               FROM pg_stat_replication AS r
@@ -89,10 +90,11 @@ SELECT
                            '  ', sender_user, '@', sender_host, ':', sender_port,
                            '  ', status, -- starting/stopped/stopping/streaming
                            '  ', case when pg_is_in_recovery() then pg_get_wal_replay_pause_state() end, -- not paused/pause requested/paused
-                           '  ', regexp_replace(to_char(total_lag_interval,
+                           '  (lag: ', regexp_replace(to_char(total_lag_interval,
                                                         'FMDD"d "FMHH24"h "FMMI"m "FMSS"s "FMMS"ms"'),
                                                 '^0+d (0+h (0+m (0+s 0*(?!ms))?)?)?', ''),
-                           '  ', pg_size_pretty(total_lag_bytes)
+                           '  ', pg_size_pretty(total_lag_bytes),
+                           ')'
                            )
               FROM pg_stat_wal_receiver,
                    coalesce((regexp_match(conninfo, '\muser=([^ ]+)'))[1]) AS s (sender_user),
