@@ -35,7 +35,7 @@ nano ~/.psqlrc
 
 ## Примеры
 
-### Aвтономная СУБД
+### Автономная СУБД
 
 #### Без применения `.psqlrc` 
 
@@ -94,7 +94,7 @@ Started at:       2026-05-06 10:36:04+00 (30 days 01:10:49 ago)
 Config loaded at: 2026-05-06 10:36:17+00 (30 days 01:10:36 ago)
 Data directory:   /pgdata/keeper-sdm18-test-shard-1-1/postgres
 Server role:      primary
-WAL send (1):     biha_node_2  biha_replication_user@192.168.22.141:57560  physical persistent  quorum streaming  1ms  128 bytes
+WAL send (1):     biha_node_2  biha_replication_user@192.168.22.141:57560  physical persistent  quorum streaming  (lag: 1ms, 128 bytes)
 Archive mode:     on (timeout: 1800)
 Archive command:  /usr/bin/pg_probackup3 archive-push -B /backups/sdm  --instance shard-1 --wal-file-path=%p --wal-file-name=%f --log-level-console=debug -j 1 --compress-algorithm none --compress-level 1
 Restore command:  
@@ -118,7 +118,7 @@ Started at:       2026-05-06 10:36:16+00 (30 days 01:10:07 ago)
 Config loaded at: 2026-05-06 10:36:23+00 (30 days 01:10:00 ago)
 Data directory:   /pgdata/keeper-sdm18-test-shard-1-2/postgres
 Server role:      replica
-WAL receive (1):  biha_node_2  biha_replication_user@sdm18-1:5432  streaming  not paused  1s 158ms  296 bytes
+WAL receive (1):  biha_node_2  biha_replication_user@sdm18-1:5432  streaming  not paused  (lag: 1s 158ms, 296 bytes)
 WAL send (0):     
 Archive mode:     on (timeout: 1800)
 Archive command:  /usr/bin/pg_probackup3 archive-push -B /backups/sdm  --instance shard-1 --wal-file-path=%p --wal-file-name=%f --log-level-console=debug -j 1 --compress-algorithm none --compress-level 1
