@@ -93,7 +93,7 @@ SELECT
                            '  (lag: ', regexp_replace(to_char(total_lag_interval,
                                                         'FMDD"d "FMHH24"h "FMMI"m "FMSS"s "FMMS"ms"'),
                                                 '^0+d (0+h (0+m (0+s 0*(?!ms))?)?)?', ''),
-                           '  ', pg_size_pretty(total_lag_bytes),
+                           ', ', pg_size_pretty(total_lag_bytes),
                            ')'
                            )
               FROM pg_stat_wal_receiver,
