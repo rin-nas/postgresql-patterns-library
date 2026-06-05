@@ -34,6 +34,10 @@ SELECT
     pg_backend_pid(),
     pg_is_in_recovery(),
     (select setting from pg_settings where name = 'data_directory' limit 1) as data_directory,
+    (select string_agg(concat(extname, ' ', extversion), ', ' order by extname) from pg_extension) as installed_extensions,
+
+    db.datname as db_name,
+    pg_size_pretty(pg_database_size(db.datname)) as db_size,
 
     pg_postmaster_start_time()::timestamptz(0) as started_at,
     pg_conf_load_time()::timestamptz(0)        as loaded_at,
@@ -74,10 +78,10 @@ SELECT
              ), '') as wal_send_to,
     (SELECT COUNT(*) FROM pg_stat_replication) as wal_send_count,
 
-    coalesce((SELECT concat(coalesce(slot_name, fallback_application_name, '¤'),
+    coalesce((SELECT concat(coalesce(slot_name, application_name, '¤'),
                            '  ', sender_user, '@', sender_host, ':', sender_port,
                            '  ', status, -- starting/stopped/stopping/streaming
-                           '  ', case when pg_is_in_recovery() then pg_get_wal_replay_pause_state() end,
+                           '  ', case when pg_is_in_recovery() then pg_get_wal_replay_pause_state() end, -- not paused/pause requested/paused
                            '  ', regexp_replace(to_char(total_lag_interval,
                                                         'FMDD"d "FMHH24"h "FMMI"m "FMSS"s "FMMS"ms"'),
                                                 '^0+d (0+h (0+m (0+s 0*(?!ms))?)?)?', ''),
@@ -85,7 +89,7 @@ SELECT
                            )
               FROM pg_stat_wal_receiver,
                    coalesce((regexp_match(conninfo, '\muser=([^ ]+)'))[1]) AS s (sender_user),
-                   coalesce((regexp_match(conninfo, '\mfallback_application_name=([^ ]+)'))[1]) AS f (fallback_application_name),
+                   coalesce((regexp_match(conninfo, '\mfallback_application_name=([^ ]+)'))[1]) AS f (application_name),
                    coalesce(case when status != 'streaming' then null
                                  when latest_end_lsn = pg_last_wal_replay_lsn() then '0'::interval
                                  else now() - latest_end_time
@@ -108,12 +112,18 @@ SELECT
             usename,
             wait_event_type,
             wait_event,
-            count(*) as count
+            count(*) as count,
+            concat_ws('/',
+              count(*) filter (where state_change < now() - interval '1 minute'),
+              count(*) filter (where state_change < now() - interval '1 hour')
+            ) as "state changed > 1m/1h ago"
         from pg_stat_activity
         group by backend_type, datname, state, usename, wait_event_type, wait_event
         order by backend_type, datname, state, usename, wait_event_type, wait_event;
-    $sql$ as "SAG"
+    $sql$ as "A"
 
+FROM pg_stat_database AS db
+WHERE datname = current_database()
 \gset
 
 -- настраиваем приглашения командной строки
@@ -151,6 +161,9 @@ SELECT
     \echo 'WAL receive (':wal_receive_count'):  ':wal_receive_from
 \endif
 \echo 'WAL send (':wal_send_count'):     ':wal_send_to
+\echo 'Installed extens: ':installed_extensions
+\echo 'Current database: ':db_name :db_size
+\echo 'Short queries:     :W - who am i, :A - stats activity groups'
 
 -- включаем отображение длительности выполнения запроса
 \timing on
