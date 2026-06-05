@@ -3,6 +3,7 @@
 Get some ideas from
    * https://github.com/zalando/pg_view
    * https://github.com/lesovsky/pgcenter/tree/master/internal/query ; https://habr.com/ru/articles/494162/
+   * https://github.com/NikolayS/postgres_dba/blob/master/sql/
 
 Show current_user `SELECT SESSION_USER, CURRENT_USER;` (after `SET ROLE rolename`)
 

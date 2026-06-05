@@ -36,6 +36,13 @@ SELECT
     (select setting from pg_settings where name = 'data_directory' limit 1) as data_directory,
     (select string_agg(concat(extname, ' ', extversion), ', ' order by extname) from pg_extension) as installed_extensions,
 
+    -- архивация WAL файлов
+    exists(select from pg_settings where name = 'archive_mode' and setting != 'off') as is_archive_active,
+    (select setting from pg_settings where name = 'archive_mode' limit 1) as archive_mode,
+    (select setting from pg_settings where name = 'archive_timeout' limit 1) as archive_timeout,
+    (select setting from pg_settings where name = 'archive_command' limit 1) as archive_command,
+    (select setting from pg_settings where name = 'restore_command' limit 1) as restore_command,
+
     db.datname as db_name,
     pg_size_pretty(pg_database_size(db.datname)) as db_size,
 
@@ -46,7 +53,7 @@ SELECT
 
     regexp_replace(coalesce(
       -- example: Postgres Pro (shardman) 18.3.2 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 13.3.1 20250418 (RED SOFT 13.3.1-3), 64-bit
-      (select setting from pg_settings where name = 'pgpro_version'),
+      (select setting from pg_settings where name = 'pgpro_version' limit 1),
 
       -- example: PostgreSQL 18.3 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 13.3.1 20250418 (RED SOFT 13.3.1-3), 64-bit
       -- example: PostgreSQL 16.11 (Ubuntu 16.11-1.pgdg24.04+1) on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04) 13.3.0, 64-bit
@@ -154,15 +161,26 @@ WHERE datname = current_database()
 \echo 'Started at:       ':started_at' (':start_uptime' ago)'
 \echo 'Config loaded at: ':loaded_at' (':load_uptime' ago)'
 \echo 'Data directory:   ':data_directory
+
 \if :is_primary
     \echo 'Server role:      primary'
 \else
     \echo 'Server role:      replica'
     \echo 'WAL receive (':wal_receive_count'):  ':wal_receive_from
 \endif
+
 \echo 'WAL send (':wal_send_count'):     ':wal_send_to
+
+\if :is_archive_active
+    \echo 'Archive mode:     ':archive_mode' (timeout: ':archive_timeout')'
+    \echo 'Archive command:  ':archive_command
+    \echo 'Restore command:  ':restore_command
+\else
+    \echo 'Archive mode:     ':archive_mode
+\endif
+
+\echo 'Current database: ':db_name' (size: ':db_size')'
 \echo 'Installed extens: ':installed_extensions
-\echo 'Current database: ':db_name :db_size
 \echo 'Short SQL:        :W - who am i, :A - stats activity groups'
 \echo
 
