@@ -163,7 +163,8 @@ WHERE datname = current_database()
 \echo 'WAL send (':wal_send_count'):     ':wal_send_to
 \echo 'Installed extens: ':installed_extensions
 \echo 'Current database: ':db_name :db_size
-\echo 'Short queries:     :W - who am i, :A - stats activity groups'
+\echo 'Short SQL:        :W - who am i, :A - stats activity groups'
+\echo
 
 -- включаем отображение длительности выполнения запроса
 \timing on
