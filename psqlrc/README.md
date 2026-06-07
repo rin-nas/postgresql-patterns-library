@@ -20,7 +20,7 @@
    * название слота или подключения
    * DSN подключения (user@host:port/database)
    * тип репликации (physical/logical)
-   * тип слота (temporary/persistent)
+   * тип слота (temporary/persistent/unknown)
    * тип синхронизации (async/potential/sync/quorum)
    * состояние репликации (startup/catchup/streaming/backup/stopping)
    * отставание во времени и байтах (форматированное) 

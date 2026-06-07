@@ -71,18 +71,21 @@ SELECT
                                              r.client_port,
                                              concat_ws('/', '', s.database),
                                        '  ', coalesce(s.slot_type, '¤'), -- physical/logical
-                                       ' ', case when s.temporary then 'temporary' else 'persistent' end,
+                                       ' ', case when s.temporary is null then 'unknown' when s.temporary then 'temporary' else 'persistent' end,
                                        '  ', r.sync_state, -- async/potential/sync/quorum
                                        ' ', r.state,       -- startup/catchup/streaming/backup/stopping
-                                       '  (lag: ', regexp_replace(to_char(coalesce(r.replay_lag, '0'::interval),
-                                                                    'FMDD"d "FMHH24"h "FMMI"m "FMSS"s "FMMS"ms"'),
-                                                            '^0+d (0+h (0+m (0+s 0*(?!ms))?)?)?', ''), -- total_lag_interval
-                                       ', ', pg_size_pretty(pg_current_wal_lsn() - r.replay_lsn), -- total_lag_bytes
+                                       '  (lag: ', coalesce(a.total_lag_time_pretty, '¤'),
+                                             ', ', coalesce(b.total_lag_size_pretty, '¤'),
                                        ')'
                                       ),
                                 e'\n                  ' order by r.backend_start)
               FROM pg_stat_replication AS r
               LEFT JOIN pg_replication_slots AS s ON r.pid = s.active_pid
+              CROSS JOIN COALESCE(regexp_replace(to_char(r.replay_lag,
+                                                         'FMDD"d "FMHH24"h "FMMI"m "FMSS"s "FMMS"ms"'),
+                                                         '^0+d (0+h (0+m (0+s 0*(?!ms))?)?)?', '')
+                                 ) AS a (total_lag_time_pretty)
+              CROSS JOIN COALESCE(pg_size_pretty(pg_current_wal_lsn() - r.replay_lsn)) AS b (total_lag_size_pretty)
              ), '') as wal_send_to,
     (SELECT COUNT(*) FROM pg_stat_replication) as wal_send_count,
 
@@ -93,7 +96,7 @@ SELECT
                            '  (lag: ', regexp_replace(to_char(total_lag_interval,
                                                         'FMDD"d "FMHH24"h "FMMI"m "FMSS"s "FMMS"ms"'),
                                                 '^0+d (0+h (0+m (0+s 0*(?!ms))?)?)?', ''),
-                           ', ', pg_size_pretty(total_lag_bytes),
+                           ', ', pg_size_pretty(total_lag_time),
                            ')'
                            )
               FROM pg_stat_wal_receiver,
@@ -105,7 +108,7 @@ SELECT
                             end) AS a (total_lag_interval),
                    coalesce(case when status != 'streaming' then null
                                  else latest_end_lsn - pg_last_wal_replay_lsn()
-                            end) AS b (total_lag_bytes)
+                            end) AS b (total_lag_time)
               LIMIT 1
              ), '') as wal_receive_from,
     (SELECT COUNT(*) FROM pg_stat_wal_receiver) as wal_receive_count,
