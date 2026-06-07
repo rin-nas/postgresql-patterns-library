@@ -75,16 +75,19 @@ SELECT
                                        '  ', r.sync_state, -- async/potential/sync/quorum
                                        ' ', r.state,       -- startup/catchup/streaming/backup/stopping
                                        '  (lag: ', coalesce(a.total_lag_time_pretty, '¤'),
-                                             ', ', coalesce(b.total_lag_size_pretty, '¤'),
-                                       ')'
+                                             ', ', coalesce(b.total_lag_size_pretty, '¤'), ')'
                                       ),
                                 e'\n                  ' order by r.backend_start)
               FROM pg_stat_replication AS r
               LEFT JOIN pg_replication_slots AS s ON r.pid = s.active_pid
-              CROSS JOIN COALESCE(regexp_replace(to_char(r.replay_lag,
-                                                         'FMDD"d "FMHH24"h "FMMI"m "FMSS"s "FMMS"ms"'),
-                                                         '^0+d (0+h (0+m (0+s 0*(?!ms))?)?)?', '')
-                                 ) AS a (total_lag_time_pretty)
+              CROSS JOIN COALESCE(case when r.replay_lag =   '0'::interval then '0ms'
+                                       when r.replay_lag <  '1s'::interval then regexp_replace(to_char(r.replay_lag, 'FMMS"ms"'), '^0+(?=\d+ms$)', '')
+                                       when r.replay_lag < '10s'::interval then regexp_replace(to_char(r.replay_lag, 'FMSS"s" FMMS"ms"'), '(?<!\d)0+(?=\d+ms$)', '')
+                                       when r.replay_lag <  '1m'::interval then to_char(r.replay_lag, 'FMSS"s"')
+                                       when r.replay_lag <  '1h'::interval then to_char(r.replay_lag, 'FMMI"m" FMSS"s"')
+                                       when r.replay_lag <  '1d'::interval then to_char(r.replay_lag, 'FMHH24"h" FMMI"m" FMSS"s"')
+                                       else to_char(r.replay_lag, 'FMDD"d" FMHH24"h" FMMI"m" FMSS"s"')
+                                  end) AS a (total_lag_time_pretty)
               CROSS JOIN COALESCE(pg_size_pretty(pg_current_wal_lsn() - r.replay_lsn)) AS b (total_lag_size_pretty)
              ), '') as wal_send_to,
     (SELECT COUNT(*) FROM pg_stat_replication) as wal_send_count,
@@ -92,12 +95,9 @@ SELECT
     coalesce((SELECT concat(coalesce(slot_name, application_name, '¤'),
                            '  ', sender_user, '@', sender_host, ':', sender_port,
                            '  ', status, -- starting/stopped/stopping/streaming
-                           '  ', case when pg_is_in_recovery() then pg_get_wal_replay_pause_state() end, -- not paused/pause requested/paused
-                           '  (lag: ', regexp_replace(to_char(total_lag_interval,
-                                                        'FMDD"d "FMHH24"h "FMMI"m "FMSS"s "FMMS"ms"'),
-                                                '^0+d (0+h (0+m (0+s 0*(?!ms))?)?)?', ''),
-                           ', ', pg_size_pretty(total_lag_time),
-                           ')'
+                           '  ', case when pg_is_in_recovery() then pg_get_wal_replay_pause_state() end, -- not paused / pause requested / paused
+                           '  (lag: ', coalesce(total_lag_time_pretty, '¤'),
+                                 ', ', coalesce(total_lag_size_pretty, '¤'), ')'
                            )
               FROM pg_stat_wal_receiver,
                    coalesce((regexp_match(conninfo, '\muser=([^ ]+)'))[1]) AS s (sender_user),
@@ -105,10 +105,19 @@ SELECT
                    coalesce(case when status != 'streaming' then null
                                  when latest_end_lsn = pg_last_wal_replay_lsn() then '0'::interval
                                  else now() - latest_end_time
-                            end) AS a (total_lag_interval),
+                            end) AS a (total_lag_time),
                    coalesce(case when status != 'streaming' then null
                                  else latest_end_lsn - pg_last_wal_replay_lsn()
-                            end) AS b (total_lag_time)
+                            end) AS b (total_lag_size),
+                   coalesce(case when total_lag_time =   '0'::interval then '0ms'
+                                 when total_lag_time <  '1s'::interval then regexp_replace(to_char(total_lag_time, 'FMMS"ms"'), '^0+(?=\d+ms$)', '')
+                                 when total_lag_time < '10s'::interval then regexp_replace(to_char(total_lag_time, 'FMSS"s" FMMS"ms"'), '(?<!\d)0+(?=\d+ms$)', '')
+                                 when total_lag_time <  '1m'::interval then to_char(total_lag_time, 'FMSS"s"')
+                                 when total_lag_time <  '1h'::interval then to_char(total_lag_time, 'FMMI"m" FMSS"s"')
+                                 when total_lag_time <  '1d'::interval then to_char(total_lag_time, 'FMHH24"h" FMMI"m" FMSS"s"')
+                                 else to_char(total_lag_time, 'FMDD"d" FMHH24"h" FMMI"m" FMSS"s"')
+                            end) AS c (total_lag_time_pretty),
+                   coalesce(pg_size_pretty(total_lag_size)) AS d (total_lag_size_pretty)
               LIMIT 1
              ), '') as wal_receive_from,
     (SELECT COUNT(*) FROM pg_stat_wal_receiver) as wal_receive_count,
@@ -186,7 +195,7 @@ WHERE datname = current_database()
 
 \echo 'Current database: ':db_name' (size: ':db_size')'
 \echo 'Installed extens: ':installed_extensions
-\echo 'Short SQL:        :W - who am i, :A - stats activity groups'
+\echo 'Short SQL:        :W - who am i, :A - stat activity groups counts'
 \echo
 
 -- включаем отображение длительности выполнения запроса
