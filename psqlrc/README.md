@@ -88,7 +88,7 @@ WAL send (0):
 Archive mode:     off
 Current database: demo (size: 8700 kB)
 Installed extens: pgpro_axe 1.1.0.1, pgpro_metastore 1.1, plpgsql 1.0.1
-Short SQL:        :W - who am i, :A - stats activity groups
+Short SQL:        :W - who am i, :A - stat activity groups counts
 
 psql (18.3, server 17.9)
 Type "help" for help.
@@ -123,7 +123,7 @@ Archive command:  /usr/bin/pg_probackup3 archive-push -B /backups/sdm  --instanc
 Restore command:  
 Current database: postgres (size: 125 MB)
 Installed extens: pg_stat_statements 1.12, pgstattuple 1.5, plpgsql 1.0.1, shardman 0.2.106
-Short SQL:        :W - who am i, :A - stats activity groups
+Short SQL:        :W - who am i, :A - stat activity groups counts
 
 psql (18.3)
 Type "help" for help.
@@ -148,7 +148,7 @@ Archive command:  /usr/bin/pg_probackup3 archive-push -B /backups/sdm  --instanc
 Restore command:  
 Current database: postgres (size: 125 MB)
 Installed extens: pg_stat_statements 1.12, pgstattuple 1.5, plpgsql 1.0.1, shardman 0.2.106
-Short SQL:        :W - who am i, :A - stats activity groups
+Short SQL:        :W - who am i, :A - stat activity groups counts
 
 psql (18.3)
 Type "help" for help.

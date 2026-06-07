@@ -88,7 +88,7 @@ SELECT
                                        when r.replay_lag <  '1d'::interval then to_char(r.replay_lag, 'FMHH24"h" FMMI"m" FMSS"s"')
                                        else to_char(r.replay_lag, 'FMDD"d" FMHH24"h" FMMI"m" FMSS"s"')
                                   end) AS a (total_lag_time_pretty)
-              CROSS JOIN COALESCE(pg_size_pretty(pg_current_wal_lsn() - r.replay_lsn)) AS b (total_lag_size_pretty)
+              CROSS JOIN pg_size_pretty(pg_current_wal_lsn() - r.replay_lsn) AS b (total_lag_size_pretty)
              ), '') as wal_send_to,
     (SELECT COUNT(*) FROM pg_stat_replication) as wal_send_count,
 
@@ -117,7 +117,7 @@ SELECT
                                  when total_lag_time <  '1d'::interval then to_char(total_lag_time, 'FMHH24"h" FMMI"m" FMSS"s"')
                                  else to_char(total_lag_time, 'FMDD"d" FMHH24"h" FMMI"m" FMSS"s"')
                             end) AS c (total_lag_time_pretty),
-                   coalesce(pg_size_pretty(total_lag_size)) AS d (total_lag_size_pretty)
+                   pg_size_pretty(total_lag_size) AS d (total_lag_size_pretty)
               LIMIT 1
              ), '') as wal_receive_from,
     (SELECT COUNT(*) FROM pg_stat_wal_receiver) as wal_receive_count,
