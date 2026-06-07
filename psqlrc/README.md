@@ -80,15 +80,15 @@ demo=#
 #### С применением `.psqlrc`
 ```
 [postgres@rmukhtarov-redos1 ~]$ psql demo
-Started at:       2026-06-03 16:57:18+03 (1 day 21:45:52 ago)
-Config loaded at: 2026-06-05 00:01:06+03 (14:42:04 ago)
-Data directory:   /var/lib/pgpro/ent-17/data
-Server role:      primary
-WAL send (0):     
-Archive mode:     off
-Current database: demo (size: 8700 kB)
-Installed extens: pgpro_axe 1.1.0.1, pgpro_metastore 1.1, plpgsql 1.0.1
-Short SQL:        :W - who am i, :A - stat activity groups counts
+Started at:        2026-06-03 16:57:18+03 (1 day 21:45:52 ago)
+Config loaded at:  2026-06-05 00:01:06+03 (14:42:04 ago)
+Data directory:    /var/lib/pgpro/ent-17/data
+Server role:       primary
+WAL send (0):
+Archive mode:      off
+Current database:  demo (size: 8700 kB)
+Installed extens:  pgpro_axe 1.1.0.1, pgpro_metastore 1.1, plpgsql 1.0.1
+Short SQL:         :W - who am i, :A - stat activity groups counts
 
 psql (18.3, server 17.9)
 Type "help" for help.
@@ -113,17 +113,17 @@ Type "help" for help.
 
 ```
 postgres@sdm18-1:~$ psql
-Started at:       2026-05-06 10:36:04+00 (30 days 01:10:49 ago)
-Config loaded at: 2026-05-06 10:36:17+00 (30 days 01:10:36 ago)
-Data directory:   /pgdata/keeper-sdm18-test-shard-1-1/postgres
-Server role:      primary
-WAL send (1):     biha_node_2  biha_replication_user@192.168.22.141:57560  physical persistent  quorum streaming  (lag: 1ms, 128 bytes)
-Archive mode:     on (timeout: 1800)
-Archive command:  /usr/bin/pg_probackup3 archive-push -B /backups/sdm  --instance shard-1 --wal-file-path=%p --wal-file-name=%f --log-level-console=debug -j 1 --compress-algorithm none --compress-level 1
-Restore command:  
-Current database: postgres (size: 125 MB)
-Installed extens: pg_stat_statements 1.12, pgstattuple 1.5, plpgsql 1.0.1, shardman 0.2.106
-Short SQL:        :W - who am i, :A - stat activity groups counts
+Started at:        2026-05-06 10:36:04+00 (30 days 01:10:49 ago)
+Config loaded at:  2026-05-06 10:36:17+00 (30 days 01:10:36 ago)
+Data directory:    /pgdata/keeper-sdm18-test-shard-1-1/postgres
+Server role:       primary
+WAL send (1):      biha_node_2  biha_replication_user@192.168.22.141:57560  physical persistent  quorum streaming  (lag: 1ms, 128 bytes)
+Archive mode:      on (timeout: 1800)
+Archive command:   /usr/bin/pg_probackup3 archive-push -B /backups/sdm  --instance shard-1 --wal-file-path=%p --wal-file-name=%f --log-level-console=debug -j 1 --compress-algorithm none --compress-level 1
+Restore command:
+Current database:  postgres (size: 125 MB)
+Installed extens:  pg_stat_statements 1.12, pgstattuple 1.5, plpgsql 1.0.1, shardman 0.2.106
+Short SQL:         :W - who am i, :A - stat activity groups counts
 
 psql (18.3)
 Type "help" for help.
@@ -137,18 +137,18 @@ Type "help" for help.
 
 ```
 postgres@sdm18-4:~$ psql
-Started at:       2026-05-06 10:36:16+00 (30 days 01:10:07 ago)
-Config loaded at: 2026-05-06 10:36:23+00 (30 days 01:10:00 ago)
-Data directory:   /pgdata/keeper-sdm18-test-shard-1-2/postgres
-Server role:      replica
-WAL receive (1):  biha_node_2  biha_replication_user@sdm18-1:5432  streaming  not paused  (lag: 1s 158ms, 296 bytes)
-WAL send (0):     
-Archive mode:     on (timeout: 1800)
-Archive command:  /usr/bin/pg_probackup3 archive-push -B /backups/sdm  --instance shard-1 --wal-file-path=%p --wal-file-name=%f --log-level-console=debug -j 1 --compress-algorithm none --compress-level 1
-Restore command:  
-Current database: postgres (size: 125 MB)
-Installed extens: pg_stat_statements 1.12, pgstattuple 1.5, plpgsql 1.0.1, shardman 0.2.106
-Short SQL:        :W - who am i, :A - stat activity groups counts
+Started at:        2026-05-06 10:36:16+00 (30 days 01:10:07 ago)
+Config loaded at:  2026-05-06 10:36:23+00 (30 days 01:10:00 ago)
+Data directory:    /pgdata/keeper-sdm18-test-shard-1-2/postgres
+Server role:       replica
+WAL receive (1):   biha_node_2  biha_replication_user@sdm18-1:5432  streaming  not paused  (lag: 1s 158ms, 296 bytes)
+WAL send (0):
+Archive mode:      on (timeout: 1800)
+Archive command:   /usr/bin/pg_probackup3 archive-push -B /backups/sdm  --instance shard-1 --wal-file-path=%p --wal-file-name=%f --log-level-console=debug -j 1 --compress-algorithm none --compress-level 1
+Restore command:
+Current database:  postgres (size: 125 MB)
+Installed extens:  pg_stat_statements 1.12, pgstattuple 1.5, plpgsql 1.0.1, shardman 0.2.106
+Short SQL:         :W - who am i, :A - stat activity groups counts
 
 psql (18.3)
 Type "help" for help.
