@@ -2593,11 +2593,11 @@ SELECT
     usename AS user,
     application_name,
     state,
-    sync_state AS mode,[](url)
-    pg_current_wal_flush_lsn() - sent_lsn   AS pending_bytes,    -- объём данных к отправке, который состоит из всех журнальных записей, накопленных на основном узле, но еще не переданных на реплику
-    sent_lsn - write_lsn              AS write_lag_bytes,  -- объём данных, отправленных с основного узла, но еще не записанных на стороне реплики
-    write_lsn - flush_lsn             AS flush_lag_bytes,  -- объём данных, записанных, но еще не синхронизированных на реплике
-    flush_lsn - replay_lsn            AS replay_lag_bytes, -- объём данных, готовых для воспроизведения процессом startup
+    sync_state AS mode,
+    pg_current_wal_flush_lsn() - sent_lsn AS pending_bytes,    -- объём данных к отправке, который состоит из всех журнальных записей, накопленных на основном узле, но еще не переданных на реплику
+    sent_lsn - write_lsn                  AS write_lag_bytes,  -- объём данных, отправленных с основного узла, но еще не записанных на стороне реплики
+    write_lsn - flush_lsn                 AS flush_lag_bytes,  -- объём данных, записанных, но еще не синхронизированных на реплике
+    flush_lsn - replay_lsn                AS replay_lag_bytes, -- объём данных, готовых для воспроизведения процессом startup
     pg_current_wal_flush_lsn() - replay_lsn AS total_lag_bytes,
     write_lag,  -- время, прошедшее между локальной синхронизацией журнала и получением уведомления о том, что изменения записаны (но еще не синхронизированы) на реплике
     flush_lag,  -- время, прошедшее между локальной синхронизацией журнала и получением уведомления о том, что изменения записаны и синхронизированы на реплике
