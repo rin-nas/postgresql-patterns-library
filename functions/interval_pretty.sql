@@ -17,6 +17,8 @@ return
 
 comment on function public.interval_pretty(interval) is 'Форматирует интервал (период времени) в читабельном виде';
 
+-- Без форматирования результат будет выглядеть примерно так (всегда 15 символов): 00:00:00.000706
+
 --TEST
 DO $do$
     BEGIN
@@ -38,6 +40,7 @@ DO $do$
         assert public.interval_pretty( '0d  0h  0m  0s  10ms'::interval) =                  '10ms';
         assert public.interval_pretty( '0d  0h  0m  0s   1ms'::interval) =                   '1ms';
         assert public.interval_pretty( '0d  0h  0m  0s   0ms'::interval) =                   '0ms';
+        assert public.interval_pretty('00:00:00.000706'::interval)       =                   '0ms';
 
         --negative
 
