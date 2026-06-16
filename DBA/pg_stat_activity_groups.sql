@@ -1,19 +1,24 @@
 with a as (
     select
         backend_type,
-        datname,
+        datname as "db",
         state,
-        usename,
+        usename as "user",
+        application_name as "application",
+        nullif(concat_ws(':',
+            host(client_addr),
+            nullif(client_port, -1)
+        ), '') as "client_addr:port",
         wait_event_type,
         wait_event,
         count(*) as count,
         concat_ws('/',
-          count(*) filter (where state_change < now() - interval '1 minute'),
-          count(*) filter (where state_change < now() - interval '1 hour')
-        ) as "state changed > 1m/1h ago"
+            count(*) filter (where state_change < now() - interval '1 minute'),
+            count(*) filter (where state_change < now() - interval '1 hour')
+        ) as "state_changed > 1m/1h ago"
     from pg_stat_activity
-    group by backend_type, datname, state, usename, wait_event_type, wait_event
-    order by backend_type, datname, state, usename, wait_event_type, wait_event
+    group by backend_type, datname, state, usename, application_name, client_addr, client_port, wait_event_type, wait_event
+    order by backend_type, datname, state, usename, application_name, client_addr, client_port, wait_event_type, wait_event
 )
 --select * from a; -- for debug
 select
@@ -40,7 +45,7 @@ left join lateral (
            t.query,
            t.application_name
     from pg_stat_activity as t
-    where (a.backend_type, a.datname, a.state, a.usename, a.wait_event_type, a.wait_event) is not distinct from
+    where (a.backend_type, a.db, a.state, a.user, a.wait_event_type, a.wait_event) is not distinct from
           (t.backend_type, t.datname, t.state, t.usename, t.wait_event_type, t.wait_event)
           and t.query_start is not null
     order by query_elapsed desc
@@ -52,7 +57,7 @@ left join lateral (
            t.query,
            t.application_name
     from pg_stat_activity as t
-    where (a.backend_type, a.datname, a.state, a.usename, a.wait_event_type, a.wait_event) is not distinct from
+    where (a.backend_type, a.db, a.state, a.user, a.wait_event_type, a.wait_event) is not distinct from
           (t.backend_type, t.datname, t.state, t.usename, t.wait_event_type, t.wait_event)
           and t.xact_start is not null
     order by xact_elapsed desc
