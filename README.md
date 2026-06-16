@@ -2608,8 +2608,8 @@ coalesce(case when pg_is_in_recovery() then pg_last_wal_receive_lsn() else pg_cu
 ```
 
 * `Insert LSN (Shared Memory) ≥ Write LSN (OS File Cache) ≥ Flush LSN (Durable Storage)`
-* `pg_current_wal_insert_lsn() ≥ pg_current_wal_lsn() ≥ pg_current_wal_flush_lsn()` (работает только на мастере)
-* `pg_last_wal_receive_lsn() ≥ pg_last_wal_replay_lsn()` (работает только на реплике)
+* `pg_current_wal_insert_lsn() ≥ pg_current_wal_lsn() ≥ pg_current_wal_flush_lsn()` (функции работают только на мастере)
+* `pg_last_wal_receive_lsn() ≥ pg_last_wal_replay_lsn()` (функции работают только на реплике)
 
 На узле-приёмнике (на конечной реплике):
 
