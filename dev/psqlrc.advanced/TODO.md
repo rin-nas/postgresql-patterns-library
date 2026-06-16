@@ -11,6 +11,8 @@ Checksum failures: `select sum(checksum_failures) from pg_stat_database`.
 
 Replica: cascade or final, physical or logical.
 
+Check duplicates in `shared_preload_libraries` = 'biha,pg_proaudit,pgpro_stats,biha'
+
 Show overall info on `psql` start
 1. Standby count by status
 1. Activity count by status, total currently used, total available, used precent (mark red if > 90%)
