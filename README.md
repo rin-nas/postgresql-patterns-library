@@ -2595,9 +2595,9 @@ SELECT
     state,
     sync_state AS mode,
     t.last_lsn - sent_lsn   AS pending_bytes,    -- объём подготовленных данных, готовых для отправки на реплику
-    sent_lsn - write_lsn    AS write_lag_bytes,  -- объём отправленных данных, но еще не записанных на реплике
-    write_lsn - flush_lsn   AS flush_lag_bytes,  -- объём записанных данных, но еще не синхронизированных на реплике
-    flush_lsn - replay_lsn  AS replay_lag_bytes, -- объём данных, готовых для воспроизведения процессом startup
+    sent_lsn   - write_lsn  AS write_lag_bytes,  -- объём отправленных данных, но еще не записанных на реплике
+    write_lsn  - flush_lsn  AS flush_lag_bytes,  -- объём записанных данных, но еще не синхронизированных на реплике
+    flush_lsn  - replay_lsn AS replay_lag_bytes, -- объём данных, готовых для воспроизведения процессом startup
     t.last_lsn - replay_lsn AS total_lag_bytes,
     write_lag,  -- время, прошедшее между локальной синхронизацией журнала и получением уведомления о том, что изменения записаны (но еще не синхронизированы) на реплике
     flush_lag,  -- время, прошедшее между локальной синхронизацией журнала и получением уведомления о том, что изменения записаны и синхронизированы на реплике
