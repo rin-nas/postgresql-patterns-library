@@ -2706,7 +2706,7 @@ psql -U postgres -qX --csv --pset=null=¤ -c 'table pg_catalog.pg_settings' > /t
 \copy (table pg_catalog.pg_settings) to '/tmp/pg_settings.csv' with (format csv, header true);
 ```
 
-**Сравниваем текущие настройки СУБД с настройками из CVS файла**
+**Сравниваем текущие настройки СУБД с настройками из CSV файла**
 
 Файл `/tmp/pg_settings_diff.sql`
 
