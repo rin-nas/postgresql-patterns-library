@@ -1,5 +1,5 @@
 --Inspired by https://hakibenita.com/future-proof-sql#assert-never-in-sql
---Documentation: https://postgrespro.ru/docs/postgresql/17/plpgsql-errors-and-messages
+--Documentation: https://postgrespro.ru/docs/postgresql/current/plpgsql-errors-and-messages
 
 create or replace function public.raise_exception(
     value anyelement,
@@ -90,7 +90,7 @@ do $$
                 end if;
                 EXIT WHEN true;
             EXCEPTION WHEN others THEN
-                GET STACKED DIAGNOSTICS --https://postgrespro.ru/docs/postgresql/14/plpgsql-control-structures#PLPGSQL-ERROR-TRAPPING
+                GET STACKED DIAGNOSTICS --https://postgrespro.ru/docs/postgresql/current/plpgsql-control-structures#PLPGSQL-ERROR-TRAPPING
                     exception_sqlstate := RETURNED_SQLSTATE,
                     exception_message  := MESSAGE_TEXT,
                     exception_context  := PG_EXCEPTION_CONTEXT,

@@ -29,11 +29,11 @@
 
 > [!CAUTION]
 > Внимание!
-> 1. Наличие WAL файлов в резервной копии зависит от текущего дня (по умолчанию каждый 5-й день), настройки [`archive_mode`](https://postgrespro.ru/docs/postgresql/17/runtime-config-wal#GUC-ARCHIVE-MODE) и текущей роли сервера (мастер, реплика).
-> 1. Для возможности восстановления СУБД из резервной копии, созданной без WAL файлов, должно быть настроено [непрерывное архивирование WAL файлов](https://postgrespro.ru/docs/postgresql/16/continuous-archiving) 
-через [`archive_command`](https://postgrespro.ru/docs/postgresql/16/runtime-config-wal#GUC-ARCHIVE-COMMAND) 
-или [`pg_receivewal`](https://postgrespro.ru/docs/postgresql/16/app-pgreceivewal).
-> 1. Следует учесть [ограничения создания резервной копии с реплики](https://postgrespro.ru/docs/postgresql/16/app-pgbasebackup)!
+> 1. Наличие WAL файлов в резервной копии зависит от текущего дня (по умолчанию каждый 5-й день), настройки [`archive_mode`](https://postgrespro.ru/docs/postgresql/current/runtime-config-wal#GUC-ARCHIVE-MODE) и текущей роли сервера (мастер, реплика).
+> 1. Для возможности восстановления СУБД из резервной копии, созданной без WAL файлов, должно быть настроено [непрерывное архивирование WAL файлов](https://postgrespro.ru/docs/postgresql/current/continuous-archiving) 
+через [`archive_command`](https://postgrespro.ru/docs/postgresql/current/runtime-config-wal#GUC-ARCHIVE-COMMAND) 
+или [`pg_receivewal`](https://postgrespro.ru/docs/postgresql/current/app-pgreceivewal).
+> 1. Следует учесть [ограничения создания резервной копии с реплики](https://postgrespro.ru/docs/postgresql/current/app-pgbasebackup)!
 
 Валидация — это выполнение команд с самым низким приоритетом (для минимизации рисков влияния на работающую СУБД) и только на реплике (при её наличии):
 1. дешифрование (опционально) и распаковка архива с бекапом во временную папку

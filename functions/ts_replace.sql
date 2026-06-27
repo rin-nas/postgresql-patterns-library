@@ -19,7 +19,7 @@ begin atomic
                unnest(weights) as weight
         from unnest(vector) as t(lexeme, positions, weights)
     )
-    --https://www.postgrespro.ru/docs/postgresql/12/datatype-textsearch#DATATYPE-TSVECTOR
+    --https://www.postgrespro.ru/docs/postgresql/current/datatype-textsearch#DATATYPE-TSVECTOR
     select array_to_string(array(
         select concat(
                       concat($$'$$,
@@ -85,7 +85,7 @@ begin
                    unnest(weights) as weight
             from unnest(vector) as t(lexeme, positions, weights)
         )
-        --https://www.postgrespro.ru/docs/postgresql/12/datatype-textsearch#DATATYPE-TSVECTOR
+        --https://www.postgrespro.ru/docs/postgresql/current/datatype-textsearch#DATATYPE-TSVECTOR
         select array_to_string(array(
             select concat(
                           concat($$'$$,

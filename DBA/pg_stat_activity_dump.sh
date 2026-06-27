@@ -39,7 +39,7 @@ where true
   --and query ~ ''
   --and application_name ~ ''
   --and state !~ '^idle'
-  --and wait_event = 'ClientRead' --https://postgrespro.ru/docs/postgresql/16/monitoring-stats#WAIT-EVENT-TABLE
+  --and wait_event = 'ClientRead' --https://postgrespro.ru/docs/postgresql/current/monitoring-stats#WAIT-EVENT-TABLE
   --and (state_change_elapsed > interval '1 minutes' or xact_elapsed > interval '1 minutes')
 order by greatest(state_change_elapsed, query_elapsed, xact_elapsed) desc;
 

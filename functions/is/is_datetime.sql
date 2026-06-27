@@ -23,7 +23,7 @@ BEGIN
         return false;
     end if;
 
-    -- https://postgrespro.ru/docs/postgresql/12/datetime-input-rules
+    -- https://postgrespro.ru/docs/postgresql/current/datetime-input-rules
     str := regexp_replace(str, '
         ^
             (\d{8})               #YYYYMMDD

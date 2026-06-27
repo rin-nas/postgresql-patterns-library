@@ -3,8 +3,8 @@
 ## Восстановление СУБД из физической резервной копии
 
 Официальная документация:
-* [Восстановление ведущего сервера (мастера) СУБД](https://postgrespro.ru/docs/postgresql/18/continuous-archiving#BACKUP-PITR-RECOVERY)
-* [Восстановление резервного сервера (реплики) СУБД](https://postgrespro.ru/docs/postgresql/18/warm-standby#STANDBY-SERVER-SETUP)
+* [Восстановление ведущего сервера (мастера) СУБД](https://postgrespro.ru/docs/postgresql/current/continuous-archiving#BACKUP-PITR-RECOVERY)
+* [Восстановление резервного сервера (реплики) СУБД](https://postgrespro.ru/docs/postgresql/current/warm-standby#STANDBY-SERVER-SETUP)
 
 ### Общие начальные команды для восстановления мастера или реплики
 

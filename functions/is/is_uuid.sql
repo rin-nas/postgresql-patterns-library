@@ -6,7 +6,7 @@ create or replace function public.is_uuid(str text)
     language sql
     set search_path = ''
 return
-    --https://postgrespro.ru/docs/postgresql/12/datatype-uuid
+    --https://postgrespro.ru/docs/postgresql/current/datatype-uuid
     case when octet_length(str) between 32 --a0eebc999c0b4ef8bb6d6bb9bd380a11
                                     and 36 --a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11
          then     str ~ '\d'

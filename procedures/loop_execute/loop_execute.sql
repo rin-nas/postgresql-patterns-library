@@ -414,7 +414,7 @@ BEGIN
 
             IF query_explain_path IS NULL THEN
                 -- JSONPath syntax
-                -- https://postgrespro.ru/docs/postgresql/14/functions-json#FUNCTIONS-SQLJSON-PATH
+                -- https://postgrespro.ru/docs/postgresql/current/functions-json#FUNCTIONS-SQLJSON-PATH
                 -- https://habr.com/ru/company/postgrespro/blog/448612/
                 query_explain_path := format($$  $.** ? (@."Relation Name" == "%s")
                                                       ? (@."Node Type" == "Index Scan" || @."Node Type" == "Index Only Scan")

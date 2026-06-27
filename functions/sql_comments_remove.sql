@@ -11,7 +11,7 @@ create or replace function public.sql_comments_remove(
     set search_path = ''
     cost 2
 return
-    --https://postgrespro.ru/docs/postgresql/12/sql-syntax-lexical
+    --https://postgrespro.ru/docs/postgresql/current/sql-syntax-lexical
     regexp_replace(sql, $regexp$
         (?:
              --[^\r\n]*?                    #singe-line comment

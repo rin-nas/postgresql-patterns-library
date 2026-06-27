@@ -16,7 +16,7 @@ with s1 as (
        n_tup_ins + n_tup_upd + n_tup_del as modified,
        n_tup_hot_upd * 100 / nullif(n_tup_upd, 0) as hot_updated_percent,
        (regexp_match(c.reloptions::text, 'fillfactor=(\d+)', 'i'))[1] as fillfactor
-    from pg_stat_user_tables as t --https://postgrespro.ru/docs/postgresql/12/monitoring-stats
+    from pg_stat_user_tables as t --https://postgrespro.ru/docs/postgresql/current/monitoring-stats
     join pg_class as c on c.oid = t.relid
 )
 , s2 as (

@@ -11,7 +11,7 @@ return
                           23) --08:00:2b:01:02:03:04:05
     and regexp_match(
         str,
-        --https://postgrespro.ru/docs/postgresql/12/datatype-net-types#DATATYPE-MACADDR
+        --https://postgrespro.ru/docs/postgresql/current/datatype-net-types#DATATYPE-MACADDR
         $regexp$
           ^
            [\da-fA-F]{2}

@@ -52,7 +52,7 @@ as $func$
                     r.m[1] as entity,
                     r.m[2]::int as codepoint
                 from regexp_matches(str, '(&#(\d{1,7});)', 'g') as r(m) -- maximum valid code point in Unicode is 1114111 (U+10FFFF)
-                where r.m[2]::int <@ any (codepoints_ranges) -- https://postgrespro.ru/docs/postgresql/12/functions-range
+                where r.m[2]::int <@ any (codepoints_ranges) -- https://postgrespro.ru/docs/postgresql/current/functions-range
             loop
                 str := replace(str, rec.entity, concat(protect_char, chr(rec.codepoint), protect_char));
                 is_replaced := true;
@@ -66,7 +66,7 @@ as $func$
                     from regexp_matches(str, '(&#x([\da-fA-F]{1,6});)', 'g') as r(m) -- maximum valid code point in Unicode is U+10FFFF
                     -- https://stackoverflow.com/questions/8316164/convert-hex-in-text-representation-to-decimal-number
                     cross join lateral (select ('x' || lpad(r.m[2], 8, '0'))::bit(32)::int) as x(codepoint)
-                    where x.codepoint <@ any (codepoints_ranges) -- https://postgrespro.ru/docs/postgresql/12/functions-range
+                    where x.codepoint <@ any (codepoints_ranges) -- https://postgrespro.ru/docs/postgresql/current/functions-range
                 loop
                     str := replace(str, rec.entity, concat(protect_char, chr(rec.codepoint), protect_char));
                     is_replaced := true;

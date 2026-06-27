@@ -50,10 +50,10 @@ $function$
             -- rollback all test queries in subtransaction
             raise exception using errcode = 'query_canceled';
         EXCEPTION
-            --https://www.postgrespro.ru/docs/postgresql/14/errcodes-appendix
+            --https://www.postgrespro.ru/docs/postgresql/current/errcodes-appendix
             WHEN query_canceled /*57014*/ THEN
-                -- https://www.postgrespro.ru/docs/postgresql/14/plpgsql-errors-and-messages
-                -- https://www.postgrespro.ru/docs/postgresql/14/plpgsql-control-structures
+                -- https://www.postgrespro.ru/docs/postgresql/current/plpgsql-errors-and-messages
+                -- https://www.postgrespro.ru/docs/postgresql/current/plpgsql-control-structures
                 GET STACKED DIAGNOSTICS
                     exception_sqlstate   := RETURNED_SQLSTATE,
                     exception_message    := MESSAGE_TEXT,
@@ -79,8 +79,8 @@ $function$
                     raise; -- raise the original exception
                 end if;
             WHEN others /*все типы ошибок, кроме QUERY_CANCELED и ASSERT_FAILURE*/ THEN
-                -- https://www.postgrespro.ru/docs/postgresql/14/plpgsql-errors-and-messages
-                -- https://www.postgrespro.ru/docs/postgresql/14/plpgsql-control-structures
+                -- https://www.postgrespro.ru/docs/postgresql/current/plpgsql-errors-and-messages
+                -- https://www.postgrespro.ru/docs/postgresql/current/plpgsql-control-structures
                 GET STACKED DIAGNOSTICS
                     exception_sqlstate   := RETURNED_SQLSTATE,
                     exception_message    := MESSAGE_TEXT,

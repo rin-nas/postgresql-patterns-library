@@ -7,7 +7,7 @@ create or replace function db_audit.pg_terminate_duplicate_locked(
     returns setof db_audit.pg_terminated
     parallel safe
     rows 10
-    volatile --https://postgrespro.ru/docs/postgresql/14/xfunc-volatility
+    volatile --https://postgrespro.ru/docs/postgresql/current/xfunc-volatility
     returns null on null input
     language sql
     set search_path = ''
@@ -62,7 +62,7 @@ with s as (
     from s
     -- Workaround to compatible with various version of PostgreSQL since v12
     cross join jsonb_to_record(to_jsonb(s)) as r (
-        --https://postgrespro.ru/docs/postgresql/14/monitoring-stats#MONITORING-PG-STAT-ACTIVITY-VIEW
+        --https://postgrespro.ru/docs/postgresql/current/monitoring-stats#MONITORING-PG-STAT-ACTIVITY-VIEW
         datid oid,
         datname name,
         pid int,

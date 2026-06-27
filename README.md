@@ -321,8 +321,8 @@ cat select.sql | psql -U postgres -qX --dbname=my_database | xz -zc9 --threads=8
 
 #### Как загрузить в таблицу данные из `CSV` файла?
 
-Воспользуйтесь утилитой [`psql`](https://postgrespro.ru/docs/postgresql/18/app-psql).
-Особенность мета-команды [`\copy`](https://postgrespro.ru/docs/postgresql/18/app-psql#APP-PSQL-META-COMMANDS-COPY) в том, что она читает файл из ***локальной файловой системы*** и пересылает его на сервер на вход SQL команде [`COPY`](https://postgrespro.ru/docs/postgresql/18/sql-copy).
+Воспользуйтесь утилитой [`psql`](https://postgrespro.ru/docs/postgresql/current/app-psql).
+Особенность мета-команды [`\copy`](https://postgrespro.ru/docs/postgresql/current/app-psql#APP-PSQL-META-COMMANDS-COPY) в том, что она читает файл из ***локальной файловой системы*** и пересылает его на сервер на вход SQL команде [`COPY`](https://postgrespro.ru/docs/postgresql/current/sql-copy).
 
 ```sql
 # без сжатия
@@ -572,7 +572,7 @@ WHERE words LIKE ANY (ARRAY['%bar%', '%zap%', '%fix%', '%new%']);
 
 #### Как получить названия сущностей по поисковой фразе с учётом начала слов (поисковые подсказки)?
 
-См. так же [полнотекстовый поиск](https://postgrespro.ru/docs/postgresql/11/textsearch).
+См. так же [полнотекстовый поиск](https://postgrespro.ru/docs/postgresql/current/textsearch).
 
 ```sql
 CREATE INDEX /*CONCURRENTLY*/ t_name_trigram_index ON t USING GIN (lower(name) gin_trgm_ops);
@@ -1079,7 +1079,7 @@ birthday   | created_at
 
 ### Как вычислить дистанцию между 2-мя точками на Земле по её поверхности в километрах?
 
-Если есть модуль [earthdistance](https://postgrespro.ru/docs/postgresql/16/earthdistance), то `(point(lon1, lat1) <@> point(lon2, lat2)) * 1.609344 AS distance_km`.
+Если есть модуль [earthdistance](https://postgrespro.ru/docs/postgresql/current/earthdistance), то `(point(lon1, lat1) <@> point(lon2, lat2)) * 1.609344 AS distance_km`.
 Иначе `gc_dist(lat1, lon1, lat2, lon2) AS distance_km`, смотри [`gc_dist.sql`](functions/gc_dist.sql)
 
 ```sql
@@ -1226,7 +1226,7 @@ select a from r;
 ### Как добавить или обновить записи одним запросом (UPSERT)?
 
 * См. [INSERT ... ON CONFLICT DO NOTHING/UPDATE](https://habr.com/post/264281/) (Habr)
-* Элегантная [реализация на PL/pgSQL](https://postgrespro.ru/docs/postgresql/18/plpgsql-control-structures#PLPGSQL-UPSERT-EXAMPLE) из официальной документации PostgreSQL
+* Элегантная [реализация на PL/pgSQL](https://postgrespro.ru/docs/postgresql/current/plpgsql-control-structures#PLPGSQL-UPSERT-EXAMPLE) из официальной документации PostgreSQL
 
 ### Как сделать `INSERT ... ON CONFLICT ...` без увеличения последовательности для дубликатов?
 
@@ -2351,7 +2351,7 @@ FROM (
 Вначале каждой миграции, которая выполняется внутри транзакции, нужно изменить настройки конфигурации 
 [`lock_timeout`](https://postgrespro.ru/docs/postgresql/current/runtime-config-client#GUC-LOCK-TIMEOUT) и 
 [`statement_timeout`](https://postgrespro.ru/docs/postgresql/current/runtime-config-client#GUC-STATEMENT-TIMEOUT) и 
-[`idle_in_transaction_session_timeout`](https://postgrespro.ru/docs/postgresql/11/runtime-config-client#GUC-IDLE-IN-TRANSACTION-SESSION-TIMEOUT) командой [SET LOCAL](https://postgrespro.ru/docs/postgresql/current/sql-set).
+[`idle_in_transaction_session_timeout`](https://postgrespro.ru/docs/postgresql/current/runtime-config-client#GUC-IDLE-IN-TRANSACTION-SESSION-TIMEOUT) командой [SET LOCAL](https://postgrespro.ru/docs/postgresql/current/sql-set).
 Действие SET LOCAL продолжается только до конца текущей транзакции, независимо от того, фиксируется она или нет. 
 При выполнении такой команды вне блока транзакции выдаётся предупреждение и больше ничего не происходит.
 

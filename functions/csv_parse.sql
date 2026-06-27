@@ -12,7 +12,7 @@ create or replace function public.csv_parse(
 as
 $func$
     -- https://en.wikipedia.org/wiki/comma-separated_values
--- https://postgrespro.ru/docs/postgresql/13/sql-copy
+-- https://postgrespro.ru/docs/postgresql/current/sql-copy
 declare
     parse_pattern text default replace($$
                      (?: ([^"<delimiter>\r\n]*)         #1 value without quotes or
