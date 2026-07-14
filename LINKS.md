@@ -116,6 +116,7 @@
 1. https://pgbarman.org/
 1. https://pgbackrest.org/, https://www.crunchydata.com/blog/pgbackrest-performing-backups-on-a-standby-cluster
 1. https://www.calculator.net/password-generator.html
+1. https://sql-ex.ru/blogs/?/VaZhnost_nastrojki_kontrolnoj_tochki_v_PostgreSQL.html - настройка контрольной точки (checkpoint)
 
 # Раtroni
 
