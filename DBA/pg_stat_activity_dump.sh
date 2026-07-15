@@ -22,8 +22,8 @@ SQL=$(cat <<EOF
 select e.*,
        pg_blocking_pids(pid),
        a.*
-       --, pg_cancel_backend(pid) -- Остановить все SQL запросы, работающие более 1 часа, сигналом SIGINT. Подключение к БД для процесса сохраняется.
-       --, pg_terminate_backend(pid) -- Принудительно завершить работу всех процессов, работающих более 1 часа, сигналом SIGTERM, если не помогает SIGINT. Подключение к БД для процесса теряется.
+       --, pg_cancel_backend(pid) -- Остановить SQL запрос сигналом SIGINT. Подключение к БД для процесса сохраняется.
+       --, pg_terminate_backend(pid) -- Принудительно завершить работу процесса сигналом SIGTERM, если не помогает SIGINT. Подключение к БД для процесса теряется.
 from pg_stat_activity as a
 cross join lateral (
     select statement_timestamp() - xact_start as xact_elapsed,  --длительность транзакции или NULL, если транзакции нет
