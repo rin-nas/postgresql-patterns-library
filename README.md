@@ -2766,3 +2766,61 @@ psql -U postgres -qX --csv -d test -f /tmp/pg_settings_diff.sql > /tmp/pg_settin
 1. `t2_setting` – значения в СУБД у заказчика (из `/tmp/pg_settings.csv`)
 
 Если в `t1_setting` или `t2_setting` указано `¤`, то такой настройки в конфиге СУБД не существовало.
+
+
+### Как получить топологию кластера СУБД?
+
+```sql
+-- Выполнить на мастере в базе postgres:
+create extension dblink;
+
+-- Запускать под пользователем postgres на любом узле кластера СУБД!
+-- Шаг 1. Получаем мастер, для этого движемся от листа к корню.
+with recursive m as (
+    select not pg_is_in_recovery()                                    as is_primary,
+           current_setting('primary_conninfo')                        as conninfo,
+           coalesce(inet_server_addr(), '127.0.0.1'::inet)            as host,
+           coalesce(inet_server_port(), current_setting('port')::int) as port,
+           0                                                          as level
+    union all
+    select s.*, 
+           m.level - 1
+    from m, dblink(m.conninfo,
+                   $$select not pg_is_in_recovery(),
+                            current_setting('primary_conninfo'),
+                            inet_server_addr(),
+                            inet_server_port()
+                   $$
+                  ) as s (is_primary bool, conninfo text, host inet, port int)
+    where m.is_primary = false and m.conninfo != ''
+)
+-- select * from m order by level; -- для отладки
+-- Шаг 2. Получаем мастер и реплики, для этого движемся от корня к листам.
+, r as (
+    select 1                           as level,
+           null::inet                  as parent_host,
+           host                        as host,
+           port                        as port,
+           null::pg_stat_replication   as pg_sr,
+           null::pg_replication_slots  as pg_rs
+    from m
+    where is_primary
+    union all
+    select r.level + 1           as level,
+           r.host                as parent_host,
+           (s.pg_sr).client_addr as host,
+           r.port,
+           s.pg_sr,
+           s.pg_rs
+    from r, dblink(-- для пользователя postgres сохраните пароль в файле ~postgres/.pgpass 
+                   format('user=postgres host=%s port=%s dbname=postgres connect_timeout=5', r.host, r.port),
+                          $$select pg_sr, pg_rs
+                            from pg_stat_replication as pg_sr
+                            left join pg_replication_slots as pg_rs on pg_sr.pid = pg_rs.active_pid
+                          $$
+                  ) as s (pg_sr pg_stat_replication, pg_rs pg_replication_slots)
+)
+select level, parent_host, host, port --, (pg_sr).*, (pg_rs).*
+from r
+;
+```
