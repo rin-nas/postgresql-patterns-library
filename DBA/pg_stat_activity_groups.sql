@@ -12,10 +12,12 @@ with a as (
         wait_event_type,
         wait_event,
         count(*) as "count",
-        concat_ws('/',
-            count(*) filter (where state_change < now() - interval '1 minute'),
-            count(*) filter (where state_change < now() - interval '1 hour')
-        ) as "state_changed > 1m/1h ago"
+        concat_ws(' ',
+                lpad((count(*) filter (where state_change < now() - interval '1 second'))::text, 3, ' '),
+                lpad((count(*) filter (where state_change < now() - interval '5 second'))::text, 3, ' '),
+                lpad((count(*) filter (where state_change < now() - interval '1 minute'))::text, 3, ' '),
+                lpad((count(*) filter (where state_change < now() - interval '1 hour'))::text,   3, ' ')
+            ) as "count_state_changed > 1s/5s/1m/1h ago"
     from pg_stat_activity
     group by backend_type, datname, state, usename/*, application_name, client_addr, client_port*/, wait_event_type, wait_event
     order by backend_type, datname, state, usename/*, application_name, client_addr, client_port*/, wait_event_type, wait_event
@@ -36,7 +38,7 @@ select
     a.wait_event_type,
     a.wait_event,
     a."count",
-    a."state_changed > 1m/1h ago",
+    a."count_state_changed > 1s/5s/1m/1h ago",
 
     q."max_query_elapsed.duration",
     t."max_xact_elapsed.duration",
