@@ -2600,12 +2600,12 @@ SELECT
     write_lsn  - flush_lsn  AS flush_lag_bytes,  -- data writing WAL on disk on replica by walreciever
     flush_lsn  - replay_lsn AS replay_lag_bytes, -- data applying (replaying) WAL as a recovery process
     t.last_lsn - replay_lsn AS total_lag_bytes,
-    write_lag,  -- the delay between when a transaction is committed on the primary and when it is written to the WAL on the standby.
-    flush_lag,  -- the delay between when a transaction is written to the WAL on the standby and when it is flushed to the disk.
-    replay_lag, -- the delay between when a transaction is flushed to the disk and when it is applied to the database on the standby.
+    write_lag,  -- the delay between when a transaction is committed on the primary and when it is written to the WAL on the standby
+    flush_lag,  -- the delay between when a transaction is written to the WAL on the standby and when it is flushed to the disk
+    replay_lag, -- the delay between when a transaction is flushed to the disk and when it is applied to the database on the standby
     reply_time  -- отметка времени о получении последнего служебного сообщения от реплики, в котором и содержатся данные по обработке журнала
 FROM pg_stat_replication,
-coalesce(case when pg_is_in_recovery() then pg_last_wal_receive_lsn() else pg_current_wal_flush_lsn() end) AS t(last_lsn);
+coalesce(case when pg_is_in_recovery() then pg_last_wal_receive_lsn() else pg_current_wal_lsn() end) AS t(last_lsn);
 ```
 
 **Detailed Breakdown**
@@ -2617,7 +2617,7 @@ Function                      | What it tracks    | Storage medium           | P
 ------------------------------|-------------------|--------------------------|-------------------------------------------
 `pg_current_wal_insert_lsn()` | WAL Reservation   | Shared RAM Buffers       | Internal debugging and performance metrics
 `pg_current_wal_lsn()`        | OS Write Pointer  | OS Page Cache (Kernel)   | Archiving partially complete WAL files
-`pg_current_wal_flush_lsn()`  | Disk Sync Pointer | Durable Hardware Storage | Monitoring replication lag & data safety
+`pg_current_wal_flush_lsn()`  | Disk Sync Pointer | Durable Hardware Storage | Internal debugging and performance metrics
 
 На узле-приёмнике (на конечной реплике):
 
