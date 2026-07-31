@@ -2595,14 +2595,14 @@ SELECT
     application_name,
     state,
     sync_state AS mode,
-    t.last_lsn - sent_lsn   AS pending_bytes,    -- объём подготовленных данных, готовых для отправки на реплику
-    sent_lsn   - write_lsn  AS write_lag_bytes,  -- объём отправленных данных, но еще не записанных на реплике
-    write_lsn  - flush_lsn  AS flush_lag_bytes,  -- объём записанных данных, но еще не синхронизированных на реплике
-    flush_lsn  - replay_lsn AS replay_lag_bytes, -- объём данных, готовых для воспроизведения процессом startup
-    t.last_lsn - replay_lsn AS total_lag_bytes,
-    write_lag,  -- время, прошедшее между локальной синхронизацией журнала и получением уведомления о том, что изменения записаны (но еще не синхронизированы) на реплике
-    flush_lag,  -- время, прошедшее между локальной синхронизацией журнала и получением уведомления о том, что изменения записаны и синхронизированы на реплике
-    replay_lag, -- время, прошедшее между локальной синхронизацией журнала и получением уведомления о том, что изменения записаны, синхронизированы и применены
+    coalesce(t.last_lsn - sent_lsn, 0)   AS sent_lag_bytes,   -- data sending WAL stream to replica via network by walsender
+    coalesce(sent_lsn   - write_lsn, 0)  AS write_lag_bytes,  -- data receiving WAL stream on replica from network by walreciever
+    coalesce(write_lsn  - flush_lsn, 0)  AS flush_lag_bytes,  -- data writing WAL on disk on replica by walreciever
+    coalesce(flush_lsn  - replay_lsn, 0) AS replay_lag_bytes, -- data applying (replaying) WAL as a recovery process
+    coalesce(t.last_lsn - replay_lsn, 0) AS total_lag_bytes,
+    write_lag,  -- the delay between when a transaction is committed on the primary and when it is written to the WAL on the standby.
+    flush_lag,  -- the delay between when a transaction is written to the WAL on the standby and when it is flushed to the disk.
+    replay_lag, -- the delay between when a transaction is flushed to the disk and when it is applied to the database on the standby.
     reply_time  -- отметка времени о получении последнего служебного сообщения от реплики, в котором и содержатся данные по обработке журнала
 FROM pg_stat_replication,
 coalesce(case when pg_is_in_recovery() then pg_last_wal_receive_lsn() else pg_current_wal_flush_lsn() end) AS t(last_lsn);
