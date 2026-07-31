@@ -2595,11 +2595,11 @@ SELECT
     application_name,
     state,
     sync_state AS mode,
-    coalesce(t.last_lsn - sent_lsn, 0)   AS sent_lag_bytes,   -- data sending WAL stream to replica via network by walsender
-    coalesce(sent_lsn   - write_lsn, 0)  AS write_lag_bytes,  -- data receiving WAL stream on replica from network by walreciever
-    coalesce(write_lsn  - flush_lsn, 0)  AS flush_lag_bytes,  -- data writing WAL on disk on replica by walreciever
-    coalesce(flush_lsn  - replay_lsn, 0) AS replay_lag_bytes, -- data applying (replaying) WAL as a recovery process
-    coalesce(t.last_lsn - replay_lsn, 0) AS total_lag_bytes,
+    t.last_lsn - sent_lsn   AS sent_lag_bytes,   -- data sending WAL stream to replica via network by walsender
+    sent_lsn   - write_lsn  AS write_lag_bytes,  -- data receiving WAL stream on replica from network by walreciever
+    write_lsn  - flush_lsn  AS flush_lag_bytes,  -- data writing WAL on disk on replica by walreciever
+    flush_lsn  - replay_lsn AS replay_lag_bytes, -- data applying (replaying) WAL as a recovery process
+    t.last_lsn - replay_lsn AS total_lag_bytes,
     write_lag,  -- the delay between when a transaction is committed on the primary and when it is written to the WAL on the standby.
     flush_lag,  -- the delay between when a transaction is written to the WAL on the standby and when it is flushed to the disk.
     replay_lag, -- the delay between when a transaction is flushed to the disk and when it is applied to the database on the standby.
