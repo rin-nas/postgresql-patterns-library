@@ -2774,7 +2774,7 @@ psql -U postgres -qX --csv -d test -f /tmp/pg_settings_diff.sql > /tmp/pg_settin
 ```sql
 /*
 Предусловия:
-1) Для пользователя postgres сохраните пароль в файле ~postgres/.pgpass
+1) На сервере, где будет выполняться SQL запрос, в файле ~postgres/.pgpass сохраните пароль для пользователя postgres
 2) На СУБД с ролью мастер в базе postgres создайте расширение dblink
 */
 \! nano ~postgres/.pgpass
