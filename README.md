@@ -2613,11 +2613,11 @@ coalesce(case when pg_is_in_recovery() then pg_last_wal_receive_lsn() else pg_cu
 * `pg_current_wal_insert_lsn() ≥ pg_current_wal_lsn() ≥ pg_current_wal_flush_lsn()` (функции работают только на мастере)
 * `pg_last_wal_receive_lsn() ≥ pg_last_wal_replay_lsn()` (функции работают только на реплике)
 
-Function | What it tracks | Storage medium | Primary use case
---|--|--|--
-`pg_current_wal_insert_lsn()` | WAL Reservation  | Shared RAM Buffers      | Internal debugging and performance metrics
-`pg_current_wal_lsn()`        | OS Write Pointer | OS Page Cache (Kernel)  | Archiving partially complete WAL files.
-`pg_current_wal_flush_lsn()`  | Disk Sync Pointer| Durable Hardware Storage| Monitoring replication lag & data safety.
+Function                      | What it tracks    | Storage medium           | Primary use case
+------------------------------|-------------------|--------------------------|-------------------------------------------
+`pg_current_wal_insert_lsn()` | WAL Reservation   | Shared RAM Buffers       | Internal debugging and performance metrics
+`pg_current_wal_lsn()`        | OS Write Pointer  | OS Page Cache (Kernel)   | Archiving partially complete WAL files
+`pg_current_wal_flush_lsn()`  | Disk Sync Pointer | Durable Hardware Storage | Monitoring replication lag & data safety
 
 На узле-приёмнике (на конечной реплике):
 
