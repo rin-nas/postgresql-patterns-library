@@ -5,7 +5,9 @@ Original source: https://github.com/sjstoelting/pgsql-tweaks/blob/main/sql/view_
 Changes: object_name column added
 */
 
-CREATE OR REPLACE VIEW pg_object_owner AS
+DROP VIEW IF EXISTS pg_object_owner;
+
+CREATE VIEW pg_object_owner AS
 WITH dbobjects AS
     (
         SELECT cls.oid

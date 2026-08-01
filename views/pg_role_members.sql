@@ -1,6 +1,8 @@
 -- Based on source: https://www.cybertec-postgresql.com/en/postgresql-get-member-roles-and-permissions/
 
-CREATE OR REPLACE VIEW pg_role_members AS
+DROP VIEW IF EXISTS pg_role_members;
+
+CREATE VIEW pg_role_members AS
 WITH RECURSIVE x AS
 (
     SELECT member::regrole,

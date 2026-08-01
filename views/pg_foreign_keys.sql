@@ -1,7 +1,9 @@
 -- Source: https://github.com/sjstoelting/pgsql-tweaks/blob/main/sql/view_pg_foreign_keys.sql
 
+DROP VIEW IF EXISTS pg_foreign_keys;
+
 -- Only version 11 or newer
-CREATE OR REPLACE VIEW pg_foreign_keys AS
+CREATE VIEW pg_foreign_keys AS
 SELECT ccu.constraint_name
     , tc.is_deferrable
     , tc.initially_deferred

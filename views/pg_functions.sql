@@ -1,5 +1,8 @@
+
+DROP VIEW IF EXISTS pg_functions;
+
 -- Create the view pg_functions for PostgreSQL 11 or newer
-CREATE OR REPLACE VIEW pg_functions AS
+CREATE VIEW pg_functions AS
 SELECT pg_namespace.nspname AS schema_name
   , pg_proc.proname AS function_name
   , pg_catalog.pg_get_function_result(pg_proc.oid) AS returning_data_type

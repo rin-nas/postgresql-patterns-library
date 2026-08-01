@@ -1,7 +1,9 @@
 /**
  * The view shows bloat in tables and indexes.
  */
-CREATE OR REPLACE VIEW pg_bloat_info AS
+DROP VIEW IF EXISTS pg_bloat_info;
+
+CREATE VIEW pg_bloat_info AS
 WITH constants AS
 	(
 		SELECT current_setting('block_size')::numeric AS bs
