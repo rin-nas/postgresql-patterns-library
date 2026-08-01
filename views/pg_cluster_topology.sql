@@ -8,15 +8,15 @@
 \connect postgres
 create extension if not exists dblink;
 
--- Запускать под пользователем postgres на базе postgres на любом узле кластера СУБД!
+DROP VIEW IF EXISTS pg_cluster_topology;
+
+CREATE VIEW pg_cluster_topology AS
 -- Шаг 1. Получаем мастер, для этого движемся от листа к корню.
-CREATE OR REPLACE VIEW pg_cluster_topology AS
 with recursive m as (
     select not pg_is_in_recovery()                                    as is_primary,
-           concat(regexp_replace(
-               current_setting('primary_conninfo'),
-               '\m(application_name|connect_timeout)=\S*', ''),
-               ' application_name=dblink_topology connect_timeout=5') as conninfo,
+           regexp_replace(nullif(trim(current_setting('primary_conninfo')), ''),
+                          '\m(application_name|connect_timeout)=\S*', '')
+               || ' application_name=dblink_topology connect_timeout=5' as conninfo,
            coalesce(inet_server_addr(), '127.0.0.1'::inet)            as addr,
            coalesce(inet_server_port(), current_setting('port')::int) as port,
            0                                                          as level
@@ -25,31 +25,32 @@ with recursive m as (
            m.level - 1
     from m, dblink(m.conninfo,
                    $$select not pg_is_in_recovery(),
-                            concat(regexp_replace(
-                                current_setting('primary_conninfo'),
-                                '\m(application_name|connect_timeout)=\S*', ''),
-                                ' application_name=dblink_topology connect_timeout=5'),
+                            regexp_replace(nullif(trim(current_setting('primary_conninfo')), ''),
+                                           '\m(application_name|connect_timeout)=\S*', '')
+                                || ' application_name=dblink_topology connect_timeout=5',
                             inet_server_addr(),
                             inet_server_port()
                    $$,
                    false --fail_on_error
                   ) as s (is_primary bool, conninfo text, addr inet, port int)
-    where m.is_primary = false and m.conninfo != ''
+    where not m.is_primary and m.conninfo is not null
 )
 -- select * from m order by level; -- для отладки
 -- Шаг 2. Получаем мастер и реплики, для этого движемся от корня к листам.
 , r as (
-    (select 1                           as level,
-            null::inet                  as parent_addr,
-            addr                        as addr,
-            port                        as port,
-            null::pg_stat_replication   as pg_sr,
-            null::pg_replication_slots  as pg_rs
+    (select 1                          as level,
+            case when m.is_primary then 'primary' else 'replica' end as role,
+            null::inet                 as parent_addr,
+            m.addr                     as addr,
+            m.port                     as port,
+            null::pg_stat_replication  as pg_sr,
+            null::pg_replication_slots as pg_rs
     from m
-    where is_primary
+    order by m.level
     limit 1)
     union all
     select r.level + 1           as level,
+           'replica'             as role,
            r.addr                as parent_addr,
            (s.pg_sr).client_addr as addr,
            r.port,
@@ -63,20 +64,21 @@ with recursive m as (
                    false --fail_on_error
                   ) as s (pg_sr pg_stat_replication, pg_rs pg_replication_slots)
 )
-select level, parent_addr, addr, port, (pg_sr).*, (pg_rs).*
+select level, role, parent_addr, addr, port, (pg_sr).*, (pg_rs).*
 from r;
 
 COMMENT ON VIEW pg_cluster_topology IS 'Cluster topology. Returns servers: master and dependent replicas, including cascaded ones.';
 
 /*
 -- TEST example
-select level, parent_addr, addr, port from pg_cluster_topology;
+-- Запускать под пользователем postgres на базе postgres на любом узле кластера СУБД!
+select level, role, parent_addr, addr, port from pg_cluster_topology;
 
- level │  parent_addr   │      addr      │ port
-───────┼────────────────┼────────────────┼──────
-     1 │ ¤              │ 192.168.22.104 │ 5432
-     2 │ 192.168.22.104 │ 192.168.22.145 │ 5432
-     2 │ 192.168.22.104 │ 192.168.20.152 │ 5432
-     3 │ 192.168.22.145 │ 192.168.22.86  │ 5432
+ level │  role   │  parent_addr   │      addr      │ port
+───────┼─────────┼────────────────┼────────────────┼──────
+     1 │ primary │ ¤              │ 127.0.0.1      │ 5432
+     2 │ replica │ 127.0.0.1      │ 192.168.22.145 │ 5432
+     2 │ replica │ 127.0.0.1      │ 192.168.20.152 │ 5432
+     3 │ replica │ 192.168.22.145 │ 192.168.22.86  │ 5432
 (4 rows)
 */
