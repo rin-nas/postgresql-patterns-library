@@ -66,8 +66,21 @@ with recursive m as (
                    false --fail_on_error
                   ) as s (last_lsn pg_lsn, pg_sr pg_stat_replication, pg_rs pg_replication_slots)
 )
-select level, is_primary, parent_addr, addr, port, last_lsn, (pg_sr).*, (pg_rs).*
-from r;
+select level, is_primary, parent_addr, addr, port, last_lsn,
+       s.*, clock_timestamp() as local_dblink_connection_end,
+       (pg_sr).*, (pg_rs).*
+from r, public.dblink(format('user=postgres host=%s port=%s dbname=postgres application_name=dblink_topology connect_timeout=5', r.addr, r.port),
+                   format($$select case when pg_is_in_recovery() then pg_get_wal_replay_pause_state() end as pause_state, -- not paused / pause requested / paused
+                                   %L                as local_dblink_connection_start,
+                                   backend_start     as remote_dblink_connection_start,
+                                   clock_timestamp() as remote_dblink_connection_end
+                            from pg_stat_activity where pid = pg_backend_pid()
+                          $$, clock_timestamp()),
+                   false --fail_on_error
+                  ) as s (pause_state                    text,
+                          local_dblink_connection_start  timestamptz,
+                          remote_dblink_connection_start timestamptz,
+                          remote_dblink_connection_end   timestamptz);
 
 COMMENT ON VIEW pg_cluster_topology IS 'Cluster topology. Returns servers: master and dependent replicas, including cascaded ones.';
 
