@@ -15,7 +15,7 @@ return
          else                           to_char($1, 'FMDD"d" FMHH24"h" FMMI"m" FMSS"s"')
     end;
 
-comment on function public.interval_pretty(interval) is 'Форматирует интервал (период времени) в читабельном виде';
+comment on function public.interval_pretty(interval) is 'Formats the interval (time period) to a human readable string';
 
 /*
 Без форматирования результат будет выглядеть примерно так:
