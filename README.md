@@ -2785,7 +2785,7 @@ psql -U postgres -qX --csv -d test -f /tmp/pg_settings_diff.sql > /tmp/pg_settin
 Пример результата в `psql`:
 
 ```
-select level, is_primary, parent_addr, addr, port from pro.pg_cluster_topology;
+select level, is_primary, parent_addr, addr, port from pg_cluster_topology;
 ┌───────┬────────────┬────────────────┬────────────────┬──────┐
 │ level │ is_primary │  parent_addr   │      addr      │ port │
 ├───────┼────────────┼────────────────┼────────────────┼──────┤

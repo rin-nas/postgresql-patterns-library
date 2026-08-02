@@ -87,7 +87,7 @@ COMMENT ON VIEW pg_cluster_topology IS 'Cluster topology. Returns servers: maste
 /*
 -- TEST example
 -- Запускать под пользователем postgres на базе postgres на любом узле кластера СУБД!
-select level, is_primary, parent_addr, addr, port from pro.pg_cluster_topology;
+select level, is_primary, parent_addr, addr, port from pg_cluster_topology;
 ┌───────┬────────────┬────────────────┬────────────────┬──────┐
 │ level │ is_primary │  parent_addr   │      addr      │ port │
 ├───────┼────────────┼────────────────┼────────────────┼──────┤
