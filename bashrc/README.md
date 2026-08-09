@@ -33,6 +33,10 @@ export HISTFILESIZE=5000
 export HISTCONTROL="ignoredups"
 export HISTTIMEFORMAT="%Y-%m-%d %T %z "
 
+# https://postgrespro.ru/docs/postgresql/current/color
+export PG_COLOR="auto"
+export PG_COLORS="error=01;31:warning=01;35:locus=01;36:locus=01"
+
 # Protect command history loose on exit within parallel terminals
 shopt -s histappend
 
