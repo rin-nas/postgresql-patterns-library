@@ -11,8 +11,8 @@ return
          when $1 < '10s'::interval then regexp_replace(to_char($1,            'FMSS"s" FMMS"ms"'), '(?<!\d)0+(?=\d+ms$)', '')
          when $1 <  '1m'::interval then to_char($1,                           'FMSS"s"')
          when $1 <  '1h'::interval then to_char($1,                   'FMMI"m" FMSS"s"')
-         when $1 <  '1d'::interval then to_char($1,         'FMHH24"h" FMMI"m" FMSS"s"')
-         else                           to_char($1, 'FMDD"d" FMHH24"h" FMMI"m" FMSS"s"')
+         when $1 <  '1d'::interval then to_char($1,         'FMHH24"h" FMMI"m"')
+         else                           to_char($1, 'FMDD"d" FMHH24"h" FMMI"m"')
     end;
 
 comment on function public.interval_pretty(interval) is 'Formats the interval (time period) to a human readable string';
@@ -30,9 +30,9 @@ DO $do$
     BEGIN
         --positive
         assert public.interval_pretty(null) is null;
-        assert public.interval_pretty('99d 23h 23m 59s 123ms'::interval) = '99d 23h 23m 59s';
-        assert public.interval_pretty('10d 10h 10m 10s 100ms'::interval) = '10d 10h 10m 10s';
-        assert public.interval_pretty( '0d 23h 23m 59s 101ms'::interval) =     '23h 23m 59s';
+        assert public.interval_pretty('99d 23h 23m 59s 123ms'::interval) = '99d 23h 23m';
+        assert public.interval_pretty('10d 10h 10m 10s 100ms'::interval) = '10d 10h 10m';
+        assert public.interval_pretty( '0d 23h 23m 59s 101ms'::interval) =     '23h 23m';
         assert public.interval_pretty( '0d  0h 23m 59s 110ms'::interval) =         '23m 59s';
         assert public.interval_pretty( '0d  0h  0m 10s 123ms'::interval) =             '10s';
         assert public.interval_pretty( '0d  0h  0m 10s   0ms'::interval) =             '10s';
