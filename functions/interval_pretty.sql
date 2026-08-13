@@ -6,13 +6,13 @@ create or replace function public.interval_pretty(interval)
     language sql
     set search_path = ''
 return
-    case when $1    = '0'::interval then '0ms'
-         when $1 >  -'1s'::interval and $1 <  '1s'::interval then regexp_replace(to_char($1,                    'FMMS"ms"'), '(?<!\d)0+(?=\d+ms$)', '')
-         when $1 > -'10s'::interval and $1 < '10s'::interval then regexp_replace(to_char($1,            'FMSS"s" FMMS"ms"'), '(?<!\d)0+(?=\d+ms$)', '')
-         when $1 >  -'1m'::interval and $1 <  '1m'::interval then to_char($1,                           'FMSS"s"')
-         when $1 >  -'1h'::interval and $1 <  '1h'::interval then to_char($1,                   'FMMI"m" FMSS"s"')
-         when $1 >  -'1d'::interval and $1 <  '1d'::interval then to_char($1,         'FMHH24"h" FMMI"m"')
-         else                                                     to_char($1, 'FMDD"d" FMHH24"h" FMMI"m"')
+    case when $1 = '0'::interval then '0ms'
+         when greatest($1, $1 * -1) <  '1s'::interval then regexp_replace(to_char($1,                    'FMMS"ms"'), '(?<!\d)0+(?=\d+ms$)', '')
+         when greatest($1, $1 * -1) < '10s'::interval then regexp_replace(to_char($1,            'FMSS"s" FMMS"ms"'), '(?<!\d)0+(?=\d+ms$)', '')
+         when greatest($1, $1 * -1) <  '1m'::interval then to_char($1,                           'FMSS"s"')
+         when greatest($1, $1 * -1) <  '1h'::interval then to_char($1,                   'FMMI"m" FMSS"s"')
+         when greatest($1, $1 * -1) <  '1d'::interval then to_char($1,         'FMHH24"h" FMMI"m"')
+         else                                              to_char($1, 'FMDD"d" FMHH24"h" FMMI"m"')
     end;
 
 comment on function public.interval_pretty(interval) is 'Formats the interval (time period) to a human readable string';
