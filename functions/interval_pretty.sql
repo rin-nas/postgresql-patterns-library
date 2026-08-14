@@ -5,15 +5,18 @@ create or replace function public.interval_pretty(interval)
     parallel safe
     language sql
     set search_path = ''
-return
-    case when $1 = '0'::interval then '0ms'
-         when greatest($1, $1 * -1) <  '1s'::interval then regexp_replace(to_char($1,                    'FMMS"ms"'), '(?<!\d)0+(?=\d+ms$)', '')
-         when greatest($1, $1 * -1) < '10s'::interval then regexp_replace(to_char($1,            'FMSS"s" FMMS"ms"'), '(?<!\d)0+(?=\d+ms$)', '')
-         when greatest($1, $1 * -1) <  '1m'::interval then to_char($1,                           'FMSS"s"')
-         when greatest($1, $1 * -1) <  '1h'::interval then to_char($1,                   'FMMI"m" FMSS"s"')
-         when greatest($1, $1 * -1) <  '1d'::interval then to_char($1,         'FMHH24"h" FMMI"m"')
-         else                                              to_char($1, 'FMDD"d" FMHH24"h" FMMI"m"')
-    end;
+begin atomic
+    select
+        case when gi < '1ms'::interval then '0'
+             when gi <  '1s'::interval then regexp_replace(to_char($1,                    'FMMS"ms"'), '(?<!\d)0+(?=\d+ms$)', '')
+             when gi < '10s'::interval then regexp_replace(to_char($1,            'FMSS"s" FMMS"ms"'), '(?<!\d)0+(?=\d+ms$)', '')
+             when gi <  '1m'::interval then to_char($1,                           'FMSS"s"')
+             when gi <  '1h'::interval then to_char($1,                   'FMMI"m" FMSS"s"')
+             when gi <  '1d'::interval then to_char($1,         'FMHH24"h" FMMI"m"')
+             else                           to_char($1, 'FMDD"d" FMHH24"h" FMMI"m"')
+        end
+    from greatest($1, $1 * -1) as gi;
+end;
 
 comment on function public.interval_pretty(interval) is 'Formats the interval (time period) to a human readable string';
 
@@ -51,8 +54,8 @@ DO $do$
             assert public.interval_pretty( '0d  0h  0m  0s  99ms'::interval * sign) = regexp_replace(                 '99ms', search, '-\&', 'g');
             assert public.interval_pretty( '0d  0h  0m  0s  10ms'::interval * sign) = regexp_replace(                 '10ms', search, '-\&', 'g');
             assert public.interval_pretty( '0d  0h  0m  0s   1ms'::interval * sign) = regexp_replace(                  '1ms', search, '-\&', 'g');
-            assert public.interval_pretty( '0d  0h  0m  0s   0ms'::interval * sign) = regexp_replace(                  '0ms', search, '-\&', 'g');
-            assert public.interval_pretty('00:00:00.000706'      ::interval * sign) = regexp_replace(                  '0ms', search, '-\&', 'g');
+            assert public.interval_pretty( '0d  0h  0m  0s   0ms'::interval * sign) = regexp_replace(                    '0', search, '-\&', 'g');
+            assert public.interval_pretty('00:00:00.000706'      ::interval * sign) = regexp_replace(                    '0', search, '-\&', 'g');
 
             --negative
         END LOOP;
