@@ -13,7 +13,7 @@ create or replace function public.ping(
     set search_path = ''
 begin atomic
     select d3.latency,
-           (s.local_connection_start - s.remote_connection_start) - d3.latency as time_diff
+           s.local_connection_start + d3.latency - s.remote_connection_start as time_diff
     from public.dblink(
                ping.connection_str,
                format($sql$
