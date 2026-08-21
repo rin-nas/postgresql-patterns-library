@@ -55,7 +55,7 @@ do $$
 
         assert (select latency between '-1s'::interval and '1s'::interval
                    and time_diff between '-1s'::interval and '1s'::interval
-                from public.ping('application_name=dblink_ping connect_timeout=3 host=127.0.0.1') as t);
+                from public.ping('application_name=dblink_ping connect_timeout=3 host=localhost') as t);
 
         --negative
         assert public.ping(null) is null;
