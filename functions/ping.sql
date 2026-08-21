@@ -33,9 +33,11 @@ begin atomic
     coalesce(d2.local_connection_duration - d1.remote_connection_duration) as d3(latency);
 end;
 
-comment on function public.ping(connection_str text,
-                             latency out interval,
-                             time_diff out interval) is 'Get latency and date-time difference between current and remote servers';
+comment on function public.ping(
+    connection_str text,
+    latency out interval,
+    time_diff out interval
+) is 'Get latency and date-time difference between current and remote servers';
 
 -- TEST
 do $$
