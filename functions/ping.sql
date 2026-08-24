@@ -16,7 +16,7 @@ begin atomic
     select s.remote_addr,
            d3.latency,
            s.local_connection_start + d3.latency - s.remote_connection_start as time_diff
-    from public.dblink(
+    from public.dblink(  -- в случае недоступности сетевого соединения dblink() возвратит ошибку
                ping.connection_str,
                format($sql$
                       select
