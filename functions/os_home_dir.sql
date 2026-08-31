@@ -19,7 +19,7 @@ end;
 
 comment on function public.os_home_dir() is 'Get OS home directory';
 
-alter function public.os_home_dir(user_name text) owner to postgres;
+--alter function public.os_home_dir(user_name text) owner to postgres;
 
 --TEST
 --select public.os_home_dir('postgres');
