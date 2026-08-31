@@ -8,9 +8,9 @@ create function public.os_home_dir()
     SECURITY DEFINER
     language sql
     set search_path = ''
-begin atomic 
+begin atomic
     -- username:password:UID:GID:GECOS:home_directory:shell
-    select split_part(t.line, ':', 6) 
+    select split_part(t.line, ':', 6)
     from string_to_table(pg_read_file('/etc/passwd'), E'\n') as t(line)
     where t.line ~ '^postgres:';
 end;
