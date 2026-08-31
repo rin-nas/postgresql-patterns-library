@@ -1,6 +1,6 @@
-drop function if exists pro.os_home_dir(user_name text);
+drop function if exists public.os_home_dir(user_name text);
 
-create function pro.os_home_dir(
+create function public.os_home_dir(
     user_name text
 )
     returns text
@@ -19,7 +19,7 @@ end;
 
 comment on function public.os_home_dir() is 'Get OS home directory';
 
-alter function pro.os_home_dir(user_name text) owner to postgres;
+alter function public.os_home_dir(user_name text) owner to postgres;
 
 --TEST
---select pro.os_home_dir('postgres');
+--select public.os_home_dir('postgres');
