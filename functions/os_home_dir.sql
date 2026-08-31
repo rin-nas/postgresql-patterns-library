@@ -1,6 +1,8 @@
-drop function if exists public.os_home_dir();
+drop function if exists pro.os_home_dir(user_name text);
 
-create function public.os_home_dir()
+create function pro.os_home_dir(
+    user_name text
+)
     returns text
     immutable
     strict -- returns null if any parameter is null
@@ -12,12 +14,12 @@ begin atomic
     -- username:password:UID:GID:GECOS:home_directory:shell
     select split_part(t.line, ':', 6)
     from string_to_table(pg_read_file('/etc/passwd'), E'\n') as t(line)
-    where t.line ~ '^postgres:';
+    where split_part(t.line, ':', 1) = os_home_dir.user_name;
 end;
-
-alter function public.os_home_dir() owner to postgres;
 
 comment on function public.os_home_dir() is 'Get OS home directory';
 
+alter function pro.os_home_dir(user_name text) owner to postgres;
+
 --TEST
---select public.os_home_dir();
+--select pro.os_home_dir('postgres');
