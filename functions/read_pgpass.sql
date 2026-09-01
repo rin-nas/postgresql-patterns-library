@@ -11,7 +11,7 @@ create function public.read_pgpass(filename text)
     immutable
     strict -- returns null if any parameter is null
     parallel safe
-    SECURITY DEFINER
+    SECURITY DEFINER -- superuser
     language sql
     set search_path = ''
 begin atomic
