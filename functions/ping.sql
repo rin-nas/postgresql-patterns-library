@@ -14,7 +14,7 @@ create function public.ping(
     immutable
     returns null on null input
     parallel safe
-    SECURITY DEFINER -- so that the invoker user does not have access to dblink()
+    SECURITY DEFINER
     language sql
     set search_path = ''
 begin atomic

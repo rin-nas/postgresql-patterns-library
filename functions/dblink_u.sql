@@ -7,7 +7,7 @@ create function public.dblink_u(connection_str text, sql text, record_definition
     immutable
     returns null on null input
     parallel safe
-    SECURITY DEFINER -- so that the invoker user does not have access to dblink()
+    SECURITY DEFINER
     language plpgsql
     set search_path = ''
 as $$
@@ -29,7 +29,7 @@ $$;
 Поведение ожидаемое согласно документации: https://postgrespro.ru/docs/postgresql/current/contrib-dblink-connect
 */
 comment on function public.dblink_u(connection_str text, sql text, record_definition text)
-    is 'Аналог функции dblink(), но для не суперпользователя позволяет не указывать пароль в строке подключения, а брать его из файла "~postgres/.pgpass"';
+    is 'Аналог функции dblink(), но для не суперпользователя позволяет не указывать пароль в строке подключения, а брать его из файла "~/.pgpass"';
 
 -- TEST
 -- select * from public.dblink_u('user=psqlrc_user host=192.168.20.152 port=5432 dbname=postgres', 'select 1', 'f int') as s(f int);
