@@ -1,6 +1,8 @@
 create extension if not exists dblink schema public;
 
-create or replace function public.ping(
+drop function if exists public.ping(connection_str text);
+
+create function public.ping(
     connection_str text,
     remote_addr out inet, -- для подключения по хосту узнаём его IP
     latency     out interval,
@@ -38,12 +40,7 @@ begin atomic
     coalesce(d2.local_connection_duration - d1.remote_connection_duration)          as d3(latency);
 end;
 
-comment on function public.ping(
-    connection_str text,
-    remote_addr out inet,
-    latency     out interval,
-    time_diff   out interval
-) is 'Get remote IP, latency and date-time difference between current and remote servers';
+comment on function public.ping(connection_str text) is 'Get remote IP, latency and date-time difference between current and remote servers';
 
 -- TEST
 do $$
