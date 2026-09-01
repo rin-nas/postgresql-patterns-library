@@ -1,3 +1,5 @@
+-- TODO функцию ping() можно реализовать по другому, см. функцию dblink_u() и там же описание проблемы в команде "comment on function"
+
 create extension if not exists dblink schema public;
 
 drop function if exists public.ping(connection_str text);
