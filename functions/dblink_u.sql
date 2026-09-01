@@ -23,7 +23,7 @@ end;
 $$;
 
 /*
-Если подключиться к СУБД не под суперпользователем и выполнеть функцию dblink() без явного указания пароля в строке подключения, то получим ошибку:
+Если подключиться к СУБД не под суперпользователем и выполнить функцию dblink() без явного указания пароля в строке подключения, то получим ошибку:
     ERROR:  password or GSSAPI delegated credentials required
     DETAIL:  Non-superusers must provide a password in the connection string or send delegated GSSAPI credentials.
 Поведение ожидаемое согласно документации: https://postgrespro.ru/docs/postgresql/current/contrib-dblink-connect
