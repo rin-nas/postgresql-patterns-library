@@ -10,7 +10,7 @@ create or replace function public.sql_split(
     returns null on null input
     parallel safe
     language plpgsql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
     cost 10
 as
 $func$

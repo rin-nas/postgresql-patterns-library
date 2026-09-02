@@ -5,7 +5,7 @@ create or replace function public.fib_code_bin(n int)
     parallel safe
     security invoker
     language sql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 return
     public.bin(
         public.bit_reverse(n) << 1 | 1, --add bit 1 to end

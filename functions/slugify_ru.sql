@@ -1,7 +1,7 @@
 create or replace function public.slugify_ru(str text)
     returns text
     language plpgsql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 as $$
 declare
 _out text;

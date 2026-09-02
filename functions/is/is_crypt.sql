@@ -7,7 +7,7 @@ create or replace function public.is_crypt(str text)
     returns null on null input
     parallel safe
     language sql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
     cost 5
 return
     case when octet_length(str) between (5+22) and 118 --speed improves

@@ -5,7 +5,7 @@ create or replace function public.array_add(a int[], n int)
     parallel safe
     security invoker
     language sql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 return
     array(select x + n from unnest(a) t(x));
 

@@ -1,6 +1,6 @@
 CREATE OR REPLACE FUNCTION public.jsonb_object_diff(l JSONB, r JSONB) RETURNS JSONB
     LANGUAGE sql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 AS $func$
     SELECT jsonb_object_agg(a.key, a.value)
     FROM (SELECT key, value FROM jsonb_each(l)) AS a(key,value)

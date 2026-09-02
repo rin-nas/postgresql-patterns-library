@@ -5,7 +5,7 @@ create or replace function public.array_unique(anyarray)
     parallel safe
     security invoker
     language sql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 as $$
     select array(
         select distinct t.x --using DISTINCT implicitly sorts the array
@@ -23,7 +23,7 @@ create or replace function public.array_unique(
     parallel safe
     security invoker
     language sql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 as $$
     select array(
         SELECT DISTINCT t.x --using DISTINCT implicitly sorts the array

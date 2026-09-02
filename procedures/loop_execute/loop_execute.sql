@@ -116,7 +116,7 @@ create or replace procedure public.loop_execute(
     */
 )
     language plpgsql
-    -- set search_path = '' -- пока закомментировал из-за ошибки https://stackoverflow.com/questions/59159091/invalid-transaction-termination
+    -- set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks -- пока закомментировал из-за ошибки https://stackoverflow.com/questions/59159091/invalid-transaction-termination
 as
 $procedure$
 DECLARE

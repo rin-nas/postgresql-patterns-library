@@ -8,7 +8,7 @@ create or replace function public.is_table_column(
     returns null on null input
     parallel safe
     language sql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 begin atomic
     select exists (
         select n.nspname as schema_name,
@@ -38,7 +38,7 @@ create or replace function public.is_table_column(
     returns null on null input
     parallel safe
     language sql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 return
     public.is_table_column(
         is_table_column.r.schema::pg_catalog.name,

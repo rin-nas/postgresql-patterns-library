@@ -5,7 +5,7 @@ CREATE OR REPLACE FUNCTION public.bit_set(num bigint, pos int, val boolean)
     security invoker
     parallel safe
     language plpgsql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 AS $$
 DECLARE
     mask bigint default 1 << (pos - 1);

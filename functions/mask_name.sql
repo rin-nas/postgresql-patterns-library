@@ -4,7 +4,7 @@ create or replace function public.mask_name(text)
     returns null on null input
     parallel safe
     language sql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 return
     rpad(upper(left($1, 1)), char_length($1), '*');
 

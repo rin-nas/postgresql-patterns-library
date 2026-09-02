@@ -5,7 +5,7 @@ CREATE OR REPLACE FUNCTION public.url_decode(input text)
     immutable
     strict -- returns null if any parameter is null
     language plpgsql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 AS $$
 DECLARE
     bin bytea = '';

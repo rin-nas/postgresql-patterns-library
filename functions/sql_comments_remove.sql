@@ -8,7 +8,7 @@ create or replace function public.sql_comments_remove(
     returns null on null input
     parallel safe
     language sql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
     cost 2
 return
     --https://postgrespro.ru/docs/postgresql/current/sql-syntax-lexical

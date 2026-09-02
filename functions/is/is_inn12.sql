@@ -5,7 +5,7 @@ create or replace function public.is_inn12(inn text) returns boolean
     strict -- returns null if any parameter is null
     parallel safe
     language plpgsql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
     cost 5
 as
 $$

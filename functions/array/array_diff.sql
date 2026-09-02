@@ -5,7 +5,7 @@ create or replace function public.array_diff(anyarray, anyarray)
     parallel safe
     security invoker
     language sql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 as $$
     select array(
         select v

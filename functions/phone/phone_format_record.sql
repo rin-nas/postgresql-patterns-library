@@ -16,7 +16,7 @@ create or replace function public.phone_format_record(
     --returns null on null input
     parallel safe
     language sql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 begin atomic
     select
         case when country_code_example is null or country_code_example = '' then country_code_example
@@ -69,7 +69,7 @@ create or replace function public.phone_format_record(
     --returns null on null input
     parallel safe
     language sql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 begin atomic
     select t.country_code::int, t.area_code, t.local_number
     from public.phone_format_record(in_country_code::text, in_area_code, in_local_number,
@@ -110,7 +110,7 @@ create or replace function public.phone_format_record(
     --returns null on null input
     parallel safe
     language sql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 begin atomic
     select t.*
     from public.phone_format_record(in_country_code::text, in_area_code, in_local_number,
@@ -152,7 +152,7 @@ create or replace function public.phone_format_record(
     --returns null on null input
     parallel safe
     language sql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 begin atomic
     select t.country_code::int, t.area_code, t.local_number
     from public.phone_format_record(in_country_code, in_area_code, in_local_number,

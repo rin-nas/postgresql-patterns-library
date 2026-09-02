@@ -21,7 +21,7 @@ create or replace function public.path_parse(
     returns null on null input
     parallel safe
     language sql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
     cost 5
 begin atomic
     select coalesce(case when left(m[1], 1) = '/' then '/' else '' end, '') as root,

@@ -3,7 +3,7 @@ create or replace function public.gc_dist(
     lat2 double precision, lon2 double precision
 ) returns double precision
     language plpgsql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 AS $$
     -- https://en.wikipedia.org/wiki/Haversine_formula
     -- http://www.movable-type.co.uk/scripts/latlong.html

@@ -3,7 +3,7 @@ CREATE OR REPLACE FUNCTION public.explain_json(
     params TEXT[] DEFAULT ARRAY[]::text[]
 ) RETURNS SETOF JSON
     LANGUAGE plpgsql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 AS $$
 BEGIN
     RETURN QUERY

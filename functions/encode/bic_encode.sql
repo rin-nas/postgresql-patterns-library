@@ -16,7 +16,7 @@ create or replace function public.bic_encode_to_table(s int[], lo int, hi int, t
     parallel safe
     security invoker
     language plpgsql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 as $$
 declare
     n int not null default cardinality(s);
@@ -48,7 +48,7 @@ create or replace function public.bic_encode(a int[])
     parallel safe
     security invoker
     language sql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 begin atomic
 
     with t as (

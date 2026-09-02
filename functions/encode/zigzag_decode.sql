@@ -5,7 +5,7 @@ create or replace function public.zigzag_decode(n int)
     parallel safe
     security invoker
     language sql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 return
     (n >> 1) # - (n & 1);
 
@@ -45,7 +45,7 @@ create or replace function public.zigzag_decode(a int[], delta int default 0)
     parallel safe
     security invoker
     language plpgsql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 as $func$
     declare
         len int := cardinality(a);

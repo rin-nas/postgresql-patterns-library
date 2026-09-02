@@ -7,7 +7,7 @@ create or replace function depers.gender_by_name(
     strict -- returns null if any parameter is null
     parallel safe
     language sql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 begin atomic
 
     with enter_sentence as (

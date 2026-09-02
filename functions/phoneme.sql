@@ -4,7 +4,7 @@ create or replace function public.phoneme(in_lexeme text)
     returns text
     immutable
     language plpgsql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 as $$
 declare
   res varchar(100) DEFAULT '';
@@ -34,7 +34,7 @@ create or replace function public.mquery(in_fullname text)
     returns text
     immutable
     language plpgsql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 as $$
 declare
   res text;

@@ -5,7 +5,7 @@ create or replace function public.bigint_to_inet(bigint)
     parallel safe
     security invoker
     language sql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 return
     concat_ws('.', ($1>>24&255), ($1>>16&255), ($1>>8&255), ($1>>0&255))::inet;
 

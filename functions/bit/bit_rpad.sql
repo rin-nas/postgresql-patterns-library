@@ -5,7 +5,7 @@ create or replace function public.bit_rpad(bits bit varying, length int, fill bi
     parallel safe
     security invoker
     language sql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 begin atomic
     select case when len > length then substring(bits from 1 for length)
                 when len < length then bits || public.bin(fill::int, length - len)

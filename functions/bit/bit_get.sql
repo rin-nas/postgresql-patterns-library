@@ -5,7 +5,7 @@ CREATE OR REPLACE FUNCTION public.bit_get(num bigint, pos int)
     security invoker
     parallel safe
     language plpgsql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 AS $$
 begin
     if num < 0 then

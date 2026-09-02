@@ -9,7 +9,7 @@ create or replace function public.jsonb_unnest_recursive_distinct(data jsonb[])
     parallel safe
     security invoker
     language sql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 begin atomic
     --explain (analyse)
     with recursive r (path, value, member_of) as

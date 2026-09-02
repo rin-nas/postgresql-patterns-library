@@ -6,7 +6,7 @@ create or replace function public.is_payment_card(smallint[])
     returns boolean
     immutable
     language sql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 begin atomic
   select sum(
              case when (pos % 2 = 0) then

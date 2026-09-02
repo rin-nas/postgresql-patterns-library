@@ -5,7 +5,7 @@ create or replace function public.entropy_redundancy(s text)
     parallel safe
     security invoker
     language sql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 return
     log(2, char_length(entropy_redundancy.s)) - public.entropy(entropy_redundancy.s);
 
@@ -19,7 +19,7 @@ create or replace function public.entropy_redundancy(data bytea)
     parallel safe
     security invoker
     language sql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 return
     log(2, octet_length(entropy_redundancy.data)) - public.entropy(entropy_redundancy.data);
 

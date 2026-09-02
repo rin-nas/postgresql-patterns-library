@@ -4,7 +4,7 @@ create function public.size_pretty(bigint)
     returns null on null input
     parallel safe
     language sql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 return
     case when $1 = 0 then '0'
          else replace(pg_size_pretty($1), ' bytes', ' B')
@@ -19,7 +19,7 @@ create function public.size_pretty(numeric)
     returns null on null input
     parallel safe
     language sql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 return
     case when $1 = 0 then '0'
          else replace(pg_size_pretty($1), ' bytes', ' B')

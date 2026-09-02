@@ -3,7 +3,7 @@ CREATE OR REPLACE FUNCTION public.is_regexp(regexp text, is_notice boolean defau
     returns null on null input
     parallel unsafe --(ERROR:  cannot start subtransactions during a parallel operation)
     language plpgsql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
     cost 5
 AS
 $$

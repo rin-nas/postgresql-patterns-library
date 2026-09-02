@@ -10,7 +10,7 @@ CREATE OR REPLACE FUNCTION public.array_unique_stable(anyarray)
     parallel safe
     security invoker
     language sql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 AS $body$
 SELECT
     array_agg(distinct_value ORDER BY first_index)

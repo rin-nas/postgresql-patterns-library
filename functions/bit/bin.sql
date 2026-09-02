@@ -5,7 +5,7 @@ create or replace function public.bin(n int)
     parallel safe
     security invoker
     language sql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 begin atomic
     select
         case (case when pos = 0 then 1 else 33 - pos end)
@@ -75,7 +75,7 @@ create or replace function public.bin(n int, length int)
     parallel safe
     security invoker
     language sql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 return
     case length
         when 1 then n::bit(1)

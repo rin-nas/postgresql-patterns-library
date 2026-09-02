@@ -10,7 +10,7 @@ create or replace function public.phone_normalize(
     --returns null on null input
     parallel safe
     language plpgsql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
     cost 10
 as
 $$
@@ -105,7 +105,7 @@ create or replace function public.phone_normalize(
     --returns null on null input
     parallel safe
     language sql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 return
     public.phone_normalize(
         nullif(trim(country_code), '')::int,
@@ -121,7 +121,7 @@ create or replace function public.phone_normalize(
     returns null on null input
     parallel safe
     language sql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 return
     case when --speed improves: номер телефона в международном формате E.164 ?
               left(phone, 1) = '+'

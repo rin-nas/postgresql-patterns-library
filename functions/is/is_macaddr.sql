@@ -4,7 +4,7 @@ create or replace function public.is_macaddr(str text)
     returns null on null input
     parallel safe
     language sql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
     cost 5
 return
     octet_length(str) in (17, --08:00:2b:01:02:03

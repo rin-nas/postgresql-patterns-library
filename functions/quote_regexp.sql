@@ -5,6 +5,6 @@ create or replace function public.quote_regexp(text)
     returns null on null input
     parallel safe
     language sql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 return
     regexp_replace($1, '([[\](){}.+*^$|\\?-])', '\\\1', 'g');

@@ -5,7 +5,7 @@ create or replace function public.codepoints_gap_decrease(a int[])
     parallel safe
     security invoker
     language sql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 begin atomic
     select array(
         with u (e) as (

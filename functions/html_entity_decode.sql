@@ -5,7 +5,7 @@ create or replace function public.html_entity_decode(str text)
     returns null on null input
     parallel safe
     language plpgsql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 as $func$
     declare
         rec record;

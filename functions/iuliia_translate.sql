@@ -6,7 +6,7 @@ create or replace function public.iuliia_translate(str text, rules jsonb)
     parallel safe
     security invoker
     language plpgsql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 as
 $$
 DECLARE
@@ -64,7 +64,7 @@ create or replace function public.iuliia_translate_mosmetro(str text)
     parallel safe
     security invoker
     language sql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 return
     public.iuliia_translate(
         str,
@@ -189,7 +189,7 @@ create or replace function public.iuliia_translate_wikipedia(str text)
     parallel safe
     security invoker
     language sql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 return
     public.iuliia_translate(
        str,

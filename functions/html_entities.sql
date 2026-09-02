@@ -4,7 +4,7 @@ create or replace function public.html_entities()
     returns null on null input
     parallel safe
     language sql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 return
     -- Last Updated 24 April 2023
     -- https://html.spec.whatwg.org/multipage/named-characters.html

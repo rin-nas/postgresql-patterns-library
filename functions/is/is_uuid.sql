@@ -4,7 +4,7 @@ create or replace function public.is_uuid(str text)
     returns null on null input
     parallel safe
     language sql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 return
     --https://postgrespro.ru/docs/postgresql/current/datatype-uuid
     case when octet_length(str) between 32 --a0eebc999c0b4ef8bb6d6bb9bd380a11

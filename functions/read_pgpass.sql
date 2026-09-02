@@ -11,9 +11,9 @@ create function public.read_pgpass(filename text)
     immutable
     strict -- returns null if any parameter is null
     parallel safe
-    SECURITY DEFINER -- superuser
+    SECURITY DEFINER
     language sql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 begin atomic
     -- https://postgrespro.com/docs/postgresql/current/libpq-pgpass
     select t7.fields[1] as hostname,

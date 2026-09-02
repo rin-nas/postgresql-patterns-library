@@ -4,7 +4,7 @@ create or replace function public.delta_encode(a int[])
     returns null on null input
     parallel safe -- Postgres 10+
     language sql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 begin atomic
     select array(
         select coalesce(a.v - lag(a.v) over (order by a.o), a.v)

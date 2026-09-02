@@ -5,7 +5,7 @@ create or replace function public.fib_encode(n int, seq int[])
     parallel safe
     security invoker
     language plpgsql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 AS $func$
 DECLARE
     i int default cardinality(seq);

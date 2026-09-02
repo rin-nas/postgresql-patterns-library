@@ -14,7 +14,7 @@ create or replace function public.replace_pairs(
     returns null on null input
     parallel safe
     language plpgsql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
     cost 3
 as
 $func$

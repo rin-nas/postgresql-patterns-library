@@ -9,7 +9,7 @@ create function public.dblink_u(connection_str text, sql text, record_definition
     parallel safe
     SECURITY DEFINER
     language plpgsql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 as $$
 declare
     conn_name text := 'tmp_conn_' || extract('epoch' from clock_timestamp());

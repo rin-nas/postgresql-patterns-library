@@ -7,9 +7,9 @@ create function public.os_home_dir(
     immutable
     strict -- returns null if any parameter is null
     parallel safe
-    SECURITY DEFINER  -- superuser
+    SECURITY DEFINER
     language sql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 begin atomic
     -- username:password:UID:GID:GECOS:home_directory:shell
     select split_part(t.line, ':', 6)

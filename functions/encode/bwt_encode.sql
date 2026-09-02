@@ -8,7 +8,7 @@ create or replace function public.bwt_encode(
     parallel safe
     security invoker
     language sql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 as $func$
 
     --https://www.geeksforgeeks.org/burrows-wheeler-data-transform-algorithm/

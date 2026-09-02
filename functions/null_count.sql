@@ -5,7 +5,7 @@ create or replace function public.null_count(variadic anyarray)
     parallel safe
     security invoker
     language sql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 as $func$
     SELECT COUNT(*)::int FROM unnest($1) g(v) WHERE g.v IS NULL;
 $func$;

@@ -5,7 +5,7 @@ CREATE OR REPLACE FUNCTION public.benchmark(loop_count int, sql_expr text)
     parallel unsafe --!!!
     security invoker
     language plpgsql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 AS
 $$
 DECLARE
@@ -32,7 +32,7 @@ CREATE OR REPLACE FUNCTION public.benchmark(timeout interval, sql_expr text)
     parallel unsafe --!!!
     security invoker
     language plpgsql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 AS
 $$
 DECLARE

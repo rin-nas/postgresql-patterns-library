@@ -5,7 +5,7 @@ CREATE OR REPLACE FUNCTION public.fib_seq(total int)
     parallel safe
     security invoker
     language plpgsql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 AS
 $func$
 DECLARE

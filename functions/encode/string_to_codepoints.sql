@@ -5,7 +5,7 @@ create or replace function public.string_to_codepoints(s text)
     parallel safe
     security invoker
     language sql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 begin atomic
     select array(
         select ascii(t.c)

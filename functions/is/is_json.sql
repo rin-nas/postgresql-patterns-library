@@ -4,7 +4,7 @@ create or replace function public.is_json(str text, is_notice boolean default fa
     parallel unsafe --(ERROR:  cannot start subtransactions during a parallel operation)
     stable
     language plpgsql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
     cost 5
 as
 $$

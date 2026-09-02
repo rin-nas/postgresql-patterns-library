@@ -5,7 +5,7 @@ create or replace function public.entropy(s text)
     parallel safe
     security invoker
     language sql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 begin atomic
     with t(freq) as (
         select count(*) * 1.0 / l.l
@@ -39,7 +39,7 @@ create or replace function public.entropy(data bytea)
     parallel safe
     security invoker
     language sql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 begin atomic
     with t(freq) as (
         select count(*) * 1.0 / l.l

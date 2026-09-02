@@ -5,7 +5,7 @@ create or replace function public.fib_unpack(data bytea)
     parallel safe
     security invoker
     language sql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 begin atomic
     with recursive r (b, bits) as (
         select substring(d.bits, 1, p.pos),

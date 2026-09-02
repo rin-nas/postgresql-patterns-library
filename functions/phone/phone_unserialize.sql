@@ -16,7 +16,7 @@ create or replace function public.phone_unserialize(
     --returns null on null input
     parallel safe
     language plpgsql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 as $$
 declare
     parts text[] not null default array[]::text[];
@@ -103,7 +103,7 @@ create or replace function public.phone_unserialize(
     --returns null on null input
     parallel safe
     language sql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 begin atomic
     select u.country_code::int, u.area_code, u.local_number
     from public.phone_unserialize(phone,

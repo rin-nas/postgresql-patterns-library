@@ -4,7 +4,7 @@ create or replace function public.has_html_entity(str text)
     returns null on null input
     parallel safe
     language sql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
     cost 3
 return
        position('&' in str) > 0 --speed improves
@@ -36,7 +36,7 @@ create or replace function public.has_html_entity(data json)
     returns null on null input
     parallel safe
     language sql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
     cost 3
 return
     public.has_html_entity(data::text);
@@ -50,7 +50,7 @@ create or replace function public.has_html_entity(data jsonb)
     returns null on null input
     parallel safe
     language sql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
     cost 3
 return
     public.has_html_entity(data::text);

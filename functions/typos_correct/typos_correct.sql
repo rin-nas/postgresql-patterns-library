@@ -18,7 +18,7 @@ create or replace function public.typos_correct(
     stable
     returns null on null input
     language sql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 begin atomic
     /*
     Описание параметров на входе:

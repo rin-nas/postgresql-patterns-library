@@ -8,7 +8,7 @@ create or replace function public.app_progress(
     parallel unsafe --NOT safe!
     volatile --NOT stable!
     language plpgsql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
     cost 5
 as
 $$

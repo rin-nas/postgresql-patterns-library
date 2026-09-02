@@ -10,7 +10,7 @@ create or replace function db_audit.pg_terminate_duplicate_locked(
     volatile --https://postgrespro.ru/docs/postgresql/current/xfunc-volatility
     returns null on null input
     language sql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 as $BODY$
 with s as (
     select a.*,

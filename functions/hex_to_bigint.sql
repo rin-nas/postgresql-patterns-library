@@ -9,7 +9,7 @@ create or replace function public.hex_to_bigint(hexval text)
     stable
     parallel safe
     language sql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 begin atomic
     select bit_or(get_byte(
                           decode(lpad(hexval, 32, '0'), 'hex')

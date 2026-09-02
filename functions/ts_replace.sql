@@ -8,7 +8,7 @@ create or replace function public.ts_replace(
     returns null on null input
     parallel safe
     language sql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
     cost 1
 begin atomic
     with s as (
@@ -63,7 +63,7 @@ create or replace function public.ts_replace(
     strict -- returns null if any parameter is null
     parallel safe
     language plpgsql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
     cost 1
 as
 $function$

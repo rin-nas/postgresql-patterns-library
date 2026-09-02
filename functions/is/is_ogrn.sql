@@ -4,7 +4,7 @@ create or replace function public.is_ogrn(str text)
     returns null on null input
     parallel safe
     language sql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
     cost 2
 return
     --https://ru.wikipedia.org/wiki/Основной_государственный_регистрационный_номер

@@ -27,7 +27,7 @@ create or replace function public.phone_parse(
     returns null on null input
     parallel safe
     language sql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
     cost 10
 begin atomic
 with t as (

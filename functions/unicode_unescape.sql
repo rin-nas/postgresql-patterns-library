@@ -4,7 +4,7 @@ create or replace function public.unicode_unescape(text)
     returns null on null input
     parallel safe
     language sql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 return
     -- input string - only as \uXXXX sequence
     -- TODO validate format by regexp and return NULL for invalid strings?

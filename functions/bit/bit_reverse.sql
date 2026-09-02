@@ -5,7 +5,7 @@ create or replace function public.bit_reverse(n int)
     parallel safe
     security invoker
     language plpgsql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 AS $func$
 DECLARE
     rev int := 0;
@@ -56,7 +56,7 @@ create or replace function public.bit_reverse(n int, r int)
     parallel safe
     security invoker
     language plpgsql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 AS $func$
 DECLARE
     rev int := 0;
@@ -109,7 +109,7 @@ create or replace function public.bit_reverse(b bit)
     parallel safe
     security invoker
     language plpgsql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 AS $func$
 DECLARE
     len int not null default bit_length(b) - 1;

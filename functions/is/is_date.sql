@@ -4,7 +4,7 @@ create or replace function public.is_date(str text, is_notice boolean default fa
     --parallel safe
     stable
     language plpgsql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
     set datestyle = 'ISO, DMY'
     cost 5
 as

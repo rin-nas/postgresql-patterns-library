@@ -8,7 +8,7 @@ create or replace function db_audit.grep_ip(str text)
     returns null on null input
     parallel safe
     language sql
-    set search_path = ''
+    set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 begin atomic
     select (row_number() over ())::int as order_num,
         m[1] as all,
