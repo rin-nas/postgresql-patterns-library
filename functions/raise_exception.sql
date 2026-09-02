@@ -1,5 +1,6 @@
---Inspired by https://hakibenita.com/future-proof-sql#assert-never-in-sql
---Documentation: https://postgrespro.ru/docs/postgresql/current/plpgsql-errors-and-messages
+-- Inspired by https://hakibenita.com/future-proof-sql#assert-never-in-sql
+-- Documentation: https://postgrespro.ru/docs/postgresql/current/plpgsql-errors-and-messages
+-- NOTICE: see also function error_on_null() in PostgreSQL 19+
 
 create or replace function public.raise_exception(
     value anyelement,
