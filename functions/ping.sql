@@ -1,5 +1,8 @@
--- TODO функцию ping() можно реализовать по другому, см. функцию dblink_u() и там же описание проблемы в команде "comment on function"
-
+/*
+TODO: Функцию ping() можно (и нужно?) реализовать по другому на PL/pgSQL, причины:
+TODO: 1) заменить "SECURITY DEFINER" на "SECURITY INVOKER", см. функцию dblink_u() и там же описание проблемы в команде "comment on function"
+TODO: 2) в случае недоступности сетевого соединения dblink() возвратит ошибку, это нужно перехватывать и возвращать NULL
+*/
 create extension if not exists dblink schema public;
 
 drop function if exists public.ping(connection_str text);
