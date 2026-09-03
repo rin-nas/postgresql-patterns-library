@@ -11,7 +11,7 @@ create function public.read_pgpass(filename text)
     immutable
     strict -- returns null if any parameter is null
     parallel safe
-    SECURITY DEFINER
+    SECURITY DEFINER -- due pg_read_file() reason
     language sql
     set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 begin atomic
