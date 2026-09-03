@@ -33,6 +33,9 @@
 -- отнимаем привилегии для уже созданных объектов
 REVOKE ALL ON DATABASE {dbname} FROM PUBLIC; -- отнимаем привилегии CREATE, CONNECT, TEMPORARY
 REVOKE ALL ON SCHEMA public FROM PUBLIC; -- отнимаем привилегии CREATE, USAGE (применимо к текущей БД!)
+REVOKE ALL ON ALL TABLES    IN SCHEMA public FROM PUBLIC; -- and VIEWS too
+REVOKE ALL ON ALL SEQUENCES IN SCHEMA public FROM PUBLIC;
+REVOKE ALL ON ALL ROUTINES  IN SCHEMA public FROM PUBLIC; -- ROUTINES = FUNCTIONS = PROCEDURES
 
 -- отнимаем привилегии для создаваемых объектов в будущем (применимо к текущей БД!)
 alter default privileges revoke all on tables from PUBLIC;
