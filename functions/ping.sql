@@ -11,7 +11,7 @@ create function public.ping(
     time_diff   out interval
 )
     returns record
-    immutable
+    volatile -- !!!
     returns null on null input
     parallel safe
     SECURITY DEFINER

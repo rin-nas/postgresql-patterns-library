@@ -4,10 +4,10 @@ drop function if exists public.dblink_u(connection_str text, sql text, record_de
 
 create function public.dblink_u(connection_str text, sql text, record_definition text)
     returns setof record
-    immutable
+    volatile -- !!!
     returns null on null input
     parallel safe
-    SECURITY DEFINER
+    security invoker -- !!!
     language plpgsql
     set search_path = 'pg_catalog, pg_temp' -- prevent SQL injection and privilege escalation attacks
 as $$
@@ -27,6 +27,8 @@ $$;
     ERROR:  password or GSSAPI delegated credentials required
     DETAIL:  Non-superusers must provide a password in the connection string or send delegated GSSAPI credentials.
 Поведение ожидаемое согласно документации: https://postgrespro.ru/docs/postgresql/current/contrib-dblink-connect
+Чтобы пароль брался из файла "~/.pgpass", нужно либо использовать функцию dblink_connect_u(),
+либо выполнять функцию dblink() под суперпользователем (для этого можно сделать функцию-обёртку с SECURITY DEFINER)
 */
 comment on function public.dblink_u(connection_str text, sql text, record_definition text)
     is 'Аналог функции dblink(), но для не суперпользователя позволяет не указывать пароль в строке подключения, а брать его из файла "~/.pgpass"';
