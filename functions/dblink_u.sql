@@ -31,7 +31,7 @@ $$;
 либо выполнять функцию dblink() под суперпользователем (для этого можно сделать функцию-обёртку с SECURITY DEFINER)
 */
 comment on function public.dblink_u(connection_str text, sql text, record_definition text)
-    is 'Аналог функции dblink(), но для не суперпользователя позволяет не указывать пароль в строке подключения, а брать его из файла "~/.pgpass"';
+    is 'Аналог функции dblink(), но для не суперпользователя позволяет указывать пароль не в строке подключения, а в файле "~/.pgpass"';
 
 -- TEST
 -- select * from public.dblink_u('user=psqlrc_user host=192.168.20.152 port=5432 dbname=postgres', 'select 1', 'f int') as s(f int);
