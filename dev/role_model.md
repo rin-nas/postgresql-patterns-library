@@ -1,5 +1,6 @@
 # Ссылки
 1. https://habr.com/ru/companies/postgrespro/articles/788268/ Как в СУБД реализовать администратора без прав доступа к данным (2024)
+1. https://pgconf.ru/talk/3117849#materials Организация защиты данных в Postgres Pro: пошаговая инструкция 
 1. https://postgres.men/database/postgresql/acl-server/ PostgreSQL ACL Server
 1. https://postgres.men/database/postgresql/acl-object/ PostgreSQL ACL Object
 
