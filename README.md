@@ -1228,6 +1228,7 @@ select a from r;
 
 * См. [INSERT ... ON CONFLICT DO NOTHING/UPDATE](https://habr.com/post/264281/) (Habr)
 * Элегантная [реализация на PL/pgSQL](https://postgrespro.ru/docs/postgresql/current/plpgsql-control-structures#PLPGSQL-UPSERT-EXAMPLE) из официальной документации PostgreSQL
+* Ещё одна [реализация через CTE](https://postgrespro.ru/docs/enterprise/current/dump-stat#DUMP-STAT-FUNCTIONS)
 
 ### Как сделать `INSERT ... ON CONFLICT ...` без увеличения последовательности для дубликатов?
 
