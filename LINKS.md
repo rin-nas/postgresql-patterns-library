@@ -135,6 +135,7 @@
 1. https://dbfiddle.uk/ - выполнение SQL (песочница)
 1. https://www.db-fiddle.com/ - выполнение SQL (песочница)
 1. https://onecompiler.com/postgresql - выполнение SQL (песочница)
+1. https://koddo.ru/playground/sql - выполнение SQL (песочница): PostgreSQL 18 прямо в браузере, схема таблиц со связями рисуется автоматически
 1. https://pganalyze.com/format - форматирование SQL
 1. https://www.mockaroo.com/ - Random Data Generator and API Mocking Tool | JSON / CSV / SQL / Excel
 
