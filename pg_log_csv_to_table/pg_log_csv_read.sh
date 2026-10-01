@@ -49,6 +49,7 @@ test -z "$FILE" && exit 0 # exit if files does not exist
 FILE_EXT=$(echo "$FILE" | grep -oP '\.\K[^.]+$')
 test "$FILE_EXT" = "zst" && (zstdcat $LOG_DIR/$FILE ; exit)
 test "$FILE_EXT" = "xz"  && (xzcat   $LOG_DIR/$FILE ; exit)
+test "$FILE_EXT" = "lz4" && (lz4cat  $LOG_DIR/$FILE ; exit)
 test "$FILE_EXT" = "bz3" && (bz3cat  $LOG_DIR/$FILE ; exit)
 test "$FILE_EXT" = "csv" && (cat     $LOG_DIR/$FILE ; exit)
 
