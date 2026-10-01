@@ -100,7 +100,7 @@ systemctl list-timers | grep -P 'NEXT|pg_archive_log'
 ### Conclusions
 | compressor | compression speed | decompression speed | compression ratio |
 |:-----------|:------------------|:--------------------|:------------------|
-| lz4        | best              | best                | bad               |
-| zst        | good              | perfect             | good              |
-| bz3        | good              | bad                 | perfect           |      
-| xz         | bad               | good                | perfect           |
+| lz4        | 🔵 best           | 🔵 best             | 🔴 bad            |
+| zst        | 🟡 good           | 🟢 perfect          | 🟡 good           |
+| bz3        | 🟡 good           | 🔴 bad              | 🟢 perfect        |      
+| xz         | 🔴 bad            | 🟡 good             | 🟢 perfect        |
