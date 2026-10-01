@@ -96,3 +96,11 @@ systemctl list-timers | grep -P 'NEXT|pg_archive_log'
 | bzip2	                                    | 1.0.6 | — | |
 | [bzip3](https://github.com/iczelia/bzip3)	| 1.3.1 | Сжатие и распаковка log файлов | Файлы за каждые сутки относительно небольшие, примерно одинакового размера. Степень сжатия немного важнее, чем скорость сжатия и распаковки. |
 | xz, liblzma	                              | 5.2.4 | — | |
+
+### Conclusions
+| compressor | compression speed | decompression speed | compression ratio |
+|:-----------|:------------------|:--------------------|:------------------|
+| lz4        | best              | best                | bad               |
+| zst        | good              | perfect             | good              |
+| bz3        | good              | bad                 | perfect           |      
+| xz         | bad               | good                | perfect           |

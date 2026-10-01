@@ -32,7 +32,7 @@ echosucc() { echo -e "${Green}$@${Reset}" ; } # сообщения об успе
 #------------------------------------------------------------------
 if test "$#" -ne 1; then
   echoinfo "Usage: $0 NUMBER" >&2
-  echo -e "Reads last PostgreSQL log file (.csv, .csv.zst, .csv.xz, .csv.bz3) to standard output." >&2
+  echo -e "Reads last PostgreSQL log file (.csv, .csv.lz4, .csv.zst, .csv.xz, .csv.bz3) to standard output." >&2
   echo -e "If log file does not exist, no error throw, just empty output." >&2
   echo -e "\nExamples:\n $0 1    reads today log file\n $0 2    reads yesterday log file and so on" >&2
   exit 2
@@ -47,10 +47,11 @@ FILE=$(ls -1 -U $LOG_DIR | grep -P '\.csv(\.[^.]+)?$' | sort -r | sed "$1!d")
 test -z "$FILE" && exit 0 # exit if files does not exist
 
 FILE_EXT=$(echo "$FILE" | grep -oP '\.\K[^.]+$')
-test "$FILE_EXT" = "zst" && (zstdcat $LOG_DIR/$FILE ; exit)
-test "$FILE_EXT" = "xz"  && (xzcat   $LOG_DIR/$FILE ; exit)
+# compare [de]compression speed and ratio - https://github.com/rin-nas/postgresql-patterns-library/blob/master/pg_archive_log/README.md
 test "$FILE_EXT" = "lz4" && (lz4cat  $LOG_DIR/$FILE ; exit)
+test "$FILE_EXT" = "zst" && (zstdcat $LOG_DIR/$FILE ; exit)
 test "$FILE_EXT" = "bz3" && (bz3cat  $LOG_DIR/$FILE ; exit)
+test "$FILE_EXT" = "xz"  && (xzcat   $LOG_DIR/$FILE ; exit)
 test "$FILE_EXT" = "csv" && (cat     $LOG_DIR/$FILE ; exit)
 
 echoerr "Error: file '$FILE': file extension '$FILE_EXT' does not support"
