@@ -1047,8 +1047,9 @@ FROM (
 
 ```sql
 SELECT
-   array_agg(x) over() as frame,
    x,
+   array_agg(x) over() as frame,
+   count(x) over() as total_count,
    sum(x) over() as total_sum,
    round(x * 100 / sum(x) over(), 2) as percent
 FROM generate_series(1, 4) as t (x);
