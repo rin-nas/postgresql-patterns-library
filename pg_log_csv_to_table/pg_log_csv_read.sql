@@ -1,11 +1,11 @@
 CREATE EXTENSION IF NOT EXISTS file_fdw;
-CREATE SERVER pg_log /*IF NOT EXISTS*/ FOREIGN DATA WRAPPER file_fdw;
-CREATE SCHEMA /*IF NOT EXISTS*/ _pg_log;
+CREATE SERVER IF NOT EXISTS file_srv FOREIGN DATA WRAPPER file_fdw;
+CREATE SCHEMA IF NOT EXISTS pg_log;
 
---DROP FOREIGN TABLE /*IF EXISTS*/ _pg_log.alldays CASCADE; -- для тестов
+--DROP FOREIGN TABLE /*IF EXISTS*/ pg_log.alldays CASCADE; -- для тестов
 
 -- выборка данных будет из всех наследуемых таблиц
-CREATE FOREIGN TABLE _pg_log.alldays (
+CREATE FOREIGN TABLE pg_log.alldays (
     log_time timestamp(3) with time zone,
     user_name text,
     database_name text,
@@ -33,48 +33,48 @@ CREATE FOREIGN TABLE _pg_log.alldays (
     leader_pid integer, -- PostgreSQL v14+
     query_id bigint -- PostgreSQL v14+
 )
-SERVER pg_log
+SERVER file_srv
 OPTIONS (program 'true', format 'csv');
 
-CREATE FOREIGN TABLE _pg_log.today ()
-INHERITS (_pg_log.alldays)
-SERVER pg_log
+CREATE FOREIGN TABLE pg_log.today ()
+INHERITS (pg_log.alldays)
+SERVER file_srv
 OPTIONS (program '/var/lib/pgsql/pg_log_csv_read.sh 1', format 'csv');
 
-CREATE FOREIGN TABLE _pg_log.yesterday ()
-INHERITS (_pg_log.alldays)
-SERVER pg_log
+CREATE FOREIGN TABLE pg_log.yesterday ()
+INHERITS (pg_log.alldays)
+SERVER file_srv
 OPTIONS (program '/var/lib/pgsql/pg_log_csv_read.sh 2', format 'csv');
 
-CREATE FOREIGN TABLE _pg_log.day_3 ()
-INHERITS (_pg_log.alldays)
-SERVER pg_log
+CREATE FOREIGN TABLE pg_log.day_3 ()
+INHERITS (pg_log.alldays)
+SERVER file_srv
 OPTIONS (program '/var/lib/pgsql/pg_log_csv_read.sh 3', format 'csv');
 
-CREATE FOREIGN TABLE _pg_log.day_4 ()
-INHERITS (_pg_log.alldays)
-SERVER pg_log
+CREATE FOREIGN TABLE pg_log.day_4 ()
+INHERITS (pg_log.alldays)
+SERVER file_srv
 OPTIONS (program '/var/lib/pgsql/pg_log_csv_read.sh 4', format 'csv');
 
-CREATE FOREIGN TABLE _pg_log.day_5 ()
-INHERITS (_pg_log.alldays)
-SERVER pg_log
+CREATE FOREIGN TABLE pg_log.day_5 ()
+INHERITS (pg_log.alldays)
+SERVER file_srv
 OPTIONS (program '/var/lib/pgsql/pg_log_csv_read.sh 5', format 'csv');
 
-CREATE FOREIGN TABLE _pg_log.day_6 ()
-INHERITS (_pg_log.alldays)
-SERVER pg_log
+CREATE FOREIGN TABLE pg_log.day_6 ()
+INHERITS (pg_log.alldays)
+SERVER file_srv
 OPTIONS (program '/var/lib/pgsql/pg_log_csv_read.sh 6', format 'csv');
 
-CREATE FOREIGN TABLE _pg_log.day_7 ()
-INHERITS (_pg_log.alldays)
-SERVER pg_log
+CREATE FOREIGN TABLE pg_log.day_7 ()
+INHERITS (pg_log.alldays)
+SERVER file_srv
 OPTIONS (program '/var/lib/pgsql/pg_log_csv_read.sh 7', format 'csv');
 
 /*
 -- Тестирование:
-TABLE _pg_log.alldays LIMIT 10;
-TABLE _pg_log.today LIMIT 10;
-TABLE _pg_log.yesterday LIMIT 10;
-SELECT count(*) FROM _pg_log.alldays;
+TABLE pg_log.alldays LIMIT 10;
+TABLE pg_log.today LIMIT 10;
+TABLE pg_log.yesterday LIMIT 10;
+SELECT count(*) FROM pg_log.alldays;
 */
