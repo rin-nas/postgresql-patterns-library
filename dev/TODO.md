@@ -964,3 +964,56 @@ FROM
   (SELECT COUNT(*) AS sender FROM pg_stat_replication) s,
   (SELECT COUNT(*) AS receiver FROM pg_stat_wal_receiver) r;
 ```
+
+# Array functions
+
+source: http://morozovsk.blogspot.com/2011/07/array-function-arraydiff-in-postgresql.html
+
+```sql
+CREATE OR REPLACE FUNCTION array_diff(anyarray, anyarray)
+RETURNS anyarray
+language sql
+as $FUNCTION$
+    SELECT ARRAY(
+        SELECT * FROM (SELECT UNNEST($1) as element) t WHERE element not in (SELECT UNNEST($2))
+    );
+$FUNCTION$;
+
+CREATE FUNCTION array_intersect(anyarray, anyarray)
+RETURNS anyarray
+language sql
+as $FUNCTION$
+    SELECT ARRAY(
+        SELECT UNNEST($1)
+        INTERSECT
+        SELECT UNNEST($2)
+    );
+$FUNCTION$;
+
+CREATE FUNCTION array_union(anyarray, anyarray)
+RETURNS anyarray
+language sql
+as $FUNCTION$
+    SELECT ARRAY(
+    SELECT UNNEST($1)
+    UNION ALL
+    SELECT UNNEST($2)
+);
+$FUNCTION$;
+
+CREATE AGGREGATE array_union (anyarray)
+(
+    sfunc = array_union,
+    stype = anyarray,
+    initcond = '{}'
+);
+
+CREATE OR REPLACE FUNCTION array_size(anyarray)
+RETURNS bigint
+language sql
+as $FUNCTION$
+    SELECT count(*) FROM (
+        SELECT UNNEST($1)
+    ) t;
+$FUNCTION$;
+```
