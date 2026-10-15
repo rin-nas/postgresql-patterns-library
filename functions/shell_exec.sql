@@ -25,9 +25,9 @@ DECLARE
     rm_program     text default concat('rm -f ', file_stdout, ' ', file_stderr, ' ', file_exit_code);
 BEGIN
     EXECUTE format(sql, command, bash_program);
-    stdout    := pg_read_file(file_stdout);
-    stderr    := pg_read_file(file_stderr);
-    exit_code := pg_read_file(file_exit_code);
+    stdout    := pg_read_file(file_stdout,    true);
+    stderr    := pg_read_file(file_stderr,    true);
+    exit_code := pg_read_file(file_exit_code, true);
     EXECUTE format(sql, '',  rm_program);
 END;
 $$;
