@@ -4,6 +4,7 @@
 * https://stackoverflow.com/questions/37479718/how-to-turn-integers-into-fibonacci-coding-efficiently
 * https://www.dcode.fr/fibonacci-encoding
 * https://www.geeksforgeeks.org/zeckendorfs-theorem-non-neighbouring-fibonacci-representation/?ref=lbp
+* [The Fast Fibonacci Decompression Algorithm](https://arxiv.org/html/0712.0811v2)
 
 # Негафибоначчи
 * https://en.wikipedia.org/wiki/Negafibonacci_coding
