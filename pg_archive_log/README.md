@@ -16,8 +16,8 @@
 ## Предусловия
 
 ```ini
-log_destination = 'csvlog' #опционально
-log_directory = '/var/log/postgresql/16' #для надёжности, папку /var/log лучше сделать в отдельном разделе ФС с квотой свободного места
+log_destination = 'csvlog' # опционально
+log_directory = '/var/log/postgresql/18' # для надёжности, папку /var/log лучше сделать в отдельном разделе ФС с квотой свободного места
 log_filename = 'postgresql-%Y-%m-%d.log'
 ```
 
