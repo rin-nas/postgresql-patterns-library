@@ -41,9 +41,9 @@ elif ! (echo "$1" | grep -qP '^\d+$'); then
   exit 2
 fi
 
-LOG_DIR="/var/log/postgresql/16"
-# sort files by name in reverse order; 'sed "$1!d"' means delete all lines, exept line $1
-FILE=$(ls -1 -U $LOG_DIR | grep -P '\.csv(\.[^.]+)?$' | sort -r | sed "$1!d")
+LOG_DIR='/var/log/postgresql/18'
+# https://stackoverflow.com/questions/6022384/bash-tool-to-get-nth-line-from-a-file
+FILE=$(ls -1 -U $LOG_DIR | grep -P '^postgres.*\.csv(\.[^.]+)?$' | sort -r | tail -n+$1 | head -1)
 test -z "$FILE" && exit 0 # exit if files does not exist
 
 FILE_EXT=$(echo "$FILE" | grep -oP '\.\K[^.]+$')
