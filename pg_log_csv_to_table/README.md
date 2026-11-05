@@ -26,6 +26,7 @@
 
 В конфигурационном файле СУБД нужно настроить сохранение протоколов в формате `CSV`:
 ```ini
+logging_collector = 'on'
 log_destination = 'csvlog'
 log_directory = '/var/log/postgresql/18' # для надёжности, папку /var/log лучше сделать в отдельном разделе ФС с квотой свободного места
 log_filename = 'postgresql-%Y-%m-%d.log'
