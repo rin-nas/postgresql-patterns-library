@@ -28,11 +28,10 @@
 ```ini
 logging_collector = 'on'
 log_destination = 'csvlog'
-log_directory = '/var/log/postgresql/18' # для надёжности, папку /var/log лучше сделать в отдельном разделе ФС с квотой свободного места
-log_filename = 'postgresql-%Y-%m-%d.log'
 ```
 
 ## Файлы
 
-1. [`pg_log_csv_read.sql`](pg_log_csv_read.sql)
-1. [`pg_log_csv_read.sh`](pg_log_csv_read.sh)
+1. https://github.com/rin-nas/psqlrc/blob/master/psqlrc/log_read.sql
+1. https://github.com/rin-nas/psqlrc/blob/master/psqlrc/log_read.sh
+1. https://github.com/rin-nas/psqlrc/blob/master/psqlrc/log_read.sed
